@@ -1,0 +1,170 @@
+/*!
+ *  Bayrell Local Bus Provider
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web.Backend;
+
+use Runtime.lib;
+use Runtime.CoreProvider;
+use Runtime.CoreStruct;
+use Runtime.Message;
+use Runtime.MessageRPC;
+use Runtime.RuntimeConstant;
+use Runtime.RuntimeUtils;
+use Runtime.Annotations.IntrospectionClass;
+use Runtime.Exceptions.ApiException;
+use Runtime.Interfaces.BusInterface;
+use Runtime.Interfaces.ContextInterface;
+use Runtime.Web.Annotations.ApiList;
+use Runtime.Web.Annotations.ApiMethod;
+
+
+struct LocalBusProvider extends CoreProvider implements BusInterface
+{
+	
+	/**
+	 * Returns api methods
+	 */
+	lambda Collection<ApiMethod> getApiMethodsByClassName(string class_name)
+	{
+		IntrospectionClass class_info = RuntimeUtils::getClassIntrospection(class_name);
+		
+		/* Get routes info */
+		Collection<ApiMethod> routes = class_info.methods.map
+		(
+			ApiMethod (Collection<var> annotations, string class_method_name) use (class_name)
+			{
+				ApiMethod api_method = annotations.findItem( lib::isInstance( classof ApiMethod ) );
+				if (api_method != null)
+				{
+					string method_name = (api_method.method_name != "") ? api_method.method_name : class_method_name;
+					return api_method.copy
+					{
+						"class_name": class_name,
+						"class_method_name": class_method_name,
+						"method_name": method_name,
+					}
+				}
+				return null;
+			}
+		).values();
+		
+		routes = routes.filter( bool (ApiMethod item) => item != null );
+		
+		return routes;
+	}
+	
+	
+	
+	/**
+	 * Find api method from list
+	 */
+	lambda ApiMethod findApiMethodFromList(ApiList api_list, MessageRPC msg)
+	{
+		bool has_space_name = api_list.space_name != "";
+		string class_name = (api_list.value != "") ? api_list.value : api_list.name;
+		if (class_name == "") return null;
+		if (has_space_name and api_list.space_name != msg.space_name) return null;
+		
+		/* Returns api methods */
+		Collection<ApiMethod> api_methods = static::getApiMethodsByClassName(class_name);
+		
+		/* Find route */
+		for (int i=0; i<api_methods.count(); i++)
+		{
+			ApiMethod api_method = api_methods.item(i);
+			
+			if (api_method.method_name != msg.method_name) continue;
+			if (not has_space_name and api_method.space_name != msg.space_name) continue;
+			
+			return api_method.copy
+			{
+				"api_name": msg.api_name,
+				"space_name": msg.space_name,
+			}
+		}
+		
+		return null;
+	}
+	
+	
+	
+	/**
+	 * Find api method
+	 */
+	lambda ApiMethod findApiMethod(MessageRPC msg)
+	{
+		Collection<CoreStruct> entities = @.entities;
+		Collection<ApiList> api_lists = entities.filter( lib::isInstance(classof ApiList) );
+		ApiMethod api_method = null;
+		
+		for (int api_lists_i=0; api_lists_i<api_lists.count(); api_lists_i++)
+		{
+			ApiList api_list = api_lists.item(api_lists_i);
+			api_method = static::findApiMethodFromList(api_list, msg);
+			
+			if (api_method != null) return api_method;
+		}
+		
+		return null;
+	}
+	
+	
+	
+	/**
+	 * Send Message
+	 */
+	static async Message sendMessage(LocalBusProvider provider, Message msg)
+	{
+		if (msg instanceof MessageRPC) return await static::sendMessageRPC(provider, msg);
+		return msg;
+	}
+	
+	
+	
+	/**
+	 * Remote procedure call
+	 */
+	static async Message sendMessageRPC(LocalBusProvider provider, Message msg)
+	{
+		msg <= have_result <= false;
+		
+		try
+		{
+			/* Find api */
+			ApiMethod api_method = static::findApiMethod(msg);
+			
+			if (api_method)
+			{
+				fn f = rtl::method(api_method.class_name, api_method.class_method_name);
+				msg = await rtl::apply(f, [msg]);
+			}
+			else
+			{
+				msg = msg->fail(null, "Api not found", RuntimeConstant::ERROR_API_NOT_FOUND);
+			}
+		}
+		catch (ApiException e)
+		{
+			msg = msg->fail(null, e.getErrorMessage(), e.getErrorCode());
+		}
+		
+		return msg;
+	}
+	
+	
+}

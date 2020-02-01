@@ -1,0 +1,283 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web.Backend;
+
+use Runtime.CoreStruct;
+use Runtime.RuntimeUtils;
+use Runtime.Interfaces.AssetsInterface;
+use Runtime.Interfaces.StringInterface;
+use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderContainer;
+
+
+class Pattern
+{
+	
+	
+	/**
+	 * Render container
+	 */
+	lambda string render(RenderContainer container) =>
+		"<!DOCTYPE html><html><head>" ~ static::renderHeader(container) ~ "</head>" ~
+		"<body>" ~ static::renderBody(container) ~ "</body>" ~
+		"</html>"
+	;
+	
+	
+	
+	/**
+	 * Render header
+	 */
+	lambda string renderHeader(RenderContainer container)
+	{
+		Collection<string> resources = static::loadResources(container.assets);
+		Collection<string> css_arr = resources.filter
+		(
+			bool (string s) => rs::substr(s, -4) == ".css"
+		);
+		
+		css_arr = css_arr.map
+		(
+			string (string s) => "<link rel='stylesheet' href='/assets/" ~ s ~ "' />"
+		);
+		
+		string css = static::getCSSFromComponents(container.components, container.layout.css_vars);
+		
+		return 
+			rs::join("", css_arr) ~
+			"<style type='text/css'>" ~ css ~ "</style>"
+		;
+	}
+	
+	
+	
+	/**
+	 * Render body
+	 */
+	lambda string renderBody(RenderContainer container) => 
+		static::renderLayoutModel(container) ~
+		static::renderFrontend(container) ~
+		static::renderBodyScripts(container)
+	;
+	
+	
+	
+	/**
+	 * Render layout model
+	 */
+	lambda string renderLayoutModel(RenderContainer container) => 
+		"<input id='layout_model' value='" ~
+		RuntimeUtils::base64_encode_url(RuntimeUtils::json_encode(container.layout)) ~
+		"' style='display: none;' type='hidden' />"
+	;
+	
+	
+	
+	/**
+	 * Render layout model
+	 */
+	lambda string renderFrontend(RenderContainer container) => 
+		"<div id='frontend_root'>" ~ 
+			static::renderClassName(container.layout.layout_class, container.layout, null, null, {}) ~
+		"</div>"
+	;
+	
+	
+	
+	/**
+	 * Render body scripts
+	 */
+	lambda string renderBodyScripts(RenderContainer container)
+	{
+		Collection<string> resources = static::loadResources(container.assets);
+		Collection<string> js_arr = resources.filter
+		(
+			bool (string s) => rs::substr(s, -3) == ".js"
+		);
+		
+		js_arr = js_arr.map
+		(
+			string (string s) => "<script src='/assets/" ~ s ~ "'></script>"
+		);
+		
+		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Drivers/BusProvider.js'></script>");
+		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Drivers/RenderDriver.js'></script>");
+		
+		return rs::join("", js_arr);
+	}
+	
+	
+	
+	/**
+	 * Render class with data
+	 */
+	lambda string renderClassName(string class_name, LayoutModel layout, Dict params, html content, Dict control)
+	{
+		return <{class_name} @model={ layout }></{class_name}>;
+	}
+	
+	
+	
+	/**
+	 * Returns if tag name is double token
+	 */
+	lambda memorize bool isDoubleToken(string tag_name)
+	{
+		Dict tokens = ["img", "meta", "input", "link", "br"];
+		if (tokens.indexOf(tag_name) == -1)  return true;
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Returns css
+	 */
+	lambda memorize string getItemCss(string class_name, string css_name)
+	{
+		Collection arr1 = RuntimeUtils::getParents(class_name);
+		Vector arr2 = new Vector();
+		arr2.push(class_name);
+		
+		for (int i=0; i<arr1.count(); i++)
+		{
+			string class_name = arr1.item(i);
+			if (class_name == "Runtime.Web.Component") break;
+			arr2.push(class_name);
+		}
+		
+		arr2 = arr2.map( rtl::method (classof RuntimeUtils, "getCssHash") );
+		arr2 = arr2.map( string (string space) use (css_name) => css_name ~ "-" ~ space );
+		
+		return rs::join(" ", arr2);
+	}
+	
+	
+	
+	/**
+	 * Add unique items to collection
+	 * @param Collection<string> res
+	 * @param Collection<string> items
+	 * @return Collection<string>
+	 */
+	lambda Collection<string> addUniqueItems
+	(
+		Collection<string> res, 
+		Collection<string> items,
+		bool insert_first = false
+	)
+	{
+		if (items == null) return res;
+		
+		Vector<string> r = new Vector();
+		for (int i=0; i<items.count(); i++)
+		{
+			string item_name = items.item(i);
+			if (res.indexOf(item_name) == -1)
+			{
+				if (insert_first) r.unshift(item_name);
+				else r.push(item_name);
+			}
+		}
+		return res.appendCollectionIm(r);
+	}
+	
+	
+	
+	/**
+	 * Returns assets
+	 * @param Collection<string> assets
+	 * @return Collection<string>
+	 */
+	lambda memorize Collection<string> loadResources(Collection<string> assets)
+	{
+		Collection<string> res = new Collection();
+		if (assets == null) return res;
+		
+		for (int i=0; i<assets.count(); i++)
+		{
+			string class_name = assets.item(i);
+			Vector<string> interfaces = rtl::getInterfaces(class_name);
+			bool is_assets = interfaces.indexOf( classof AssetsInterface ) != -1;
+			
+			if (not is_assets)
+			{
+				continue;
+			}
+			
+			Collection<string> r = null;
+			string module_name = rtl::method(class_name, "getModuleName")();
+			int module_name_sz = rs::strlen(module_name);
+			
+			fn f = rtl::method(class_name, "assets");
+			r = f(null);
+			if (r != null)
+			{
+				r = r.map
+				(
+					string (string s) use (module_name, module_name_sz) => 
+						module_name ~ "/es6" ~ rs::substr(s, module_name_sz) ~ ".js"
+				);
+				res = static::addUniqueItems(res, r);
+			}
+			
+			fn f = rtl::method(class_name, "resources");
+			r = f(null);
+			if (r != null)
+			{
+				r = r.map
+				(
+					string (string s) use (module_name, module_name_sz) => 
+						module_name ~ "/resources" ~ rs::substr(s, module_name_sz)
+				);
+				res = static::addUniqueItems(res, r);
+			}
+		}
+		
+		return res;
+	}
+	
+	
+	
+	/**
+	 * Returns css string
+	 * @param Collection<string> components
+	 * @param Dict<string> css_vars
+	 * @return string
+	 */
+	lambda memorize string getCSSFromComponents(Collection<string> components, Dict<string> css_vars)
+	{
+		Vector<string> res = new Vector();
+		if (components != null)
+		{
+			for (int i=0; i<components.count(); i++)
+			{
+				string component_name = components.item(i);
+				fn f = rtl::method(component_name, "css");
+				string css = f(css_vars);
+				res.push(css);
+			}
+		}
+		string s = res.reduce( string (string res, string s) => res ~ s, "" );
+		return s;
+	}
+	
+	
+	
+}

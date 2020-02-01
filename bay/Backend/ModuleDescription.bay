@@ -1,0 +1,158 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+ 
+namespace Runtime.Web.Backend;
+
+use Runtime.Context;
+use Runtime.CoreStruct;
+use Runtime.RuntimeConstant;
+use Runtime.Annotations.Entity;
+use Runtime.Annotations.Provider;
+use Runtime.Annotations.LambdaChain;
+use Runtime.Annotations.LambdaChainDeclare;
+use Runtime.Interfaces.ModuleDescriptionInterface;
+use Runtime.Web.Backend.LocalBusProvider;
+use Runtime.Web.Backend.RenderChain;
+use Runtime.Web.RenderContainer;
+
+
+class ModuleDescription implements ModuleDescriptionInterface
+{
+	
+	/**
+	 * Returns module name
+	 * @return string
+	 */
+	lambda string getModuleName() => "Runtime.Web.Backend";
+	
+	
+	
+	/**
+	 * Returns module name
+	 * @return string
+	 */
+	lambda string getModuleVersion() => "0.8.0";
+	
+	
+	
+	/**
+	 * Returns required modules
+	 * @return Dict<string>
+	 */
+	lambda Dict<string> requiredModules() =>
+	{
+		'Runtime': '>=0.3',
+		'Runtime.Web': '*',
+	};
+	
+	
+	
+	/**
+	 * Returns enities
+	 */
+	lambda Collection<Dict> entities() => 
+	[
+		/* Extend entities */
+		new LambdaChain
+		{
+			"name": "Runtime.Entities",
+			"value": "Runtime.Web.Backend.ModuleDescription::extendEntities",
+		},
+		
+		/* Declare Lambda chain Runtime.Web.Backend.Request */
+		new LambdaChainDeclare{ "name": RenderContainer::RENDER_CHAIN, "is_await": true },
+		
+		/* Start */
+		new LambdaChain
+		{
+			"name": RenderContainer::RENDER_CHAIN,
+			"value": "Runtime.Web.Backend.RenderChain::start",
+			"pos": RenderContainer::RENDER_CHAIN_START,
+		},
+		
+		/* Create pocket model */
+		new LambdaChain
+		{
+			"name": RenderContainer::RENDER_CHAIN,
+			"value": "Runtime.Web.Backend.RenderChain::createLayoutModel",
+			"pos": RenderContainer::RENDER_CHAIN_CREATE_LAYOUT_MODEL,
+		},
+		
+		/* Call route */
+		new LambdaChain
+		{
+			"name": RenderContainer::RENDER_CHAIN,
+			"value": "Runtime.Web.Backend.RenderChain::callRoute",
+			"pos": RenderContainer::RENDER_CHAIN_CALL_ROUTE,
+			"is_await": true,
+		},
+		
+		/* Init assets */
+		new LambdaChain
+		{
+			"name": RenderContainer::RENDER_CHAIN,
+			"value": "Runtime.Web.Backend.RenderChain::initAssets",
+			"pos": RenderContainer::RENDER_CHAIN_INIT_ASSETS,
+		},
+		
+		/* Returns response */
+		new LambdaChain
+		{
+			"name": RenderContainer::RENDER_CHAIN,
+			"value": "Runtime.Web.Backend.RenderChain::response",
+			"pos": RenderContainer::RENDER_CHAIN_RESPONSE,
+		},
+		
+	];
+	
+	
+	
+	/**
+	 * Extend entities
+	 */
+	lambda Collection<CoreStruct> extendEntities(Context c, Collection<CoreStruct> entities)
+	{
+		bool api = (bool) c->config(["Runtime.Web.Backend", "api"], true);
+		bool bus_default = (bool) c->config(["Runtime.Web.Backend", "bus_default"], true);
+		string bus = (string) c->config(["Runtime.Web.Backend", "bus"], "");
+		
+		/* Enable api service */
+		if (api)
+		{
+			entities = entities.pushIm( new Entity{ "name": "Runtime.Web.Backend.ApiRoutes" } );
+		}
+		
+		/* Set default bus */
+		if (bus == "" and bus_default)
+		{
+			bus = classof LocalBusProvider;
+		}
+		
+		/* Enable local bus provider */
+		if (bus != "")
+		{
+			entities = entities.pushIm
+			(
+				new Provider{ "name": RuntimeConstant::BUS_INTERFACE, "value": bus }
+			);
+		}
+		
+		return entities;
+	}
+	
+}

@@ -1,0 +1,366 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+ 
+namespace Runtime.Web;
+
+use Runtime.lib;
+use Runtime.re;
+use Runtime.Context;
+use Runtime.CoreStruct;
+use Runtime.Message;
+use Runtime.RuntimeConstant;
+use Runtime.RuntimeUtils;
+use Runtime.Annotations.IntrospectionClass;
+use Runtime.Interfaces.BusInterface;
+use Runtime.Web.Annotations.Route;
+use Runtime.Web.Annotations.RouteList;
+use Runtime.Web.Cookie;
+use Runtime.Web.LayoutModel;
+use Runtime.Web.Request;
+use Runtime.Web.Response;
+
+
+struct RenderContainer extends Message
+{
+	/* Chains */
+	static const string RENDER_CHAIN = "Runtime.Web.RenderChain";
+	static const string PATTERN_CHAIN = "Runtime.Web.PatternChain";
+	static const string LAYOUT_CHAIN = "Runtime.Web.LayoutChain";
+	
+	/* Render Chain */
+	static const int RENDER_CHAIN_START = 500;
+	static const int RENDER_CHAIN_CREATE_LAYOUT_MODEL = 1000;
+	static const int RENDER_CHAIN_CALL_ROUTE_PRE = 1500;
+	static const int RENDER_CHAIN_CALL_ROUTE = 2000;
+	static const int RENDER_CHAIN_CALL_PAGE_NOT_FOUND = 2100;
+	static const int RENDER_CHAIN_CALL_ROUTE_POST = 2500;
+	static const int RENDER_CHAIN_INIT_ASSETS = 3000;
+	static const int RENDER_CHAIN_RESPONSE = 4000;
+	static const int RENDER_CHAIN_RESPONSE_POST = 4500;
+	
+	Request request = null;
+	Response response = null;
+	Route route = null;
+	Dict<string> route_params = null;
+	Dict<Cookie> cookies = null;
+	LayoutModel layout = null;
+	string pattern_name = "default";
+	string pattern_class = "";	
+	Collection<string> assets = null;
+	Collection<string> components = null;
+	
+	
+	
+	/**
+	 * Send message
+	 * @param Message msg
+	 * @param Context ctx
+	 * @return Message
+	 */
+	static async Message sendContainerMessage(Message msg, RenderContainer container)
+	{
+		msg <= cookies <= container.cookies;
+		if (container.layout) msg <= pocket <= container.layout.pocket;
+		BusInterface provider = @->getProvider(RuntimeConstant::BUS_INTERFACE, "default");
+		msg = await provider->sendMessage(msg);
+		return msg;
+	}
+	
+	
+	
+	/**
+	 * Return cookie by name
+	 */
+	lambda memorize Cookie getCookie(string cookie_name, bool search_update, RenderContainer container)
+	{
+		Cookie cookie = null;
+		if (cookie_name == "") return null;
+		if (container.request == null) return null;
+		if (search_update and container.cookies != null) cookie = container.cookies.get(cookie_name, null);
+		if (cookie == null) cookie = container.request.cookies.get(cookie_name, null);
+		return cookie;
+	}
+	
+	
+	
+	/**
+	 * Set cookie
+	 */
+	lambda RenderContainer setCookie(Cookie cookie, RenderContainer container)
+	{
+		Dict<Cookie> cookies = container.cookies;
+		if (cookies == null) cookies = new Dict<Cookie>();
+		cookies = cookies.setIm(cookie.name, cookie);
+		container <= cookies <= cookies;
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Return api data
+	 */
+	lambda memorize Dict getApiData(RenderContainer container)
+	{
+		string data1 = container.request.payload.get("DATA", "");
+		var data2 = RuntimeUtils::base64_decode_url(data1);
+		Dict data3 = RuntimeUtils::json_decode(data2);
+		return data3;
+	}
+	
+	
+	
+	/**
+	 * Returns routes
+	 */
+	lambda Collection<Route> getRoutesByClassName(string class_name)
+	{
+		IntrospectionClass class_info = RuntimeUtils::getClassIntrospection(class_name);
+		
+		/* Get routes info */
+		Collection<Route> routes = class_info.methods.map
+		(
+			Route (Collection<var> annotations, string class_method_name) use (class_name)
+			{
+				Route route = annotations.findItem( lib::isInstance( classof Route ) );
+				if (route != null)
+				{
+					return route.copy
+					{
+						"class_name": class_name,
+						"class_method_name": class_method_name,
+					}
+				}
+				return null;
+			}
+		).values().filter( bool (Route item) => item != null );
+		
+		return routes;
+	}
+	
+	
+	
+	
+	/**
+	 * Returns routes
+	 */
+	lambda Collection<Route> getRoutes(Collection<CoreStruct> entitites)
+	{
+		Collection<RouteList> route_lists = entitites.filter( lib::isInstance(classof RouteList) );
+		
+		Vector<CoreStruct> routes = new Vector();
+		routes.appendVector( entitites.filter(lib::isInstance( classof Route )) );
+		
+		for (int i=0; i<route_lists.count(); i++)
+		{
+			RouteList route_list = route_lists.item(i);
+			string class_name = (route_list.value != "") ? route_list.value : route_list.name;
+			if (class_name == "") continue;
+			routes.appendVector( static::getRoutesByClassName(class_name) );
+		}
+		
+		return routes.toCollection();
+	}
+	
+	
+	
+	/**
+	 * Split route prefix
+	 */
+	lambda memorize string splitRoutePrefix(string request_uri, string route_prefix)
+	{
+		int prefix_len = rs::strlen(route_prefix);
+		if (prefix_len > 0)
+		{
+			int pos = rs::search(request_uri, route_prefix);
+			if (pos == -1)
+			{
+				return null;
+			}
+			request_uri = rs::substr(request_uri, prefix_len);
+		}
+		if (request_uri == "") request_uri = "/";
+		return request_uri;
+	}
+	
+	
+	
+	/**
+	 * Find route
+	 */
+	lambda list<string, string> findRoute(Collection<Route> routes, Request request)
+	{
+		Route route = null;
+		Dict<string> params = null;
+		
+		string request_uri = request.uri;
+		string route_prefix = request.route_prefix;
+		
+		request_uri = static::splitRoutePrefix(request_uri, route_prefix);
+		if (request_uri === null) return [route, params];
+		
+		/* Find route */
+		for (int i=0; i<routes.count(); i++)
+		{
+			Route info = routes.item(i);
+			Collection<string> matches = re::matchAll( info.uri_match, request_uri );
+			if (matches != null)
+			{
+				matches = matches.map( string (Collection<string> arr) => arr.get(0, "") );
+				params = info::getParams(matches, info);
+				route = info;
+				break;
+			}
+		}
+		
+		return [route, params];
+	}
+	
+	
+	
+	/**
+	 * Returns layout class name
+	 */
+	lambda string getLayoutClassName(RenderContainer container)
+	{
+		string layout_class = container.layout.layout_class;
+		if (layout_class != "") return layout_class;
+		layout_class = @->chain(RenderContainer::LAYOUT_CHAIN, [ container, "" ]);
+		/*layout_class = layouts.get(container.layout.layout_name, "");*/
+		return layout_class;
+	}
+	
+	
+	
+	/**
+	 * Returns pattern class name
+	 */
+	lambda string getPatternClassName(RenderContainer container)
+	{
+		string pattern_class = container.pattern_class;
+		if (pattern_class != "") return pattern_class;
+		pattern_class = @->chain(RenderContainer::PATTERN_CHAIN, [ container, "" ]);
+		/*pattern_class = patterns.get(container.pattern_name, "");*/
+		return pattern_class;
+	}
+	
+	
+	
+	
+	/**
+	 * Lazy render
+	 */
+	lambda RenderContainer renderLazy
+	(
+		string page_class, CoreStruct page_model, string layout_name, RenderContainer container
+	)
+	{
+		return container.copy
+		{
+			"layout": container.layout.copy
+			{
+				"page_class": page_class,
+				"page_model": page_model,
+			},
+			"layout_name": layout_name,
+		};
+	}
+	
+	
+	
+	/**
+	 * Returns asserts of the components
+	 */
+	static list<Collection, Collection> getRequiredAssets
+	(
+		Collection<string> modules, Collection<string> components
+	)
+	{
+		if (modules == null) modules = new Collection<string>();
+		
+		components = static::getRequiredComponents(components);
+		modules = modules.prependCollectionIm
+		(
+			components.map
+			(
+				string (string class_name)
+				{
+					fn f = rtl::method(class_name, "moduleName");
+					return f();
+				}
+			)
+		);
+		modules = modules.removeDuplicatesIm();
+		modules = Context::getRequiredModules(modules);
+		return [modules, components];
+	}
+	
+	
+	
+	/**
+	 * Returns required modules
+	 * @param string class_name
+	 * @return Collection<string>
+	 */
+	static void _getRequiredComponents
+	(
+		Vector<string> res,
+		Map<string> cache,
+		Collection<string> components
+	)
+	{
+		if (components == null)
+			return;
+		
+		for (int i=0; i<components.count(); i++)
+		{
+			string class_name = components.item(i);
+			if (cache.get(class_name, false) == false)
+			{
+				cache.set(class_name, true);
+				
+				fn f = rtl::method(class_name, "components");
+				Dict<string> sub_components = f();
+				if (sub_components != null)
+				{
+					static::_getRequiredComponents(res, cache, sub_components);
+				}
+
+				res.push(class_name);
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * Returns all components
+	 * @param Collection<string> components
+	 * @return Collection<string>
+	 */
+	lambda Collection<string> getRequiredComponents(Collection<string> components)
+	{
+		Vector<string> res = new Vector();
+		Map<string> cache = new Map();
+		static::_getRequiredComponents(res, cache, components);
+		res = res.removeDublicatesIm();
+		return res.toCollection();
+	}
+	
+	
+}

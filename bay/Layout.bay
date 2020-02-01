@@ -1,0 +1,66 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.CoreStruct;
+use Runtime.RuntimeUtils;
+use Runtime.Web.Component;
+use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderHelper;
+
+
+class Layout extends Component
+{
+	
+	/**
+	 * Returns module name
+	 */
+	lambda string moduleName() => "Runtime.Web";
+	
+	
+	
+	/**
+	 * Required components
+	 */
+	lambda Collection<string> components() => null;
+	
+	
+	
+	/**
+	 * Component css
+	 */
+	lambda string css(Dict<string> vars) => 
+		@css{
+			*{box-sizing: border-box;}body{margin:0;padding:0;}
+		}
+	;
+	
+	
+	
+	/**
+	 * Component render
+	 */
+	lambda html render(LayoutModel layout, LayoutModel model, Dict params, html content, var control)
+	{
+		string class_name = model.page_class;
+		return <{class_name} @bind="page_model" @key="view"></{class_name}>;
+	}
+	
+	
+}

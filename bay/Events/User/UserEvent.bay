@@ -1,0 +1,136 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web.Events.User;
+
+use Runtime.Web.Events.UIEvent;
+use Runtime.Web.Interfaces.ElementInterface;
+
+
+struct UserEvent extends UIEvent
+{
+	public string name = "";
+	public bool bubbles = false;
+	public bool cancel_bubble = false;
+	public bool cancelable = true;
+	public bool composed = true;
+	public bool default_prevented = false;
+	public int event_phase = 0;
+	public bool is_trusted = true;
+	public var es6_event = null;
+	public var currentElement = null;
+	public var target = null;
+	
+	
+	void assignEvent(var e)
+	{
+		#switch
+		#case ifcode ES6 then
+		this.setDict(ctx, Runtime.Dict.from({
+			"name": e.type,
+			"currentElement": e.target,
+			"target": e.currentTarget,
+			"ui": e.currentTarget._ui,
+			"bubbles": e.bubbles,
+			"cancel_bubble": e.cancel_bubble,
+			"cancelable": e.cancelable,
+			"composed": e.composed,
+			"default_prevented": e.default_prevented,
+			"event_phase": e.eventPhase,
+			"is_trusted": e.isTrusted,
+			"es6_event": e,
+		}));
+		#endswitch
+	}
+	
+	static UserEvent fromEvent(var e)
+	{
+		#switch
+		#case ifcode ES6 then
+		var target = e.currentTarget || e.target;
+		var doc = target.ownerDocument || target;
+		var win = doc.defaultView;
+		var obj = null;
+		
+		if (e.type == "click") obj = new Runtime.Web.Events.Mouse.MouseClickEvent();
+		else if (e.type == "dblclick") obj = new Runtime.Web.Events.Mouse.MouseDoubleClickEvent();
+		else if (e.type == "contextmenu") obj = new Runtime.Web.Events.Mouse.MouseContextMenuEvent();
+		else if (e.type == "mousedown") obj = new Runtime.Web.Events.Mouse.MouseDownEvent();
+		else if (e.type == "mouseenter") obj = new Runtime.Web.Events.Mouse.MouseEnterEvent();
+		else if (e.type == "mouseleave") obj = new Runtime.Web.Events.Mouse.MouseLeaveEvent();
+		else if (e.type == "mousemove") obj = new Runtime.Web.Events.Mouse.MouseMoveEvent();
+		else if (e.type == "mouseout") obj = new Runtime.Web.Events.Mouse.MouseOutEvent();
+		else if (e.type == "mouseover") obj = new Runtime.Web.Events.Mouse.MouseOverEvent();
+		else if (e.type == "mouseup") obj = new Runtime.Web.Events.Mouse.MouseUpEvent();
+		else if (e.type == "wheel") obj = new Runtime.Web.Events.Mouse.MouseWheelEvent();
+		else if (e.type == "change") obj = new Runtime.Web.Events.User.ChangeEvent();
+		else if (e.type == "focus") obj = new Runtime.Web.Events.User.FocusEvent();
+		else if (e.type == "blur") obj = new Runtime.Web.Events.User.BlurEvent();
+		else if (e.type == "keydown") obj = new Runtime.Web.Events.Keyboard.KeyDownEvent();
+		else if (e.type == "keypress") obj = new Runtime.Web.Events.Keyboard.KeyUpEvent();
+		else if (e.type == "keyup") obj = new Runtime.Web.Events.Keyboard.KeyPressEvent();
+		
+		if (obj == null)
+			return null;
+			
+		obj.assignEvent(ctx, e);
+		return obj;
+		#endswitch
+	}
+	
+	
+	
+	/**
+	 * Prevent default mouse event
+	 */
+	void preventDefault()
+	{
+		#switch
+		#case ifcode ES6 then
+		this.assignValue('preventDefault', true);
+		this.es6_event.preventDefault();
+		#endswitch
+	}
+
+	
+	
+	/**
+	 * Cancel event
+	 */
+	void isCancel()
+	{
+		return this.cancelBubble;
+	}
+	
+	
+	
+	/**
+	 * Cancel event
+	 */
+	void cancel()
+	{
+		#switch
+		#case ifcode ES6 then
+		this.assignValue('cancelBubble', true);
+		this.assignValue('preventDefault', true);
+		this.es6_event.cancelBubble = true;
+		this.es6_event.stopPropagation();
+		this.es6_event.preventDefault();
+		#endswitch
+	}
+}

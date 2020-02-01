@@ -1,0 +1,182 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+ 
+namespace Runtime.Web.Backend;
+
+use Runtime.lib;
+use Runtime.re;
+use Runtime.Context;
+use Runtime.CoreStruct;
+use Runtime.RuntimeUtils;
+use Runtime.Web.RedirectResponse;
+use Runtime.Web.Request;
+use Runtime.Web.Response;
+use Runtime.Interfaces.AssetsInterface;
+use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.Route;
+use Runtime.Web.RouteList;
+
+
+static class RenderChain
+{
+		
+	/**
+	 * Start
+	 */
+	static RenderContainer start(RenderContainer container)
+	{
+		if (container.route != null and container.route_params != null) return container;
+		
+		string uri = container.request.uri;
+		bool is_html = rs::substr(uri, -5) == ".html";
+		bool is_last_slash = rs::substr(uri, -1) == "/";
+		
+		if (is_html) return container;
+		if (not is_last_slash)
+		{
+			container <= response <= new RedirectResponse{ "redirect": uri ~ "/" };
+		}
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Create pocket model
+	 */
+	static RenderContainer createLayoutModel(RenderContainer container)
+	{
+		if (container == null) return container;
+		if (container.route == null or container.route_params == null) return container;
+		if (container.response != null) return container;
+		
+		/* Set default pattern */
+		container <= pattern_name <= "default";
+		
+		/* Create PocketModel */
+		container <= layout <= new LayoutModel
+		{
+			"bag": new Dict(),
+			"uri": RenderContainer::splitRoutePrefix(container.request.uri, container.request.route_prefix),
+			"full_uri": container.request.uri,
+			"route_prefix": container.request.route_prefix,
+			"route_uri": container.route.uri,
+			"route_uri_match": container.route.uri_match,
+			"route_name": container.route.name,
+			"route_params": container.route_params,
+			"local_bus_gate": container.request.route_prefix ~ "/api",
+			"layout_name": "default",
+			"frontend_env": {
+				"route_prefix": container.request.route_prefix,
+				"local_bus_gate": container.request.route_prefix ~ "/api",
+			},
+		};
+		
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Call route
+	 */
+	static async RenderContainer callRoute(RenderContainer container)
+	{
+		if (container == null) return container;
+		if (container.response != null) return container;
+		if (container.route == null or container.route_params == null) return container;
+		if (container.route.class_name == "" or container.route.class_method_name == "") return container;
+		
+		fn f = rtl::method(container.route.class_name, container.route.class_method_name);
+		container = await f(container);
+		
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Init assets
+	 */
+	static RenderContainer initAssets(RenderContainer container)
+	{
+		if (container == null) return container;
+		if (container.response != null) return container;
+		if (container.layout == null) return container;
+		if (container.layout.page_class == "") return container;
+		
+		string layout_class = RenderContainer::getLayoutClassName(container);
+		string pattern_class = RenderContainer::getPatternClassName(container);
+		
+		if (layout_class == "") layout_class = "Runtime.Web.Layout";
+		if (pattern_class == "") pattern_class = "Runtime.Web.Backend.Pattern";
+		
+		/* Get components */
+		Collection<string> components = [ layout_class, container.layout.page_class ];
+		if (container.layout.components != null) 
+		{
+			components = components.prependCollectionIm(container.layout.components);
+		}
+		
+		/* Get required assets */
+		list res = RenderContainer::getRequiredAssets(container.layout.modules, components);
+		Collection<string> modules = res.item(0);
+		Collection<string> components = res.item(1);
+		Collection<string> assets = modules
+			.map(string (string name) => name ~ ".ModuleDescription")
+			.filter( lib::classImplements(classof AssetsInterface) )
+		;
+		
+		/* Extends assets */
+		if (container.layout.assets != null) 
+			assets = modules.prependCollectionIm(container.layout.assets);
+		
+		container = container.copy({
+			"assets": assets,
+			"components": components,
+			"layout": container.layout.copy({
+				"frontend_modules": modules,
+				"layout_class": layout_class,
+			}),
+			"pattern_class": pattern_class,
+		});
+		
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Returns response
+	 */
+	static RenderContainer response(RenderContainer container)
+	{
+		if (container == null) return container;
+		if (container.response != null) return container;
+		if (container.pattern_class == "") return container;
+		
+		fn f = rtl::method(container.pattern_class, "render");
+		string content = f(container);
+		
+		container <= response <= new Response{ "content": content };
+		return container;
+	}
+	
+	
+}

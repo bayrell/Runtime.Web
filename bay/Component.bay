@@ -1,0 +1,243 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.lib;
+use Runtime.CoreObject;
+use Runtime.CoreStruct;
+use Runtime.RuntimeUtils;
+use Runtime.Annotations.IntrospectionClass;
+use Runtime.Interfaces.ContextInterface;
+use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderHelper;
+use Runtime.Web.Events.User.ChangeEvent;
+use Runtime.Web.Events.UIEvent;
+use Runtime.Web.Template;
+
+
+class Component extends CoreObject
+{
+	public Component parent_component = null;
+	public string path = "";
+	public var params = null;
+	public var driver = null;
+	public CoreStruct model = null;
+	public string model_bind_name = "";
+	public bool model_updated_by_self = true;
+	public bool model_updated_by_driver = true;
+	
+	
+	/**
+	 * Returns module name
+	 */
+	lambda string moduleName() => static::getCurrentNamespace();
+	lambda string getModuleName()
+	{
+		string class_name = static::getCurrentClassName();
+		IntrospectionClass info = RuntimeUtils::getClassIntrospection(class_name);
+		
+		Template t = info.class_info.findItem( lib::isInstance( classof Template ) );
+		if (t != null and t.module_name != "") return t.module_name;
+		
+		return static::moduleName();
+	}
+	
+	
+	
+	/**
+	 * Returns model name
+	 */
+	lambda string modelName() => classof CoreStruct;
+	lambda string getModelName()
+	{
+		string class_name = static::getCurrentClassName();
+		IntrospectionClass info = RuntimeUtils::getClassIntrospection(class_name);
+		
+		Template t = info.class_info.findItem( lib::isInstance( classof Template ) );
+		if (t != null and t.model_name != "") return t.model_name;
+		
+		return static::modelName();
+	}
+	
+	
+	
+	/**
+	 * Returns required components
+	 */
+	lambda Collection<string> components() => null;
+	
+	
+	
+	/**
+	 * Component css
+	 */
+	lambda string css(Dict<string> vars) => "";
+	
+	
+	
+	/**
+	 * Component render
+	 */
+	lambda html render(LayoutModel layout, CoreStruct model, Dict params, html content, var control) => null;
+	
+	
+	
+	/**
+	 * Returns css name
+	 */
+	lambda string getCssName(string css_name)
+	{
+		string class_name = static::getCurrentClassName();
+		return RenderHelper::getCssName(class_name, css_name);
+	}
+	
+	
+	
+	#ifdef FRONTEND then
+	
+	/* ---------------------------------- Model ---------------------------------- */
+	
+	
+	/**
+	 * Model changed by driver or self
+	 */
+	public void onModelChange(CoreStruct old_model, CoreStruct new_model, string kind)
+	{
+	}
+	
+	
+	
+	/**
+	 * Model changed by subcomponent
+	 */
+	public void onModelUpdate(string key, CoreStruct model)
+	{
+		if (key == "") return;
+		Dict d = {};
+		d = d.setIm(key, model);
+		this.updateModel(d);
+	}
+	
+	
+	
+	/**
+	 * Set new component's model
+	 */
+	public void driverSetNewModel(CoreStruct model, string model_bind_name)
+	{
+		CoreStruct old_model = this.model;
+		if (this.model != model)
+		{
+			this.model = model;
+			this.model_updated_by_driver = true;
+			this.onModelChange(old_model, model, "driver");
+		}
+		
+		this.model_bind_name = model_bind_name;
+	}
+	
+	
+	
+	/**
+	 * Set new params
+	 */
+	public void driverSetParams(var params)
+	{
+		this.params = params;
+	}
+	
+	
+	
+	/**
+	 * Update current model
+	 * @param Dict map
+	 */
+	public void updateModel(Dict map)
+	{
+		this.setModel( this.model.copy(map) );
+	}
+	
+	
+	
+	/**
+	 * Update current model
+	 * @param Dict map
+	 */
+	public void updateModelData(Collection attrs, var new_value)
+	{
+		this.setModel( rtl::setAttr(this.model, attrs, new_value) );
+	}
+	
+	
+	
+	/**
+	 * Set new component's model and dispatch signal out ModelChange
+	 * @param CoreStruct model
+	 */
+	public void setModel(CoreStruct model)
+	{
+		if (this.model != model)
+		{
+			CoreStruct old_model = this.model;
+			this.model = model;
+			this.model_updated_by_self = true;
+			
+			this.onModelChange(old_model, model, "component");			
+			this.parent_component.onModelUpdate(this.model_bind_name, model);
+		}
+	}
+	
+	
+	
+	/**
+	 * Signal out
+	 */
+	public void signalOut(UIEvent e)
+	{
+		string class_name = e.getClassName();
+		string method_name = "";
+		
+		if (this.params == null) return;
+		
+		if (e instanceof ChangeEvent)
+		{
+			if (rtl::exists(this.params["@bind"]))
+			{
+				string bind = this.params["@bind"];
+				this.parent_component.onModelUpdate(bind, e.value);
+			}
+		}
+		
+		method_name = this.params["@event:" ~ class_name];
+		if (rtl::exists(method_name))
+		{
+			fn f = rtl::method(this.parent_component, method_name);
+			f(e);
+		}
+		
+		method_name = this.params["@eventAsync:" ~ class_name];
+		if (rtl::exists(method_name))
+		{
+			fn f = rtl::method(this.parent_component, method_name);
+			rtl::applyAwait(f, [e]);
+		}
+	}
+	
+	#endif
+}

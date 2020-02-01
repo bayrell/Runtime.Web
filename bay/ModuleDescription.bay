@@ -1,0 +1,131 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.Annotations.Manager;
+use Runtime.Annotations.LambdaChain;
+use Runtime.Annotations.LambdaChainDeclare;
+use Runtime.Annotations.Provider;
+use Runtime.Interfaces.AssetsInterface;
+use Runtime.Interfaces.ContextInterface;
+use Runtime.Interfaces.ModuleDescriptionInterface;
+use Runtime.Web.RenderContainer;
+
+
+class ModuleDescription implements 
+	ModuleDescriptionInterface,
+	AssetsInterface
+{
+
+	
+	/**
+	 * Returns module name
+	 * @return string
+	 */
+	lambda string getModuleName() => "Runtime.Web";
+	
+	
+	
+	/**
+	 * Returns module name
+	 * @return string
+	 */
+	lambda string getModuleVersion() => "0.7.3";
+	
+	
+	
+	/**
+	 * Returns required modules
+	 * @return Dict<string>
+	 */
+	lambda Dict<string> requiredModules() =>
+	{
+		'Runtime': '>=0.3',
+		'Runtime.Web': '*',
+	};
+	
+	
+	
+	/**
+	 * Returns module files load order
+	 * @return Collection<string>
+	 */
+	lambda Collection<string> assets() => 
+	[
+		"Runtime.Web/Component",
+		"Runtime.Web/Cookie",
+		"Runtime.Web/Layout",
+		"Runtime.Web/LayoutModel",
+		"Runtime.Web/RenderContainer",
+		"Runtime.Web/RenderHelper",
+		"Runtime.Web/Request",
+		"Runtime.Web/Response",
+		"Runtime.Web/Annotations/ApiList",
+		"Runtime.Web/Annotations/ApiMethod",
+		"Runtime.Web/Annotations/Route",
+		"Runtime.Web/Annotations/RouteList",
+		"Runtime.Web/Annotations/RouteMiddleware",
+		"Runtime.Web/Annotations/Template",
+		"Runtime.Web/Events/UIEvent",
+		"Runtime.Web/Events/User/UserEvent",
+		"Runtime.Web/Events/User/BlurEvent",
+		"Runtime.Web/Events/User/ChangeEvent",
+		"Runtime.Web/Events/User/FocusEvent",
+		"Runtime.Web/Events/Keyboard/KeyboardEvent",
+		"Runtime.Web/Events/Keyboard/KeyDownEvent",
+		"Runtime.Web/Events/Keyboard/KeyPressEvent",
+		"Runtime.Web/Events/Keyboard/KeyUpEvent",
+		"Runtime.Web/Events/Mouse/MouseEvent",
+		"Runtime.Web/Events/Mouse/MouseClickEvent",
+		"Runtime.Web/Events/Mouse/MouseContextMenuEvent",
+		"Runtime.Web/Events/Mouse/MouseDoubleClickEvent",
+		"Runtime.Web/Events/Mouse/MouseDownEvent",
+		"Runtime.Web/Events/Mouse/MouseEnterEvent",
+		"Runtime.Web/Events/Mouse/MouseLeaveEvent",
+		"Runtime.Web/Events/Mouse/MouseMoveEvent",
+		"Runtime.Web/Events/Mouse/MouseOutEvent",
+		"Runtime.Web/Events/Mouse/MouseOverEvent",
+		"Runtime.Web/Events/Mouse/MouseUpEvent",
+		"Runtime.Web/Events/Mouse/MouseWheelEvent",
+		"Runtime.Web/RedirectResponse",
+		"Runtime.Web/JsonResponse",
+		"Runtime.Web/ModuleDescription",
+	];
+	
+	
+	
+	/**
+	 * Returns enities
+	 */
+	lambda Collection<Dict> entities() => 
+	[
+		/* Declare Layout Chain */
+		new LambdaChainDeclare{ "name": RenderContainer::LAYOUT_CHAIN },
+		new LambdaChainDeclare{ "name": RenderContainer::PATTERN_CHAIN },
+	];
+	
+	
+	
+	/**
+	 * Returns sync loaded files
+	 */		
+	lambda Vector<string> resources() => null;
+	
+	
+}
