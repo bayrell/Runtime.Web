@@ -1,7 +1,7 @@
 /*!
  *  Bayrell Runtime Library
  *
- *  (c) Copyright 2018-2019 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -94,7 +94,7 @@ class Component extends CoreObject
 	/**
 	 * Component render
 	 */
-	lambda html render(LayoutModel layout, CoreStruct model, Dict params, html content, var control) => null;
+	lambda html render(LayoutModel layout, CoreStruct model, Dict params, html content) => null;
 	
 	
 	
@@ -107,6 +107,53 @@ class Component extends CoreObject
 		return RenderHelper::getCssName(class_name, css_name);
 	}
 	
+	
+	
+	/**
+	 * Escape attr
+	 */
+	lambda string escapeAttr(string s)
+	{
+		return rs::escapeHtml(s);
+	}
+	
+	
+	
+	/**
+	 * Escape html
+	 */
+	lambda string escapeHtml(var s)
+	{
+		#switch
+		#case ifcode PHP then
+		if ($s instanceof \Runtime\RawString) return $s->toString();
+		#endswitch
+		if (rtl::isString(s)) return rs::escapeHtml(s);
+		if (s instanceof Collection) return rs::join("", s);
+		return rs::escapeHtml( rtl::toString(s) );
+	}
+	
+	
+	
+	/**
+	 * Json encode
+	 */
+	lambda string json_encode(var obj)
+	{
+		return RuntimeUtils::json_encode(obj);
+	}
+	
+	
+	
+	/**
+	 * To html
+	 */
+	lambda string toHtml(var s)
+	{
+		if (rtl::isString(s)) return s;
+		if (s instanceof Collection) return rs::join("", s);
+		return rtl::toString(s);
+	}
 	
 	
 	#ifdef FRONTEND then

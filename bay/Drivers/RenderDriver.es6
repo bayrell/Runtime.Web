@@ -45,6 +45,7 @@ Runtime.CoreStruct.prototype.initData = function (old_model, changed)
  */
 Runtime.Web.Drivers.Control = function()
 {
+	this.type = "";
 	this.component = null;
 	this.driver = null;
 	this.model = null;
@@ -102,23 +103,25 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		control.component = this;
 		control.parent = this.root_elem;
 		control.path = "";
-		var childs = Runtime.Web.Drivers.RenderDriver.component
+		var res = this.constructor.insert
 		(
-			this.layout_model,
-			this.layout_model.layout_class,
-			{"@model":this.layout_model,"@key":""},
-			null,
-			control,
+			control, [],
+			"component",
+			{
+				"name": this.layout_model.layout_class,
+				"attrs": {"@model":this.layout_model,"@key":""},
+			},
 			0
-		);
-		childs = this.constructor.normalizeChilds(childs);
-		this.constructor.patchElemChilds(this.root_elem, childs, this);
+		);		
+		this.constructor.patch(control, res[1]);
+		
+		/* TODO this.remove_keys */
 	},
 	
 	findComponent: function(path, class_name)
 	{
 		if (this.components[path] == undefined) return null;
-		if (this.components[path].getClassName() == class_name) return null;
+		if (this.components[path].getClassName() != class_name) return null;
 		return this.components[path];
 	},
 	saveComponent: function(component)
@@ -189,6 +192,67 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		var e = document.createElement('textarea');
 		e.innerHTML = s;
 		return e.value;
+	},
+	
+	
+	
+	/**
+	 * Returns elem by index
+	 */
+	getElemChild: function(parent_elem, index)
+	{
+		if (index < 0 || index >= parent_elem.childNodes.length) return null;
+		return parent_elem.childNodes[index];
+	},
+	
+	
+	
+	/**
+	 * Find elem pos by virtual path
+	 */
+	findElemPosByPath: function(parent_elem, path)
+	{
+		for (var i = 0; i < parent_elem.childNodes.length; i++)
+		{
+			if (parent_elem.childNodes[i]._vpath == path)
+			{
+				return i;
+			}
+		}
+		return -1;
+	},
+	
+	
+	
+	/**
+	 * Find elem by virtual path
+	 */
+	findElemByPath: function(parent_elem, vpath, kind)
+	{
+		var pos = this.findElemPosByPath(parent_elem, vpath);
+		return this.getElemChild(parent_elem, pos);
+	},
+	
+	
+	
+	/**
+	 * Find elem by virtual path and check
+	 */
+	findElemByPathAndCheck: function(parent_elem, vpath, kind)
+	{
+		var pos = this.findElemPosByPath(parent_elem, vpath);
+		var elem_new = this.getElemChild(parent_elem, pos);
+		
+		/* Check element */
+		if (elem_new != null)
+		{
+			if (kind == "element")
+			{
+				if (elem_new.tagName == undefined) elem_new = null;
+			}
+		}
+		
+		return elem_new;
 	},
 	
 	
@@ -326,130 +390,6 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 	
 	
 	/**
-	 * Normalize childs
-	 */
-	_normalizeChilds: function(res, childs)
-	{
-		for (var i=0; i<childs.length; i++)
-		{
-			var item = childs[i];
-			if (item instanceof Array)
-			{
-				res = this._normalizeChilds(res, item);
-			}
-			else
-			{
-				res.push(item);
-			}
-		}
-		return res;
-	},
-	
-	
-	
-	/**
-	 * Normalize childs
-	 */
-	normalizeChilds: function(childs)
-	{
-		var res = [];
-		res = this._normalizeChilds(res, childs);
-		return res;
-	},
-	
-	
-	
-	/**
-	 * Returns true if elements is different
-	 */
-	isElemDiff: function(e1, e2)
-	{
-		if (e1 instanceof Text && e2 instanceof Text)
-		{
-			if (e1.textContent != e2.textContent)
-			{
-				/* console.log("Change", e1.textContent, e2.textContent); */
-				return true;
-			}
-		}
-		else if (
-			e1 instanceof Text && !(e2 instanceof Text) || 
-			e2 instanceof Text && !(e1 instanceof Text)
-		)
-		{
-			return true;
-		}
-		else if (e1 != e2)
-		{
-			return true;
-		}
-		
-		return false;
-	},
-	
-	
-	
-	/**
-	 * isChildsDiff
-	 */
-	isChildsDiff: function(parent_elem, childs)
-	{
-		if (childs.length != parent_elem.childNodes.length) return true;
-		for (var i=0; i<parent_elem.childNodes.length; i++)
-		{
-			var e1 = parent_elem.childNodes[i];
-			var e2 = childs[i];
-			if (this.isElemDiff(e1, e2))
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	},
-	
-	
-	
-	/**
-	 * Returns elem by index
-	 */
-	getElemChild: function(parent_elem, index)
-	{
-		if (index < 0 || index >= parent_elem.childNodes.length) return null;
-		return parent_elem.childNodes[index];
-	},
-	
-	
-	
-	/**
-	 * Find elem pos by virtual path
-	 */
-	findElemPosByPath: function(parent_elem, path)
-	{
-		for (var i = 0; i < parent_elem.childNodes.length; i++)
-		{
-			if (parent_elem.childNodes[i]._vpath == path)
-			{
-				return i;
-			}
-		}
-		return -1;
-	},
-	
-	
-	
-	/**
-	 * Find elem by virtual path
-	 */
-	findElemByPath: function(parent_elem, vpath, kind)
-	{
-		var pos = this.findElemPosByPath(parent_elem, vpath);
-		return this.getElemChild(parent_elem, pos);
-	},
-	
-	
-	
-	/**
 	 * Build Virtual Path
 	 */
 	buildPath: function(control, params, index)
@@ -461,8 +401,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		}
 		if (vkey == "")
 		{
-			vkey = "" + control.index;
-			control.index++;
+			vkey = "" + index;
 		}
 		var path = control.path;
 		return path + ((path != "") ? "." : "") + vkey;
@@ -483,6 +422,10 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		/* Set path */
 		var path = control.path;
 		elem.setAttribute("data-vpath", path);
+		elem.params = Runtime.Dict.from(params);
+		elem._attrs = params;
+		elem._component = component;
+		elem._vpath = path;			
 		
 		/* Set attrs */
 		if (params != null)
@@ -502,6 +445,13 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				}
 				if (key[0] == "@") continue;
 				elem.setAttribute(key, value);
+			}
+			
+			/* Set reference */
+			if (params["@ref"] != undefined)
+			{
+				var ref = params["@ref"];
+				component[ref] = elem;
 			}
 			
 			/* Bind element events */
@@ -564,6 +514,12 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 							}
 						};
 						
+						console.log
+						(
+							"addEventListener",
+							elem, params
+						);
+						
 						elem.addEventListener
 						(
 							es6_name,
@@ -578,188 +534,245 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 	
 	
 	/**
-	 * Update elem content
-	 */	
-	updateElemContent: function(elem, childs, control)
+	 * Normalize childs
+	 */
+	_normalizeChilds: function(res, childs)
 	{
-		/* Component content */
-		if (childs != null)
+		for (var i=0; i<childs.length; i++)
 		{
-			childs = this.normalizeChilds(childs);
+			var item = childs[i];
+			if (item instanceof Array)
+			{
+				res = this._normalizeChilds(res, item);
+			}
+			else
+			{
+				res.push(item);
+			}
 		}
+		return res;
+	},
+	
+	
+	
+	/**
+	 * Normalize content
+	 */
+	normalizeContent: function(content, control)
+	{
+		if (content == null) return null;
+		if (typeof content == "function" || content instanceof Function) content = content(control);
+		if (this.isElem(content)) return content;
+		if (content instanceof Array)
+		{
+			var new_content = [];
+			for (var i=0; i<content.length; i++)
+			{
+				var item = this.normalizeContent(content[i], control);
+				new_content.push(item);
+			}
+			
+			var res = [];
+			this._normalizeChilds(res, new_content);
+			
+			return res;
+		}
+		
+		return content;
+	},
+	
+	
+	
+	/**
+	 * Insert element
+	 */
+	insert: function (control, childs, type, obj, index)
+	{
+		var new_control = null;
+		var parent_elem = control.parent;
+		var name = (obj != null) ? obj.name : "";
+		var attrs = (obj != null && obj.attrs != null && obj.attrs != undefined) ? obj.attrs : null;
+		var content = (obj != null && obj.content != null && obj.content != undefined) ? obj.content : null;
+		var path = this.buildPath(control, attrs, index);
+		var driver = control.driver;
+		
+		if (type == 'component')
+		{
+			var model = null;
+			var model_bind_name = "";
+			
+			/* Find class */
+			var class_obj = use(name);
+			if (class_obj == undefined)
+			{
+				throw new Error("Component " + name + " not found");
+			}
+			
+			/* Find component */
+			var component = driver.findComponent(path, name);
+			if (component == null)
+			{
+				/* Create component */
+				component = new class_obj();
+				component.path = path;
+				component.driver = driver;
+				driver.saveComponent(component);
+			}
+			
+			/* Find model */
+			if (attrs != null && attrs["@model"] != undefined)
+			{
+				model = attrs["@model"];
+			}
+			if (attrs != null && attrs["@bind"] != undefined)
+			{
+				model_bind_name = attrs["@bind"];
+				if (model == null) model = model[model_bind_name];
+			}
+			
+			/* Set new model */
+			component.driverSetParams(driver.context, attrs);
+			component.driverSetNewModel(driver.context, model, model_bind_name);
+			component.parent_component = control.component;
+			
+			/* Set reference */
+			if (attrs != null && attrs["@ref"] != undefined)
+			{
+				var ref = attrs["@ref"];
+				component.parent_component[ref] = component;
+			}
+			
+			/* Create new control */
+			new_control = control.copy({
+				"type": type,
+				"index": index,
+				"path": path,
+				"component": component,
+				"model": model,
+			});
+			
+			/* Render component */
+			var render = class_obj.render.bind(class_obj);
+			var res = render(driver.context, obj.layout, model, Runtime.Dict.from(attrs), content);
+			
+			/* Call result */
+			if (res != null && typeof res == "function") res = res(new_control);
+			
+			/* Normalize content */
+			res = this.normalizeContent(res, new_control);
+			
+			/* Add childs */
+			childs = childs.slice();
+			childs.push(res);
+		}
+		
+		else if (type == 'element')
+		{
+			var elem_new = this.findElemByPathAndCheck(parent_elem, path, type);
+			var is_new_elem = false;
+			
+			/* Create new element */
+			if (elem_new == null)
+			{
+				elem_new = document.createElement(name);
+				is_new_elem = true;
+			}
+			
+			/* Create new control */
+			new_control = control.copy({
+				"type": type,
+				"index": index,
+				"path": path,
+				"parent": elem_new,
+				"childs": [],
+			});
+			
+			/* Update element params */
+			this.updateElemParams(elem_new, attrs, new_control, is_new_elem);
+			
+			/* Add childs */
+			childs = childs.slice();
+			childs.push(elem_new);
+		}
+		
+		else if (this.isElem(content))
+		{
+			childs = childs.slice();
+			childs.push(content);
+		}
+		else if (content instanceof Array)
+		{
+			childs = childs.slice();
+			childs.push(content);
+		}
+		else if (typeof content == "function" || content instanceof Function)
+		{
+			childs = childs.slice();
+			childs.push(content);
+		}
+		
+		else if (type == 'raw')
+		{
+			/* To string */
+			content = Runtime.rtl.toStr(content);
+			
+			/* Create new element */
+			var elem_new = this.createElementFromHTML(content);
+			
+			/* Add childs */
+			childs = childs.slice();
+			childs.push(elem_new);
+		}
+		
+		else if (type == 'text')
+		{
+			/* To string */
+			content = Runtime.rtl.toStr(content);
+			content = this.decodeHtmlEntities(content);
+			
+			var elem_new = this.findElemByPathAndCheck(parent_elem, path, type);
+			
+			/* Create new element */
+			if (elem_new == null)
+			{
+				elem_new = document.createTextNode(content);
+			}
+			else
+			{
+				if (elem_new.nodeValue != content)
+				{
+					elem_new.nodeValue = content;
+				}
+			}
+			
+			/* Set elem path */
+			elem_new._vpath = path;
+			
+			/* Add childs */
+			childs = childs.slice();
+			childs.push(elem_new);
+		}
+		
+		else if (type == 'html')
+		{
+			
+		}
+		
+		return [new_control, childs];
+	},
+	
+	
+	
+	/**
+	 * Patch childs of the control
+	 */
+	patch: function (control, childs)
+	{
+		/* Normalize content */
+		var childs = this.normalizeContent(childs, control);
 		
 		/* Patch element */
-		this.patchElemChilds(elem, childs, control.driver);
-	},
-	
-	
-	
-	/**
-	 * Render text
-	 */
-	text: function(layout, content, control)
-	{
-		var parent_elem = control.parent;
-		
-		/* Render content */
-		if (typeof content == "function") content = content(control);
-		if (this.isElem(content)) return content;
-		if (content instanceof Array) return content;
-		
-		/* To string */
-		content = Runtime.rtl.toStr(content);
-		content = this.decodeHtmlEntities(content);
-		
-		/* Select element */
-		var elem_path = this.buildPath(control, null);
-		/*var new_control = control.copy({ "path": elem_path });*/
-		var elem_new = this.findElemByPath(parent_elem, elem_path, "elem");		
-		
-		/* Check element */
-		if (elem_new != null)
-		{
-			if (elem_new.tagName != undefined) elem_new = null;
-		}
-		
-		/* Create new element */
-		if (elem_new == null)
-		{
-			elem_new = document.createTextNode(content);
-		}
-		else
-		{
-			if (elem_new.nodeValue != content) elem_new.nodeValue = content;
-		}
-		
-		/* Set elem path */
-		elem_new._vpath = elem_path;
-		
-		return elem_new;
-	},
-	
-	
-	
-	/**
-	 * Render raw text
-	 */
-	raw: function(layout, content, control)
-	{
-		var parent_elem = control.parent;
-		var elem_path = this.buildPath(control, null);
-		
-		/* Render content */
-		if (typeof content == "function") content = content(control);
-		if (this.isElem(content)) return content;
-		if (content instanceof Array) return content;
-		
-		return this.createElementFromHTML( Runtime.rtl.toStr(content) );
-	},
-	
-	
-	
-	/**
-	 * Render elem
-	 */
-	elem: function(layout, name, params, content, control)
-	{
-		var parent_elem = control.parent;
-		var elem_path = this.buildPath(control, params);
-		var elem_new = this.findElemByPath(parent_elem, elem_path, "elem");
-		var is_new_elem = false;
-		
-		/* Check element */
-		if (elem_new != null)
-		{
-			if (elem_new.tagName == undefined) elem_new = null;
-		}
-		
-		/* Create new element */
-		if (elem_new == null)
-		{
-			elem_new = document.createElement(name);
-			is_new_elem = true;
-		}
-		
-		/* Set new control */
-		var new_control = control.copy({"path": elem_path, "parent": elem_new, "index": 0});
-		
-		/* Render content */
-		if (typeof content == "function") content = content(new_control);
-		
-		/* Update element params */
-		this.updateElemParams(elem_new, params, new_control, is_new_elem);
-		
-		/* Update element params */
-		this.updateElemContent(elem_new, content, new_control, is_new_elem);
-		
-		/* Set elem path */
-		elem_new._vpath = elem_path;
-		
-		return elem_new;
-	},
-	
-	
-	
-	/**
-	 * Render component
-	 */
-	component: function(layout, name, params, content, control)
-	{
-		var e = null;
-		var driver = control.driver;
-		var parent_component = control.component;
-		var model = null;
-		var model_bind_name = "";
-		
-		if (params != null && params["@model"] != undefined)
-		{
-			model = params["@model"];
-		}
-		if (params != null && params["@bind"] != undefined)
-		{
-			/*if (model != null) model = control.model;*/
-			model_bind_name = params["@bind"];
-			if (model == null) model = model[model_bind_name];
-		}
-		
-		var class_obj = use(name);
-		if (class_obj == undefined)
-		{
-			throw new Error("Component " + name + " not found");
-		}
-		
-		var component_path = this.buildPath(control, params);
-		var component = driver.findComponent(component_path, name);
-		if (component == null)
-		{
-			component = new class_obj();
-			component.path = component_path;
-			component.driver = driver;
-			driver.saveComponent(component);
-		}
-		
-		/* Set new model */
-		component.driverSetParams(driver.context, params);
-		component.driverSetNewModel(driver.context, model, model_bind_name);
-		component.parent_component = parent_component;
-		
-		/* Set new control */
-		var new_control = control.copy({
-			"index": 0,
-			"path": component_path,
-			"component": component,
-			"model": model,
-		});
-		
-		/* Render component */
-		var render = class_obj.render.bind(class_obj);
-		var res = render(driver.context, layout, model, Runtime.Dict.from(params), content, new_control);
-		
-		/* Call result */
-		if (res != null && typeof res == "function") res = res(new_control);
-		
-		/* Result */
-		return res;
+		this.patchElemChilds(control.parent, childs, control.driver);		
 	},
 	
 	
@@ -814,12 +827,13 @@ try
 	global_context = global_context.constructor.init(global_context, global_context);
 	/* global_context = global_context.constructor.start(global_context, global_context); */
 	window['global_context'] = global_context;	
-	window['RenderDriver'] = Runtime.Web.Drivers.RenderDriver.run
+	window['RenderDriverInstance'] = Runtime.Web.Drivers.RenderDriver.run
 	(
 		global_context,
 		'#frontend_root',
 		layout_model
 	);
+	window['RenderDriver'] = Runtime.Web.Drivers.RenderDriver;
 }
 catch (ex)
 {
