@@ -41,26 +41,26 @@ struct KeyboardEvent extends UserEvent
 	public string value = "";
 	
 	
-	void assignEvent(var e)
+	static void assignEventObject(var obj, var e)
 	{
-		parent(e);
+		parent(obj, e);
 		
 		#switch
 		#case ifcode ES6 then
-		this.setDict(ctx, Runtime.Dict.from({
-			"altKey": e.altKey,
-			"charCode": e.charCode,
-			"code": e.code,
-			"ctrlKey": e.ctrlKey,
-			"key": e.key,
-			"keyCode": e.keyCode,
-			"locale": e.locale,
-			"location": e.location,
-			"repeat": e.repeat,
-			"shiftKey": e.shiftKey,
-			"which": e.which,
-			"value": e.currentTarget.value,
-		}));
+		
+		obj.set(ctx, "altKey", e.altKey);
+		obj.set(ctx, "charCode", e.charCode);
+		obj.set(ctx, "code", e.code);
+		obj.set(ctx, "ctrlKey", e.ctrlKey);
+		obj.set(ctx, "key", e.key);
+		obj.set(ctx, "keyCode", e.keyCode);
+		obj.set(ctx, "locale", e.locale);
+		obj.set(ctx, "location", e.location);
+		obj.set(ctx, "repeat", e.repeat);
+		obj.set(ctx, "shiftKey", e.shiftKey);
+		obj.set(ctx, "which", e.which);
+		obj.set(ctx, "value", e.currentTarget.value);
+		
 		#endswitch
 	}
 	

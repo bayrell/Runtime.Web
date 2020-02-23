@@ -24,6 +24,5 @@ use Runtime.Web.Events.User.UserEvent;
 struct FocusEvent extends UserEvent
 {
 	static const string ES6_EVENT_NAME = "focus";
-	
 }
 

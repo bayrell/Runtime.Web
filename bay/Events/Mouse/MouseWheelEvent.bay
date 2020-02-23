@@ -31,17 +31,15 @@ struct MouseWheelEvent extends MouseEvent
 	
 	
 	
-	void assignEvent(var e)
+	static void assignEventObject(var obj, var e)
 	{
-		parent(e);
+		parent(obj, e);
 		
 		#switch
 		#case ifcode ES6 then
-		this.setMap(new Runtime.Dict({
-			"wheelDelta": e.wheelDelta,
-			"wheelDeltaX": e.wheelDeltaX,
-			"wheelDeltaY": e.wheelDeltaY,
-		}));
+		obj.set(ctx, "wheelDelta", e.wheelDelta);
+		obj.set(ctx, "wheelDeltaX", e.wheelDeltaX);
+		obj.set(ctx, "wheelDeltaY", e.wheelDeltaY);
 		#endswitch
 	}
 	

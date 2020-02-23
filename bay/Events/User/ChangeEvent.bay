@@ -27,13 +27,13 @@ struct ChangeEvent extends UserEvent
 	public string value="";
 	
 	
-	void assignEvent(var e)
+	static void assignEventObject(var obj, var e)
 	{
-		parent(e);
+		parent(obj, e);
 		
 		#switch
 		#case ifcode ES6 then
-		this.assignValue(ctx, "value", e.target.value);
+		obj.set(ctx, "value", e.currentTarget.value);
 		#endswitch
 	}
 	

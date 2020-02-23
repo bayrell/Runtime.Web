@@ -37,24 +37,23 @@ struct UserEvent extends UIEvent
 	public var target = null;
 	
 	
-	void assignEvent(var e)
+	static void assignEventObject(var obj, var e)
 	{
 		#switch
 		#case ifcode ES6 then
-		this.setDict(ctx, Runtime.Dict.from({
-			"name": e.type,
-			"currentElement": e.target,
-			"target": e.currentTarget,
-			"ui": e.currentTarget._ui,
-			"bubbles": e.bubbles,
-			"cancel_bubble": e.cancel_bubble,
-			"cancelable": e.cancelable,
-			"composed": e.composed,
-			"default_prevented": e.default_prevented,
-			"event_phase": e.eventPhase,
-			"is_trusted": e.isTrusted,
-			"es6_event": e,
-		}));
+		
+		obj.set(ctx, "name", e.type);
+		obj.set(ctx, "currentElement", e.target);
+		obj.set(ctx, "target", e.currentTarget);
+		obj.set(ctx, "bubbles", e.bubbles);
+		obj.set(ctx, "cancel_bubble", e.cancel_bubble);
+		obj.set(ctx, "cancelable", e.cancelable);
+		obj.set(ctx, "composed", e.composed);
+		obj.set(ctx, "default_prevented", e.default_prevented);
+		obj.set(ctx, "event_phase", e.event_phase);
+		obj.set(ctx, "is_trusted", e.isTrusted);
+		obj.set(ctx, "es6_event", e);
+		
 		#endswitch
 	}
 	
@@ -65,31 +64,36 @@ struct UserEvent extends UIEvent
 		var target = e.currentTarget || e.target;
 		var doc = target.ownerDocument || target;
 		var win = doc.defaultView;
-		var obj = null;
+		var event = null;
+		var obj = new Runtime.Map();
+		var class_name = "";
 		
-		if (e.type == "click") obj = new Runtime.Web.Events.Mouse.MouseClickEvent();
-		else if (e.type == "dblclick") obj = new Runtime.Web.Events.Mouse.MouseDoubleClickEvent();
-		else if (e.type == "contextmenu") obj = new Runtime.Web.Events.Mouse.MouseContextMenuEvent();
-		else if (e.type == "mousedown") obj = new Runtime.Web.Events.Mouse.MouseDownEvent();
-		else if (e.type == "mouseenter") obj = new Runtime.Web.Events.Mouse.MouseEnterEvent();
-		else if (e.type == "mouseleave") obj = new Runtime.Web.Events.Mouse.MouseLeaveEvent();
-		else if (e.type == "mousemove") obj = new Runtime.Web.Events.Mouse.MouseMoveEvent();
-		else if (e.type == "mouseout") obj = new Runtime.Web.Events.Mouse.MouseOutEvent();
-		else if (e.type == "mouseover") obj = new Runtime.Web.Events.Mouse.MouseOverEvent();
-		else if (e.type == "mouseup") obj = new Runtime.Web.Events.Mouse.MouseUpEvent();
-		else if (e.type == "wheel") obj = new Runtime.Web.Events.Mouse.MouseWheelEvent();
-		else if (e.type == "change") obj = new Runtime.Web.Events.User.ChangeEvent();
-		else if (e.type == "focus") obj = new Runtime.Web.Events.User.FocusEvent();
-		else if (e.type == "blur") obj = new Runtime.Web.Events.User.BlurEvent();
-		else if (e.type == "keydown") obj = new Runtime.Web.Events.Keyboard.KeyDownEvent();
-		else if (e.type == "keypress") obj = new Runtime.Web.Events.Keyboard.KeyUpEvent();
-		else if (e.type == "keyup") obj = new Runtime.Web.Events.Keyboard.KeyPressEvent();
+		if (e.type == "click") class_name = "Runtime.Web.Events.Mouse.MouseClickEvent";
+		else if (e.type == "dblclick") class_name = "Runtime.Web.Events.Mouse.MouseDoubleClickEvent";
+		else if (e.type == "contextmenu") class_name = "Runtime.Web.Events.Mouse.MouseContextMenuEvent";
+		else if (e.type == "mousedown") class_name = "Runtime.Web.Events.Mouse.MouseDownEvent";
+		else if (e.type == "mouseenter") class_name = "Runtime.Web.Events.Mouse.MouseEnterEvent";
+		else if (e.type == "mouseleave") class_name = "Runtime.Web.Events.Mouse.MouseLeaveEvent";
+		else if (e.type == "mousemove") class_name = "Runtime.Web.Events.Mouse.MouseMoveEvent";
+		else if (e.type == "mouseout") class_name = "Runtime.Web.Events.Mouse.MouseOutEvent";
+		else if (e.type == "mouseover") class_name = "Runtime.Web.Events.Mouse.MouseOverEvent";
+		else if (e.type == "mouseup") class_name = "Runtime.Web.Events.Mouse.MouseUpEvent";
+		else if (e.type == "wheel") class_name = "Runtime.Web.Events.Mouse.MouseWheelEvent";
+		else if (e.type == "change") class_name = "Runtime.Web.Events.User.ChangeEvent";
+		else if (e.type == "focus") class_name = "Runtime.Web.Events.User.FocusEvent";
+		else if (e.type == "blur") class_name = "Runtime.Web.Events.User.BlurEvent";
+		else if (e.type == "keydown") class_name = "Runtime.Web.Events.Keyboard.KeyDownEvent";
+		else if (e.type == "keypress") class_name = "Runtime.Web.Events.Keyboard.KeyUpEvent";
+		else if (e.type == "keyup") class_name = "Runtime.Web.Events.Keyboard.KeyPressEvent";
 		
-		if (obj == null)
+		var class_obj = use(class_name);
+		class_obj.assignEventObject(ctx, obj, e);
+		event = new class_obj(ctx, obj);
+		
+		if (event == null)
 			return null;
 			
-		obj.assignEvent(ctx, e);
-		return obj;
+		return event;
 		#endswitch
 	}
 	

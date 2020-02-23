@@ -48,35 +48,35 @@ struct MouseEvent extends UserEvent
 	
 	
 	
-	void assignEvent(var e)
+	static void assignEventObject(var obj, var e)
 	{
-		parent(e);
+		parent(obj, e);
 		
 		#switch
 		#case ifcode ES6 then
-		this.setDict(ctx, Runtime.Dict.from({
-			"altKey": e.altKey,
-			"button": e.button,
-			"buttons": e.buttons,
-			"clientX": e.clientX,
-			"clientY": e.clientY,
-			"ctrlKey": e.ctrlKey,
-			"detail": e.detail,
-			"layerX": e.layerX,
-			"layerY": e.layerY,
-			"metaKey": e.metaKey,
-			"movementX": e.movementX,
-			"movementY": e.movementY,
-			"offsetX": e.offsetX,
-			"offsetY": e.offsetY,
-			"pageX": e.pageX,
-			"pageY": e.pageY,
-			"screenX": e.screenX,
-			"screenY": e.screenY,
-			"shiftKey": e.shiftKey,
-			"x": e.x,
-			"y": e.y,
-		}));
+		
+		obj.set(ctx, "altKey", e.altKey);
+		obj.set(ctx, "button", e.button);
+		obj.set(ctx, "buttons", e.buttons);
+		obj.set(ctx, "clientX", e.clientX);
+		obj.set(ctx, "clientY", e.clientY);
+		obj.set(ctx, "ctrlKey", e.ctrlKey);
+		obj.set(ctx, "detail", e.detail);
+		obj.set(ctx, "layerX", e.layerX);
+		obj.set(ctx, "layerY", e.layerY);
+		obj.set(ctx, "metaKey", e.metaKey);
+		obj.set(ctx, "movementX", e.movementX);
+		obj.set(ctx, "movementY", e.movementY);
+		obj.set(ctx, "offsetX", e.offsetX);
+		obj.set(ctx, "offsetY", e.offsetY);
+		obj.set(ctx, "pageX", e.pageX);
+		obj.set(ctx, "pageY", e.pageY);
+		obj.set(ctx, "screenX", e.screenX);
+		obj.set(ctx, "screenY", e.screenY);
+		obj.set(ctx, "shiftKey", e.shiftKey);
+		obj.set(ctx, "x", e.x);
+		obj.set(ctx, "y", e.y);
+		
 		#endswitch
 	}
 	
