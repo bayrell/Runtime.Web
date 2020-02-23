@@ -102,7 +102,7 @@ struct UserEvent extends UIEvent
 	{
 		#switch
 		#case ifcode ES6 then
-		this.assignValue('preventDefault', true);
+		this.assignValue('default_prevented', true);
 		this.es6_event.preventDefault();
 		#endswitch
 	}
@@ -126,8 +126,8 @@ struct UserEvent extends UIEvent
 	{
 		#switch
 		#case ifcode ES6 then
-		this.assignValue('cancelBubble', true);
-		this.assignValue('preventDefault', true);
+		this.assignValue('cancel_bubble', true);
+		this.assignValue('default_prevented', true);
 		this.es6_event.cancelBubble = true;
 		this.es6_event.stopPropagation();
 		this.es6_event.preventDefault();
