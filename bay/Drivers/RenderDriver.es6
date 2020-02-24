@@ -513,13 +513,13 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 								}
 							}
 						};
-						
+						/*
 						console.log
 						(
 							"addEventListener",
 							elem, params
 						);
-						
+						*/
 						elem.addEventListener
 						(
 							es6_name,
