@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.CoreStruct;
+use Runtime.Web.SeoModel;
 
 
 struct LayoutModel extends CoreStruct
@@ -35,6 +36,7 @@ struct LayoutModel extends CoreStruct
 	string route_name = "";
 	string route_prefix = "";
 	string local_bus_gate = "";
+	string locale_uri = "";
 	
 	/* Layout info */
 	string layout_name = "default";
@@ -43,15 +45,26 @@ struct LayoutModel extends CoreStruct
 	CoreStruct page_model = null;
 	
 	/* SEO */
+	string locale = "";
 	string title = "";
-	string meta_description = "";
-	string meta_keywords = "";
+	string description = "";
+	string favicon = "";
+	SeoModel seo = new SeoModel();
+	
+	/* Pagination */
+	int page = 0;
+	int pages = 0;
+	int count_in_page = 0;
+	
+	/* Breadcrumbs */
+	Collection<Dict> breadcrumbs = null;
 	
 	/* Other data */
 	Dict<primitive> pocket = new Dict();
 	Dict<primitive> css_vars = new Dict();
 	
 	/* Frontend settings */
+	string frontend_type = "";
 	string frontend_class_name = "";
 	Dict<primitive> frontend_env = null;
 	Dict<primitive> frontend_settings = null;

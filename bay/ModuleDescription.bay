@@ -76,6 +76,7 @@ class ModuleDescription implements
 		"Runtime.Web/RenderHelper",
 		"Runtime.Web/Request",
 		"Runtime.Web/Response",
+		"Runtime.Web/SeoModel",
 		"Runtime.Web/Annotations/ApiList",
 		"Runtime.Web/Annotations/ApiMethod",
 		"Runtime.Web/Annotations/Route",

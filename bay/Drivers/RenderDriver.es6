@@ -653,7 +653,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			
 			/* Render component */
 			var render = class_obj.render.bind(class_obj);
-			var res = render(driver.context, obj.layout, model, Runtime.Dict.from(attrs), content);
+			var res = render(driver.context, driver.layout_model, model, Runtime.Dict.from(attrs), content);
 			
 			/* Call result */
 			if (res != null && typeof res == "function") res = res(new_control);

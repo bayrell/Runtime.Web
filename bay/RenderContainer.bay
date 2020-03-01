@@ -53,6 +53,16 @@ struct RenderContainer extends Message
 	static const int RENDER_CHAIN_RESPONSE = 4000;
 	static const int RENDER_CHAIN_RESPONSE_POST = 4500;
 	
+	/* Static Frontend Types */
+	static const string FRONTEND_TYPE_DEFAULT = "";
+	static const string FRONTEND_TYPE_HOME = "home";
+	static const string FRONTEND_TYPE_CATEGORY = "category";
+	static const string FRONTEND_TYPE_TAG = "tag";
+	static const string FRONTEND_TYPE_ARCHIVE = "archive";
+	static const string FRONTEND_TYPE_ARTICLE = "article";
+	static const string FRONTEND_TYPE_SEARCH = "search";
+	static const string FRONTEND_TYPE_SINLGE = "single_page";
+	
 	Request request = null;
 	Response response = null;
 	Route route = null;
@@ -60,7 +70,7 @@ struct RenderContainer extends Message
 	Dict<Cookie> cookies = null;
 	LayoutModel layout = null;
 	string pattern_name = "default";
-	string pattern_class = "";	
+	string pattern_class = "";
 	Collection<string> assets = null;
 	Collection<string> components = null;
 	
