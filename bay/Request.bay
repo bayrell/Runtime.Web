@@ -76,7 +76,7 @@ struct Request extends CoreStruct
 			(
 				$ctx, 
 				$key,
-				new \Runtime.Web\Cookie
+				new \Runtime\Web\Cookie
 				(
 					$ctx,
 					\Runtime\Dict::from([
