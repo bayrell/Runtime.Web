@@ -37,6 +37,7 @@ struct LayoutModel extends CoreStruct
 	string route_prefix = "";
 	string local_bus_gate = "";
 	string locale_uri = "";
+	string f_inc = "";
 	
 	/* Layout info */
 	string layout_name = "default";

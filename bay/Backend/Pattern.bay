@@ -68,7 +68,8 @@ class Pattern
 		
 		css_arr = css_arr.map
 		(
-			string (string s) => "<link rel='stylesheet' href='/assets/" ~ s ~ "' />"
+			string (string s) use (container) =>
+				"<link rel='stylesheet' href='/assets/" ~ s ~ "?_=" ~ container.layout.f_inc ~ "' />"
 		);
 		
 		string css = static::getCSSFromComponents(container.components, container.layout.css_vars);
@@ -127,11 +128,12 @@ class Pattern
 		
 		js_arr = js_arr.map
 		(
-			string (string s) => "<script src='/assets/" ~ s ~ "'></script>"
+			string (string s) use (container) =>
+				"<script src='/assets/" ~ s ~ "?_=" ~ container.layout.f_inc ~ "'></script>"
 		);
 		
-		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Drivers/BusProvider.js'></script>");
-		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Drivers/RenderDriver.js'></script>");
+		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Drivers/BusProvider.js?_=" ~ container.layout.f_inc ~ "'></script>");
+		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Drivers/RenderDriver.js?_=" ~ container.layout.f_inc ~ "'></script>");
 		
 		return rs::join("", js_arr);
 	}
