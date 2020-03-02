@@ -140,27 +140,36 @@ struct RenderContainer extends Message
 	 */
 	lambda Collection<Route> getRoutesByClassName(string class_name)
 	{
+		Vector<Route> routes = new Vector<Route>();
 		IntrospectionClass class_info = RuntimeUtils::getClassIntrospection(class_name);
 		
 		/* Get routes info */
-		Collection<Route> routes = class_info.methods.map
+		class_info.methods.each
 		(
-			Route (Collection<var> annotations, string class_method_name) use (class_name)
+			void (Collection<Route> annotations, string class_method_name) use (routes, class_name)
 			{
-				Route route = annotations.findItem( lib::isInstance( classof Route ) );
-				if (route != null)
-				{
-					return route.copy
+				annotations.each
+				(
+					void (Route route) use (routes, class_name, class_method_name)
 					{
-						"class_name": class_name,
-						"class_method_name": class_method_name,
+						if (route == null) return;
+						if (route instanceof Route)
+						{
+							routes.push
+							(
+								route.copy
+								{
+									"class_name": class_name,
+									"class_method_name": class_method_name,
+								}
+							);
+						}
 					}
-				}
-				return null;
+				);
 			}
-		).values().filter( bool (Route item) => item != null );
+		);
 		
-		return routes;
+		return routes.toCollection();
 	}
 	
 	

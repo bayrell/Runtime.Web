@@ -134,7 +134,7 @@ class ModuleDescription implements ModuleDescriptionInterface
 		/* Enable api service */
 		if (api)
 		{
-			entities = entities.pushIm( new Entity{ "name": "Runtime.Web.Backend.ApiRoutes" } );
+			entities = entities.prependIm( new Entity{ "name": "Runtime.Web.Backend.ApiRoutes" } );
 		}
 		
 		/* Set default bus */
@@ -146,7 +146,7 @@ class ModuleDescription implements ModuleDescriptionInterface
 		/* Enable local bus provider */
 		if (bus != "")
 		{
-			entities = entities.pushIm
+			entities = entities.prependIm
 			(
 				new Provider{ "name": RuntimeConstant::BUS_INTERFACE, "value": bus }
 			);

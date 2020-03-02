@@ -38,32 +38,35 @@ struct Route extends CoreStruct
 	 */
 	protected void initData(Route old_model, Dict changed = null)
 	{
-		string uri_match = this.uri;
-		uri_match = re::replace("\\/", "\\/", uri_match);
-		
-		Vector matches = re::matchAll("{(.*?)}", this.uri);
-		if (matches)
+		if (this.uri_match == "")
 		{
-			Vector<string> params = matches.get(0, null);
-			params.each(
-				void (Vector<string> name) use (uri_match)
-				{
-					uri_match = re::replace(
-						"{" ~ name ~ "}", 
-						"([^\\/]*?)", 
-						uri_match
-					);
-				}
-			);
+			string uri_match = this.uri;
+			uri_match = re::replace("\\/", "\\/", uri_match);
 			
-			this.assignValue("params", params.toCollection());
+			Vector matches = re::matchAll("{(.*?)}", this.uri);
+			if (matches)
+			{
+				Vector<string> params = matches.get(0, null);
+				params.each(
+					void (string name) use (uri_match)
+					{
+						uri_match = re::replace(
+							"{" ~ name ~ "}", 
+							"([^\\/]*?)", 
+							uri_match
+						);
+					}
+				);
+				
+				this.assignValue("params", params.toCollection());
+			}
+			else
+			{
+				this.assignValue("params", new Collection<string>());
+			}
+			
+			this.assignValue("uri_match", "^" ~ uri_match ~ "$");
 		}
-		else
-		{
-			this.assignValue("params", new Collection<string>());
-		}
-		
-		this.assignValue("uri_match", "^" ~ uri_match ~ "$");
 	}
 	
 	

@@ -115,6 +115,12 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		);		
 		this.constructor.patch(control, res[1]);
 		
+		/* Change title */
+		if (this.layout_model.title != document.title)
+		{
+			document.title = this.layout_model.title;
+		}
+		
 		/* TODO this.remove_keys */
 	},
 	
@@ -128,6 +134,11 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	{
 		this.components[component.path] = component;
 	},
+	
+	setTitle: function(ctx, new_title)
+	{
+		this.layout_model = this.layout_model.copy(ctx, {"title": new_title});
+	}
 	
 });
 Object.assign(Runtime.Web.Drivers.RenderDriver,
@@ -435,16 +446,16 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				var value = params[key];
 				if (is_input && (key == "value" || key == "@model"))
 				{
-					elem.value = value;
+					if (elem.value != value) elem.value = value;
 					continue;
 				}
 				if (is_input && key == "@bind")
 				{
-					elem.value = model[value];
+					if (elem.value != model[value]) elem.value = model[value];
 					continue;
 				}
 				if (key[0] == "@") continue;
-				elem.setAttribute(key, value);
+				if (elem.getAttribute(key) != value) elem.setAttribute(key, value);
 			}
 			
 			/* Set reference */
