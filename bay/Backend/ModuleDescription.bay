@@ -85,12 +85,20 @@ class ModuleDescription implements ModuleDescriptionInterface
 			"pos": RenderContainer::RENDER_CHAIN_START,
 		},
 		
-		/* Create pocket model */
+		/* Create layout model */
 		new LambdaChain
 		{
 			"name": RenderContainer::RENDER_CHAIN,
 			"value": "Runtime.Web.Backend.RenderChain::createLayoutModel",
 			"pos": RenderContainer::RENDER_CHAIN_CREATE_LAYOUT_MODEL,
+		},
+		
+		/* Set enviroments */
+		new LambdaChain
+		{
+			"name": RenderContainer::RENDER_CHAIN,
+			"value": "Runtime.Web.Backend.RenderChain::setFrontendEnviroment",
+			"pos": RenderContainer::RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS,
 		},
 		
 		/* Call route */

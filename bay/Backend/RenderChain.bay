@@ -82,12 +82,24 @@ static class RenderChain
 			"route_params": container.route_params,
 			"local_bus_gate": container.request.route_prefix ~ "/api",
 			"layout_name": "default",
-			"frontend_env": {
-				"route_prefix": container.request.route_prefix,
-				"local_bus_gate": container.request.route_prefix ~ "/api",
-			},
+			"frontend_env": { },
 		};
 		
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Create pocket model
+	 */
+	static RenderContainer setFrontendEnviroment(RenderContainer container)
+	{
+		if (container.layout == null) return container;
+		container <= layout <= frontend_env <= container.layout.frontend_env
+			.setIm("route_prefix", container.request.route_prefix)
+			.setIm("local_bus_gate", container.request.route_prefix ~ "/api")
+		;
 		return container;
 	}
 	

@@ -42,9 +42,17 @@ struct RenderContainer extends Message
 	static const string PATTERN_CHAIN = "Runtime.Web.PatternChain";
 	static const string LAYOUT_CHAIN = "Runtime.Web.LayoutChain";
 	
+	/* Pattern */
+	static const string PATTERN_HEADER_BEFORE = "Runtime.Web.PatternChain.HeaderBefore";
+	static const string PATTERN_HEADER_SEO = "Runtime.Web.PatternChain.HeaderSeo";
+	static const string PATTERN_HEADER_AFTER = "Runtime.Web.PatternChain.HeaderAfter";
+	static const string PATTERN_BODY_BEFORE = "Runtime.Web.PatternChain.BodyBefore";
+	static const string PATTERN_BODY_AFTER = "Runtime.Web.PatternChain.BodyAfter";
+	
 	/* Render Chain */
 	static const int RENDER_CHAIN_START = 500;
 	static const int RENDER_CHAIN_CREATE_LAYOUT_MODEL = 1000;
+	static const int RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS = 1200;
 	static const int RENDER_CHAIN_CALL_ROUTE_PRE = 1500;
 	static const int RENDER_CHAIN_CALL_ROUTE = 2000;
 	static const int RENDER_CHAIN_CALL_PAGE_NOT_FOUND = 2100;

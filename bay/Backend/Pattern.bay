@@ -31,11 +31,32 @@ class Pattern
 	
 	
 	/**
+	 * Chain
+	 */
+	lambda string chain(string chain_name, RenderContainer container)
+	{
+		return "";
+	}
+	
+	
+	
+	/**
 	 * Render container
 	 */
 	lambda string render(RenderContainer container) =>
-		"<!DOCTYPE html><html><head>" ~ static::renderSeo(container) ~ static::renderHeader(container) ~ "</head>" ~
-		"<body>" ~ static::renderBody(container) ~ "</body>" ~
+		"<!DOCTYPE html>" ~
+		"<html>" ~
+			"<head>" ~
+				static::chain(RenderContainer::PATTERN_HEADER_BEFORE, container) ~
+				static::chain(RenderContainer::PATTERN_HEADER_SEO, container) ~
+				static::renderHeader(container) ~
+				static::chain(RenderContainer::PATTERN_HEADER_AFTER, container) ~
+			"</head>" ~
+			"<body>" ~
+				static::chain(RenderContainer::PATTERN_BODY_BEFORE, container) ~
+				static::renderBody(container) ~
+				static::chain(RenderContainer::PATTERN_BODY_AFTER, container) ~
+			"</body>" ~
 		"</html>"
 	;
 	
