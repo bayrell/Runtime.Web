@@ -126,6 +126,26 @@ class ModuleDescription implements ModuleDescriptionInterface
 			"pos": RenderContainer::RENDER_CHAIN_RESPONSE,
 		},
 		
+		/* Seo chain */
+		new LambdaChain
+		{
+			"name": RenderContainer::PATTERN_HEADER_SEO,
+			"value": "Runtime.Web.Backend.Pattern::renderSeo",
+		},
+		
+		/* Header After chain */
+		new LambdaChain
+		{
+			"name": RenderContainer::PATTERN_HEADER_AFTER,
+			"value": "Runtime.Web.Backend.Pattern::renderHeader",
+		},
+		
+		/* Render body scripts */
+		new LambdaChain
+		{
+			"name": RenderContainer::PATTERN_BODY_AFTER,
+			"value": "Runtime.Web.Backend.Pattern::renderBodyScripts",
+		},
 	];
 	
 	

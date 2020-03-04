@@ -35,7 +35,7 @@ class Pattern
 	 */
 	lambda string chain(string chain_name, RenderContainer container)
 	{
-		return "";
+		return @->chain(chain_name, [ container, "" ]);
 	}
 	
 	
@@ -49,7 +49,6 @@ class Pattern
 			"<head>" ~
 				static::chain(RenderContainer::PATTERN_HEADER_BEFORE, container) ~
 				static::chain(RenderContainer::PATTERN_HEADER_SEO, container) ~
-				static::renderHeader(container) ~
 				static::chain(RenderContainer::PATTERN_HEADER_AFTER, container) ~
 			"</head>" ~
 			"<body>" ~
@@ -65,9 +64,10 @@ class Pattern
 	/**
 	 * Render seo
 	 */
-	lambda string renderSeo(RenderContainer container)
+	lambda string renderSeo(RenderContainer container, string content)
 	{
 		return 
+			content ~
 			((container.layout.title) ? '<title>' ~ container.layout.title ~ '</title>' : "") ~
 			((container.layout.description != "") ? 
 				'<meta name="description" content="' ~ container.layout.description ~ '"/>' : "")
@@ -79,7 +79,7 @@ class Pattern
 	/**
 	 * Render header
 	 */
-	lambda string renderHeader(RenderContainer container)
+	lambda string renderHeader(RenderContainer container, string content)
 	{
 		Collection<string> resources = static::loadResources(container.assets);
 		Collection<string> css_arr = resources.filter
@@ -95,7 +95,7 @@ class Pattern
 		
 		string css = static::getCSSFromComponents(container.components, container.layout.css_vars);
 		
-		return 
+		return content ~
 			rs::join("", css_arr) ~
 			"<style type='text/css'>" ~ css ~ "</style>"
 		;
@@ -108,8 +108,7 @@ class Pattern
 	 */
 	lambda string renderBody(RenderContainer container) => 
 		static::renderLayoutModel(container) ~
-		static::renderFrontend(container) ~
-		static::renderBodyScripts(container)
+		static::renderFrontend(container)
 	;
 	
 	
