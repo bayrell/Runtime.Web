@@ -75,7 +75,7 @@ struct Route extends CoreStruct
 	 * Get params
 	 * @return Map<string>
 	 */
-	lambda memorize Dict<string> getParams(Vector<string> matches, Route info)
+	pure memorize Dict<string> getParams(Vector<string> matches, Route info)
 	{
 		if (info.params == null)
 		{

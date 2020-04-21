@@ -47,7 +47,7 @@ struct RedirectResponse extends Response
 	/**
 	 * Returns content
 	 */
-	lambda string getContent(RedirectResponse r)
+	pure string getContent(RedirectResponse r)
 	{
 		return "";
 	}

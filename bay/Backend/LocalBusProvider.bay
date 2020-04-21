@@ -39,7 +39,7 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 	/**
 	 * Returns api methods
 	 */
-	lambda Collection<ApiMethod> getApiMethodsByClassName(string class_name)
+	pure Collection<ApiMethod> getApiMethodsByClassName(string class_name)
 	{
 		IntrospectionClass class_info = RuntimeUtils::getClassIntrospection(class_name);
 		
@@ -73,7 +73,7 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 	/**
 	 * Find api method from list
 	 */
-	lambda ApiMethod findApiMethodFromList(ApiList api_list, MessageRPC msg)
+	pure ApiMethod findApiMethodFromList(ApiList api_list, MessageRPC msg)
 	{
 		bool has_space_name = api_list.space_name != "";
 		string class_name = (api_list.value != "") ? api_list.value : api_list.name;
@@ -106,7 +106,7 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 	/**
 	 * Find api method
 	 */
-	lambda ApiMethod findApiMethod(MessageRPC msg)
+	pure ApiMethod findApiMethod(MessageRPC msg)
 	{
 		Collection<CoreStruct> entities = @.entities;
 		Collection<ApiList> api_lists = entities.filter( lib::isInstance(classof ApiList) );

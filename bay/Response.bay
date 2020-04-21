@@ -33,7 +33,7 @@ struct Response extends CoreStruct
 	/**
 	 * Returns content
 	 */
-	lambda string getContent(Response r)
+	pure string getContent(Response r)
 	{
 		return r.content;
 	}

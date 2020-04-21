@@ -39,7 +39,7 @@ class ModuleDescription implements ModuleDescriptionInterface
 	 * Returns module name
 	 * @return string
 	 */
-	lambda string getModuleName() => "Runtime.Web.Backend";
+	pure string getModuleName() => "Runtime.Web.Backend";
 	
 	
 	
@@ -47,7 +47,7 @@ class ModuleDescription implements ModuleDescriptionInterface
 	 * Returns module name
 	 * @return string
 	 */
-	lambda string getModuleVersion() => "0.8.0";
+	pure string getModuleVersion() => "0.8.0";
 	
 	
 	
@@ -55,7 +55,7 @@ class ModuleDescription implements ModuleDescriptionInterface
 	 * Returns required modules
 	 * @return Dict<string>
 	 */
-	lambda Dict<string> requiredModules() =>
+	pure Dict<string> requiredModules() =>
 	{
 		'Runtime': '>=0.3',
 		'Runtime.Web': '*',
@@ -66,7 +66,7 @@ class ModuleDescription implements ModuleDescriptionInterface
 	/**
 	 * Returns enities
 	 */
-	lambda Collection<Dict> entities() => 
+	pure Collection<Dict> entities() => 
 	[
 		/* Extend entities */
 		new LambdaChain
@@ -154,7 +154,7 @@ class ModuleDescription implements ModuleDescriptionInterface
 	/**
 	 * Extend entities
 	 */
-	lambda Collection<CoreStruct> extendEntities(Context c, Collection<CoreStruct> entities)
+	pure Collection<CoreStruct> extendEntities(Context c, Collection<CoreStruct> entities)
 	{
 		bool api = c ->
 			method config(["Runtime.Web.Backend", "api"], true) ->

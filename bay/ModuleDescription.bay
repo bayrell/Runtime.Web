@@ -38,7 +38,7 @@ class ModuleDescription implements
 	 * Returns module name
 	 * @return string
 	 */
-	lambda string getModuleName() => "Runtime.Web";
+	pure string getModuleName() => "Runtime.Web";
 	
 	
 	
@@ -46,7 +46,7 @@ class ModuleDescription implements
 	 * Returns module name
 	 * @return string
 	 */
-	lambda string getModuleVersion() => "0.9.0";
+	pure string getModuleVersion() => "0.9.0";
 	
 	
 	
@@ -54,7 +54,7 @@ class ModuleDescription implements
 	 * Returns required modules
 	 * @return Dict<string>
 	 */
-	lambda Dict<string> requiredModules() =>
+	pure Dict<string> requiredModules() =>
 	{
 		'Runtime': '>=0.3',
 		'Runtime.Web': '*',
@@ -66,7 +66,7 @@ class ModuleDescription implements
 	 * Returns module files load order
 	 * @return Collection<string>
 	 */
-	lambda Collection<string> assets() => 
+	pure Collection<string> assets() => 
 	[
 		"Runtime.Web/Component",
 		"Runtime.Web/Cookie",
@@ -114,7 +114,7 @@ class ModuleDescription implements
 	/**
 	 * Returns enities
 	 */
-	lambda Collection<Dict> entities() => 
+	pure Collection<Dict> entities() => 
 	[
 		/* Declare Layout Chain */
 		new LambdaChainDeclare{ "name": RenderContainer::LAYOUT_CHAIN },
@@ -126,7 +126,7 @@ class ModuleDescription implements
 	/**
 	 * Returns sync loaded files
 	 */		
-	lambda Vector<string> resources() => null;
+	pure Vector<string> resources() => null;
 	
 	
 }

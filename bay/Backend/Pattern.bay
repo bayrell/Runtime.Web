@@ -33,7 +33,7 @@ class Pattern
 	/**
 	 * Chain
 	 */
-	lambda string chain(string chain_name, RenderContainer container)
+	pure string chain(string chain_name, RenderContainer container)
 	{
 		return @ -> method chain(chain_name, [ container, "" ]);
 	}
@@ -43,7 +43,7 @@ class Pattern
 	/**
 	 * Render container
 	 */
-	lambda string render(RenderContainer container) =>
+	pure string render(RenderContainer container) =>
 		"<!DOCTYPE html>" ~
 		"<html>" ~
 			"<head>" ~
@@ -64,7 +64,7 @@ class Pattern
 	/**
 	 * Render seo
 	 */
-	lambda string renderSeo(RenderContainer container, string content)
+	pure string renderSeo(RenderContainer container, string content)
 	{
 		return 
 			content ~
@@ -79,7 +79,7 @@ class Pattern
 	/**
 	 * Render header
 	 */
-	lambda string renderHeader(RenderContainer container, string content)
+	pure string renderHeader(RenderContainer container, string content)
 	{
 		Collection<string> resources = static::loadResources(container.assets);
 		Collection<string> css_arr = resources.filter
@@ -106,7 +106,7 @@ class Pattern
 	/**
 	 * Render body
 	 */
-	lambda string renderBody(RenderContainer container) => 
+	pure string renderBody(RenderContainer container) => 
 		static::renderLayoutModel(container) ~
 		static::renderFrontend(container)
 	;
@@ -116,7 +116,7 @@ class Pattern
 	/**
 	 * Render layout model
 	 */
-	lambda string renderLayoutModel(RenderContainer container) => 
+	pure string renderLayoutModel(RenderContainer container) => 
 		"<input id='layout_model' value='" ~
 		RuntimeUtils::base64_encode_url(RuntimeUtils::json_encode(container.layout)) ~
 		"' style='display: none;' type='hidden' />"
@@ -127,7 +127,7 @@ class Pattern
 	/**
 	 * Render layout model
 	 */
-	lambda string renderFrontend(RenderContainer container) => 
+	pure string renderFrontend(RenderContainer container) => 
 		"<div id='frontend_root'>" ~ 
 			static::renderClassName(container.layout.layout_class, container.layout, null, null, {}) ~
 		"</div>"
@@ -138,7 +138,7 @@ class Pattern
 	/**
 	 * Render body scripts
 	 */
-	lambda string renderBodyScripts(RenderContainer container)
+	pure string renderBodyScripts(RenderContainer container)
 	{
 		Collection<string> resources = static::loadResources(container.assets);
 		Collection<string> js_arr = resources.filter
@@ -163,7 +163,7 @@ class Pattern
 	/**
 	 * Render class with data
 	 */
-	lambda string renderClassName(string class_name, LayoutModel layout, Dict params, html content, Dict control)
+	pure string renderClassName(string class_name, LayoutModel layout, Dict params, html content, Dict control)
 	{
 		return <{class_name} @model={ layout }></{class_name}>;
 	}
@@ -173,7 +173,7 @@ class Pattern
 	/**
 	 * Returns if tag name is double token
 	 */
-	lambda memorize bool isDoubleToken(string tag_name)
+	pure memorize bool isDoubleToken(string tag_name)
 	{
 		Dict tokens = ["img", "meta", "input", "link", "br"];
 		if (tokens.indexOf(tag_name) == -1)  return true;
@@ -185,7 +185,7 @@ class Pattern
 	/**
 	 * Returns css
 	 */
-	lambda memorize string getItemCss(string class_name, string css_name)
+	pure memorize string getItemCss(string class_name, string css_name)
 	{
 		Collection arr1 = RuntimeUtils::getParents(class_name);
 		Vector arr2 = new Vector();
@@ -212,7 +212,7 @@ class Pattern
 	 * @param Collection<string> items
 	 * @return Collection<string>
 	 */
-	lambda Collection<string> addUniqueItems
+	pure Collection<string> addUniqueItems
 	(
 		Collection<string> res, 
 		Collection<string> items,
@@ -241,7 +241,7 @@ class Pattern
 	 * @param Collection<string> assets
 	 * @return Collection<string>
 	 */
-	lambda memorize Collection<string> loadResources(Collection<string> assets)
+	pure memorize Collection<string> loadResources(Collection<string> assets)
 	{
 		Collection<string> res = new Collection();
 		if (assets == null) return res;
@@ -297,7 +297,7 @@ class Pattern
 	 * @param Dict<string> css_vars
 	 * @return string
 	 */
-	lambda memorize string getCSSFromComponents(Collection<string> components, Dict<string> css_vars)
+	pure memorize string getCSSFromComponents(Collection<string> components, Dict<string> css_vars)
 	{
 		Vector<string> res = new Vector();
 		if (components != null)

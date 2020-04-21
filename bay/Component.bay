@@ -46,8 +46,8 @@ class Component extends CoreObject
 	/**
 	 * Returns module name
 	 */
-	lambda string moduleName() => static::getCurrentNamespace();
-	lambda string getModuleName()
+	pure string moduleName() => static::getCurrentNamespace();
+	pure string getModuleName()
 	{
 		string class_name = static::getCurrentClassName();
 		IntrospectionClass info = RuntimeUtils::getClassIntrospection(class_name);
@@ -63,8 +63,8 @@ class Component extends CoreObject
 	/**
 	 * Returns model name
 	 */
-	lambda string modelName() => classof CoreStruct;
-	lambda string getModelName()
+	pure string modelName() => classof CoreStruct;
+	pure string getModelName()
 	{
 		string class_name = static::getCurrentClassName();
 		IntrospectionClass info = RuntimeUtils::getClassIntrospection(class_name);
@@ -80,28 +80,28 @@ class Component extends CoreObject
 	/**
 	 * Returns required components
 	 */
-	lambda Collection<string> components() => null;
+	pure Collection<string> components() => null;
 	
 	
 	
 	/**
 	 * Component css
 	 */
-	lambda string css(Dict<string> vars) => "";
+	pure string css(Dict<string> vars) => "";
 	
 	
 	
 	/**
 	 * Component render
 	 */
-	lambda html render(LayoutModel layout, CoreStruct model, Dict params, html content) => null;
+	pure html render(LayoutModel layout, CoreStruct model, Dict params, html content) => null;
 	
 	
 	
 	/**
 	 * Returns css name
 	 */
-	lambda string getCssName(string css_name)
+	pure string getCssName(string css_name)
 	{
 		string class_name = static::getCurrentClassName();
 		return RenderHelper::getCssName(class_name, css_name);
@@ -112,7 +112,7 @@ class Component extends CoreObject
 	/**
 	 * Escape attr
 	 */
-	lambda string escapeAttr(string s)
+	pure string escapeAttr(string s)
 	{
 		return rs::escapeHtml(s);
 	}
@@ -122,7 +122,7 @@ class Component extends CoreObject
 	/**
 	 * Escape html
 	 */
-	lambda string escapeHtml(var s)
+	pure string escapeHtml(var s)
 	{
 		#switch
 		#case ifcode PHP then
@@ -138,7 +138,7 @@ class Component extends CoreObject
 	/**
 	 * Json encode
 	 */
-	lambda string json_encode(var obj)
+	pure string json_encode(var obj)
 	{
 		return RuntimeUtils::json_encode(obj);
 	}
@@ -148,7 +148,7 @@ class Component extends CoreObject
 	/**
 	 * To html
 	 */
-	lambda string toHtml(var s)
+	pure string toHtml(var s)
 	{
 		if (rtl::isString(s)) return s;
 		if (s instanceof Collection) return rs::join("", s);

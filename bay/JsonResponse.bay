@@ -45,7 +45,7 @@ struct JsonResponse extends Response
 	/**
 	 * Returns content
 	 */
-	lambda string getContent(JsonResponse r)
+	pure string getContent(JsonResponse r)
 	{
 		return RuntimeUtils::json_encode(r.data);
 	}

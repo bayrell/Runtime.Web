@@ -104,7 +104,7 @@ struct RenderContainer extends Message
 	/**
 	 * Return cookie by name
 	 */
-	lambda memorize Cookie getCookie(string cookie_name, bool search_update, RenderContainer container)
+	pure memorize Cookie getCookie(string cookie_name, bool search_update, RenderContainer container)
 	{
 		Cookie cookie = null;
 		if (cookie_name == "") return null;
@@ -119,7 +119,7 @@ struct RenderContainer extends Message
 	/**
 	 * Set cookie
 	 */
-	lambda RenderContainer setCookie(Cookie cookie, RenderContainer container)
+	pure RenderContainer setCookie(Cookie cookie, RenderContainer container)
 	{
 		Dict<Cookie> cookies = container.cookies;
 		if (cookies == null) cookies = new Dict<Cookie>();
@@ -133,7 +133,7 @@ struct RenderContainer extends Message
 	/**
 	 * Return api data
 	 */
-	lambda memorize Dict getApiData(RenderContainer container)
+	pure memorize Dict getApiData(RenderContainer container)
 	{
 		string data1 = container.request.payload.get("DATA", "");
 		var data2 = RuntimeUtils::base64_decode_url(data1);
@@ -146,7 +146,7 @@ struct RenderContainer extends Message
 	/**
 	 * Returns routes
 	 */
-	lambda Collection<Route> getRoutesByClassName(string class_name)
+	pure Collection<Route> getRoutesByClassName(string class_name)
 	{
 		Vector<Route> routes = new Vector<Route>();
 		IntrospectionClass class_info = RuntimeUtils::getClassIntrospection(class_name);
@@ -186,7 +186,7 @@ struct RenderContainer extends Message
 	/**
 	 * Returns routes
 	 */
-	lambda Collection<Route> getRoutes(Collection<CoreStruct> entitites)
+	pure Collection<Route> getRoutes(Collection<CoreStruct> entitites)
 	{
 		Collection<RouteList> route_lists = entitites.filter( lib::isInstance(classof RouteList) );
 		
@@ -209,7 +209,7 @@ struct RenderContainer extends Message
 	/**
 	 * Split route prefix
 	 */
-	lambda memorize string splitRoutePrefix(string request_uri, string route_prefix)
+	pure memorize string splitRoutePrefix(string request_uri, string route_prefix)
 	{
 		int prefix_len = rs::strlen(route_prefix);
 		if (prefix_len > 0)
@@ -230,7 +230,7 @@ struct RenderContainer extends Message
 	/**
 	 * Find route
 	 */
-	lambda list<string, string> findRoute(Collection<Route> routes, Request request)
+	pure list<string, string> findRoute(Collection<Route> routes, Request request)
 	{
 		Route route = null;
 		Dict<string> params = null;
@@ -263,7 +263,7 @@ struct RenderContainer extends Message
 	/**
 	 * Returns layout class name
 	 */
-	lambda string getLayoutClassName(RenderContainer container)
+	pure string getLayoutClassName(RenderContainer container)
 	{
 		string layout_class = container.layout.layout_class;
 		if (layout_class != "") return layout_class;
@@ -277,7 +277,7 @@ struct RenderContainer extends Message
 	/**
 	 * Returns pattern class name
 	 */
-	lambda string getPatternClassName(RenderContainer container)
+	pure string getPatternClassName(RenderContainer container)
 	{
 		string pattern_class = container.pattern_class;
 		if (pattern_class != "") return pattern_class;
@@ -292,7 +292,7 @@ struct RenderContainer extends Message
 	/**
 	 * Lazy render
 	 */
-	lambda RenderContainer renderLazy
+	pure RenderContainer renderLazy
 	(
 		string page_class, CoreStruct page_model, string layout_name, RenderContainer container
 	)
@@ -380,7 +380,7 @@ struct RenderContainer extends Message
 	 * @param Collection<string> components
 	 * @return Collection<string>
 	 */
-	lambda Collection<string> getRequiredComponents(Collection<string> components)
+	pure Collection<string> getRequiredComponents(Collection<string> components)
 	{
 		Vector<string> res = new Vector();
 		Map<string> cache = new Map();

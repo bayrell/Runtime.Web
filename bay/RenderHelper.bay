@@ -36,7 +36,7 @@ static class RenderHelper
 	/**
 	 * Returns css name
 	 */
-	lambda memorize string getCssName(string class_name, string css_name)
+	pure memorize string getCssName(string class_name, string css_name)
 	{
 		string hash = RuntimeUtils::getCssHash(class_name);
 		Collection<string> arr = rs::split(" ", css_name);
@@ -50,7 +50,7 @@ static class RenderHelper
 	/**
 	 * Escape attr
 	 */
-	lambda string escapeAttr(string s)
+	pure string escapeAttr(string s)
 	{
 		return rs::escapeHtml(s);
 	}
@@ -60,7 +60,7 @@ static class RenderHelper
 	/**
 	 * Escape html
 	 */
-	lambda string escapeHtml(var s)
+	pure string escapeHtml(var s)
 	{
 		#switch
 		#case ifcode PHP then
@@ -76,7 +76,7 @@ static class RenderHelper
 	/**
 	 * To html
 	 */
-	lambda string toHtml(var s)
+	pure string toHtml(var s)
 	{
 		if (rtl::isString(s)) return s;
 		if (s instanceof Collection) return rs::join("", s);
@@ -88,7 +88,7 @@ static class RenderHelper
 	/**
 	 * Json encode
 	 */
-	lambda string json_encode(var obj)
+	pure string json_encode(var obj)
 	{
 		return RuntimeUtils::json_encode(obj);
 	}
