@@ -35,7 +35,7 @@ class Pattern
 	 */
 	lambda string chain(string chain_name, RenderContainer container)
 	{
-		return @->chain(chain_name, [ container, "" ]);
+		return @ -> method chain(chain_name, [ container, "" ]);
 	}
 	
 	

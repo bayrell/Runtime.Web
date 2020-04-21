@@ -18,6 +18,7 @@
  
 namespace Runtime.Web.Backend;
 
+use Runtime.lib;
 use Runtime.Context;
 use Runtime.CoreStruct;
 use Runtime.RuntimeConstant;
@@ -155,9 +156,18 @@ class ModuleDescription implements ModuleDescriptionInterface
 	 */
 	lambda Collection<CoreStruct> extendEntities(Context c, Collection<CoreStruct> entities)
 	{
-		bool api = (bool) c->config(["Runtime.Web.Backend", "api"], true);
-		bool bus_default = (bool) c->config(["Runtime.Web.Backend", "bus_default"], true);
-		string bus = (string) c->config(["Runtime.Web.Backend", "bus"], "");
+		bool api = c ->
+			method config(["Runtime.Web.Backend", "api"], true) ->
+			monad lib::to("bool", false)
+		;
+		bool bus_default = c ->
+			method config(["Runtime.Web.Backend", "bus_default"], true) ->
+			monad lib::to("bool", false)
+		;
+		string bus = c ->
+			method config(["Runtime.Web.Backend", "bus"], "") ->
+			monad lib::to("string", "")
+		;
 		
 		/* Enable api service */
 		if (api)

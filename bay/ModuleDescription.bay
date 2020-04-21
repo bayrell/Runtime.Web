@@ -46,7 +46,7 @@ class ModuleDescription implements
 	 * Returns module name
 	 * @return string
 	 */
-	lambda string getModuleVersion() => "0.7.3";
+	lambda string getModuleVersion() => "0.9.0";
 	
 	
 	

@@ -94,8 +94,8 @@ struct RenderContainer extends Message
 	{
 		msg <= cookies <= container.cookies;
 		if (container.layout) msg <= pocket <= container.layout.pocket;
-		BusInterface provider = @->getProvider(RuntimeConstant::BUS_INTERFACE, "default");
-		msg = await provider->sendMessage(msg);
+		BusInterface provider = @ -> method getProvider(RuntimeConstant::BUS_INTERFACE, "default");
+		msg = provider -> await method sendMessage(msg);
 		return msg;
 	}
 	
@@ -267,7 +267,7 @@ struct RenderContainer extends Message
 	{
 		string layout_class = container.layout.layout_class;
 		if (layout_class != "") return layout_class;
-		layout_class = @->chain(RenderContainer::LAYOUT_CHAIN, [ container, "" ]);
+		layout_class = @ -> method chain(RenderContainer::LAYOUT_CHAIN, [ container, "" ]);
 		/*layout_class = layouts.get(container.layout.layout_name, "");*/
 		return layout_class;
 	}
@@ -281,7 +281,7 @@ struct RenderContainer extends Message
 	{
 		string pattern_class = container.pattern_class;
 		if (pattern_class != "") return pattern_class;
-		pattern_class = @->chain(RenderContainer::PATTERN_CHAIN, [ container, "" ]);
+		pattern_class = @ -> method chain(RenderContainer::PATTERN_CHAIN, [ container, "" ]);
 		/*pattern_class = patterns.get(container.pattern_name, "");*/
 		return pattern_class;
 	}

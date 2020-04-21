@@ -55,7 +55,7 @@ class ApiRoutes
 			"method_name": container.route_params.item("method_name"),
 			"data": data3,
 		};
-		msg = await @->sendMessage(msg);
+		msg = await @ -> method sendMessage(msg);
 		
 		JsonResponse response = new JsonResponse{ "data": msg.takeDict() };
 		container <= response <= response;
