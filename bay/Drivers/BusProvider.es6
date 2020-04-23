@@ -55,24 +55,27 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 	/**
 	 * Send Message
 	 */
-	sendMessage: function(ctx, provider, msg)
+	sendMessage: function(ctx, msg)
 	{
-		return (__async_t) =>
+		return (ctx, provider) =>
 		{
-			if (__async_t.pos() == "0")
+			return (__async_t) =>
 			{
-				if (msg instanceof Runtime.MessageRPC)
+				if (__async_t.pos() == "0")
 				{
-					return __async_t.jump(ctx, "1").call(ctx, this.sendMessageRPC(ctx, provider, msg), "__v0");
+					if (msg instanceof Runtime.MessageRPC)
+					{
+						return __async_t.jump(ctx, "1").call(ctx, this.sendMessageRPC(ctx, provider, msg), "__v0");
+					}
+					return __async_t.ret(__async_t, msg);
 				}
-				return __async_t.ret(__async_t, msg);
-			}
-			else if (__async_t.pos() == "1")
-			{
-				return __async_t.ret(ctx, __async_t.getVar(ctx, "__v0"));
-			}
-			return __async_t.ret_void();
-		};
+				else if (__async_t.pos() == "1")
+				{
+					return __async_t.ret(ctx, __async_t.getVar(ctx, "__v0"));
+				}
+				return __async_t.ret_void();
+			};
+		}
 	},
 	
 	

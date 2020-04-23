@@ -695,7 +695,6 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				"index": index,
 				"path": path,
 				"parent": elem_new,
-				"childs": [],
 			});
 			
 			/* Update element params */
@@ -719,6 +718,13 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		else if (typeof content == "function" || content instanceof Function)
 		{
 			childs = childs.slice();
+			
+			/* Create new control */
+			new_control = control.copy({
+				"index": index,
+				"path": path,
+			});
+			content = this.normalizeContent(content, new_control);
 			childs.push(content);
 		}
 		

@@ -26,6 +26,7 @@ use Runtime.Message;
 use Runtime.RuntimeConstant;
 use Runtime.RuntimeUtils;
 use Runtime.Annotations.IntrospectionClass;
+use Runtime.Interfaces.AssetsInterface;
 use Runtime.Interfaces.BusInterface;
 use Runtime.Web.Annotations.Route;
 use Runtime.Web.Annotations.RouteList;
@@ -53,6 +54,7 @@ struct RenderContainer extends Message
 	static const int RENDER_CHAIN_START = 500;
 	static const int RENDER_CHAIN_CREATE_LAYOUT_MODEL = 1000;
 	static const int RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS = 1200;
+	static const int RENDER_CHAIN_BEFORE_CALL_ROUTE = 1500;
 	static const int RENDER_CHAIN_CALL_ROUTE_PRE = 1500;
 	static const int RENDER_CHAIN_CALL_ROUTE = 2000;
 	static const int RENDER_CHAIN_CALL_PAGE_NOT_FOUND = 2100;
@@ -104,14 +106,17 @@ struct RenderContainer extends Message
 	/**
 	 * Return cookie by name
 	 */
-	pure memorize Cookie getCookie(string cookie_name, bool search_update, RenderContainer container)
+	pure memorize Cookie getCookie(string cookie_name, bool only_request = false)
 	{
-		Cookie cookie = null;
-		if (cookie_name == "") return null;
-		if (container.request == null) return null;
-		if (search_update and container.cookies != null) cookie = container.cookies.get(cookie_name, null);
-		if (cookie == null) cookie = container.request.cookies.get(cookie_name, null);
-		return cookie;
+		return RenderContainer (RenderContainer container) use (cookie_name, only_request)
+		{
+			Cookie cookie = null;
+			if (cookie_name == "") return null;
+			if (container.request == null) return null;
+			if (not only_request and container.cookies != null) cookie = container.cookies.get(cookie_name, null);
+			if (cookie == null) cookie = container.request.cookies.get(cookie_name, null);
+			return cookie;
+		}
 	}
 	
 	
@@ -119,13 +124,16 @@ struct RenderContainer extends Message
 	/**
 	 * Set cookie
 	 */
-	pure RenderContainer setCookie(Cookie cookie, RenderContainer container)
+	pure RenderContainer setCookie(Cookie cookie)
 	{
-		Dict<Cookie> cookies = container.cookies;
-		if (cookies == null) cookies = new Dict<Cookie>();
-		cookies = cookies.setIm(cookie.name, cookie);
-		container <= cookies <= cookies;
-		return container;
+		return RenderContainer (RenderContainer container) use (cookie)
+		{
+			Dict<Cookie> cookies = container.cookies;
+			if (cookies == null) cookies = new Dict<Cookie>();
+			cookies = cookies.setIm(cookie.name, cookie);
+			container <= cookies <= cookies;
+			return container;
+		}
 	}
 	
 	
@@ -334,6 +342,17 @@ struct RenderContainer extends Message
 		);
 		modules = modules.removeDuplicatesIm();
 		modules = Context::getRequiredModules(modules);
+		
+		/* Filter frontend modules */
+		modules = modules.filter
+		(
+			bool (string module_name)
+			{
+				string class_name = module_name ~ ".ModuleDescription";
+				return rtl::class_implements(class_name, classof AssetsInterface);
+			}
+		);
+		
 		return [modules, components];
 	}
 	
