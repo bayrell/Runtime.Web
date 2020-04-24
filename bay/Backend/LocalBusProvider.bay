@@ -128,43 +128,43 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 	/**
 	 * Send Message
 	 */
-	static async Message sendMessage(LocalBusProvider provider, Message msg)
-	{
-		if (msg instanceof MessageRPC) return await static::sendMessageRPC(provider, msg);
-		return msg;
-	}
+	static fn sendMessage(Message msg) =>
+		(msg instanceof MessageRPC) ? static::sendMessageRPC(msg) : msg
+	;
 	
 	
 	
 	/**
 	 * Remote procedure call
 	 */
-	static async Message sendMessageRPC(LocalBusProvider provider, Message msg)
-	{
-		msg <= have_result <= false;
-		
-		try
+	static fn sendMessageRPC(Message msg) =>
+		async Message (LocalBusProvider provider) use (msg)
 		{
-			/* Find api */
-			ApiMethod api_method = static::findApiMethod(msg);
+			msg <= have_result <= false;
 			
-			if (api_method)
+			try
 			{
-				fn f = rtl::method(api_method.class_name, api_method.class_method_name);
-				msg = await rtl::apply(f, [msg]);
+				/* Find api */
+				ApiMethod api_method = static::findApiMethod(msg);
+				
+				if (api_method)
+				{
+					fn f = rtl::method(api_method.class_name, api_method.class_method_name);
+					msg = await rtl::apply(f, [msg]);
+				}
+				else
+				{
+					msg = msg -> method fail(null, "Api not found", RuntimeConstant::ERROR_API_NOT_FOUND);
+				}
 			}
-			else
+			catch (ApiException e)
 			{
-				msg = msg -> method fail(null, "Api not found", RuntimeConstant::ERROR_API_NOT_FOUND);
+				msg = msg -> method fail(null, e.getErrorMessage(), e.getErrorCode());
 			}
+			
+			return msg;
 		}
-		catch (ApiException e)
-		{
-			msg = msg -> method fail(null, e.getErrorMessage(), e.getErrorCode());
-		}
-		
-		return msg;
-	}
+	;
 	
 	
 }

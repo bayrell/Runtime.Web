@@ -158,11 +158,11 @@ class ModuleDescription implements ModuleDescriptionInterface
 	{
 		bool api = c ->
 			method config(["Runtime.Web.Backend", "api"], true) ->
-			monad lib::to("bool", false)
+			monad lib::to("bool", true)
 		;
 		bool bus_default = c ->
 			method config(["Runtime.Web.Backend", "bus_default"], true) ->
-			monad lib::to("bool", false)
+			monad lib::to("bool", true)
 		;
 		string bus = c ->
 			method config(["Runtime.Web.Backend", "bus"], "") ->

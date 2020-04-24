@@ -42,6 +42,7 @@ struct JsonResponse extends Response
 	}
 	
 	
+	
 	/**
 	 * Returns content
 	 */

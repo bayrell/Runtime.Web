@@ -65,7 +65,10 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 				{
 					if (msg instanceof Runtime.MessageRPC)
 					{
-						return __async_t.jump(ctx, "1").call(ctx, this.sendMessageRPC(ctx, provider, msg), "__v0");
+						return __async_t
+							.jump(ctx, "1")
+							.call(ctx, this.sendMessageRPC(ctx, msg)(ctx, provider), "__v0")
+						;
 					}
 					return __async_t.ret(__async_t, msg);
 				}
@@ -81,37 +84,11 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 	
 	
 	/**
-	 * Remote procedure call
-	 */
-	sendMessageRPC: function(ctx, provider, msg)
-	{
-		return (__async_t) =>
-		{
-			
-			this.sendPost
-			(
-				ctx, msg,
-				(function(__async_t)
-				{
-					return function (ctx, msg)
-					{
-						__async_t.resolve(ctx, msg);
-					}
-				})(__async_t)
-			);
-			
-			return null;
-		};
-	},
-	
-	
-	
-	/**
 	 * Convert data to Native for ajax POST request
 	 * @params serializable data
 	 * @return Vector
 	 */
-	buildPostData: function(ctx, data)
+	buildData: function(ctx, data)
 	{
 		var res = [];
 		var json = Runtime.RuntimeUtils.json_encode(ctx, data);
@@ -123,24 +100,13 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 	
 	
 	/**
-	 * Send api request
-	 * @param string class_name
-	 * @param string method_name
-	 * @param Map<string, mixed> data
-	 * @param callback f
-	 */ 
-	sendPost: function(ctx, msg, f)
+	 * Returns FormData
+	 * @params data - json object
+	 * @return FormData
+	 */
+	buildPostData: function(ctx, data)
 	{
-		var api_name = msg.api_name;
-		var space_name = msg.space_name;
-		var method_name = msg.method_name;
-		var uri = msg.uri;
-		var data = msg.data;
-		
 		var post_data = new FormData();
-		
-		/* Build pos data */
-		data = this.buildPostData(ctx, data);
 		
 		/* Add data to post data */
 		for (var i=0; i<data.length; i++)
@@ -165,90 +131,187 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 			}
 		}
 		
+		return post_data;
+	},
+	
+	
+	
+	/**
+	 * Remote procedure call
+	 */
+	sendMessageRPC: function(ctx, msg)
+	{
+		return (ctx, provider) =>
+		{
+			return (__async_t) =>
+			{
+				var api_name = msg.api_name;
+				var space_name = msg.space_name;
+				var method_name = msg.method_name;
+				var uri = msg.uri;
+				var data = msg.data;
+				
+				/* Build pos data */
+				data = this.buildData(ctx, data);
+				var post_data = this.buildPostData(ctx, data);
+				
+				var local_bus_gate = ctx.enviroments.get(ctx, "local_bus_gate", "");
+				var url = (uri != "") ? uri : 
+					local_bus_gate  + "/" + api_name + '/' + space_name + '/' + method_name + '/'
+				;
+				
+				this.sendPost
+				(
+					ctx, url, post_data,
+					(function(__async_t, msg)
+					{
+						return function (ctx, xhr)
+						{
+							if (xhr.readyState != 4) return;
+							
+							if (xhr.status != 200)
+							{
+								msg = msg.copy
+								(
+									ctx, 
+									{
+										"have_result": true,
+										"error": "Error code " + xhr.status,
+										"code": Runtime.RuntimeConstant.ERROR_RESPONSE,
+										"response": null,
+									}
+								);
+								
+								__async_t.resolve(ctx, msg);
+								
+								return;
+							}
+							
+							var res = {};
+							var exists = Runtime.rtl.exists;
+							try
+							{
+								res = JSON.parse(xhr.responseText);
+								
+								var response = Runtime.RuntimeUtils.NativeToObject
+								(
+									ctx,
+									exists(ctx, res.response) ? res.response : null
+								);
+								
+								//console.log(response);
+								
+								msg = msg.copy
+								(
+									ctx, 
+									{
+										"have_result": exists(ctx, res.have_result) ? res.have_result : false,
+										"error": exists(ctx, res.error) ? res.error : "Unknown error",
+										"code": exists(ctx, res.code) ? res.code : Runtime.RuntimeConstant.ERROR_UNKNOWN,
+										"response": response,
+									}
+								);
+							}
+							catch (e)
+							{
+								msg = msg.copy
+								(
+									ctx, 
+									{
+										"have_result": true,
+										"error": "Json parse error",
+										"code": Runtime.RuntimeConstant.ERROR_PARSE_SERIALIZATION_ERROR,
+										"response": null,
+									}
+								);
+							}
+							
+							__async_t.resolve(ctx, msg);
+						}
+					})(__async_t, msg)
+				);
+				
+				return null;
+			};
+		}
+	},
+	
+	
+	
+	/**
+	 * Send post. Returns json object or null if error
+	 */
+	post: function(ctx, obj)
+	{
+		return (ctx, provider) =>
+		{
+			return (__async_t) =>
+			{
+				var url = obj.get(ctx, "url");
+				var data = obj.get(ctx, "data");
+				
+				/* Build pos data */
+				data = this.buildData(ctx, data);
+				var post_data = this.buildPostData(ctx, data);
+				
+				this.sendPost
+				(
+					ctx, url, post_data,
+					(function(__async_t)
+					{
+						return function (ctx, xhr)
+						{
+							if (xhr.readyState != 4) return;
+							
+							var res = null;
+							if (xhr.status == 200)
+							{
+								try
+								{
+									res = JSON.parse(xhr.responseText);
+								}
+								catch (e)
+								{
+									res = null;
+								}
+							}
+							
+							__async_t.resolve(ctx, res);
+						}
+					})(__async_t)
+				);
+					
+				return null;
+			};
+		}
+	},
+	
+	
+	
+	/**
+	 * Send api request
+	 * @param string class_name
+	 * @param string method_name
+	 * @param Map<string, mixed> data
+	 * @param callback f
+	 */ 
+	sendPost: function(ctx, url, post_data, f)
+	{
 		/* Add CSRF Token */
 		/*post_data.append("csrf_token", Runtime.Web.Driver.BusProvider.GetCookie("csrf_token"));*/
-		var local_bus_gate = ctx.enviroments.get(ctx, "local_bus_gate", "");
-		var url = (uri != "") ? uri : local_bus_gate  + "/" + api_name + '/' + space_name + '/' + method_name + '/';
 		
 		/* Send AJAX Request */
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', url, true);
 		xhr.send(post_data);
-		xhr.onreadystatechange = (function(ctx, xhr, msg, f) {
+		xhr.onreadystatechange = (function(ctx, xhr, f) {
 			return function()
 			{
-				if (xhr.readyState != 4) return;
-				if (xhr.status == 200)
-				{
-					var res = {};
-					var exists = Runtime.rtl.exists;
-					try
-					{
-						res = JSON.parse(xhr.responseText);
-						if (f != undefined && f != null)
-						{
-							var response = Runtime.RuntimeUtils.NativeToObject
-							(
-								ctx,
-								exists(ctx, res.response) ? res.response : null
-							);
-							
-							//console.log(response);
-							
-							msg = msg.copy
-							(
-								ctx, 
-								{
-									"have_result": exists(ctx, res.have_result) ? res.have_result : false,
-									"error": exists(ctx, res.error) ? res.error : "Unknown error",
-									"code": exists(ctx, res.code) ? res.code : Runtime.RuntimeConstant.ERROR_UNKNOWN,
-									"response": response,
-								}
-							);
-							
-							f(ctx, msg);
-						}
-					}
-					catch (e)
-					{
-						if (f != undefined && f != null)
-						{
-							msg = msg.copy
-							(
-								ctx, 
-								{
-									"have_result": true,
-									"error": "Json parse error",
-									"code": Runtime.RuntimeConstant.ERROR_PARSE_SERIALIZATION_ERROR,
-									"response": null,
-								}
-							);
-							
-							f(ctx, msg);
-						}
-					}
-				}
-				else
-				{
-					if (f != undefined && f != null)
-					{
-						msg = msg.copy
-						(
-							ctx, 
-							{
-								"have_result": true,
-								"error": "Error code " + xhr.status,
-								"code": Runtime.RuntimeConstant.ERROR_RESPONSE,
-								"response": null,
-							}
-						);
-						
-						f(ctx, msg);
-					}
-				}
+				f(ctx, xhr);
 			}
-		})(ctx, xhr, msg, f);
+		})(ctx, xhr, f);
 	},
+	
 	
 	
 	/* ======================= Class Init Functions ======================= */

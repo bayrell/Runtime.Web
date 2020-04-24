@@ -18,6 +18,7 @@
  
 namespace Runtime.Web;
 
+use Runtime.lib;
 use Runtime.CoreStruct;
 use Runtime.RuntimeUtils;
 use Runtime.Web.Cookie;
@@ -106,5 +107,18 @@ struct Request extends CoreStruct
 		
 		return r;
 	}	
+	
+	
+	
+	/**
+	 * Returns api data
+	 */
+	pure memorize var decodePayload(Request r) =>
+		r
+			-> attr "payload"
+			-> lib::get("DATA", "")
+			-> RuntimeUtils::base64_decode_url
+			-> RuntimeUtils::json_decode
+	;
 	
 }
