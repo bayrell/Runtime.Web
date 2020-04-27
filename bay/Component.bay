@@ -158,6 +158,15 @@ class Component extends CoreObject
 	
 	#ifdef FRONTEND then
 	
+	
+	/**
+	 * Update component
+	 */
+	public void onUpdate(bool created)
+	{
+	}
+	
+	
 	/* ---------------------------------- Model ---------------------------------- */
 	
 	

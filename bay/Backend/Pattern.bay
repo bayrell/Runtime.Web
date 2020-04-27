@@ -280,7 +280,7 @@ class Pattern
 				r = r.map
 				(
 					string (string s) use (module_name, module_name_sz) => 
-						module_name ~ "/resources" ~ rs::substr(s, module_name_sz)
+						module_name ~ "/resources" ~ rs::substr(s, module_name_sz + 1)
 				);
 				res = static::addUniqueItems(res, r);
 			}

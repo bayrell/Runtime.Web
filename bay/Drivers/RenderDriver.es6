@@ -74,10 +74,16 @@ Runtime.Web.Drivers.RenderDriver = function()
 	this.layout_model = null;
 	this.root_elem = null;
 	this.components = {};
+	this.updated_components = [];
 	this.context = null;
 }
 Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 {
+	
+	updateComponent: function(component, created)
+	{
+		this.updated_components.push({"component":component, "created":created});
+	},
 	
 	onModelUpdate: function(ctx, key, model)
 	{
@@ -96,6 +102,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	_repaint: function()
 	{
 		this.animation_id = null;
+		this.updated_components = [];
 		this.remove_keys = [];
 		
 		var control = new Runtime.Web.Drivers.Control();
@@ -121,7 +128,17 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 			document.title = this.layout_model.title;
 		}
 		
+		/* Update components */
+		for (var i=0; i<this.updated_components.length; i++)
+		{
+			var c = this.updated_components[i].component;
+			c.onUpdate(this.context, this.updated_components[i].created);
+		}
+		
 		/* TODO this.remove_keys */
+		
+		/* Clear */
+		this.updated_components = [];
 	},
 	
 	findComponent: function(path, class_name)
@@ -138,7 +155,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	setTitle: function(ctx, new_title)
 	{
 		this.layout_model = this.layout_model.copy(ctx, {"title": new_title});
-	}
+	},
 	
 });
 Object.assign(Runtime.Web.Drivers.RenderDriver,
@@ -444,14 +461,22 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			for (var key in params)
 			{
 				var value = params[key];
-				if (is_input && (key == "value" || key == "@model"))
+				if (is_input && (key == "value" || key == "@model") && params["@bind"] == undefined)
 				{
 					if (elem.value != value) elem.value = value;
 					continue;
 				}
 				if (is_input && key == "@bind")
 				{
-					if (elem.value != model[value]) elem.value = model[value];
+					if (typeof value == "string")
+					{
+						value = Runtime.Collection.from([value]);
+					}
+					var model_value = Runtime.rtl.attr
+					(
+						driver.context, model, value, null
+					);
+					if (elem.value != model_value) elem.value = model_value;
 					continue;
 				}
 				if (key[0] == "@") continue;
@@ -479,8 +504,8 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 						{ 
 							return function (e) 
 							{
-								d = {}; d[value] = elem.value;
-								component.updateModel(driver.context, Runtime.Dict.from(d));
+								var d = {}; d[value] = elem.value; d = Runtime.Dict.from(d);
+								component.updateModel(driver.context, d);
 							}
 						};
 						elem.addEventListener
@@ -611,6 +636,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		{
 			var model = null;
 			var model_bind_name = "";
+			var created = false;
 			
 			/* Find class */
 			var class_obj = use(name);
@@ -628,6 +654,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				component.path = path;
 				component.driver = driver;
 				driver.saveComponent(component);
+				created = true;
 			}
 			
 			/* Find model */
@@ -638,7 +665,18 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			if (attrs != null && attrs["@bind"] != undefined)
 			{
 				model_bind_name = attrs["@bind"];
-				if (model == null) model = model[model_bind_name];
+				if (model == null)
+				{
+					if (typeof model_bind_name == "string")
+					{
+						model_bind_name = Runtime.Collection.from([model_bind_name]);
+					}
+					var model_value = Runtime.rtl.attr
+					(
+						driver.context, model, model_bind_name, null
+					);
+					model = model_value;
+				}
 			}
 			
 			/* Set new model */
@@ -675,6 +713,8 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			/* Add childs */
 			childs = childs.slice();
 			childs.push(res);
+			
+			driver.updateComponent(component, created);
 		}
 		
 		else if (type == 'element')
@@ -820,17 +860,8 @@ try
 	global_context = Runtime.Context.create
 	(
 		null,
-		layout_model.frontend_env,
-		[
-			new Runtime.Annotations.Provider
-			(
-				null,
-				{
-					"name": Runtime.RuntimeConstant.BUS_INTERFACE,
-					"value": "Runtime.Web.Drivers.BusProvider",
-				}
-			)
-		]
+		"",
+		layout_model.frontend_env
 	);
 	global_context = global_context.copy
 	(
