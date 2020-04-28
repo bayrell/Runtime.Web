@@ -204,7 +204,7 @@ struct RenderContainer extends Message
 		for (int i=0; i<route_lists.count(); i++)
 		{
 			RouteList route_list = route_lists.item(i);
-			string class_name = (route_list.value != "") ? route_list.value : route_list.name;
+			string class_name = route_list.className();
 			if (class_name == "") continue;
 			routes.appendVector( static::getRoutesByClassName(class_name) );
 		}
@@ -293,7 +293,6 @@ struct RenderContainer extends Message
 		/*pattern_class = patterns.get(container.pattern_name, "");*/
 		return pattern_class;
 	}
-	
 	
 	
 	
