@@ -100,8 +100,19 @@ class Entry
 		}
 		else
 		{
-			$this->output_404($container);
+			static::output_404($container);
 		}
+	}
+	
+	
+	
+	/**
+	 * Output 404 Error
+	 */
+	static function output_404($container)
+	{
+		http_response_code(404);
+		echo "404 Not found";
 	}
 	
 	
