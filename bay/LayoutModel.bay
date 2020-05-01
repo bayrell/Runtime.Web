@@ -19,25 +19,24 @@
 namespace Runtime.Web;
 
 use Runtime.CoreStruct;
+use Runtime.Annotations.Route;
 use Runtime.Web.SeoModel;
 
 
 struct LayoutModel extends CoreStruct
 {
 	/* URL Info */
-	Dict<string> route_params = null;
 	bool is_https = false;
 	int port = 80;
 	string hostname = "";
 	string uri = "";
 	string full_uri = "";
-	string route_uri = "";
-	string route_uri_match = "";
-	string route_name = "";
 	string route_prefix = "";
 	string local_bus_gate = "";
 	string locale_uri = "";
 	string f_inc = "";
+	Route route = null;
+	Dict<string> route_params = null;
 	
 	/* Layout info */
 	string layout_name = "default";
