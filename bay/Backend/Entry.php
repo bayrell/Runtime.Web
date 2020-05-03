@@ -50,7 +50,6 @@ class Entry
 		}
 		catch (\Exception $ex)
 		{
-			$this->return_code = 1;
 			static::output_web_exception($ctx, $ex);
 		}
 	}
