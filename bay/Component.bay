@@ -35,7 +35,7 @@ class Component extends CoreObject
 {
 	public Component parent_component = null;
 	public string path = "";
-	public var params = null;
+	public Dict params = null;
 	public var driver = null;
 	public CoreStruct model = null;
 	public string model_bind_name = "";
@@ -213,7 +213,7 @@ class Component extends CoreObject
 	/**
 	 * Set new params
 	 */
-	public void driverSetParams(var params)
+	public void driverSetParams(Dict params)
 	{
 		this.params = params;
 	}
@@ -273,22 +273,22 @@ class Component extends CoreObject
 		
 		if (e instanceof ChangeEvent)
 		{
-			if (rtl::exists(this.params["@bind"]))
+			if (this.params.has("@bind"))
 			{
-				string bind = this.params["@bind"];
+				string bind = this.params.item("@bind");
 				this.parent_component.onModelUpdate(bind, e.value);
 			}
 		}
 		
-		method_name = this.params["@event:" ~ class_name];
-		if (rtl::exists(method_name))
+		method_name = this.params.get("@event:" ~ class_name, "");
+		if (method_name != "")
 		{
 			fn f = rtl::method(this.parent_component, method_name);
 			f(e);
 		}
 		
-		method_name = this.params["@eventAsync:" ~ class_name];
-		if (rtl::exists(method_name))
+		method_name = this.params.get("@eventAsync:" ~ class_name, "");
+		if (method_name != "")
 		{
 			fn f = rtl::method(this.parent_component, method_name);
 			rtl::applyAwait(f, [e]);

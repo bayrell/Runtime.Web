@@ -206,6 +206,7 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 									ctx, 
 									{
 										"have_result": exists(ctx, res.have_result) ? res.have_result : false,
+										"success_message": exists(ctx, res.success_message) ? res.success_message : "",
 										"error": exists(ctx, res.error) ? res.error : "Unknown error",
 										"code": exists(ctx, res.code) ? res.code : Runtime.RuntimeConstant.ERROR_UNKNOWN,
 										"response": response,

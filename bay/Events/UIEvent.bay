@@ -22,9 +22,11 @@ use Runtime.CoreEvent;
 use Runtime.CoreStruct;
 use Runtime.Message;
 use Runtime.Reference;
+use Runtime.Web.Component;
 
 
 struct UIEvent extends Message
 {
 	int component_id = 0;
+	Component instance = null;
 }

@@ -449,7 +449,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		
 		/* Set path */
 		var path = control.path;
-		elem.setAttribute("data-vpath", path);
+		/* elem.setAttribute("data-vpath", path); */
 		elem.params = Runtime.Dict.from(params);
 		elem._attrs = params;
 		elem._component = component;
@@ -680,7 +680,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			}
 			
 			/* Set new model */
-			component.driverSetParams(driver.context, attrs);
+			component.driverSetParams(driver.context, Runtime.Dict.from(attrs));
 			component.driverSetNewModel(driver.context, model, model_bind_name);
 			component.parent_component = control.component;
 			
@@ -813,6 +813,11 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		else if (type == 'html')
 		{
 			
+		}
+		
+		else if (type == 'empty')
+		{
+			new_control = control;
 		}
 		
 		return [new_control, childs];
