@@ -116,7 +116,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 			"component",
 			{
 				"name": this.layout_model.layout_class,
-				"attrs": {"@model":this.layout_model,"@key":""},
+				"attrs": { "@model":this.layout_model, "@key":"" },
 			},
 			0
 		);		
@@ -208,7 +208,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	getBindModel: function(path, bind_value)
 	{
 		var class_name = bind_value[0];
-		var value = bind_value[1];
+		var bind_name = bind_value[1];
 		
 		var component = this.searchComponent(path, class_name);
 		if (component == null)
@@ -217,17 +217,38 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 			return;
 		}
 		
-		if (typeof value == "string")
+		if (typeof bind_name == "string")
 		{
-			value = Runtime.Collection.from([value]);
+			bind_name = Runtime.Collection.from([bind_name]);
 		}
 		
 		var model_value = Runtime.rtl.attr
 		(
-			this.context, model, value, null
+			this.context, component.model, bind_name, null
 		);
 		
 		return model_value;
+	},
+	
+	bindModelUpdate: function(path, bind_value, model)
+	{
+		if (path == "0")
+		{
+			this.onModelUpdate(this.ctx, bind_name, model);
+			return;
+		}
+		
+		var class_name = bind_value[0];
+		var bind_name = bind_value[1];
+		
+		var component = this.searchComponent(path, class_name);
+		if (component == null)
+		{
+			this.constructor.warning("Component " + class_name + " not found");
+			return;
+		}
+		
+		component.onModelUpdate(this.ctx, bind_name, model);
 	},
 	
 	setTitle: function(ctx, new_title)
@@ -576,12 +597,17 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 							{
 								var class_name = bind_value[0];
 								var value = bind_value[1];
-								var component = this.searchComponent(path, class_name);
+								
+								driver.bindModelUpdate(path, bind_value, elem.value);
+								
+								/*
+								var component = driver.searchComponent(path, class_name);
 								if (component)
 								{
 									var d = {}; d[value] = elem.value; d = Runtime.Dict.from(d);
 									component.updateModel(driver.context, d);
 								}
+								*/
 							}
 						};
 						elem.addEventListener

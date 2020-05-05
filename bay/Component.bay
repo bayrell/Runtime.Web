@@ -254,8 +254,8 @@ class Component extends CoreObject
 			this.model = model;
 			this.model_updated_by_self = true;
 			
-			this.onModelChange(old_model, model, "component");			
-			this.parent_component.onModelUpdate(this.model_bind_name, model);
+			this.onModelChange(old_model, model, "component");
+			this.driver.@bindModelUpdate(this.path, this.model_bind_name, model);
 		}
 	}
 	
@@ -276,8 +276,7 @@ class Component extends CoreObject
 			if (this.params.has("@bind"))
 			{
 				string bind = this.params.item("@bind");
-				this.driver.bindModelUpdate(this, bind, e.value);
-				/* this.parent_component.onModelUpdate(bind, e.value); */
+				this.driver.bindModelUpdate(this.path, bind, e.value);
 			}
 		}
 		
