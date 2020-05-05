@@ -761,6 +761,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			
 			/* Create new control */
 			new_control = control.copy({
+				"type": type,
 				"index": index,
 				"path": path,
 			});
@@ -830,6 +831,11 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 	 */
 	patch: function (control, childs)
 	{
+		if (control.type == "empty")
+		{
+			return;
+		}
+		
 		/* Normalize content */
 		var childs = this.normalizeContent(childs, control);
 		
