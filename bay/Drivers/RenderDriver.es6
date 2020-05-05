@@ -141,7 +141,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		this.updated_components = [];
 	},
 	
-	findComponent: function(path, class_name)
+	getComponent: function(path, class_name)
 	{
 		if (this.components[path] == undefined) return null;
 		if (this.components[path].getClassName() != class_name) return null;
@@ -150,6 +150,84 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	saveComponent: function(component)
 	{
 		this.components[component.path] = component;
+	},
+	
+	searchComponent: function(path, class_name)
+	{
+		var arr = path.split(".");
+		while (arr.length > 0)
+		{
+			var path = arr.join(".");
+			var component = this.getComponent(path, class_name);
+			if (component != null)
+			{
+				return component;
+			}
+			arr.pop();
+		}
+		return null;
+	},
+	
+	searchEventMethod: function(path, method_name)
+	{
+		var class_name = method_name[0];
+		var value = method_name[1];
+		
+		var component = this.searchComponent(path, class_name);
+		if (component == null)
+		{
+			this.constructor.warning("Component " + class_name + " not found");
+			return null;
+		}
+	
+		var f = component[value];
+		if (f == undefined)
+		{
+			this.constructor.warning(value + " not found in ", component);
+			return null;
+		}
+		
+		return f.bind(component);
+	},
+	
+	setReference: function(path, ref_name, elem)
+	{
+		var class_name = ref_name[0];
+		var value = ref_name[1];
+		
+		var component = this.searchComponent(path, class_name);
+		if (component == null)
+		{
+			this.constructor.warning("Component " + class_name + " not found");
+			return;
+		}
+		
+		component[value] = elem;
+	},
+	
+	getBindModel: function(path, bind_value)
+	{
+		var class_name = bind_value[0];
+		var value = bind_value[1];
+		
+		var component = this.searchComponent(path, class_name);
+		if (component == null)
+		{
+			this.constructor.warning("Component " + class_name + " not found");
+			return;
+		}
+		
+		if (typeof value == "string")
+		{
+			value = Runtime.Collection.from([value]);
+		}
+		
+		var model_value = Runtime.rtl.attr
+		(
+			this.context, model, value, null
+		);
+		
+		return model_value;
 	},
 	
 	setTitle: function(ctx, new_title)
@@ -468,14 +546,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				}
 				if (is_input && key == "@bind")
 				{
-					if (typeof value == "string")
-					{
-						value = Runtime.Collection.from([value]);
-					}
-					var model_value = Runtime.rtl.attr
-					(
-						driver.context, model, value, null
-					);
+					var model_value = driver.getBindModel(path, value);
 					if (elem.value != model_value) elem.value = model_value;
 					continue;
 				}
@@ -486,8 +557,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			/* Set reference */
 			if (params["@ref"] != undefined)
 			{
-				var ref = params["@ref"];
-				component[ref] = elem;
+				driver.setReference(component.path, params["@ref"], elem);
 			}
 			
 			/* Bind element events */
@@ -500,18 +570,24 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 					var is_event_async = key.substring(0, 12) == "@eventAsync:";
 					if (key == "@bind")
 					{
-						var f = function (driver, elem, value, component)
+						var f = function (driver, elem, bind_value)
 						{ 
 							return function (e) 
 							{
-								var d = {}; d[value] = elem.value; d = Runtime.Dict.from(d);
-								component.updateModel(driver.context, d);
+								var class_name = bind_value[0];
+								var value = bind_value[1];
+								var component = this.searchComponent(path, class_name);
+								if (component)
+								{
+									var d = {}; d[value] = elem.value; d = Runtime.Dict.from(d);
+									component.updateModel(driver.context, d);
+								}
 							}
 						};
 						elem.addEventListener
 						(
 							"change",
-							f(driver, elem, value, component)
+							f(driver, elem, value)
 						);
 					}
 					else if (is_event || is_event_async)
@@ -527,17 +603,17 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 						if (es6_name == undefined) continue;
 						
 						var is_async = is_event_async && !is_event;
-						var f = function (driver, elem, value, component, is_async)
-						{ 
+						var f_event = function (driver, elem, params, key, is_async)
+						{
 							return function (e) 
 							{
-								var f = component[value];
-								if (f == undefined)
+								var value = params[key];
+								var f = driver.searchEventMethod(elem._vpath, value);
+								if (!f)
 								{
-									driver.constructor.warning(value + " not found in ", component);
 									return;
 								}
-								f = f.bind(component);
+								
 								var event = Runtime.Web.Events.User.UserEvent.fromEvent(driver.context, e);
 								if (is_async)
 								{
@@ -559,7 +635,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 						elem.addEventListener
 						(
 							es6_name,
-							f(driver, elem, value, component, is_async)
+							f_event(driver, elem, params, key, is_async)
 						);
 					}
 				}
@@ -646,7 +722,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			}
 			
 			/* Find component */
-			var component = driver.findComponent(path, name);
+			var component = driver.getComponent(path, name);
 			if (component == null)
 			{
 				/* Create component */
@@ -667,14 +743,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				model_bind_name = attrs["@bind"];
 				if (model == null)
 				{
-					if (typeof model_bind_name == "string")
-					{
-						model_bind_name = Runtime.Collection.from([model_bind_name]);
-					}
-					var model_value = Runtime.rtl.attr
-					(
-						driver.context, model, model_bind_name, null
-					);
+					var model_value = driver.getBindModel(path, value);
 					model = model_value;
 				}
 			}
@@ -687,8 +756,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			/* Set reference */
 			if (attrs != null && attrs["@ref"] != undefined)
 			{
-				var ref = attrs["@ref"];
-				component.parent_component[ref] = component;
+				driver.setReference(component.parent_component.path, attrs["@ref"], component);
 			}
 			
 			/* Create new control */

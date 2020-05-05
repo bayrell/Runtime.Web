@@ -276,22 +276,23 @@ class Component extends CoreObject
 			if (this.params.has("@bind"))
 			{
 				string bind = this.params.item("@bind");
-				this.parent_component.onModelUpdate(bind, e.value);
+				this.driver.bindModelUpdate(this, bind, e.value);
+				/* this.parent_component.onModelUpdate(bind, e.value); */
 			}
 		}
 		
 		method_name = this.params.get("@event:" ~ class_name, "");
 		if (method_name != "")
 		{
-			fn f = rtl::method(this.parent_component, method_name);
-			f(e);
+			fn f = this.driver.@searchEventMethod(this.parent_component.path, method_name);
+			if (f) f(e);
 		}
 		
 		method_name = this.params.get("@eventAsync:" ~ class_name, "");
 		if (method_name != "")
 		{
-			fn f = rtl::method(this.parent_component, method_name);
-			rtl::applyAwait(f, [e]);
+			fn f = this.driver.@searchEventMethod(this.parent_component.path, method_name);
+			if (f) rtl::applyAwait(f, [e]);
 		}
 	}
 	
