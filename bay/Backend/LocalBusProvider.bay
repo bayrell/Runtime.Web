@@ -75,6 +75,8 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 	 */
 	pure ApiMethod findApiMethodFromList(ApiList api_list, MessageRPC msg)
 	{
+		if (api_list.name != msg.api_name) return null;
+		
 		bool has_space_name = api_list.space_name != "";
 		string class_name = (api_list.value != "") ? api_list.value : api_list.name;
 		if (class_name == "") return null;
