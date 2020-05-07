@@ -769,7 +769,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				model_bind_name = attrs["@bind"];
 				if (model == null)
 				{
-					var model_value = driver.getBindModel(path, value);
+					var model_value = driver.getBindModel(path, attrs["@bind"]);
 					model = model_value;
 				}
 			}
