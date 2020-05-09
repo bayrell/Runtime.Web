@@ -165,7 +165,8 @@ class Pattern
 	 */
 	pure string renderClassName(string class_name, LayoutModel layout, Dict params, html content, Dict control)
 	{
-		return <{class_name} @model={ layout }></{class_name}>;
+		LayoutModel model = layout;
+		return <{class_name} @bind=[]></{class_name}>;
 	}
 	
 	

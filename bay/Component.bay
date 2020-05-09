@@ -37,10 +37,17 @@ class Component extends CoreObject
 	public string path = "";
 	public Dict params = null;
 	public var driver = null;
-	public CoreStruct model = null;
-	public string model_bind_name = "";
-	public bool model_updated_by_self = true;
-	public bool model_updated_by_driver = true;
+	public Collection<string> model_bind_path = "";
+	
+	
+	
+	/**
+	 * Returns model
+	 */
+	var model(Collection<string> path = null) =>
+		rtl::attr(this.driver.layout_model, this.model_bind_path.concat(path), null)
+	;
+	
 	
 	
 	/**
@@ -167,45 +174,13 @@ class Component extends CoreObject
 	}
 	
 	
-	/* ---------------------------------- Model ---------------------------------- */
-	
-	
-	/**
-	 * Model changed by driver or self
-	 */
-	public void onModelChange(CoreStruct old_model, CoreStruct new_model, string kind)
-	{
-	}
-	
-	
-	
-	/**
-	 * Model changed by subcomponent
-	 */
-	public void onModelUpdate(string key, CoreStruct model)
-	{
-		if (key == "") return;
-		Dict d = {};
-		d = d.setIm(key, model);
-		this.updateModel(d);
-	}
-	
-	
 	
 	/**
 	 * Set new component's model
 	 */
-	public void driverSetNewModel(CoreStruct model, string model_bind_name)
+	public void driverSetModel(Collection<string> model_bind_path)
 	{
-		CoreStruct old_model = this.model;
-		if (this.model != model)
-		{
-			this.model = model;
-			this.model_updated_by_driver = true;
-			this.onModelChange(old_model, model, "driver");
-		}
-		
-		this.model_bind_name = model_bind_name;
+		this.model_bind_path = model_bind_path;
 	}
 	
 	
@@ -226,37 +201,17 @@ class Component extends CoreObject
 	 */
 	public void updateModel(Dict map)
 	{
-		this.setModel( this.model.copy(map) );
+		this.driver.updateModel(this.model_bind_path, map);
 	}
 	
 	
 	
 	/**
-	 * Update current model
-	 * @param Dict map
+	 * Update model value
 	 */
-	public void updateModelData(Collection attrs, var new_value)
+	public void updateModelValue(Collection<string> path, var value)
 	{
-		this.setModel( rtl::setAttr(this.model, attrs, new_value) );
-	}
-	
-	
-	
-	/**
-	 * Set new component's model and dispatch signal out ModelChange
-	 * @param CoreStruct model
-	 */
-	public void setModel(CoreStruct model)
-	{
-		if (this.model != model)
-		{
-			CoreStruct old_model = this.model;
-			this.model = model;
-			this.model_updated_by_self = true;
-			
-			this.onModelChange(old_model, model, "component");
-			this.driver.@bindModelUpdate(this.path, this.model_bind_name, model);
-		}
+		this.driver.updateModelValue(this.model_bind_path.concat(path), value);
 	}
 	
 	

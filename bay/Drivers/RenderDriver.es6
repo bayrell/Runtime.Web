@@ -48,10 +48,10 @@ Runtime.Web.Drivers.Control = function()
 	this.type = "";
 	this.component = null;
 	this.driver = null;
-	this.model = null;
 	this.parent = null;
 	this.path = null;
 	this.index = 0;
+	this.model_bind_path = Runtime.Collection.from([]);
 }
 Object.assign(Runtime.Web.Drivers.Control.prototype,
 {
@@ -73,21 +73,43 @@ Runtime.Web.Drivers.RenderDriver = function()
 	this.animation_id = null;
 	this.layout_model = null;
 	this.root_elem = null;
-	this.components = {};
+	this.components =
+	{
+		"": this,
+	};
+	this.model_bind_path = Runtime.Collection.from([]);
 	this.updated_components = [];
 	this.context = null;
 }
 Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 {
+	getClassName: function()
+	{
+		return "Runtime.Web.Drivers.RenderDriver";
+	},
 	
 	updateComponent: function(component, created)
 	{
 		this.updated_components.push({"component":component, "created":created});
 	},
 	
-	onModelUpdate: function(ctx, key, model)
+	setModel: function(ctx, bind_model_path, model)
 	{
-		this.layout_model = model;
+		this.layout_model = Runtime.rtl.setAttr(ctx, this.layout_model, bind_model_path, model);
+		this.repaint();
+	},
+	
+	updateModel: function(ctx, bind_model_path, map)
+	{
+		var model = Runtime.rtl.attr(ctx, this.layout_model, bind_model_path);
+		model = model.copy(map);
+		this.layout_model = Runtime.rtl.setAttr(ctx, this.layout_model, bind_model_path, model);
+		this.repaint();
+	},
+	
+	updateModelValue: function(ctx, bind_model_path, value)
+	{
+		this.layout_model = Runtime.rtl.setAttr(ctx, this.layout_model, bind_model_path, value);
 		this.repaint();
 	},
 	
@@ -116,7 +138,15 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 			"component",
 			{
 				"name": this.layout_model.layout_class,
-				"attrs": { "@model":this.layout_model, "@key":"" },
+				"attrs":
+				{
+					"@bind": Runtime.Collection.from
+					([
+						"Runtime.Web.Drivers.RenderDriver",
+						Runtime.Collection.from([])
+					]),
+					"@key":""
+				},
 			},
 			0
 		);		
@@ -165,6 +195,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 			}
 			arr.pop();
 		}
+		if (class_name == this.getClassName()) return this;
 		return null;
 	},
 	
@@ -205,10 +236,12 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		component[value] = elem;
 	},
 	
-	getBindModel: function(path, bind_value)
+	getBindModelPath: function(path, bind_value)
 	{
 		var class_name = bind_value[0];
 		var bind_name = bind_value[1];
+		
+		if (typeof bind_name == "string") bind_name = Runtime.Collection.from([bind_name]);
 		
 		var component = this.searchComponent(path, class_name);
 		if (component == null)
@@ -217,43 +250,25 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 			return;
 		}
 		
-		if (typeof bind_name == "string")
-		{
-			bind_name = Runtime.Collection.from([bind_name]);
-		}
-		
-		var model_value = Runtime.rtl.attr
-		(
-			this.context, component.model, bind_name, null
-		);
-		
-		return model_value;
+		var model_bind_path = component.model_bind_path.concat(this.context, bind_name);
+		return model_bind_path;
 	},
 	
-	bindModelUpdate: function(path, bind_value, model)
+	getBindModelValue: function(path, bind_value)
 	{
-		if (path == "0")
-		{
-			this.onModelUpdate(this.ctx, bind_name, model);
-			return;
-		}
-		
-		var class_name = bind_value[0];
-		var bind_name = bind_value[1];
-		
-		var component = this.searchComponent(path, class_name);
-		if (component == null)
-		{
-			this.constructor.warning("Component " + class_name + " not found");
-			return;
-		}
-		
-		component.onModelUpdate(this.ctx, bind_name, model);
+		var model_bind_path = this.getBindModelPath(path, bind_value);
+		return this.getModel(model_bind_path);
+	},
+	
+	getModel: function(model_path)
+	{
+		return Runtime.rtl.attr(this.context, this.layout_model, model_path, null);
 	},
 	
 	setTitle: function(ctx, new_title)
 	{
 		this.layout_model = this.layout_model.copy(ctx, {"title": new_title});
+		this.repaint();
 	},
 	
 });
@@ -560,14 +575,14 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			for (var key in params)
 			{
 				var value = params[key];
-				if (is_input && (key == "value" || key == "@model") && params["@bind"] == undefined)
+				if (is_input && (key == "value") && params["@bind"] == undefined)
 				{
 					if (elem.value != value) elem.value = value;
 					continue;
 				}
 				if (is_input && key == "@bind")
 				{
-					var model_value = driver.getBindModel(path, value);
+					var model_value = driver.getBindModelValue(path, value);
 					if (elem.value != model_value) elem.value = model_value;
 					continue;
 				}
@@ -595,19 +610,8 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 						{ 
 							return function (e) 
 							{
-								var class_name = bind_value[0];
-								var value = bind_value[1];
-								
-								driver.bindModelUpdate(path, bind_value, elem.value);
-								
-								/*
-								var component = driver.searchComponent(path, class_name);
-								if (component)
-								{
-									var d = {}; d[value] = elem.value; d = Runtime.Dict.from(d);
-									component.updateModel(driver.context, d);
-								}
-								*/
+								var model_bind_path = driver.getBindModelPath(path, bind_value);
+								driver.updateModelValue(driver.context, model_bind_path, elem.value);
 							}
 						};
 						elem.addEventListener
@@ -737,7 +741,8 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		if (type == 'component')
 		{
 			var model = null;
-			var model_bind_name = "";
+			var model_bind_name = null;
+			var model_bind_path = null;
 			var created = false;
 			
 			/* Find class */
@@ -760,23 +765,14 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			}
 			
 			/* Find model */
-			if (attrs != null && attrs["@model"] != undefined)
-			{
-				model = attrs["@model"];
-			}
 			if (attrs != null && attrs["@bind"] != undefined)
 			{
-				model_bind_name = attrs["@bind"];
-				if (model == null)
-				{
-					var model_value = driver.getBindModel(path, attrs["@bind"]);
-					model = model_value;
-				}
+				model_bind_path = driver.getBindModelPath(path, attrs["@bind"]);
 			}
 			
 			/* Set new model */
 			component.driverSetParams(driver.context, Runtime.Dict.from(attrs));
-			component.driverSetNewModel(driver.context, model, model_bind_name);
+			component.driverSetModel(driver.context, model_bind_path);
 			component.parent_component = control.component;
 			
 			/* Set reference */
@@ -796,7 +792,10 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			
 			/* Render component */
 			var render = class_obj.render.bind(class_obj);
-			var res = render(driver.context, driver.layout_model, model, Runtime.Dict.from(attrs), content);
+			var res = render
+			(
+				driver.context, driver.layout_model, component.model(), Runtime.Dict.from(attrs), content
+			);
 			
 			/* Call result */
 			if (res != null && typeof res == "function") res = res(new_control);
@@ -979,7 +978,7 @@ try
 	Runtime.RuntimeUtils.setContext(global_context);
 	global_context = global_context.constructor.init(global_context, global_context);
 	/* global_context = global_context.constructor.start(global_context, global_context); */
-	window['global_context'] = global_context;	
+	window['global_context'] = global_context;
 	window['RenderDriverInstance'] = Runtime.Web.Drivers.RenderDriver.run
 	(
 		global_context,
