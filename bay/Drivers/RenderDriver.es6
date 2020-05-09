@@ -132,7 +132,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		control.component = this;
 		control.parent = this.root_elem;
 		control.path = "";
-		var res = this.constructor.insert
+		var res = this.constructor.e
 		(
 			control, [],
 			"component",
@@ -150,7 +150,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 			},
 			0
 		);		
-		this.constructor.patch(control, res[1]);
+		this.constructor.p(control, res[1]);
 		
 		/* Change title */
 		if (this.layout_model.title != document.title)
@@ -726,9 +726,9 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 	
 	
 	/**
-	 * Insert element
+	 * Element
 	 */
-	insert: function (control, childs, type, obj, index)
+	e: function (control, childs, type, obj, index)
 	{
 		var new_control = null;
 		var parent_elem = control.parent;
@@ -922,7 +922,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 	/**
 	 * Patch childs of the control
 	 */
-	patch: function (control, childs)
+	p: function (control, childs)
 	{
 		if (control.type == "empty")
 		{
