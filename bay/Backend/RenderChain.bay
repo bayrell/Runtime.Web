@@ -29,6 +29,7 @@ use Runtime.Web.Response;
 use Runtime.Interfaces.AssetsInterface;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderHelper;
 use Runtime.Web.Route;
 use Runtime.Web.RouteList;
 
@@ -73,7 +74,7 @@ static class RenderChain
 		container <= layout <= new LayoutModel
 		{
 			"bag": new Dict(),
-			"uri": RenderContainer::splitRoutePrefix(container.request.uri, container.request.route_prefix),
+			"uri": RenderHelper::splitRoutePrefix(container.request.uri, container.request.route_prefix),
 			"full_uri": container.request.uri,
 			"route": container.route,
 			"route_prefix": container.request.route_prefix,
@@ -131,8 +132,8 @@ static class RenderChain
 		if (container.layout == null) return container;
 		if (container.layout.page_class == "") return container;
 		
-		string layout_class = RenderContainer::getLayoutClassName(container);
-		string pattern_class = RenderContainer::getPatternClassName(container);
+		string layout_class = RenderHelper::getLayoutClassName(container);
+		string pattern_class = RenderHelper::getPatternClassName(container);
 		
 		if (layout_class == "") layout_class = "Runtime.Web.Layout";
 		if (pattern_class == "") pattern_class = "Runtime.Web.Backend.Pattern";
@@ -145,7 +146,7 @@ static class RenderChain
 		}
 		
 		/* Get required assets */
-		list res = RenderContainer::getRequiredAssets(container.layout.modules, components);
+		list res = RenderHelper::getRequiredAssets(container.layout.modules, components);
 		Collection<string> modules = res.item(0);
 		Collection<string> components = res.item(1);
 		Collection<string> assets = modules

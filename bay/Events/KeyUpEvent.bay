@@ -16,13 +16,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.User;
+namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.User.UserEvent;
+use Runtime.Web.Events.KeyboardEvent;
 
 
-struct BlurEvent extends UserEvent
+struct KeyUpEvent extends KeyboardEvent
 {
-	static const string ES6_EVENT_NAME = "blur";
+	static const string ES6_EVENT_NAME = "keyup";
 }
-

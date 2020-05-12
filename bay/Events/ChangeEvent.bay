@@ -16,12 +16,26 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.Keyboard;
+namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.Keyboard.KeyboardEvent;
+use Runtime.Web.Events.WebEvent;
 
 
-struct KeyUpEvent extends KeyboardEvent
+struct ChangeEvent extends WebEvent
 {
-	static const string ES6_EVENT_NAME = "keyup";
+	static const string ES6_EVENT_NAME = "change";
+	public string value="";
+	
+	
+	static void assignEventObject(var obj, var e)
+	{
+		parent(obj, e);
+		
+		#switch
+		#case ifcode ES6 then
+		obj.set(ctx, "value", e.currentTarget.value);
+		#endswitch
+	}
+	
 }
+

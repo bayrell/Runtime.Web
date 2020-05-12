@@ -16,26 +16,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.User;
+namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.User.UserEvent;
+use Runtime.Web.Events.MouseEvent;
 
 
-struct ChangeEvent extends UserEvent
+struct MouseClickEvent extends MouseEvent
 {
-	static const string ES6_EVENT_NAME = "change";
-	public string value="";
-	
-	
-	static void assignEventObject(var obj, var e)
-	{
-		parent(obj, e);
-		
-		#switch
-		#case ifcode ES6 then
-		obj.set(ctx, "value", e.currentTarget.value);
-		#endswitch
-	}
-	
+	static const string ES6_EVENT_NAME = "click";
 }
-

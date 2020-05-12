@@ -16,12 +16,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.Mouse;
+namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.Mouse.MouseEvent;
+use Runtime.Web.Events.KeyboardEvent;
 
 
-struct MouseLeaveEvent extends MouseEvent
+struct KeyPressEvent extends KeyboardEvent
 {
-	static const string ES6_EVENT_NAME = "mouseleave";
+	static const string ES6_EVENT_NAME = "keypress";
 }

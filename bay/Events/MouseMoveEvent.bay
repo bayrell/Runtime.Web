@@ -16,12 +16,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.Keyboard;
+namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.Keyboard.KeyboardEvent;
+use Runtime.Web.Events.MouseEvent;
 
 
-struct KeyDownEvent extends KeyboardEvent
+struct MouseMoveEvent extends MouseEvent
 {
-	static const string ES6_EVENT_NAME = "keydown";
+	static const string ES6_EVENT_NAME = "mousemove";
 }

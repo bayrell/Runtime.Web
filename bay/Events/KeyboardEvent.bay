@@ -16,15 +16,15 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.Keyboard;
+namespace Runtime.Web.Events;
 
 use Runtime.CoreEvent;
 use Runtime.Interfaces.CloneableInterface;
 use Runtime.Interfaces.SerializeInterface;
-use Runtime.Web.Events.User.UserEvent;
+use Runtime.Web.Events.WebEvent;
 
 
-struct KeyboardEvent extends UserEvent
+struct KeyboardEvent extends WebEvent
 {
 	
 	public bool altKey = false;

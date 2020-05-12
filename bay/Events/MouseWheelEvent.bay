@@ -16,13 +16,32 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.User;
+namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.User.UserEvent;
+use Runtime.Web.Events.MouseEvent;
 
 
-struct FocusEvent extends UserEvent
+struct MouseWheelEvent extends MouseEvent
 {
-	static const string ES6_EVENT_NAME = "focus";
+	static const string ES6_EVENT_NAME = "wheel";
+	
+	public int wheelDelta = 0;
+	public int wheelDeltaX = 0;
+	public int wheelDeltaY = 0;
+	
+	
+	
+	static void assignEventObject(var obj, var e)
+	{
+		parent(obj, e);
+		
+		#switch
+		#case ifcode ES6 then
+		obj.set(ctx, "wheelDelta", e.wheelDelta);
+		obj.set(ctx, "wheelDeltaX", e.wheelDeltaX);
+		obj.set(ctx, "wheelDeltaY", e.wheelDeltaY);
+		#endswitch
+	}
+	
+	
 }
-

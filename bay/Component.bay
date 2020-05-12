@@ -26,7 +26,7 @@ use Runtime.Annotations.IntrospectionClass;
 use Runtime.Interfaces.ContextInterface;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderHelper;
-use Runtime.Web.Events.User.ChangeEvent;
+use Runtime.Web.Events.ChangeEvent;
 use Runtime.Web.Events.UIEvent;
 use Runtime.Web.Template;
 
@@ -45,7 +45,8 @@ class Component extends CoreObject
 	 * Returns model
 	 */
 	var model(Collection<string> path = null) =>
-		rtl::attr(this.driver.layout_model, this.model_bind_path.concat(path), null)
+		this.model_bind_path == null ? null :
+			rtl::attr(this.driver.layout_model, this.model_bind_path.concat(path), null)
 	;
 	
 	
@@ -196,6 +197,17 @@ class Component extends CoreObject
 	
 	
 	/**
+	 * Set model
+	 * @param var map
+	 */
+	public void setModel(var model)
+	{
+		this.driver.setModel(this.model_bind_path, model);
+	}
+	
+	
+	
+	/**
 	 * Update current model
 	 * @param Dict map
 	 */
@@ -219,10 +231,13 @@ class Component extends CoreObject
 	/**
 	 * Signal out
 	 */
-	public void signalOut(UIEvent e)
+	public void signal(UIEvent e)
 	{
 		string class_name = e.getClassName();
 		string method_name = "";
+		
+		e <= instance <= this;
+		e <= instance_id <= 0;
 		
 		if (this.params == null) return;
 		
@@ -231,7 +246,7 @@ class Component extends CoreObject
 			if (this.params.has("@bind"))
 			{
 				string bind = this.params.item("@bind");
-				this.driver.bindModelUpdate(this.path, bind, e.value);
+				this.driver.updateModel(this.model_bind_path, e.value);
 			}
 		}
 		

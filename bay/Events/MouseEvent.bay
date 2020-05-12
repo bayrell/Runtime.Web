@@ -16,12 +16,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.Mouse;
+namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.User.UserEvent;
+use Runtime.Web.Events.WebEvent;
 
 
-struct MouseEvent extends UserEvent
+struct MouseEvent extends WebEvent
 {
 	
 	public bool altKey = false;

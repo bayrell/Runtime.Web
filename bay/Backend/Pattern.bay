@@ -24,6 +24,7 @@ use Runtime.Interfaces.AssetsInterface;
 use Runtime.Interfaces.StringInterface;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderHelper;
 
 
 class Pattern
@@ -47,14 +48,14 @@ class Pattern
 		"<!DOCTYPE html>" ~
 		"<html>" ~
 			"<head>" ~
-				static::chain(RenderContainer::PATTERN_HEADER_BEFORE, container) ~
-				static::chain(RenderContainer::PATTERN_HEADER_SEO, container) ~
-				static::chain(RenderContainer::PATTERN_HEADER_AFTER, container) ~
+				static::chain(RenderHelper::PATTERN_HEADER_BEFORE, container) ~
+				static::chain(RenderHelper::PATTERN_HEADER_SEO, container) ~
+				static::chain(RenderHelper::PATTERN_HEADER_AFTER, container) ~
 			"</head>" ~
 			"<body>" ~
-				static::chain(RenderContainer::PATTERN_BODY_BEFORE, container) ~
+				static::chain(RenderHelper::PATTERN_BODY_BEFORE, container) ~
 				static::renderBody(container) ~
-				static::chain(RenderContainer::PATTERN_BODY_AFTER, container) ~
+				static::chain(RenderHelper::PATTERN_BODY_AFTER, container) ~
 			"</body>" ~
 		"</html>"
 	;

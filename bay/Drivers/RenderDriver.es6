@@ -102,7 +102,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	updateModel: function(ctx, bind_model_path, map)
 	{
 		var model = Runtime.rtl.attr(ctx, this.layout_model, bind_model_path);
-		model = model.copy(map);
+		model = model.copy(ctx, map);
 		this.layout_model = Runtime.rtl.setAttr(ctx, this.layout_model, bind_model_path, model);
 		this.repaint();
 	},
@@ -174,7 +174,11 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	getComponent: function(path, class_name)
 	{
 		if (this.components[path] == undefined) return null;
-		if (this.components[path].getClassName() != class_name) return null;
+		var parents = Runtime.RuntimeUtils.getParents(this.context, this.components[path].getClassName());
+		if (this.components[path].getClassName() != class_name && parents.indexOf(this.context, class_name) == -1)
+		{
+			return null;
+		}
 		return this.components[path];
 	},
 	saveComponent: function(component)
@@ -207,7 +211,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		var component = this.searchComponent(path, class_name);
 		if (component == null)
 		{
-			this.constructor.warning("Component " + class_name + " not found");
+			this.constructor.warning("Search event: " + class_name + " not found");
 			return null;
 		}
 	
@@ -229,7 +233,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		var component = this.searchComponent(path, class_name);
 		if (component == null)
 		{
-			this.constructor.warning("Component " + class_name + " not found");
+			this.constructor.warning("Set reference: " + class_name + " not found");
 			return;
 		}
 		
@@ -246,7 +250,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		var component = this.searchComponent(path, class_name);
 		if (component == null)
 		{
-			this.constructor.warning("Component " + class_name + " not found");
+			this.constructor.warning("Bind model: " + class_name + " not found");
 			return;
 		}
 		
@@ -627,7 +631,11 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 						if (is_event_async) event_name = key.substring(12);
 						
 						var event_class = use(event_name);
-						if (event_class == undefined) continue
+						if (event_class == undefined)
+						{
+							this.warning("Event " + event_name + " not found in ", elem);
+							continue;
+						}
 						
 						var es6_name = event_class.ES6_EVENT_NAME;
 						if (es6_name == undefined) continue;
@@ -644,7 +652,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 									return;
 								}
 								
-								var event = Runtime.Web.Events.User.UserEvent.fromEvent(driver.context, e);
+								var event = Runtime.Web.Events.WebEvent.fromEvent(driver.context, e);
 								if (is_async)
 								{
 									Runtime.rtl.applyAwait(driver.context, f, [event]);

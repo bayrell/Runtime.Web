@@ -26,6 +26,7 @@ use Runtime.Interfaces.AssetsInterface;
 use Runtime.Interfaces.ContextInterface;
 use Runtime.Interfaces.ModuleDescriptionInterface;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderHelper;
 
 
 class ModuleDescription implements 
@@ -46,7 +47,7 @@ class ModuleDescription implements
 	 * Returns module name
 	 * @return string
 	 */
-	pure string getModuleVersion() => "0.9.0";
+	pure string getModuleVersion() => "0.9.3";
 	
 	
 	
@@ -84,26 +85,26 @@ class ModuleDescription implements
 		"Runtime.Web/Annotations/RouteMiddleware",
 		"Runtime.Web/Annotations/Template",
 		"Runtime.Web/Events/UIEvent",
-		"Runtime.Web/Events/User/UserEvent",
-		"Runtime.Web/Events/User/BlurEvent",
-		"Runtime.Web/Events/User/ChangeEvent",
-		"Runtime.Web/Events/User/FocusEvent",
-		"Runtime.Web/Events/Keyboard/KeyboardEvent",
-		"Runtime.Web/Events/Keyboard/KeyDownEvent",
-		"Runtime.Web/Events/Keyboard/KeyPressEvent",
-		"Runtime.Web/Events/Keyboard/KeyUpEvent",
-		"Runtime.Web/Events/Mouse/MouseEvent",
-		"Runtime.Web/Events/Mouse/MouseClickEvent",
-		"Runtime.Web/Events/Mouse/MouseContextMenuEvent",
-		"Runtime.Web/Events/Mouse/MouseDoubleClickEvent",
-		"Runtime.Web/Events/Mouse/MouseDownEvent",
-		"Runtime.Web/Events/Mouse/MouseEnterEvent",
-		"Runtime.Web/Events/Mouse/MouseLeaveEvent",
-		"Runtime.Web/Events/Mouse/MouseMoveEvent",
-		"Runtime.Web/Events/Mouse/MouseOutEvent",
-		"Runtime.Web/Events/Mouse/MouseOverEvent",
-		"Runtime.Web/Events/Mouse/MouseUpEvent",
-		"Runtime.Web/Events/Mouse/MouseWheelEvent",
+		"Runtime.Web/Events/WebEvent",
+		"Runtime.Web/Events/BlurEvent",
+		"Runtime.Web/Events/ChangeEvent",
+		"Runtime.Web/Events/FocusEvent",
+		"Runtime.Web/Events/KeyboardEvent",
+		"Runtime.Web/Events/KeyDownEvent",
+		"Runtime.Web/Events/KeyPressEvent",
+		"Runtime.Web/Events/KeyUpEvent",
+		"Runtime.Web/Events/MouseEvent",
+		"Runtime.Web/Events/MouseClickEvent",
+		"Runtime.Web/Events/MouseContextMenuEvent",
+		"Runtime.Web/Events/MouseDoubleClickEvent",
+		"Runtime.Web/Events/MouseDownEvent",
+		"Runtime.Web/Events/MouseEnterEvent",
+		"Runtime.Web/Events/MouseLeaveEvent",
+		"Runtime.Web/Events/MouseMoveEvent",
+		"Runtime.Web/Events/MouseOutEvent",
+		"Runtime.Web/Events/MouseOverEvent",
+		"Runtime.Web/Events/MouseUpEvent",
+		"Runtime.Web/Events/MouseWheelEvent",
 		"Runtime.Web/RedirectResponse",
 		"Runtime.Web/JsonResponse",
 		"Runtime.Web/ModuleDescription",
@@ -117,8 +118,8 @@ class ModuleDescription implements
 	pure Collection<Dict> entities() => 
 	[
 		/* Declare Layout Chain */
-		new LambdaChainDeclare{ "name": RenderContainer::LAYOUT_CHAIN },
-		new LambdaChainDeclare{ "name": RenderContainer::PATTERN_CHAIN },
+		new LambdaChainDeclare{ "name": RenderHelper::LAYOUT_CHAIN },
+		new LambdaChainDeclare{ "name": RenderHelper::PATTERN_CHAIN },
 	];
 	
 	

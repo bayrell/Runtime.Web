@@ -16,12 +16,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events.Mouse;
+namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.Mouse.MouseEvent;
+use Runtime.Web.Events.MouseEvent;
 
 
-struct MouseOverEvent extends MouseEvent
+struct MouseUpEvent extends MouseEvent
 {
-	static const string ES6_EVENT_NAME = "mouseover";
+	static const string ES6_EVENT_NAME = "mouseup";
 }
