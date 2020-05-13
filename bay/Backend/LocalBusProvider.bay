@@ -27,6 +27,7 @@ use Runtime.RuntimeConstant;
 use Runtime.RuntimeUtils;
 use Runtime.Annotations.IntrospectionClass;
 use Runtime.Exceptions.ApiException;
+use Runtime.Exceptions.RuntimeException;
 use Runtime.Interfaces.BusInterface;
 use Runtime.Interfaces.ContextInterface;
 use Runtime.Web.Annotations.ApiList;
@@ -75,12 +76,13 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 	 */
 	pure ApiMethod findApiMethodFromList(ApiList api_list, MessageRPC msg)
 	{
-		if (api_list.name != msg.api_name) return null;
+		if (api_list.apiName() != msg.api_name) return null;
 		
 		bool has_space_name = api_list.space_name != "";
-		string class_name = (api_list.value != "") ? api_list.value : api_list.name;
-		if (class_name == "") return null;
 		if (has_space_name and api_list.space_name != msg.space_name) return null;
+		
+		string class_name = api_list.className();
+		if (class_name == "") return null;
 		
 		/* Returns api methods */
 		Collection<ApiMethod> api_methods = static::getApiMethodsByClassName(class_name);
@@ -159,9 +161,9 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 					msg = msg -> method fail(null, "Api not found", RuntimeConstant::ERROR_API_NOT_FOUND);
 				}
 			}
-			catch (ApiException e)
+			catch (RuntimeException e)
 			{
-				msg = msg -> method fail(null, e.getErrorMessage(), e.getErrorCode());
+				msg = msg -> method exception(e);
 			}
 			
 			return msg;

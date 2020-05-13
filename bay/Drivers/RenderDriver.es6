@@ -810,6 +810,13 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				model_bind_path = driver.getBindModelPath(path, attrs["@bind"]);
 			}
 			
+			/* Get model */
+			if (model_bind_path != null)
+			{
+				model = Runtime.rtl.attr(driver.context, driver.layout_model, model_bind_path, null);
+				attrs["value"] = model;
+			}
+			
 			/* Set new model */
 			component.driverSetParams(driver.context, Runtime.Dict.from(attrs));
 			component.driverSetModel(driver.context, model_bind_path);
@@ -834,7 +841,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			var render = class_obj.render.bind(class_obj);
 			var res = render
 			(
-				driver.context, driver.layout_model, component.model(), Runtime.Dict.from(attrs), content
+				driver.context, driver.layout_model, model, Runtime.Dict.from(attrs), content
 			);
 			
 			/* Call result */

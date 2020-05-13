@@ -69,6 +69,8 @@ static class RenderHelper
 	static const string FRONTEND_TYPE_SEARCH = "search";
 	static const string FRONTEND_TYPE_SINLGE = "single_page";
 	
+	/* Providers */
+	static const string BUS_INTERFACE = "Runtime.Interfaces.BusInterface";
 	
 	
 	/**

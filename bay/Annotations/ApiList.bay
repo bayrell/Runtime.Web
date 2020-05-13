@@ -26,4 +26,5 @@ struct ApiList extends Entity
 {
 	string api_name = "";
 	string space_name = "";
+	string apiName() => this.api_name != "" ? this.api_name : this.getClassName();
 }
