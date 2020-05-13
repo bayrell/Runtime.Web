@@ -72,7 +72,9 @@ Runtime.Web.Drivers.RenderDriver = function()
 	this.remove_keys = [];
 	this.animation_id = null;
 	this.layout_model = null;
+	this.root_attrs = null;
 	this.root_elem = null;
+	this.root_control = null;
 	this.components =
 	{
 		"": this,
@@ -113,6 +115,29 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		this.repaint();
 	},
 	
+	init: function()
+	{
+		var attrs = {
+			"@bind": Runtime.Collection.from
+			([
+				"Runtime.Web.Drivers.RenderDriver",
+				Runtime.Collection.from([])
+			]),
+			"@key":""
+		};
+		
+		this.root_attrs = attrs;
+		this.root_elem._attrs = attrs;
+		this.root_elem._vpath = "";
+		this.root_elem._component = this;
+		this.root_elem.params = Runtime.Dict.from(attrs);
+		this.root_control = new Runtime.Web.Drivers.Control();
+		this.root_control.driver = this;
+		this.root_control.component = this;
+		this.root_control.parent = this.root_elem;
+		this.root_control.path = "";
+	},
+	
 	repaint: function()
 	{
 		if (this.animation_id == null)
@@ -127,30 +152,18 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		this.updated_components = [];
 		this.remove_keys = [];
 		
-		var control = new Runtime.Web.Drivers.Control();
-		control.driver = this;
-		control.component = this;
-		control.parent = this.root_elem;
-		control.path = "";
+		/* Patch root element */
 		var res = this.constructor.e
 		(
-			control, [],
+			this.root_control, [],
 			"component",
 			{
 				"name": this.layout_model.layout_class,
-				"attrs":
-				{
-					"@bind": Runtime.Collection.from
-					([
-						"Runtime.Web.Drivers.RenderDriver",
-						Runtime.Collection.from([])
-					]),
-					"@key":""
-				},
+				"attrs": this.root_attrs,
 			},
 			0
 		);		
-		this.constructor.p(control, res[1]);
+		this.constructor.p(this.root_control, res[1]);
 		
 		/* Change title */
 		if (this.layout_model.title != document.title)
@@ -165,7 +178,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 			c.onUpdate(this.context, this.updated_components[i].created);
 		}
 		
-		/* TODO this.remove_keys */
+		/* TODO this.remove_keys and remove components */
 		
 		/* Clear */
 		this.updated_components = [];
@@ -174,8 +187,9 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	getComponent: function(path, class_name)
 	{
 		if (this.components[path] == undefined) return null;
-		var parents = Runtime.RuntimeUtils.getParents(this.context, this.components[path].getClassName());
-		if (this.components[path].getClassName() != class_name && parents.indexOf(this.context, class_name) == -1)
+		var path_class_name = this.components[path].getClassName();
+		var parents = Runtime.RuntimeUtils.getParents(this.context, path_class_name);
+		if (path_class_name != class_name && parents.indexOf(this.context, class_name) == -1)
 		{
 			return null;
 		}
@@ -183,7 +197,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 	},
 	saveComponent: function(component)
 	{
-		this.components[component.path] = component;
+		this.components["" + component.path] = component;
 	},
 	
 	searchComponent: function(path, class_name)
@@ -558,54 +572,70 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 	/**
 	 * Update elem params
 	 */
-	updateElemParams: function(elem, params, control, is_new_elem)
+	updateElemParams: function(control, elem)
 	{
-		var is_input = ["INPUT", "SELECT"].indexOf(elem.tagName) >= 0;
 		var model = control.model;
 		var driver = control.driver;
-		var component = control.component;
+		var is_new_elem = control.is_new_elem;
+		var component = elem._component;
+		var attrs = elem._attrs;
+		var path = elem._vpath;
 		
-		/* Set path */
-		var path = control.path;
-		/* elem.setAttribute("data-vpath", path); */
-		elem.params = Runtime.Dict.from(params);
-		elem._attrs = params;
-		elem._component = component;
-		elem._vpath = path;			
+		if (control.path != elem._vpath)
+		{
+			console.log("--------------");
+			console.log(control.path);
+			console.log(elem._vpath);
+		}
 		
 		/* Set attrs */
-		if (params != null)
-		{		
-			for (var key in params)
+		if (attrs != null)
+		{
+			/* Add attributes */
+			for (var key in attrs)
 			{
-				var value = params[key];
-				if (is_input && (key == "value") && params["@bind"] == undefined)
+				var value = attrs[key];
+				if (key == "@bind")
 				{
-					if (elem.value != value) elem.value = value;
-					continue;
+					value = driver.getBindModelValue(path, value);
 				}
-				if (is_input && key == "@bind")
+				if (key == "value" || key == "@bind")
 				{
-					var model_value = driver.getBindModelValue(path, value);
-					if (elem.value != model_value) elem.value = model_value;
-					continue;
+					if (elem.tagName == "INPUT" || elem.tagName == "SELECT" || elem.tagName == "TEXTAREA")
+					{
+						if (elem.value != value) elem.value = value;
+						continue;
+					}
 				}
 				if (key[0] == "@") continue;
-				if (elem.getAttribute(key) != value) elem.setAttribute(key, value);
+				if (elem.getAttribute(key) != value)
+				{
+					elem.setAttribute(key, value);
+				}
+			}
+			
+			/* Remove old attributes */
+			for (var i=elem.attributes.length - 1; i>=0; i--)
+			{
+				var attr = elem.attributes[i];
+				if (attrs[attr.name] == undefined)
+				{
+					elem.removeAttribute(attr.name);
+				}
 			}
 			
 			/* Set reference */
-			if (params["@ref"] != undefined)
+			if (attrs["@ref"] != undefined)
 			{
-				driver.setReference(component.path, params["@ref"], elem);
+				driver.setReference(component.path, attrs["@ref"], elem);
 			}
 			
 			/* Bind element events */
 			if (is_new_elem)
 			{
-				for (var key in params)
+				for (var key in attrs)
 				{
-					var value = params[key];
+					var value = attrs[key];
 					var is_event = key.substring(0, 7) == "@event:";
 					var is_event_async = key.substring(0, 12) == "@eventAsync:";
 					if (key == "@bind")
@@ -640,12 +670,14 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 						var es6_name = event_class.ES6_EVENT_NAME;
 						if (es6_name == undefined) continue;
 						
+						/* console.log("Event " + event_name, elem); */
+						
 						var is_async = is_event_async && !is_event;
-						var f_event = function (driver, elem, params, key, is_async)
+						var f_event = function (driver, elem, attrs, key, is_async)
 						{
 							return function (e) 
 							{
-								var value = params[key];
+								var value = attrs[key];
 								var f = driver.searchEventMethod(elem._vpath, value);
 								if (!f)
 								{
@@ -673,7 +705,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 						elem.addEventListener
 						(
 							es6_name,
-							f_event(driver, elem, params, key, is_async)
+							f_event(driver, elem, attrs, key, is_async)
 						);
 					}
 				}
@@ -736,7 +768,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 	/**
 	 * Element
 	 */
-	e: function (control, childs, type, obj, index)
+	e: function (control, childs, type, obj, index, elem_flag)
 	{
 		var new_control = null;
 		var parent_elem = control.parent;
@@ -836,10 +868,20 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 				"index": index,
 				"path": path,
 				"parent": elem_new,
+				"is_new_elem": is_new_elem,
 			});
 			
 			/* Update element params */
-			this.updateElemParams(elem_new, attrs, new_control, is_new_elem);
+			elem_new._attrs = attrs;
+			elem_new._vpath = path;
+			elem_new._component = control.component;
+			elem_new.params = Runtime.Dict.from(attrs);
+			
+			/* Patch element params */
+			if (elem_flag === false)
+			{
+				this.updateElemParams(new_control, elem_new);
+			}
 			
 			/* Add childs */
 			childs = childs.slice();
@@ -941,7 +983,10 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		var childs = this.normalizeContent(childs, control);
 		
 		/* Patch element */
-		this.patchElemChilds(control.parent, childs, control.driver);		
+		this.patchElemChilds(control.parent, childs, control.driver);
+		
+		/* Patch element params */
+		this.updateElemParams(control, control.parent);
 	},
 	
 	
@@ -955,10 +1000,12 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		driver.context = context;
 		driver.layout_model = layout_model;
 		driver.root_elem = document.querySelector(selector);
+		driver.init();
 		driver.repaint();
 		return driver;
 	}
 });
+Runtime.rtl.defClass(Runtime.Web.Drivers.RenderDriver);
 
 
 try

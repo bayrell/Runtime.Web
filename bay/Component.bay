@@ -37,7 +37,7 @@ class Component extends CoreObject
 	public string path = "";
 	public Dict params = null;
 	public var driver = null;
-	public Collection<string> model_bind_path = "";
+	public Collection<string> model_bind_path = [];
 	
 	
 	
@@ -246,7 +246,7 @@ class Component extends CoreObject
 			if (this.params.has("@bind"))
 			{
 				string bind = this.params.item("@bind");
-				this.driver.updateModel(this.model_bind_path, e.value);
+				this.driver.updateModelValue(this.model_bind_path, e.value);
 			}
 		}
 		
