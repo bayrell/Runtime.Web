@@ -18,6 +18,7 @@
 
 namespace Runtime.Web.Backend;
 
+use Runtime.lib;
 use Runtime.CoreProvider;
 use Runtime.MessageRPC;
 use Runtime.RuntimeUtils;
@@ -47,7 +48,7 @@ class ApiRoutes
 		var data2 = RuntimeUtils::base64_decode_url(data1);
 		var data3 = RuntimeUtils::json_decode(data2);
 		
-		var msg = new MessageRPC
+		var msg = MessageRPC::create
 		{
 			"is_external": true,
 			"api_name": container.route_params.item("api_name"),
@@ -55,7 +56,7 @@ class ApiRoutes
 			"method_name": container.route_params.item("method_name"),
 			"data": data3,
 		};
-		msg = await @ -> method sendMessage(msg);
+		msg = await @ -> method send(msg);
 		
 		JsonResponse response = new JsonResponse{ "data": msg.takeDict() };
 		container <= response <= response;

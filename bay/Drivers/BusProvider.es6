@@ -175,7 +175,7 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 								(
 									ctx, 
 									{
-										"have_result": true,
+										"have_answer": false,
 										"error": "Error code " + xhr.status,
 										"code": Runtime.RuntimeConstant.ERROR_RESPONSE,
 										"response": null,
@@ -205,10 +205,13 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 								(
 									ctx, 
 									{
-										"have_result": exists(ctx, res.have_result) ? res.have_result : false,
+										"message_id": exists(ctx, res.message_id) ? res.message_id : -1,
+										"have_answer": exists(ctx, res.have_answer) ? res.have_answer : false,
 										"success_message": exists(ctx, res.success_message) ? res.success_message : "",
 										"error": exists(ctx, res.error) ? res.error : "Unknown error",
-										"code": exists(ctx, res.code) ? res.code : Runtime.RuntimeConstant.ERROR_UNKNOWN,
+										"error_name": exists(ctx, res.error_name) ? res.error_name : "",
+										"code": exists(ctx, res.code) ? res.code : 
+											Runtime.RuntimeConstant.ERROR_UNKNOWN,
 										"response": response,
 									}
 								);
@@ -219,7 +222,7 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 								(
 									ctx, 
 									{
-										"have_result": true,
+										"have_answer": false,
 										"error": "Json parse error",
 										"code": Runtime.RuntimeConstant.ERROR_PARSE_SERIALIZATION_ERROR,
 										"response": null,

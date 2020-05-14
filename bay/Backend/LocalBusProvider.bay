@@ -144,7 +144,7 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 	static fn sendMessageRPC(Message msg) =>
 		async Message (LocalBusProvider provider) use (msg)
 		{
-			msg <= have_result <= false;
+			msg <= have_answer <= false;
 			
 			try
 			{
@@ -158,13 +158,15 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 				}
 				else
 				{
-					msg = msg -> method fail(null, "Api not found", RuntimeConstant::ERROR_API_NOT_FOUND);
+					throw new ApiException(_("App", "Api not found"), RuntimeConstant::ERROR_API_NOT_FOUND);
 				}
 			}
 			catch (RuntimeException e)
 			{
 				msg = msg -> method exception(e);
 			}
+			
+			msg <= have_answer <= true;
 			
 			return msg;
 		}
