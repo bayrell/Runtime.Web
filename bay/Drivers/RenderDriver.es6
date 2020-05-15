@@ -79,15 +79,23 @@ Runtime.Web.Drivers.RenderDriver = function()
 	{
 		"": this,
 	};
+	this.components_id={};
 	this.model_bind_path = Runtime.Collection.from([]);
 	this.updated_components = [];
 	this.context = null;
+	this.next_component_id = 0;
 }
 Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 {
 	getClassName: function()
 	{
 		return "Runtime.Web.Drivers.RenderDriver";
+	},
+	
+	nextComponentId: function()
+	{
+		this.next_component_id++;
+		return this.next_component_id;
 	},
 	
 	updateComponent: function(component, created)
@@ -176,12 +184,27 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		{
 			var c = this.updated_components[i].component;
 			c.onUpdate(this.context, this.updated_components[i].created);
+			c.old_model = c.model(this.context);
 		}
 		
 		/* TODO this.remove_keys and remove components */
 		
 		/* Clear */
 		this.updated_components = [];
+	},
+	
+	findComponents: function(ctx, class_name)
+	{
+		var arr = [];
+		for (var i in this.components_id)
+		{
+			var c = this.components_id[i];
+			if (Runtime.rtl.is_instanceof(ctx, c, class_name))
+			{
+				arr.push(c);
+			}
+		}
+		return Runtime.Collection.from(arr);
 	},
 	
 	getComponent: function(path, class_name)
@@ -195,9 +218,11 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		}
 		return this.components[path];
 	},
+	
 	saveComponent: function(component)
 	{
 		this.components["" + component.path] = component;
+		this.components_id[component.component_id] = component;
 	},
 	
 	searchComponent: function(path, class_name)
@@ -798,6 +823,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 			{
 				/* Create component */
 				component = new class_obj();
+				component.component_id = driver.nextComponentId();
 				component.path = path;
 				component.driver = driver;
 				driver.saveComponent(component);

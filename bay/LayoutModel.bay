@@ -60,7 +60,7 @@ struct LayoutModel extends CoreStruct
 	Collection<Dict> breadcrumbs = null;
 	
 	/* Other data */
-	Dict<primitive> pocket = new Dict();
+	Dict<primitive> storage = new Dict();
 	Dict<primitive> css_vars = new Dict();
 	
 	/* Frontend settings */

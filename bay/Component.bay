@@ -33,9 +33,11 @@ use Runtime.Web.Template;
 
 class Component extends CoreObject
 {
+	public int component_id = 0;
 	public Component parent_component = null;
 	public string path = "";
 	public Dict params = null;
+	public var old_model = null;
 	public var driver = null;
 	public Collection<string> model_bind_path = [];
 	
