@@ -161,9 +161,14 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 					throw new ApiException(_("App", "Api not found"), RuntimeConstant::ERROR_API_NOT_FOUND);
 				}
 			}
+			catch (ApiException e)
+			{
+				msg = msg -> method exception(e);
+			}
 			catch (RuntimeException e)
 			{
 				msg = msg -> method exception(e);
+				msg <= code <= RuntimeConstant::ERROR_FATAL;
 			}
 			
 			msg <= have_answer <= true;
