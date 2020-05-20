@@ -103,6 +103,15 @@ class ModuleDescription implements ModuleDescriptionInterface
 			"pos": RenderHelper::RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS,
 		},
 		
+		/* Call middleware route */
+		new LambdaChain
+		{
+			"name": RenderHelper::RENDER_CHAIN,
+			"value": "Runtime.Web.Backend.RenderChain::callRouteMiddleware",
+			"pos": RenderHelper::RENDER_CHAIN_CALL_ROUTE_PRE,
+			"is_await": true,
+		},
+		
 		/* Call route */
 		new LambdaChain
 		{

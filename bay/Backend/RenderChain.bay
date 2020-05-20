@@ -23,10 +23,12 @@ use Runtime.re;
 use Runtime.Context;
 use Runtime.CoreStruct;
 use Runtime.RuntimeUtils;
+use Runtime.Annotations.IntrospectionInfo;
+use Runtime.Interfaces.AssetsInterface;
+use Runtime.Web.Annotations.RouteMiddleware;
 use Runtime.Web.RedirectResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
-use Runtime.Interfaces.AssetsInterface;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderHelper;
@@ -81,7 +83,7 @@ static class RenderChain
 			"route_params": container.route_params,
 			"local_bus_gate": container.request.route_prefix ~ "/api",
 			"layout_name": "default",
-			"frontend_env": { },
+			"frontend_env": {},
 		};
 		
 		return container;
@@ -105,6 +107,52 @@ static class RenderChain
 	
 	
 	/**
+	 * Middleware
+	 */
+	static async RenderContainer callRouteMiddleware(RenderContainer container)
+	{
+		if (container == null) return container;
+		if (container.response != null) return container;
+		if (container.route == null or container.route_params == null) return container;
+		if (container.route.class_name == "" or container.route.class_method_name == "") return container;
+		
+		Collection<RouteMiddleware> middlewares = [];
+		
+		/* Get middleware from class */
+		fn getMethodInfoByName = rtl::method(container.route.class_name, "getClassInfo");
+		IntrospectionInfo info = getMethodInfoByName();
+		middlewares = middlewares.concat
+		(
+			info.annotations.filter( lib::isInstance(classof RouteMiddleware) )
+		)
+		
+		/* Get middleware from method */
+		fn getMethodInfoByName = rtl::method(container.route.class_name, "getMethodInfoByName");
+		IntrospectionInfo info = getMethodInfoByName(container.route.class_method_name);
+		middlewares = middlewares.concat
+		(
+			info.annotations.filter( lib::isInstance(classof RouteMiddleware) )
+		);
+		
+		/* Run each middleware */
+		for (int i=0; i<middlewares.count(i); i++)
+		{
+			RouteMiddleware m = middlewares.item(i);
+			Collection arr = rs::split("::", m.value);
+			string class_name = arr.get(0, "");
+			string method_name = arr.get(1, "");
+			fn f = rtl::method(class_name, method_name);
+			
+			/* Run method */
+			container = await f(container);
+		}
+		
+		return container;
+	}
+	
+	
+	
+	/**
 	 * Call route
 	 */
 	static async RenderContainer callRoute(RenderContainer container)
@@ -113,6 +161,7 @@ static class RenderChain
 		if (container.response != null) return container;
 		if (container.route == null or container.route_params == null) return container;
 		if (container.route.class_name == "" or container.route.class_method_name == "") return container;
+		if (container.layout.page_class != "") return container;
 		
 		fn f = rtl::method(container.route.class_name, container.route.class_method_name);
 		container = await f(container);

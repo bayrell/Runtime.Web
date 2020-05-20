@@ -23,7 +23,5 @@ use Runtime.Message;
 
 struct RouteMiddleware extends Message
 {
-	string kind = "";
-	string action = "";
-	string chain = "";
+	string value = "";
 }

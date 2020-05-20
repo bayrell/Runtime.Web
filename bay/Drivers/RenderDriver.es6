@@ -314,6 +314,10 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		this.repaint();
 	},
 	
+	reloadPage: function(ct)
+	{
+		document.location = document.location;
+	},
 });
 Object.assign(Runtime.Web.Drivers.RenderDriver,
 {
