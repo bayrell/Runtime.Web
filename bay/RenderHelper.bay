@@ -35,16 +35,19 @@ use Runtime.Web.Request;
 static class RenderHelper
 {
 	/* Chains */
-	static const string RENDER_CHAIN = "Runtime.Web.RenderChain";
-	static const string PATTERN_CHAIN = "Runtime.Web.PatternChain";
-	static const string LAYOUT_CHAIN = "Runtime.Web.LayoutChain";
+	static const string RENDER_CHAIN = "Runtime.Web.RenderHelper::RENDER_CHAIN";
+	static const string PATTERN_CHAIN = "Runtime.Web.RenderHelper::PATTERN_CHAIN";
+	static const string LAYOUT_CHAIN = "Runtime.Web.RenderHelper::LAYOUT_CHAIN";
+	static const string API_CONTAINER = "Runtime.Web.RenderHelper::API_CONTAINER";
+	static const string API_CHAIN = "Runtime.Web.RenderHelper::API_CHAIN";
+	static const string FIND_API_METHOD = "Runtime.Web.RenderHelper::FIND_API_METHOD";
 	
 	/* Pattern */
-	static const string PATTERN_HEADER_BEFORE = "Runtime.Web.PatternChain.HeaderBefore";
-	static const string PATTERN_HEADER_SEO = "Runtime.Web.PatternChain.HeaderSeo";
-	static const string PATTERN_HEADER_AFTER = "Runtime.Web.PatternChain.HeaderAfter";
-	static const string PATTERN_BODY_BEFORE = "Runtime.Web.PatternChain.BodyBefore";
-	static const string PATTERN_BODY_AFTER = "Runtime.Web.PatternChain.BodyAfter";
+	static const string PATTERN_HEADER_BEFORE = "Runtime.Web.RenderHelper::PATTERN_HEADER_BEFORE";
+	static const string PATTERN_HEADER_SEO = "Runtime.Web.RenderHelper::PATTERN_HEADER_SEO";
+	static const string PATTERN_HEADER_AFTER = "Runtime.Web.RenderHelper::PATTERN_HEADER_AFTER";
+	static const string PATTERN_BODY_BEFORE = "Runtime.Web.RenderHelper::PATTERN_BODY_BEFORE";
+	static const string PATTERN_BODY_AFTER = "Runtime.Web.RenderHelper::PATTERN_BODY_AFTER";
 	
 	/* Render Chain */
 	static const int RENDER_CHAIN_START = 500;
@@ -58,6 +61,12 @@ static class RenderHelper
 	static const int RENDER_CHAIN_INIT_ASSETS = 3000;
 	static const int RENDER_CHAIN_RESPONSE = 4000;
 	static const int RENDER_CHAIN_RESPONSE_POST = 4500;
+	
+	/* Api chain */
+	static const int API_CHAIN_FIND_METHOD = 1000;
+	static const int API_CHAIN_MIDDLEWARE = 2000;
+	static const int API_CHAIN_RUN = 3000;
+	static const int API_CHAIN_ANSWER = 4000;
 	
 	/* Static Frontend Types */
 	static const string FRONTEND_TYPE_DEFAULT = "";

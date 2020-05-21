@@ -79,6 +79,40 @@ class ModuleDescription implements ModuleDescriptionInterface
 		/* Declare Lambda chain Runtime.Web.Backend.Request */
 		new LambdaChainDeclare{ "name": RenderHelper::RENDER_CHAIN, "is_await": true },
 		
+		/* Find api method */
+		new LambdaChain
+		{
+			"name": RenderHelper::API_CHAIN,
+			"value": "Runtime.Web.Backend.LocalBusProvider::findApiMethod",
+			"pos": RenderHelper::API_CHAIN_FIND_METHOD,
+		},
+		
+		/* Api Middleware */
+		new LambdaChain
+		{
+			"name": RenderHelper::API_CHAIN,
+			"value": "Runtime.Web.Backend.LocalBusProvider::callApiMiddleware",
+			"pos": RenderHelper::API_CHAIN_MIDDLEWARE,
+			"is_await": true,
+		},
+		
+		/* Api Run */
+		new LambdaChain
+		{
+			"name": RenderHelper::API_CHAIN,
+			"value": "Runtime.Web.Backend.LocalBusProvider::callApiRun",
+			"pos": RenderHelper::API_CHAIN_RUN,
+			"is_await": true,
+		},
+		
+		/* Api Answer */
+		new LambdaChain
+		{
+			"name": RenderHelper::API_CHAIN,
+			"value": "Runtime.Web.Backend.LocalBusProvider::callApiAnswer",
+			"pos": RenderHelper::API_CHAIN_ANSWER,
+		},
+		
 		/* Start */
 		new LambdaChain
 		{

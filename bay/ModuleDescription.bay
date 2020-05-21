@@ -69,6 +69,7 @@ class ModuleDescription implements
 	 */
 	pure Collection<string> assets() => 
 	[
+		"Runtime.Web/ApiContainer",
 		"Runtime.Web/Component",
 		"Runtime.Web/Cookie",
 		"Runtime.Web/Layout",

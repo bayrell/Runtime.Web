@@ -26,12 +26,16 @@ use Runtime.Message;
 use Runtime.RuntimeConstant;
 use Runtime.RuntimeUtils;
 use Runtime.Annotations.IntrospectionClass;
+use Runtime.Exceptions.ApiException;
+use Runtime.Exceptions.RuntimeException;
 use Runtime.Interfaces.AssetsInterface;
 use Runtime.Interfaces.BusInterface;
 use Runtime.Web.Annotations.Route;
 use Runtime.Web.Annotations.RouteList;
+use Runtime.Web.ApiContainer;
 use Runtime.Web.Cookie;
 use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderHelper;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 
@@ -52,19 +56,40 @@ struct RenderContainer extends Message
 	
 	
 	/**
-	 * Send message
-	 * @param Message msg
-	 * @param Context ctx
+	 * Send rpc message
+	 * @param Dict items
 	 * @return Message
-	 */
-	static async Message sendContainerMessage(Message msg, RenderContainer container)
-	{
-		msg <= cookies <= container.cookies;
-		if (container.layout) msg <= pocket <= container.layout.pocket;
-		BusInterface provider = @ -> method getProvider(RuntimeConstant::BUS_INTERFACE, "default");
-		msg = provider -> await method sendMessage(msg);
-		return msg;
-	}
+	 */ 
+	static fn sendMessage(Dict items) =>
+		async Message (RenderContainer container) use (items)
+		{
+			ApiContainer msg = ApiContainer::create(items);
+			msg <= render_container <= container;
+			
+			try
+			{
+				msg = @ -> await method chainAwait(RenderHelper::API_CONTAINER, [msg]);
+			}
+			catch (ApiException e)
+			{
+				msg = msg -> method exception(e);
+				msg <= have_answer <= true;
+			}
+			catch (RuntimeException e)
+			{
+				msg = msg -> method exception(e);
+				msg <= code <= RuntimeConstant::ERROR_FATAL;
+				msg <= have_answer <= true;
+			}
+			
+			if (not msg.have_answer)
+			{
+				msg = @ -> await method send(msg);
+			}
+			
+			return msg;
+		}
+	;
 	
 	
 	

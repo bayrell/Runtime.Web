@@ -1,5 +1,5 @@
 /*!
- *  Bayrell Local Bus Provider
+ *  Bayrell Runtime Library
  *
  *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
  *
@@ -26,12 +26,16 @@ use Runtime.MessageRPC;
 use Runtime.RuntimeConstant;
 use Runtime.RuntimeUtils;
 use Runtime.Annotations.IntrospectionClass;
+use Runtime.Annotations.IntrospectionInfo;
 use Runtime.Exceptions.ApiException;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Interfaces.BusInterface;
 use Runtime.Interfaces.ContextInterface;
 use Runtime.Web.Annotations.ApiList;
 use Runtime.Web.Annotations.ApiMethod;
+use Runtime.Web.Annotations.ApiMiddleware;
+use Runtime.Web.ApiContainer;
+use Runtime.Web.RenderHelper;
 
 
 struct LocalBusProvider extends CoreProvider implements BusInterface
@@ -110,21 +114,99 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 	/**
 	 * Find api method
 	 */
-	pure ApiMethod findApiMethod(MessageRPC msg)
+	pure ApiMethod findApiMethod(ApiContainer container)
 	{
+		if (container.api_method != null) return container;
+		
 		Collection<CoreStruct> entities = @.entities;
 		Collection<ApiList> api_lists = entities.filter( lib::isInstance(classof ApiList) );
-		ApiMethod api_method = null;
 		
 		for (int api_lists_i=0; api_lists_i<api_lists.count(); api_lists_i++)
 		{
 			ApiList api_list = api_lists.item(api_lists_i);
-			api_method = static::findApiMethodFromList(api_list, msg);
+			ApiMethod api_method = static::findApiMethodFromList(api_list, container);
 			
-			if (api_method != null) return api_method;
+			if (api_method != null)
+			{
+				container <= api_method <= api_method;
+				break;
+			}
 		}
 		
-		return null;
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Api Middleware
+	 */
+	static async MessageRPC callApiMiddleware(ApiContainer container)
+	{
+		if (container.api_method == null) return container;
+		
+		Collection<ApiMiddleware> middlewares = [];
+		
+		/* Get middleware from class */
+		fn getMethodInfoByName = rtl::method(container.api_method.class_name, "getClassInfo");
+		IntrospectionInfo info = getMethodInfoByName();
+		middlewares = middlewares.concat
+		(
+			info.annotations.filter( lib::isInstance(classof ApiMiddleware) )
+		);
+		
+		/* Get middleware from method */
+		fn getMethodInfoByName = rtl::method(container.api_method.class_name, "getMethodInfoByName");
+		IntrospectionInfo info = getMethodInfoByName(container.api_method.class_method_name);
+		middlewares = middlewares.concat
+		(
+			info.annotations.filter( lib::isInstance(classof ApiMiddleware) )
+		);
+		
+		/* Run each middleware */
+		for (int i=0; i<middlewares.count(i); i++)
+		{
+			ApiMiddleware m = middlewares.item(i);
+			Collection arr = rs::split("::", m.value);
+			string class_name = arr.get(0, "");
+			string method_name = arr.get(1, "");
+			fn f = rtl::method(class_name, method_name);
+			
+			/* Run method */
+			container = await f(container);
+		}
+		
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Api Run
+	 */
+	static async MessageRPC callApiRun(ApiContainer container)
+	{
+		if (container.api_method == null) return container;
+		
+		fn f = rtl::method(container.api_method.class_name, container.api_method.class_method_name);
+		container = await rtl::apply(f, [container]);
+		
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Api Answer
+	 */
+	static MessageRPC callApiAnswer(ApiContainer container)
+	{
+		if (container.api_method == null)
+		{
+			throw new ApiException(_("App", "Api not found"), RuntimeConstant::ERROR_API_NOT_FOUND);
+		}
+		
+		return container;
 	}
 	
 	
@@ -148,18 +230,12 @@ struct LocalBusProvider extends CoreProvider implements BusInterface
 			
 			try
 			{
-				/* Find api */
-				ApiMethod api_method = static::findApiMethod(msg);
-				
-				if (api_method)
+				if (not (msg instanceof ApiContainer))
 				{
-					fn f = rtl::method(api_method.class_name, api_method.class_method_name);
-					msg = await rtl::apply(f, [msg]);
+					msg = ApiContainer::create( msg.takeDict() );
 				}
-				else
-				{
-					throw new ApiException(_("App", "Api not found"), RuntimeConstant::ERROR_API_NOT_FOUND);
-				}
+				msg <= render_container <= null;
+				msg = @ -> await method chainAwait(RenderHelper::API_CHAIN, [msg]);
 			}
 			catch (ApiException e)
 			{
