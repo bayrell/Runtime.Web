@@ -16,12 +16,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Runtime.Web.Frontend;
 
 use Runtime.CoreStruct;
 use Runtime.RuntimeUtils;
-use Runtime.Web.Component;
-use Runtime.Web.LayoutModel;
+use Runtime.Web.Frontend.Component;
+use Runtime.Web.Frontend.LayoutModel;
 use Runtime.Web.RenderHelper;
 
 

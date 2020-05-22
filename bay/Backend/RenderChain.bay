@@ -26,10 +26,10 @@ use Runtime.RuntimeUtils;
 use Runtime.Annotations.IntrospectionInfo;
 use Runtime.Interfaces.AssetsInterface;
 use Runtime.Web.Annotations.RouteMiddleware;
+use Runtime.Web.Frontend.LayoutModel;
 use Runtime.Web.RedirectResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
-use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderHelper;
 use Runtime.Web.Route;
@@ -77,6 +77,7 @@ static class RenderChain
 		{
 			"bag": new Dict(),
 			"uri": RenderHelper::splitRoutePrefix(container.request.uri, container.request.route_prefix),
+			"f_inc": @ -> method config(["Runtime.Web", "f_inc"], 1),
 			"full_uri": container.request.uri,
 			"route": container.route,
 			"route_prefix": container.request.route_prefix,

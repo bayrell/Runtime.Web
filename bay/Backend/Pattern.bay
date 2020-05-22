@@ -22,7 +22,7 @@ use Runtime.CoreStruct;
 use Runtime.RuntimeUtils;
 use Runtime.Interfaces.AssetsInterface;
 use Runtime.Interfaces.StringInterface;
-use Runtime.Web.LayoutModel;
+use Runtime.Web.Frontend.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderHelper;
 
@@ -119,7 +119,7 @@ class Pattern
 	 */
 	pure string renderLayoutModel(RenderContainer container) => 
 		"<input id='layout_model' value='" ~
-		RuntimeUtils::base64_encode_url(RuntimeUtils::json_encode(container.layout)) ~
+		rs::base64_encode_url(RuntimeUtils::json_encode(container.layout)) ~
 		"' style='display: none;' type='hidden' />"
 	;
 	
@@ -153,8 +153,8 @@ class Pattern
 				"<script src='/assets/" ~ s ~ "?_=" ~ container.layout.f_inc ~ "'></script>"
 		);
 		
-		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Drivers/BusProvider.js?_=" ~ container.layout.f_inc ~ "'></script>");
-		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Drivers/RenderDriver.js?_=" ~ container.layout.f_inc ~ "'></script>");
+		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Frontend/BusProvider.js?_=" ~ container.layout.f_inc ~ "'></script>");
+		js_arr = js_arr.pushIm("<script src='/assets/Runtime.Web/es6/Frontend/RenderDriver.js?_=" ~ container.layout.f_inc ~ "'></script>");
 		
 		return rs::join("", js_arr);
 	}
@@ -196,7 +196,7 @@ class Pattern
 		for (int i=0; i<arr1.count(); i++)
 		{
 			string class_name = arr1.item(i);
-			if (class_name == "Runtime.Web.Component") break;
+			if (class_name == "Runtime.Web.Frontend.Component") break;
 			arr2.push(class_name);
 		}
 		

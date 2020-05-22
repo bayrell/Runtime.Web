@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Runtime.Web.Frontend;
 
 use Runtime.lib;
 use Runtime.CoreObject;
@@ -268,4 +268,13 @@ class Component extends CoreObject
 	}
 	
 	#endif
+	
+	
+	/**
+	 * Send rpc message
+	 * @param Dict items
+	 * @return Message
+	 */ 
+	async fn sendMessage(Dict items) => @ -> await method sendMessage(items);
+	
 }

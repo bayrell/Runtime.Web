@@ -18,18 +18,18 @@
  */
 if (typeof Runtime == 'undefined') Runtime = {};
 if (typeof Runtime.Web == 'undefined') Runtime.Web = {};
-if (typeof Runtime.Web.Drivers == 'undefined') Runtime.Web.Drivers = {};
-Runtime.Web.Drivers.BusProvider = function(ctx)
+if (typeof Runtime.Web.Frontend == 'undefined') Runtime.Web.Frontend = {};
+Runtime.Web.Frontend.BusProvider = function(ctx)
 {
 	Runtime.CoreProvider.apply(this, arguments);
 };
-Runtime.Web.Drivers.BusProvider.prototype = Object.create(Runtime.CoreProvider.prototype);
-Runtime.Web.Drivers.BusProvider.prototype.constructor = Runtime.Web.Drivers.BusProvider;
-Object.assign(Runtime.Web.Drivers.BusProvider.prototype,
+Runtime.Web.Frontend.BusProvider.prototype = Object.create(Runtime.CoreProvider.prototype);
+Runtime.Web.Frontend.BusProvider.prototype.constructor = Runtime.Web.Frontend.BusProvider;
+Object.assign(Runtime.Web.Frontend.BusProvider.prototype,
 {
 	assignObject: function(ctx,o)
 	{
-		if (o instanceof Runtime.Web.Drivers.BusProvider)
+		if (o instanceof Runtime.Web.Frontend.BusProvider)
 		{
 		}
 		Runtime.CoreProvider.prototype.assignObject.call(this,ctx,o);
@@ -45,11 +45,11 @@ Object.assign(Runtime.Web.Drivers.BusProvider.prototype,
 	},
 	getClassName: function(ctx)
 	{
-		return "Runtime.Web.Drivers.BusProvider";
+		return "Runtime.Web.Frontend.BusProvider";
 	},
 });
-Object.assign(Runtime.Web.Drivers.BusProvider, Runtime.CoreProvider);
-Object.assign(Runtime.Web.Drivers.BusProvider,
+Object.assign(Runtime.Web.Frontend.BusProvider, Runtime.CoreProvider);
+Object.assign(Runtime.Web.Frontend.BusProvider,
 {
 	
 	/**
@@ -325,7 +325,7 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 	},
 	getCurrentClassName: function()
 	{
-		return "Runtime.Web.Drivers.BusProvider";
+		return "Runtime.Web.Frontend.BusProvider";
 	},
 	getParentClassName: function()
 	{
@@ -338,8 +338,8 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 		var IntrospectionInfo = Runtime.Annotations.IntrospectionInfo;
 		return new IntrospectionInfo(ctx, {
 			"kind": IntrospectionInfo.ITEM_CLASS,
-			"class_name": "Runtime.Web.Drivers.BusProvider",
-			"name": "Runtime.Web.Drivers.BusProvider",
+			"class_name": "Runtime.Web.Frontend.BusProvider",
+			"name": "Runtime.Web.Frontend.BusProvider",
 			"annotations": Collection.from([
 			]),
 		});
@@ -369,4 +369,4 @@ Object.assign(Runtime.Web.Drivers.BusProvider,
 		Runtime.Interfaces.BusInterface,
 	],
 });
-Runtime.rtl.defClass(Runtime.Web.Drivers.BusProvider);
+Runtime.rtl.defClass(Runtime.Web.Frontend.BusProvider);

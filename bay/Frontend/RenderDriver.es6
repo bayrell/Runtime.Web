@@ -19,7 +19,7 @@
 
 if (typeof Runtime == 'undefined') Runtime = {};
 if (typeof Runtime.Web == 'undefined') Runtime.Web = {};
-if (typeof Runtime.Web.Drivers == 'undefined') Runtime.Web.Drivers = {};
+if (typeof Runtime.Web.Frontend == 'undefined') Runtime.Web.Frontend = {};
 var use = (typeof Runtime != 'undefined' && typeof Runtime.rtl != 'undefined') ? Runtime.rtl.find_class : null;
 
 
@@ -43,7 +43,7 @@ Runtime.CoreStruct.prototype.initData = function (old_model, changed)
 /**
  * Control object
  */
-Runtime.Web.Drivers.Control = function()
+Runtime.Web.Frontend.Control = function()
 {
 	this.type = "";
 	this.component = null;
@@ -53,7 +53,7 @@ Runtime.Web.Drivers.Control = function()
 	this.index = 0;
 	this.model_bind_path = Runtime.Collection.from([]);
 }
-Object.assign(Runtime.Web.Drivers.Control.prototype,
+Object.assign(Runtime.Web.Frontend.Control.prototype,
 {
 	copy: function(obj)
 	{
@@ -67,7 +67,7 @@ Object.assign(Runtime.Web.Drivers.Control.prototype,
 /**
  * Render driver
  */
-Runtime.Web.Drivers.RenderDriver = function()
+Runtime.Web.Frontend.RenderDriver = function()
 {
 	this.remove_keys = [];
 	this.animation_id = null;
@@ -85,11 +85,11 @@ Runtime.Web.Drivers.RenderDriver = function()
 	this.context = null;
 	this.next_component_id = 0;
 }
-Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
+Object.assign(Runtime.Web.Frontend.RenderDriver.prototype,
 {
 	getClassName: function()
 	{
-		return "Runtime.Web.Drivers.RenderDriver";
+		return "Runtime.Web.Frontend.RenderDriver";
 	},
 	
 	nextComponentId: function()
@@ -128,7 +128,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		var attrs = {
 			"@bind": Runtime.Collection.from
 			([
-				"Runtime.Web.Drivers.RenderDriver",
+				"Runtime.Web.Frontend.RenderDriver",
 				Runtime.Collection.from([])
 			]),
 			"@key":""
@@ -139,7 +139,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		this.root_elem._vpath = "";
 		this.root_elem._component = this;
 		this.root_elem.params = Runtime.Dict.from(attrs);
-		this.root_control = new Runtime.Web.Drivers.Control();
+		this.root_control = new Runtime.Web.Frontend.Control();
 		this.root_control.driver = this;
 		this.root_control.component = this;
 		this.root_control.parent = this.root_elem;
@@ -326,15 +326,15 @@ Object.assign(Runtime.Web.Drivers.RenderDriver.prototype,
 		}
 	},
 });
-Object.assign(Runtime.Web.Drivers.RenderDriver,
+Object.assign(Runtime.Web.Frontend.RenderDriver,
 {
 	getCurrentNamespace: function()
 	{
-		return "Runtime.Web.Drivers";
+		return "Runtime.Web.Frontend";
 	},
 	getCurrentClassName: function()
 	{
-		return "Runtime.Web.Drivers.RenderDriver";
+		return "Runtime.Web.Frontend.RenderDriver";
 	},
 	getParentClassName: function()
 	{
@@ -1040,7 +1040,7 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 	 */
 	run: function(context, selector, layout_model)
 	{
-		var driver = new Runtime.Web.Drivers.RenderDriver();
+		var driver = new Runtime.Web.Frontend.RenderDriver();
 		driver.context = context;
 		driver.layout_model = layout_model;
 		driver.root_elem = document.querySelector(selector);
@@ -1049,12 +1049,12 @@ Object.assign(Runtime.Web.Drivers.RenderDriver,
 		return driver;
 	}
 });
-Runtime.rtl.defClass(Runtime.Web.Drivers.RenderDriver);
+Runtime.rtl.defClass(Runtime.Web.Frontend.RenderDriver);
 
 
 try
 {
-	var layout_model = Runtime.RuntimeUtils.base64_decode_url
+	var layout_model = Runtime.rs.base64_decode_url
 	(
 		null, document.getElementById('layout_model').value
 	);
@@ -1078,13 +1078,13 @@ try
 	global_context = global_context.constructor.init(global_context, global_context);
 	/* global_context = global_context.constructor.start(global_context, global_context); */
 	window['global_context'] = global_context;
-	window['RenderDriverInstance'] = Runtime.Web.Drivers.RenderDriver.run
+	window['RenderDriverInstance'] = Runtime.Web.Frontend.RenderDriver.run
 	(
 		global_context,
 		'#frontend_root',
 		layout_model
 	);
-	window['RenderDriver'] = Runtime.Web.Drivers.RenderDriver;
+	window['RenderDriver'] = Runtime.Web.Frontend.RenderDriver;
 }
 catch (ex)
 {

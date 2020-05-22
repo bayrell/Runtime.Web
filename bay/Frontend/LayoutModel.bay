@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Runtime.Web.Frontend;
 
 use Runtime.CoreStruct;
 use Runtime.Annotations.Route;
@@ -49,7 +49,6 @@ struct LayoutModel extends CoreStruct
 	string title = "";
 	string description = "";
 	string favicon = "";
-	SeoModel seo = new SeoModel();
 	
 	/* Pagination */
 	int page = 0;
