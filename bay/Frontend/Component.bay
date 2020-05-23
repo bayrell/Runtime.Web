@@ -46,9 +46,9 @@ class Component extends CoreObject
 	/**
 	 * Returns model
 	 */
-	var model(Collection<string> path = null) =>
+	var model(Collection<string> path = null, var def_val = null) =>
 		this.model_bind_path == null ? null :
-			rtl::attr(this.driver.layout_model, this.model_bind_path.concat(path), null)
+			rtl::attr(this.driver.layout_model, this.model_bind_path.concat(path), def_val)
 	;
 	
 	
