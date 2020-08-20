@@ -18,10 +18,10 @@
 
 namespace Runtime.Web.Frontend;
 
-use Runtime.CoreStruct;
+use Runtime.BaseStruct;
 
 
-struct SeoModel extends CoreStruct
+struct SeoModel extends BaseStruct
 {
 	string og_type = "";
 	string site_name = "";

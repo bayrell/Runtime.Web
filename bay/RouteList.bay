@@ -18,7 +18,7 @@
  
 namespace Runtime.Web.Annotations;
 
-use Runtime.CoreStruct;
+use Runtime.BaseStruct;
 use Runtime.Annotations.Entity;
 
 

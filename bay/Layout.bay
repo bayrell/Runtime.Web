@@ -18,7 +18,7 @@
 
 namespace Runtime.Web.Frontend;
 
-use Runtime.CoreStruct;
+use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
 use Runtime.Web.Frontend.Component;
 use Runtime.Web.Frontend.LayoutModel;

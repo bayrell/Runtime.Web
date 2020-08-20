@@ -19,10 +19,10 @@
 namespace Runtime.Web.Annotations;
 
 use Runtime.re;
-use Runtime.CoreStruct;
+use Runtime.BaseStruct;
 
 
-struct Route extends CoreStruct
+struct Route extends BaseStruct
 {
 	public string uri = "";
 	public string name = "";

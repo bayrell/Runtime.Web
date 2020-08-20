@@ -18,12 +18,12 @@
 
 namespace Runtime.Web.Frontend;
 
-use Runtime.CoreStruct;
+use Runtime.BaseStruct;
 use Runtime.Annotations.Route;
 use Runtime.Web.SeoModel;
 
 
-struct LayoutModel extends CoreStruct
+struct LayoutModel extends BaseStruct
 {
 	/* URL Info */
 	bool is_https = false;
@@ -42,7 +42,7 @@ struct LayoutModel extends CoreStruct
 	string layout_name = "default";
 	string layout_class = "";
 	string page_class = null;
-	CoreStruct page_model = null;
+	BaseStruct page_model = null;
 	
 	/* SEO */
 	string locale = "";

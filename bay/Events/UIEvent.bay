@@ -19,7 +19,7 @@
 namespace Runtime.Web.Events;
 
 use Runtime.CoreEvent;
-use Runtime.CoreStruct;
+use Runtime.BaseStruct;
 use Runtime.Message;
 use Runtime.Reference;
 use Runtime.Web.Component;

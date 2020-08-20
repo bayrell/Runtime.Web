@@ -19,8 +19,8 @@
 namespace Runtime.Web.Frontend;
 
 use Runtime.lib;
-use Runtime.CoreObject;
-use Runtime.CoreStruct;
+use Runtime.BaseObject;
+use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
 use Runtime.Annotations.IntrospectionClass;
 use Runtime.Interfaces.ContextInterface;
@@ -31,7 +31,7 @@ use Runtime.Web.Events.UIEvent;
 use Runtime.Web.Template;
 
 
-class Component extends CoreObject
+class Component extends BaseObject
 {
 	public int component_id = 0;
 	public Component parent_component = null;
@@ -73,7 +73,7 @@ class Component extends CoreObject
 	/**
 	 * Returns model name
 	 */
-	pure string modelName() => classof CoreStruct;
+	pure string modelName() => classof BaseStruct;
 	pure string getModelName()
 	{
 		string class_name = static::getCurrentClassName();
@@ -104,7 +104,7 @@ class Component extends CoreObject
 	/**
 	 * Component render
 	 */
-	pure html render(LayoutModel layout, CoreStruct model, Dict params, html content) => null;
+	pure html render(LayoutModel layout, BaseStruct model, Dict params, html content) => null;
 	
 	
 	

@@ -18,10 +18,10 @@
  
 namespace Runtime.Web.Annotations;
 
-use Runtime.CoreStruct;
+use Runtime.BaseStruct;
 
 
-struct Template extends CoreStruct
+struct Template extends BaseStruct
 {
 	string module_name = "";
 	string model_name = "";

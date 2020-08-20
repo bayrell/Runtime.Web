@@ -18,7 +18,7 @@
  
 namespace Runtime.Interfaces;
 
-use Runtime.CoreObject;
+use Runtime.BaseObject;
 use Runtime.Map;
 use Runtime.Vector;
 use Runtime.Interfaces.ContextInterface;
@@ -29,9 +29,9 @@ interface SerializeInterface
 	
 	/**
 	 * Assign and clone data from other object
-	 * @param CoreObject obj
+	 * @param BaseObject obj
 	 */
-	void assignObject(CoreObject obj);
+	void assignObject(BaseObject obj);
 	
 	
 	
