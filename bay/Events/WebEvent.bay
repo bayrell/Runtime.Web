@@ -100,25 +100,11 @@ struct WebEvent extends UIEvent
 	
 	
 	/**
-	 * Prevent default mouse event
-	 */
-	void preventDefault()
-	{
-		#switch
-		#case ifcode ES6 then
-		this.assignValue('default_prevented', true);
-		this.es6_event.preventDefault();
-		#endswitch
-	}
-
-	
-	
-	/**
 	 * Cancel event
 	 */
 	void isCancel()
 	{
-		return this.cancelBubble;
+		return this.cancel_bubble;
 	}
 	
 	
@@ -126,15 +112,40 @@ struct WebEvent extends UIEvent
 	/**
 	 * Cancel event
 	 */
-	void cancel()
+	pure WebEvent preventDefault(WebEvent event)
 	{
-		#switch
-		#case ifcode ES6 then
-		this.assignValue('cancel_bubble', true);
-		this.assignValue('default_prevented', true);
-		this.es6_event.cancelBubble = true;
-		this.es6_event.stopPropagation();
-		this.es6_event.preventDefault();
-		#endswitch
+		event = event.copy
+		{
+			"default_prevented": true,
+		};
+		
+		#ifcode ES6 then
+		event.es6_event.preventDefault();
+		#endif
+		
+		return event;
 	}
+	
+	
+	
+	/**
+	 * Cancel event
+	 */
+	pure WebEvent cancel(WebEvent event)
+	{
+		event = event.copy
+		{
+			"cancel_bubble": true,
+			"default_prevented": true,
+		};
+		
+		#ifcode ES6 then
+		event.es6_event.cancelBubble = true;
+		event.es6_event.stopPropagation();
+		event.es6_event.preventDefault();
+		#endif
+		
+		return event;
+	}
+	
 }

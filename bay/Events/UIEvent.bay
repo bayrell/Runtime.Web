@@ -18,15 +18,16 @@
 
 namespace Runtime.Web.Events;
 
-use Runtime.CoreEvent;
 use Runtime.BaseStruct;
-use Runtime.Message;
-use Runtime.Reference;
-use Runtime.Web.Component;
+use Runtime.Core.CoreEvent;
 
 
-struct UIEvent extends Message
+struct UIEvent extends CoreEvent
 {
-	int instance_id = 0;
-	Component instance = null;
+	
+	/**
+	 * Cancel event
+	 */
+	pure UIEvent cancel(UIEvent event) => event;
+	
 }

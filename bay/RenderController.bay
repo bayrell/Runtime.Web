@@ -1,0 +1,491 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.BaseStruct;
+use Runtime.RuntimeUtils;
+use Runtime.Core.CoreDriver;
+use Runtime.Core.CoreObject;
+use Runtime.Web.Component;
+use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderDriver;
+use Runtime.Web.RenderDriverControl;
+
+
+class RenderController extends CoreDriver
+{
+	protected var ctx = null;
+	protected string selector = "";
+	protected var root_elem = null;
+	protected var animation_id = null;
+	protected bool is_main_controller = false;
+	protected LayoutModel layout = null;
+	
+	/* Render variable */
+	protected Vector updated_components = null;
+	protected Vector remove_keys = null;
+	protected Map<CoreObject> components = null;
+	protected int next_component_id = 0;
+	
+	
+	/**
+	 * Returns true if main controller
+	 */
+	bool isMainController() => this.is_main_controller;
+	
+	
+	
+	/**
+	 * Component get path
+	 */
+	string getPath() => "";
+	
+	
+	
+	/**
+	 * Returns model path
+	 */
+	Collection<string> getModelPath() => [];
+	
+	
+	
+	/**
+	 * Returns model
+	 */
+	var model(Collection<string> model_path = null, var def_val = null) =>
+		rtl::attr(this.layout, model_path, def_val)
+	;
+	
+	
+	
+	/**
+	 * Update model
+	 */
+	void updateModel(Collection<string> model_path = null, BaseStruct model = null)
+	{
+		this.layout = rtl::setAttr(this.layout, model_path, model);
+		this.repaint();
+	}
+	
+	
+	
+	/**
+	 * Returns next unique component id
+	 */
+	string nextComponentId()
+	{
+		this.next_component_id = this.next_component_id + 1;
+		return this.getObjectName() ~ ".obj." ~ this.next_component_id;
+	}
+	
+	
+	
+	/**
+	 * Output warning message
+	 */
+	void warning(string msg)
+	{
+		#ifcode JAVASCRIPT then
+		var arr = Array.apply(null, arguments);
+		arr.shift(); /* Remove ctx */
+		arr.unshift("[Warning]");
+		console.log.apply(null, arr);
+		#endif
+	}
+	
+	
+	
+	/**
+	 * Returns component by path
+	 */
+	Component getComponent(string path_id, string class_name)
+	{
+		if (not this.components.has(path_id)) return null;
+		
+		CoreObject component = this.components.item(path_id);
+		string component_class_name = component.getClassName();
+		Vector<string> component_parents = RuntimeUtils::getParents(component_class_name);
+		if (component_class_name != class_name and component_parents.indexOf(class_name) == -1)
+		{
+			return null;
+		}
+		
+		return component;
+	}
+	
+	
+	
+	/**
+	 * Search component in parents
+	 */
+	Component searchComponent (string path_id, string class_name)
+	{
+		Vector<string> arr = Vector::@from( rs::split("\\.", path_id) );
+		while (arr.count() > 0)
+		{
+			string path = rs::join(".", arr);
+			Component component = this.getComponent(path, class_name);
+			if (component != null)
+			{
+				return component;
+			}
+			arr.pop();
+		}
+		if (class_name == this.getClassName()) return this;
+		return null;
+	}
+	
+	
+	
+	/**
+	 * Save component
+	 */
+	void saveComponent(Component component)
+	{
+		this.components.set(component.getPath(), component);
+		@.addObject(component);
+	}
+	
+	
+	
+	/**
+	 * Add to update component
+	 */
+	void updateComponent(Component component, bool created = false)
+	{
+		this.updated_components.push({ "component": component, "created": created });
+	}
+	
+	
+	
+	/**
+	 * Returns model path from @bind value
+	 */
+	Collection<string> getBindModelPath(string path_id, Collection bind_value)
+	{
+		string class_name = bind_value[0];
+		Collection bind_name = bind_value[1];
+		if (rtl::isString(bind_name))
+		{
+			bind_name = Collection::@from([bind_name]);
+		}
+		
+		Component component = this.searchComponent(path_id, class_name);
+		if (component == null)
+		{
+			this.warning("Bind model: " ~ class_name ~ " not found");
+			return;
+		}
+		
+		/* Get model path */
+		Collection<string> model_path = component.getModelPath();
+		model_path = model_path.concat(bind_name);
+		return model_path;
+	}
+	
+	
+	
+	/**
+	 * Returns model value from @bind value
+	 */
+	var getBindModelValue(string path_id, Collection bind_value, var def_val = null)
+	{
+		Collection<string> model_path = this.getBindModelPath(path_id, bind_value);
+		return this.model(model_path, def_val);
+	}
+	
+	
+	
+	/**
+	 * Start driver
+	 */
+	public async void startDriver()
+	{
+		this.setParent( @.getDriver(classof RenderDriver) );
+		this.selector = this.entity["params", "selector"] |> default string "";
+		this.is_main_controller = this.entity["params", "main_controller"] |> default bool false;
+		
+		string window_name = this.entity["params", "window"] |> default string "";
+		#ifcode JAVASCRIPT then
+		if (window_name != "") window[window_name] = this;
+		if (this.selector != "") this.root_elem = document.querySelector(this.selector);
+		#endif
+		
+		this.components = new Map();
+		this.saveComponent(this);
+	}
+	
+	
+	
+	/**
+	 * Render layout
+	 */
+	public void renderLayout(LayoutModel layout)
+	{
+		this.layout = layout;
+		this.repaint();
+	}
+	
+	
+	
+	/**
+	 * Repaint layout
+	 */
+	public void repaint()
+	{
+		#ifcode JAVASCRIPT then
+		if (this.animation_id == null)
+		{
+			this.ctx = ctx;
+			this.animation_id = requestAnimationFrame( this.render.bind(this) );
+		}
+		#endif
+	}
+	
+	
+	
+	/**
+	 * Render layout
+	 */
+	protected void render()
+	{
+		var ctx = this.ctx;
+		this.animation_id = null;
+		
+		this.updated_components = new Vector();
+		this.remove_keys = new Vector();
+		
+		RenderDriverControl root_control = new RenderDriverControl
+		{
+			"ctx": ctx,
+			"controller": this,
+			"component": this,
+			"parent": this.root_elem,
+			"path_id": "",
+		};
+		
+		#ifcode JAVASCRIPT then
+		var res = RenderDriver.e
+		(
+			root_control, [],
+			"component",
+			{
+				"name": this.layout.layout_class,
+				"attrs": {
+					"@bind": ["Runtime.Web.RenderController", []],
+					"@key":""
+				},
+			},
+			0
+		);
+		RenderDriver.p(root_control, res[1]);
+		#endif
+		
+	}
+	
+	
+	
+	/**
+	 * Update elem params
+	 */
+	public void updateElemParams(RenderDriverControl control, var elem)
+	{
+		#ifcode JAVASCRIPT then
+		
+		var model = control.model;
+		var is_new_elem = control.is_new_elem;
+		var component = elem._component;
+		var attrs = elem._attrs;
+		var path_id = elem._path_id;
+		
+		/* Set attrs */
+		if (attrs != null)
+		{
+			/* Add attributes */
+			for (var key in attrs)
+			{
+				var value = attrs[key];
+				if (key == "@bind")
+				{
+					value = this.getBindModelValue(ctx, path_id, value);
+				}
+				if (key == "value" || key == "@bind")
+				{
+					if (elem.tagName == "INPUT" || elem.tagName == "SELECT" || elem.tagName == "TEXTAREA")
+					{
+						if (elem.value != value) elem.value = value;
+						continue;
+					}
+				}
+				if (key[0] == "@") continue;
+				if (elem.getAttribute(key) != value)
+				{
+					elem.setAttribute(key, value);
+				}
+			}
+			
+			/* Remove old attributes */
+			for (var i=elem.attributes.length - 1; i>=0; i--)
+			{
+				var attr = elem.attributes[i];
+				if (attrs[attr.name] == undefined)
+				{
+					elem.removeAttribute(attr.name);
+				}
+			}
+		}
+		
+		#endif
+	}
+	
+	
+	
+	/**
+	 * Patch DOM with new childs
+	 */
+	public void patchElemChilds(var parent_elem, var new_childs)
+	{
+		#ifcode JAVASCRIPT then
+		if (new_childs == null) new_childs = [];
+		
+		var findElementPos = function (elem, e)
+		{
+			var childs = elem.childNodes;
+			for (var i = 0; i < elem.childNodes.length; i++)
+			{
+				if (childs[i] == e)
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+		
+		var insertFirst = function (elem, e)
+		{
+			if (elem.childNodes.length == 0)
+			{
+				elem.appendChild(e);
+			}
+			else
+			{
+				elem.insertBefore(e, elem.firstChild);
+			}
+		}
+		
+		var insertAfter = function (elem, prev, e)
+		{
+			if (prev == null)
+			{
+				insertFirst(elem, e);
+				return;
+			}
+			var next = prev.nextSibling;
+			if (next == null)
+			{
+				elem.appendChild(e);
+			}
+			else
+			{
+				elem.insertBefore(e, next);
+			}
+		}
+		
+		
+		/* Remove elems */
+		var i = parent_elem.childNodes.length - 1;
+		while (i >= 0)
+		{
+			var e = parent_elem.childNodes[i];
+			if (new_childs.indexOf(e) == -1)
+			{
+				parent_elem.removeChild(e);
+				this.remove_keys.push(e._key);
+				/* console.log('Remove child ', i); */
+			}
+			i--;
+		}
+		
+		
+		var prevElem = null;
+		for (var i=0; i<new_childs.length; i++)
+		{
+			var new_e = new_childs[i];
+			if (typeof new_e == "string")
+			{
+				new_e = document.createTextNode(new_e);
+			}
+			
+			var pos = findElementPos(parent_elem, new_e);
+			var flag = false;
+			
+			/* If new element */
+			if (pos == -1)
+			{
+				if (prevElem == null)
+				{
+					insertFirst(parent_elem, new_e);
+					flag = true;
+					/* console.log('Insert first ', i); */
+				}
+				else
+				{
+					insertAfter(parent_elem, prevElem, new_e);
+					flag = true;
+					/* console.log('Insert after[1] ', i); */
+				}
+			}
+			
+			/* If existing element */
+			else
+			{
+				if (pos - 1 < 0)
+				{
+					if (i != 0)
+					{
+						insertAfter(parent_elem, prevElem, new_e);
+						flag = true;
+						/* console.log('Insert after[2] ', i); */
+					}
+				}
+				else
+				{
+					var prevSibling = parent_elem.childNodes[pos - 1];
+					if (prevElem != prevSibling)
+					{
+						insertAfter(parent_elem, prevElem, new_e);
+						flag = true;
+						/* console.log('Insert after[3] ', i); */
+					}
+				}
+			}
+			
+			if (flag)
+			{
+				var index = this.remove_keys.indexOf(new_e._key);
+				if (index != -1)
+					this.remove_keys.splice(index, 1);
+			}
+			
+			prevElem = new_e;
+		}
+		#endif
+	}
+	
+}

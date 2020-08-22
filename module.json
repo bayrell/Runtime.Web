@@ -1,0 +1,37 @@
+{
+	"name": "Runtime.Web",
+	"files":
+	[
+		"Component",
+		"Layout",
+		"LayoutModel",
+		"RenderController",
+		"RenderDriver",
+		"RenderDriverControl",
+		"Route",
+		"RouteList",
+		"SeoModel",
+		"Events/UIEvent",
+		"Events/WebEvent",
+		"Events/BlurEvent",
+		"Events/ChangeEvent",
+		"Events/FocusEvent",
+		"Events/KeyboardEvent",
+		"Events/KeyDownEvent",
+		"Events/KeyPressEvent",
+		"Events/KeyUpEvent",
+		"Events/MouseEvent",
+		"Events/MouseClickEvent",
+		"Events/MouseContextMenuEvent",
+		"Events/MouseDoubleClickEvent",
+		"Events/MouseDownEvent",
+		"Events/MouseEnterEvent",
+		"Events/MouseLeaveEvent",
+		"Events/MouseMoveEvent",
+		"Events/MouseOutEvent",
+		"Events/MouseOverEvent",
+		"Events/MouseUpEvent",
+		"Events/MouseWheelEvent",
+		"ModuleDescription"
+	]
+}

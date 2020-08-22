@@ -16,81 +16,123 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Frontend;
+namespace Runtime.Web;
 
-use Runtime.lib;
-use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
-use Runtime.Annotations.IntrospectionClass;
-use Runtime.Interfaces.ContextInterface;
+use Runtime.Core.CoreObject;
+use Runtime.Core.Message;
 use Runtime.Web.LayoutModel;
-use Runtime.Web.RenderHelper;
-use Runtime.Web.Events.ChangeEvent;
+use Runtime.Web.RenderController;
+use Runtime.Web.RenderDriver;
 use Runtime.Web.Events.UIEvent;
-use Runtime.Web.Template;
 
 
-class Component extends BaseObject
+class Component extends CoreObject
 {
-	public int component_id = 0;
-	public Component parent_component = null;
-	public string path = "";
-	public Dict params = null;
-	public var old_model = null;
-	public var driver = null;
-	public Collection<string> model_bind_path = [];
+	protected string path_id = "";
+	protected RenderController controller = null;
+	protected Dict params = null;
+	protected Collection<string> model_path = [];
+	
+	
+	/**
+	 * Component get path
+	 */
+	string getPath() => this.path_id;
+	
+	
+	
+	/**
+	 * Returns model path
+	 */
+	public Collection<string> getModelPath() => this.model_path;
+	
+	
+	
+	/**
+	 * Set new component's model
+	 */
+	public void setModelPath(Collection<string> model_path)
+	{
+		this.model_path = model_path;
+	}
+	
+	
+	
+	/**
+	 * Returns component params
+	 */
+	public Dict getParams() => this.params;
+	
+	
+	
+	/**
+	 * Set new params
+	 */
+	public void setParams(Dict params)
+	{
+		this.params = params;
+	}
 	
 	
 	
 	/**
 	 * Returns model
 	 */
-	var model(Collection<string> path = null, var def_val = null) =>
-		this.model_bind_path == null ? null :
-			rtl::attr(this.driver.layout_model, this.model_bind_path.concat(path), def_val)
+	var model(Collection<string> model_path = null, var def_val = null) =>
+		this.model_path == null ? null :
+			rtl::attr(this.controller.layout, this.model_path.concat(model_path), def_val)
 	;
 	
 	
 	
 	/**
-	 * Returns module name
+	 * Commit model
 	 */
-	pure string moduleName() => static::getCurrentNamespace();
-	pure string getModuleName()
+	void commit(string method_name = "")
 	{
-		string class_name = static::getCurrentClassName();
-		IntrospectionClass info = RuntimeUtils::getClassIntrospection(class_name);
+		var args = new Vector();
+		#ifcode JAVASCRIPT then
+		for (var i=2; i<arguments.length; i++) args.push(ctx, arguments[i]);
+		#endif
 		
-		Template t = info.class_info.findItem( lib::isInstance( classof Template ) );
-		if (t != null and t.module_name != "") return t.module_name;
+		/* Get current model */
+		BaseStruct model = this.model();
+		args.unshift(model);
 		
-		return static::moduleName();
+		/* Change model by function */
+		fn f = rtl::method(model.getClassName(), method_name);
+		model = rtl::apply(f, args);
+		
+		/* Set new model */
+		this.controller.updateModel(this.model_path, model);
 	}
 	
 	
 	
 	/**
-	 * Returns model name
+	 * Constructor
 	 */
-	pure string modelName() => classof BaseStruct;
-	pure string getModelName()
+	void constructor(string object_name, string path_id, RenderController controller)
 	{
-		string class_name = static::getCurrentClassName();
-		IntrospectionClass info = RuntimeUtils::getClassIntrospection(class_name);
-		
-		Template t = info.class_info.findItem( lib::isInstance( classof Template ) );
-		if (t != null and t.model_name != "") return t.model_name;
-		
-		return static::modelName();
+		parent(object_name);
+		this.path_id = path_id;
+		this.controller = controller;
 	}
 	
 	
 	
 	/**
-	 * Returns required components
+	 * Cancel event
 	 */
-	pure Collection<string> components() => null;
+	static Message<UIEvent> cancelEvent(Message<UIEvent> msg)
+	{
+		msg.cancel();
+		UIEvent event = (UIEvent)msg.data;
+		msg.data = event::cancel(event);
+		return msg;
+	}
 	
 	
 	
@@ -114,7 +156,7 @@ class Component extends BaseObject
 	pure string getCssName(string css_name)
 	{
 		string class_name = static::getCurrentClassName();
-		return RenderHelper::getCssName(class_name, css_name);
+		return RenderDriver::getCssName(class_name, css_name);
 	}
 	
 	
@@ -164,117 +206,5 @@ class Component extends BaseObject
 		if (s instanceof Collection) return rs::join("", s);
 		return rtl::toString(s);
 	}
-	
-	
-	#ifdef FRONTEND then
-	
-	
-	/**
-	 * Update component
-	 */
-	public void onUpdate(bool created)
-	{
-	}
-	
-	
-	
-	/**
-	 * Set new component's model
-	 */
-	public void driverSetModel(Collection<string> model_bind_path)
-	{
-		this.model_bind_path = model_bind_path;
-	}
-	
-	
-	
-	/**
-	 * Set new params
-	 */
-	public void driverSetParams(Dict params)
-	{
-		this.params = params;
-	}
-	
-	
-	
-	/**
-	 * Set model
-	 * @param var map
-	 */
-	public void setModel(var model)
-	{
-		this.driver.setModel(this.model_bind_path, model);
-	}
-	
-	
-	
-	/**
-	 * Update current model
-	 * @param Dict map
-	 */
-	public void updateModel(Dict map)
-	{
-		this.driver.updateModel(this.model_bind_path, map);
-	}
-	
-	
-	
-	/**
-	 * Update model value
-	 */
-	public void updateModelValue(Collection<string> path, var value)
-	{
-		this.driver.updateModelValue(this.model_bind_path.concat(path), value);
-	}
-	
-	
-	
-	/**
-	 * Signal out
-	 */
-	public void signal(UIEvent e)
-	{
-		string class_name = e.getClassName();
-		string method_name = "";
-		
-		e <= instance <= this;
-		e <= instance_id <= 0;
-		
-		if (this.params == null) return;
-		
-		if (e instanceof ChangeEvent)
-		{
-			if (this.params.has("@bind"))
-			{
-				string bind = this.params.item("@bind");
-				this.driver.updateModelValue(this.model_bind_path, e.value);
-			}
-		}
-		
-		method_name = this.params.get("@event:" ~ class_name, "");
-		if (method_name != "")
-		{
-			fn f = this.driver.@searchEventMethod(this.parent_component.path, method_name);
-			if (f) f(e);
-		}
-		
-		method_name = this.params.get("@eventAsync:" ~ class_name, "");
-		if (method_name != "")
-		{
-			fn f = this.driver.@searchEventMethod(this.parent_component.path, method_name);
-			if (f) rtl::applyAwait(f, [e]);
-		}
-	}
-	
-	#endif
-	
-	
-	/**
-	 * Send rpc message
-	 * @param Dict items
-	 * @return Message
-	 */ 
-	async fn sendMessage(Dict items) => @ -> await method sendMessage(items);
 	
 }

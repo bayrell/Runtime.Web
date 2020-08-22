@@ -1,0 +1,515 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.RuntimeUtils;
+use Runtime.Core.CoreDriver;
+
+
+class RenderDriver extends CoreDriver
+{
+	
+	/**
+	 * Start controller
+	 */
+	public async void startDriver()
+	{
+	}
+	
+	
+	
+	/**
+	 * Retuns css hash
+	 * @param string component class name
+	 * @return string hash
+	 */
+	static memorize string getCssHash(string s)
+	{
+		string r = "";
+		string a = "1234567890abcdef";
+		int sz = rs::strlen(s);
+		int h = 0;
+		for (int i=0; i<sz; i++)
+		{
+			int c = rs::ord( rs::substr(s, i, 1) );
+			h = ((h << 2) + (h >> 14) + c) & 65535;
+		}
+		int p = 0;
+		while (h != 0 or p < 4)
+		{
+			int c = h & 15;
+			h = h >> 4;
+			r ~= rs::substr(a, c, 1);
+			p = p + 1;
+		}
+		return r;
+	}
+	
+	
+	
+	/**
+	 * Returns css name
+	 */
+	pure memorize string getCssName(string class_name, string css_name)
+	{
+		Collection<string> arr = rs::split(" ", css_name);
+		Collection<string> class_names = RuntimeUtils::getParents(class_name);
+		
+		class_names = class_names.filter
+		(
+			bool (string class_name) =>
+				class_name != "Runtime.BaseObject" and
+				class_name != "Runtime.Core.CoreObject" and
+				class_name != "Runtime.Web.Component"
+		);
+		
+		arr = arr.map
+		(
+			string (string css_name) use (class_names)
+			{
+				Collection<string> s1 = class_names.map
+				(
+					string (string class_name) use (css_name)
+					{
+						string hash = static::getCssHash(class_name);
+						return css_name ~ "-" ~ hash;
+					}
+				);
+				
+				string s2 = rs::join(" ", s1);
+				return s2;
+			}
+		);
+		
+		string name = rs::join(" ", arr);
+		return name;
+	}
+	
+}
+
+
+#ifcode JAVASCRIPT then
+window["RenderDriver"] = Runtime.Web.RenderDriver;
+
+
+Object.assign(Runtime.Web.RenderDriver,
+{
+	
+	
+	/**
+	 * Returns true if is elem
+	 */
+	isElem(o)
+	{
+		if (o instanceof HTMLElement || o instanceof Node) return true;
+		return false;
+	},
+	
+	
+	
+	/**
+	 * Return HTML elems from string
+	 */
+	createElementFromHTML(s)
+	{
+		var res = [];
+		var e = document.createElement('div');
+		e.innerHTML = s.trim();
+		for (var i = 0; i < e.childNodes.length; i++) res.push( e.childNodes[i] );
+		return res;
+	},
+	
+	
+	
+	/**
+	 * Decode html entities
+	 */
+	decodeHtmlEntities(s)
+	{
+		var e = document.createElement('textarea');
+		e.innerHTML = s;
+		return e.value;
+	},
+	
+	
+	
+	/**
+	 * Returns elem by index
+	 */
+	getElemChild: function(parent_elem, index)
+	{
+		if (index < 0 || index >= parent_elem.childNodes.length) return null;
+		return parent_elem.childNodes[index];
+	},
+	
+	
+	
+	/**
+	 * Find elem pos by virtual path
+	 */
+	findElemPosByPath: function(parent_elem, path)
+	{
+		for (var i = 0; i < parent_elem.childNodes.length; i++)
+		{
+			if (parent_elem.childNodes[i]._vpath == path)
+			{
+				return i;
+			}
+		}
+		return -1;
+	},
+	
+	
+	
+	/**
+	 * Find elem by virtual path
+	 */
+	findElemByPath: function(parent_elem, vpath, kind)
+	{
+		var pos = this.findElemPosByPath(parent_elem, vpath);
+		return this.getElemChild(parent_elem, pos);
+	},
+	
+	
+	
+	/**
+	 * Find elem by virtual path and check
+	 */
+	findElemByPathAndCheck: function(parent_elem, vpath, kind)
+	{
+		var pos = this.findElemPosByPath(parent_elem, vpath);
+		var elem_new = this.getElemChild(parent_elem, pos);
+		
+		/* Check element */
+		if (elem_new != null)
+		{
+			if (kind == "element")
+			{
+				if (elem_new.tagName == undefined) elem_new = null;
+			}
+		}
+		
+		return elem_new;
+	},
+	
+	
+	
+	/**
+	 * Build Virtual Path
+	 */
+	buildPath: function(control, params, index)
+	{
+		var key = "";
+		if (params != null)
+		{
+			if (params["@key"] != undefined) key = params["@key"];
+		}
+		if (key == "")
+		{
+			key = index;
+		}
+		var path_id = control.path_id;
+		return "" + path_id + ((path_id != "") ? "." : "") + key;
+	},
+	
+	
+	
+	/**
+	 * Normalize childs
+	 */
+	_normalizeChilds: function(res, childs)
+	{
+		for (var i=0; i<childs.length; i++)
+		{
+			var item = childs[i];
+			if (item instanceof Array)
+			{
+				res = this._normalizeChilds(res, item);
+			}
+			else
+			{
+				res.push(item);
+			}
+		}
+		return res;
+	},
+	
+	
+	
+	/**
+	 * Normalize content
+	 */
+	normalizeContent: function(content, control)
+	{
+		if (content == null) return null;
+		if (typeof content == "function" || content instanceof Function) content = content(control);
+		if (this.isElem(content)) return content;
+		if (content instanceof Array)
+		{
+			var new_content = [];
+			for (var i=0; i<content.length; i++)
+			{
+				var item = this.normalizeContent(content[i], control);
+				new_content.push(item);
+			}
+			
+			var res = [];
+			this._normalizeChilds(res, new_content);
+			
+			return res;
+		}
+		
+		return content;
+	},
+	
+	
+	
+	/**
+	 * Element
+	 */
+	e: function (control, childs, type, obj, index, elem_flag)
+	{
+		var new_control = null;
+		var parent_elem = control.parent;
+		var name = (obj != null) ? obj.name : "";
+		var attrs = (obj != null && obj.attrs != null && obj.attrs != undefined) ? obj.attrs : null;
+		var content = (obj != null && obj.content != null && obj.content != undefined) ? obj.content : null;
+		var path_id = this.buildPath(control, attrs, index);
+		var controller = control.controller;
+		var ctx = control.ctx;
+		
+		if (type == 'component')
+		{
+			var model = null;
+			var model_path = null;
+			var created = false;
+			
+			/* Find class */
+			var class_obj = use(name);
+			if (class_obj == undefined)
+			{
+				throw new Error("Component " + name + " not found");
+			}
+			
+			/* Find component */
+			var component = controller.getComponent(ctx, path_id, name);
+			if (component == null)
+			{
+				/* Create component */
+				component = new class_obj(ctx, controller.nextComponentId(), path_id, controller);
+				controller.saveComponent(ctx, component);
+				created = true;
+			}
+			
+			/* Find model */
+			if (attrs != null && attrs["@bind"] != undefined)
+			{
+				model_path = controller.getBindModelPath(ctx, path_id, attrs["@bind"]);
+			}
+			
+			/* Get model */
+			if (model_path != null)
+			{
+				model = Runtime.rtl.attr(ctx, controller.layout, model_path, null);
+				attrs["value"] = model;
+			}
+			
+			var dict_attrs = Runtime.Dict.from(attrs);
+			
+			/* Set new model */
+			component.setParams(ctx, dict_attrs);
+			component.setModelPath(ctx, model_path);
+			component.setParent(ctx, control.component);
+			
+			/* Set reference */
+			if (attrs != null && attrs["@ref"] != undefined)
+			{
+				/* controller.setReference(ctx, component.parent_component.path_id, attrs["@ref"], component); */
+			}
+			
+			/* Create new control */
+			new_control = control.copy(ctx, {
+				"type": type,
+				"index": index,
+				"path_id": path_id,
+				"component": component,
+				"model": model,
+			});
+			
+			/* Render component */
+			var render = class_obj.render.bind(class_obj);
+			var res = render
+			(
+				ctx, controller.layout, model, dict_attrs, content
+			);
+			
+			/* Call result */
+			if (res != null && typeof res == "function") res = res(new_control);
+			
+			/* Normalize content */
+			res = this.normalizeContent(res, new_control);
+			
+			/* Add childs */
+			childs = childs.slice();
+			childs.push(res);
+			
+			controller.updateComponent(ctx, component, created);
+		}
+		
+		else if (type == 'element')
+		{
+			var elem_new = this.findElemByPathAndCheck(parent_elem, path_id, type);
+			var is_new_elem = false;
+			
+			/* Create new element */
+			if (elem_new == null)
+			{
+				elem_new = document.createElement(name);
+				is_new_elem = true;
+			}
+			
+			/* Create new control */
+			new_control = control.copy(ctx, {
+				"type": type,
+				"index": index,
+				"path_id": path_id,
+				"parent": elem_new,
+				"is_new_elem": is_new_elem,
+			});
+			
+			/* Update element params */
+			elem_new._attrs = attrs;
+			elem_new._path_id = path_id;
+			elem_new._component = control.component;
+			elem_new._params = Runtime.Dict.from(attrs);
+			
+			/* Update element params */
+			controller.updateElemParams(ctx, new_control, elem_new);
+			
+			/* Add childs */
+			childs = childs.slice();
+			childs.push(elem_new);
+		}
+		
+		else if (this.isElem(content))
+		{
+			childs = childs.slice();
+			childs.push(content);
+		}
+		else if (content instanceof Array)
+		{
+			childs = childs.slice();
+			childs.push(content);
+		}
+		else if (typeof content == "function" || content instanceof Function)
+		{
+			childs = childs.slice();
+			
+			/* Create new control */
+			new_control = control.copy(ctx, {
+				"type": type,
+				"index": index,
+				"path": path_id,
+			});
+			content = this.normalizeContent(content, new_control);
+			childs.push(content);
+		}
+		
+		else if (type == 'raw')
+		{
+			/* To string */
+			content = Runtime.rtl.toStr(content);
+			
+			/* Create new element */
+			var elem_new = this.createElementFromHTML(content);
+			
+			/* Add childs */
+			childs = childs.slice();
+			childs.push(elem_new);
+		}
+		
+		else if (type == 'text')
+		{
+			/* To string */
+			content = Runtime.rtl.toStr(content);
+			content = this.decodeHtmlEntities(content);
+			
+			var elem_new = this.findElemByPathAndCheck(parent_elem, path_id, type);
+			
+			/* Create new element */
+			if (elem_new == null)
+			{
+				elem_new = document.createTextNode(content);
+			}
+			else
+			{
+				if (elem_new.nodeValue != content)
+				{
+					elem_new.nodeValue = content;
+				}
+			}
+			
+			/* Set elem path */
+			elem_new._path_id = path_id;
+			
+			/* Add childs */
+			childs = childs.slice();
+			childs.push(elem_new);
+		}
+		
+		else if (type == 'html')
+		{
+			
+		}
+		
+		else if (type == 'empty')
+		{
+			new_control = control;
+		}
+		
+		return [new_control, childs];
+	},
+	
+	
+	
+	/**
+	 * Patch childs of the control
+	 */
+	p: function (control, childs)
+	{
+		if (control.type == "empty")
+		{
+			return;
+		}
+		
+		var controller = control.controller;
+		var ctx = control.ctx;
+		
+		/* Normalize content */
+		var childs = this.normalizeContent(childs, control);
+		
+		/* Patch element */
+		controller.patchElemChilds(ctx, control.parent, childs);
+		
+		/* Patch element params */
+		/* controller.updateElemParams(ctx, control, control.parent); */
+	}
+	
+});
+#endif

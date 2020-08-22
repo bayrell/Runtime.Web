@@ -18,15 +18,10 @@
 
 namespace Runtime.Web;
 
-use Runtime.Annotations.Manager;
-use Runtime.Annotations.LambdaChain;
-use Runtime.Annotations.LambdaChainDeclare;
-use Runtime.Annotations.Provider;
 use Runtime.Interfaces.AssetsInterface;
-use Runtime.Interfaces.ContextInterface;
 use Runtime.Interfaces.ModuleDescriptionInterface;
-use Runtime.Web.RenderContainer;
-use Runtime.Web.RenderHelper;
+use Runtime.Core.Driver;
+use Runtime.Web.RenderDriver;
 
 
 class ModuleDescription implements 
@@ -47,7 +42,7 @@ class ModuleDescription implements
 	 * Returns module name
 	 * @return string
 	 */
-	pure string getModuleVersion() => "0.9.3";
+	pure string getModuleVersion() => "0.10.0";
 	
 	
 	
@@ -69,18 +64,6 @@ class ModuleDescription implements
 	 */
 	pure Collection<string> assets() => 
 	[
-		"Runtime.Web/ApiContainer",
-		"Runtime.Web/Cookie",
-		"Runtime.Web/RenderContainer",
-		"Runtime.Web/RenderHelper",
-		"Runtime.Web/Request",
-		"Runtime.Web/Response",
-		"Runtime.Web/Annotations/ApiList",
-		"Runtime.Web/Annotations/ApiMethod",
-		"Runtime.Web/Annotations/Route",
-		"Runtime.Web/Annotations/RouteList",
-		"Runtime.Web/Annotations/RouteMiddleware",
-		"Runtime.Web/Annotations/Template",
 		"Runtime.Web/Events/UIEvent",
 		"Runtime.Web/Events/WebEvent",
 		"Runtime.Web/Events/BlurEvent",
@@ -102,12 +85,10 @@ class ModuleDescription implements
 		"Runtime.Web/Events/MouseOverEvent",
 		"Runtime.Web/Events/MouseUpEvent",
 		"Runtime.Web/Events/MouseWheelEvent",
-		"Runtime.Web/Frontend/Component",
-		"Runtime.Web/Frontend/Layout",
-		"Runtime.Web/Frontend/LayoutModel",
-		"Runtime.Web/Frontend/SeoModel",
-		"Runtime.Web/RedirectResponse",
-		"Runtime.Web/JsonResponse",
+		"Runtime.Web/Component",
+		"Runtime.Web/Layout",
+		"Runtime.Web/LayoutModel",
+		"Runtime.Web/SeoModel",
 		"Runtime.Web/ModuleDescription",
 	];
 	
@@ -118,9 +99,8 @@ class ModuleDescription implements
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		/* Declare Layout Chain */
-		new LambdaChainDeclare{ "name": RenderHelper::LAYOUT_CHAIN },
-		new LambdaChainDeclare{ "name": RenderHelper::PATTERN_CHAIN },
+		/* Render Driver */
+		new Driver{ "name": classof RenderDriver },
 	];
 	
 	

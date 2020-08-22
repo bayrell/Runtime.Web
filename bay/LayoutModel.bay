@@ -16,11 +16,10 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Frontend;
+namespace Runtime.Web;
 
 use Runtime.BaseStruct;
-use Runtime.Annotations.Route;
-use Runtime.Web.SeoModel;
+use Runtime.Web.Route;
 
 
 struct LayoutModel extends BaseStruct
@@ -32,7 +31,6 @@ struct LayoutModel extends BaseStruct
 	string uri = "";
 	string full_uri = "";
 	string route_prefix = "";
-	string local_bus_gate = "";
 	string locale_uri = "";
 	string f_inc = "";
 	Route route = null;
@@ -44,7 +42,7 @@ struct LayoutModel extends BaseStruct
 	string page_class = null;
 	BaseStruct page_model = null;
 	
-	/* SEO */
+	/* Base SEO Options */
 	string locale = "";
 	string title = "";
 	string description = "";
@@ -61,16 +59,4 @@ struct LayoutModel extends BaseStruct
 	/* Other data */
 	Dict<primitive> storage = new Dict();
 	Dict<primitive> css_vars = new Dict();
-	
-	/* Frontend settings */
-	string frontend_type = "";
-	string frontend_class_name = "";
-	Dict<primitive> frontend_env = null;
-	Dict<primitive> frontend_settings = null;
-	Collection<string> frontend_modules = null;
-	
-	/* Additional assets */
-	Collection<string> assets = null;
-	Collection<string> components = null;
-	Collection<string> modules = null;
 }

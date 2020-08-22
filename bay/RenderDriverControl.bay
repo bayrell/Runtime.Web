@@ -16,16 +16,19 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Interfaces;
+namespace Runtime.Web;
+
+use Runtime.BaseStruct;
 
 
-interface StringInterface
+struct RenderDriverControl extends BaseStruct
 {
-	
-	/**
-	 * Returns string
-	 */
-	public string toString();
-	
+	var ctx = null;
+	string type = "";
+	var component = null;
+	var controller = null;
+	var parent = null;
+	string path_id = "";
+	int index = 0;
+	Collection model_bind_path = [];
 }
-

@@ -16,10 +16,10 @@
  *  limitations under the License.
  */
  
-namespace Runtime.Web.Annotations;
+namespace Runtime.Web;
 
 use Runtime.BaseStruct;
-use Runtime.Annotations.Entity;
+use Runtime.Core.Entity;
 
 
 struct RouteList extends Entity

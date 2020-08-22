@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Frontend;
+namespace Runtime.Web;
 
 use Runtime.BaseStruct;
 
