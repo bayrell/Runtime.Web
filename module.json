@@ -9,6 +9,7 @@
 		"RenderDriver",
 		"RenderDriverControl",
 		"Route",
+		"RouteController",
 		"RouteList",
 		"SeoModel",
 		"Events/UIEvent",

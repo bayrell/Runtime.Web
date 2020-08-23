@@ -100,9 +100,9 @@ struct WebEvent extends UIEvent
 	
 	
 	/**
-	 * Cancel event
+	 * Check if event is cancel
 	 */
-	void isCancel()
+	bool isCancel()
 	{
 		return this.cancel_bubble;
 	}

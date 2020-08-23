@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
+use Runtime.Core.CoreEvent;
 use Runtime.Core.CoreObject;
 use Runtime.Core.Message;
 use Runtime.Web.LayoutModel;
@@ -124,14 +125,23 @@ class Component extends CoreObject
 	
 	
 	/**
-	 * Cancel event
+	 * Handle message
 	 */
-	static Message<UIEvent> cancelEvent(Message<UIEvent> msg)
+	public async void handleMessage(Message msg)
 	{
-		msg.cancel();
-		UIEvent event = (UIEvent)msg.data;
-		msg.data = event::cancel(event);
-		return msg;
+		if (msg.getObjectName() == this.getObjectName())
+		{
+			if (msg.data instanceof CoreEvent)
+			{
+				CoreEvent event = msg.data;
+				string callback = this.controller.findCallback(this.getObjectName(), msg.from, event.getClassName());
+				if (callback != "" and rtl::method_exists(this, callback))
+				{
+					fn f = rtl::method(this, callback);
+					await f(msg);
+				}
+			}
+		}
 	}
 	
 	

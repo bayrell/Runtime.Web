@@ -18,17 +18,17 @@
 
 namespace Runtime.Web;
 
-use Runtime.BaseStruct;
+use Runtime.Core.CoreDriver;
 
 
-struct RenderDriverControl extends BaseStruct
+class RouteController extends CoreDriver
 {
-	var ctx = null;
-	string type = "";
-	var component = null;
-	var controller = null;
-	var parent = null;
-	string path_id = "";
-	int index = 0;
-	bool is_new_elem = false;
+	
+	/**
+	 * Start driver
+	 */
+	public async void startDriver()
+	{
+	}
+	
 }
