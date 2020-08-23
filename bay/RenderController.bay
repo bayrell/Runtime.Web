@@ -36,6 +36,7 @@ class RenderController extends CoreDriver
 	protected var animation_id = null;
 	protected bool is_main_controller = false;
 	protected LayoutModel layout = null;
+	protected Collection<string> layout_components = null;
 	
 	/* Render variable */
 	protected Vector updated_components = null;
@@ -43,6 +44,8 @@ class RenderController extends CoreDriver
 	protected Map<CoreObject> components = null;
 	protected int next_component_id = 0;
 	protected Vector<Dict> callbacks = null;
+	protected string new_css = "";
+	protected string old_css = "";
 	
 	
 	/**
@@ -301,7 +304,12 @@ class RenderController extends CoreDriver
 	 */
 	public void renderLayout(LayoutModel layout)
 	{
+		layout = RenderDriver::chainLayout(layout);
+		Collection<string> components = RenderDriver::getLayoutComponents(layout);
+		string css = RenderDriver::getCSSFromComponents(components, layout.css_vars);
 		this.layout = layout;
+		this.layout_components = components;
+		this.applyCss(css);
 		this.repaint();
 	}
 	
@@ -319,6 +327,16 @@ class RenderController extends CoreDriver
 			this.animation_id = requestAnimationFrame( this.render.bind(this) );
 		}
 		#endif
+	}
+	
+	
+	
+	/**
+	 * Apply css
+	 */
+	public void applyCss(string css)
+	{
+		this.new_css = css;
 	}
 	
 	
@@ -358,8 +376,25 @@ class RenderController extends CoreDriver
 			0
 		);
 		RenderDriver.p(root_control, res[1]);
+		
+		/* Add new css */
+		if (this.new_css != this.old_css)
+		{
+			var elem = RenderDriver.getPreviousElement(this.root_elem);
+			if (elem != null && elem.tagName == "STYLE" && elem._root_elem == this.root_elem)
+			{
+			}
+			else
+			{
+				elem = document.createElement("STYLE");
+				elem._root_elem = this.root_elem;
+				this.root_elem.parentElement.insertBefore(elem, this.root_elem);
+			}
+			elem.textContent = this.new_css;
+		}
 		#endif
 		
+		this.old_css = this.new_css;
 	}
 	
 	

@@ -21,6 +21,9 @@ namespace Runtime.Web;
 use Runtime.Interfaces.AssetsInterface;
 use Runtime.Interfaces.ModuleDescriptionInterface;
 use Runtime.Core.Driver;
+use Runtime.Core.LambdaChain;
+use Runtime.Web.Layout;
+use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
 
 
@@ -101,6 +104,12 @@ class ModuleDescription implements
 	[
 		/* Render Driver */
 		new Driver{ "name": classof RenderDriver },
+		new LambdaChain
+		{
+			"name": RenderDriver::LAYOUT_CHAIN,
+			"pos": 10000,
+			"value": "Runtime.Web.ModuleDescription::chainLayoutModel",
+		},
 	];
 	
 	
@@ -110,5 +119,18 @@ class ModuleDescription implements
 	 */		
 	pure Vector<string> resources() => null;
 	
+	
+	
+	/**
+	 * Layout chain
+	 */
+	pure LayoutModel chainLayoutModel(LayoutModel layout)
+	{
+		if (layout.layout_name == "default" and layout.layout_class == "")
+		{
+			layout <= layout_class <= classof Layout;
+		}
+		return [ layout ];
+	}
 	
 }

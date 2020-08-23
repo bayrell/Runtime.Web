@@ -18,12 +18,17 @@
 
 namespace Runtime.Web;
 
+use Runtime.lib;
 use Runtime.RuntimeUtils;
 use Runtime.Core.CoreDriver;
+use Runtime.Web.LayoutModel;
 
 
 class RenderDriver extends CoreDriver
 {
+	
+	static const string LAYOUT_CHAIN = "Runtime.Web.RenderDriver::LAYOUT_CHAIN";
+	
 	
 	/**
 	 * Start controller
@@ -101,6 +106,118 @@ class RenderDriver extends CoreDriver
 		return name;
 	}
 	
+	
+	
+	/**
+	 * Returns required modules
+	 * @param string class_name
+	 * @return Collection<string>
+	 */
+	static void _getRequiredComponents
+	(
+		Vector<string> res,
+		Map<string> cache,
+		Collection<string> components
+	)
+	{
+		if (components == null)
+			return;
+		
+		for (int i=0; i<components.count(); i++)
+		{
+			string class_name = components.item(i);
+			if (cache.get(class_name, false) == false)
+			{
+				cache.set(class_name, true);
+				if (rtl::method_exists(class_name, "components"))
+				{
+					fn f = rtl::method(class_name, "components");
+					Dict<string> sub_components = f();
+					if (sub_components != null)
+					{
+						static::_getRequiredComponents(res, cache, sub_components);
+					}
+				}
+				res.push(class_name);
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * Returns all components
+	 * @param Collection<string> components
+	 * @return Collection<string>
+	 */
+	pure Collection<string> getRequiredComponents(Collection<string> components)
+	{
+		Vector<string> res = new Vector();
+		Map<string> cache = new Map();
+		static::_getRequiredComponents(res, cache, components);
+		res = res.removeDublicatesIm();
+		return res.toCollection();
+	}
+	
+	
+	
+	/**
+	 * Returns all layout components
+	 * @param LayoutModel layout
+	 * @return Collection<string>
+	 */
+	pure Collection<string> getLayoutComponents(LayoutModel layout)
+	{
+		Collection<string> components = [ layout.layout_class, layout.page_class ];
+		if (layout.components != null)
+		{
+			components = components.appendCollectionIm(layout.components);
+		}
+		components = components.removeDublicatesIm();
+		components = RenderDriver::getRequiredComponents(components);
+		components = components.filter( lib::equalNot("") );
+		return components;
+	}
+	
+	
+	
+	/**
+	 * Returns css string
+	 * @param Collection<string> components
+	 * @param Dict<string> css_vars
+	 * @return string
+	 */
+	pure memorize string getCSSFromComponents(Collection<string> components, Dict<string> css_vars)
+	{
+		Vector<string> res = new Vector();
+		if (components != null)
+		{
+			for (int i=0; i<components.count(); i++)
+			{
+				string component_name = components.item(i);
+				if (rtl::method_exists(component_name, "css"))
+				{
+					fn f = rtl::method(component_name, "css");
+					string css = f(css_vars);
+					res.push(css);
+				}
+			}
+		}
+		string s = res.reduce( string (string res, string s) => res ~ s, "" );
+		return s;
+	}
+	
+	
+	
+	/**
+	 * Layout chain
+	 */
+	pure LayoutModel chainLayout(LayoutModel layout)
+	{
+		layout = @.chain(static::LAYOUT_CHAIN, [layout]) |> attr 0;
+		return layout;
+	}
+	
 }
 
 
@@ -156,6 +273,27 @@ Object.assign(Runtime.Web.RenderDriver,
 	{
 		if (index < 0 || index >= parent_elem.childNodes.length) return null;
 		return parent_elem.childNodes[index];
+	},
+	
+	
+	
+	/**
+	 * Returns previous element
+	 */
+	getPreviousElement: function(elem)
+	{
+		var previous = null;
+		var parent_elem = elem.parentElement;
+		for (var i = 0; i < parent_elem.childNodes.length; i++)
+		{
+			var e = parent_elem.childNodes[i];
+			if (e == elem)
+			{
+				return previous;
+			}
+			previous = e;
+		}
+		return null;
 	},
 	
 	

@@ -59,4 +59,7 @@ struct LayoutModel extends BaseStruct
 	/* Other data */
 	Dict<primitive> storage = new Dict();
 	Dict<primitive> css_vars = new Dict();
+	
+	/* Used components */
+	Collection<string> components = null;
 }
