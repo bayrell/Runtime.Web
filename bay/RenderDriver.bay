@@ -375,14 +375,15 @@ Object.assign(Runtime.Web.RenderDriver,
 	 */
 	buildPath: function(control, params, index)
 	{
-		var key = "";
+		var key = ""; var elem_name = "";
 		if (params != null)
 		{
 			if (params["@key"] != undefined) key = params["@key"];
+			if (params["@elem_name"] != undefined) elem_name = params["@elem_name"];
 		}
 		if (key == "")
 		{
-			key = index;
+			key = (elem_name != "") ? (elem_name + "-" + index) : index;
 		}
 		var path_id = control.path_id;
 		return "" + path_id + ((path_id != "") ? "." : "") + key;
@@ -443,8 +444,9 @@ Object.assign(Runtime.Web.RenderDriver,
 	/**
 	 * Element
 	 */
-	e: function (control, childs, type, obj, index, elem_flag)
+	e: function (control, childs, type, obj)
 	{
+		var index = childs.length;
 		var new_control = null;
 		var parent_elem = control.parent;
 		var name = (obj != null) ? obj.name : "";

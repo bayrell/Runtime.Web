@@ -458,16 +458,6 @@ class RenderController extends CoreDriver
 				var is_event = key.substring(0, 7) == "@event:";
 				var is_event_async = key.substring(0, 12) == "@eventAsync:";
 				
-				/* Find component */
-				var path_id = elem._path_id;
-				var class_name = value[0];
-				var callback = value[1];
-				var component = this.searchComponent(ctx, path_id, class_name);
-				if (component == null)
-				{
-					continue;
-				}
-				
 				if (key == "@bind")
 				{
 					var f_event = function (ctx, controller, path_id, bind_value)
@@ -499,6 +489,16 @@ class RenderController extends CoreDriver
 					
 					var es6_name = event_class.ES6_EVENT_NAME;
 					if (es6_name == undefined) continue;
+					
+					/* Find component */
+					var path_id = elem._path_id;
+					var class_name = value[0];
+					var callback = value[1];
+					var component = this.searchComponent(ctx, path_id, class_name);
+					if (component == null)
+					{
+						continue;
+					}
 					
 					/* Find callback method */
 					if (!Runtime.rtl.method_exists(ctx, component, callback))
