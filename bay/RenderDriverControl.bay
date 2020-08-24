@@ -27,7 +27,7 @@ struct RenderDriverControl extends BaseStruct
 	string type = "";
 	var component = null;
 	var controller = null;
-	var parent = null;
+	var parent_elem = null;
 	string path_id = "";
 	int index = 0;
 	bool is_new_elem = false;

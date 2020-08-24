@@ -327,7 +327,7 @@ Object.assign(Runtime.Web.RenderDriver,
 	{
 		for (var i = 0; i < parent_elem.childNodes.length; i++)
 		{
-			if (parent_elem.childNodes[i]._vpath == path)
+			if (parent_elem.childNodes[i]._path_id == path)
 			{
 				return i;
 			}
@@ -340,9 +340,9 @@ Object.assign(Runtime.Web.RenderDriver,
 	/**
 	 * Find elem by virtual path
 	 */
-	findElemByPath: function(parent_elem, vpath, kind)
+	findElemByPath: function(parent_elem, path_id, kind)
 	{
-		var pos = this.findElemPosByPath(parent_elem, vpath);
+		var pos = this.findElemPosByPath(parent_elem, path_id);
 		return this.getElemChild(parent_elem, pos);
 	},
 	
@@ -351,9 +351,9 @@ Object.assign(Runtime.Web.RenderDriver,
 	/**
 	 * Find elem by virtual path and check
 	 */
-	findElemByPathAndCheck: function(parent_elem, vpath, kind)
+	findElemByPathAndCheck: function(parent_elem, path_id, kind)
 	{
-		var pos = this.findElemPosByPath(parent_elem, vpath);
+		var pos = this.findElemPosByPath(parent_elem, path_id);
 		var elem_new = this.getElemChild(parent_elem, pos);
 		
 		/* Check element */
@@ -361,7 +361,10 @@ Object.assign(Runtime.Web.RenderDriver,
 		{
 			if (kind == "element")
 			{
-				if (elem_new.tagName == undefined) elem_new = null;
+				if (elem_new.tagName == undefined)
+				{
+					elem_new = null;
+				}
 			}
 		}
 		
@@ -448,7 +451,7 @@ Object.assign(Runtime.Web.RenderDriver,
 	{
 		var index = childs.length;
 		var new_control = null;
-		var parent_elem = control.parent;
+		var parent_elem = control.parent_elem;
 		var name = (obj != null) ? obj.name : "";
 		var attrs = (obj != null && obj.attrs != null && obj.attrs != undefined) ? obj.attrs : null;
 		var content = (obj != null && obj.content != null && obj.content != undefined) ? obj.content : null;
@@ -545,6 +548,9 @@ Object.assign(Runtime.Web.RenderDriver,
 			{
 				elem_new = document.createElement(name);
 				is_new_elem = true;
+				
+				var test_e = this.findElemByPathAndCheck(parent_elem, path_id, type);
+				/*console.log(elem_new);*/
 			}
 			
 			/* Create new control */
@@ -552,7 +558,7 @@ Object.assign(Runtime.Web.RenderDriver,
 				"type": type,
 				"index": index,
 				"path_id": path_id,
-				"parent": elem_new,
+				"parent_elem": elem_new,
 				"is_new_elem": is_new_elem,
 			});
 			
@@ -668,10 +674,10 @@ Object.assign(Runtime.Web.RenderDriver,
 		var childs = this.normalizeContent(childs, control);
 		
 		/* Patch element */
-		controller.patchElemChilds(ctx, control.parent, childs);
+		controller.patchElemChilds(ctx, control.parent_elem, childs);
 		
 		/* Patch element params */
-		/* controller.updateElemParams(ctx, control, control.parent); */
+		/* controller.updateElemParams(ctx, control, control.parent_elem); */
 	}
 	
 });

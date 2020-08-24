@@ -324,7 +324,7 @@ class RenderController extends CoreDriver
 			"ctx": ctx,
 			"controller": this,
 			"component": this,
-			"parent": this.root_elem,
+			"parent_elem": this.root_elem,
 			"path_id": "",
 		};
 		
@@ -409,7 +409,7 @@ class RenderController extends CoreDriver
 			for (var i=elem.attributes.length - 1; i>=0; i--)
 			{
 				var attr = elem.attributes[i];
-				if (attrs[attr.name] == undefined)
+				if (attrs[attr.name] == undefined && attr.name != "data-path")
 				{
 					elem.removeAttribute(attr.name);
 				}
@@ -418,6 +418,9 @@ class RenderController extends CoreDriver
 		
 		/* Bind element events */
 		this.bindEvents(ctx, control, elem, attrs, is_new_elem);
+		
+		/* Set data-path attribute */
+		elem.setAttribute("data-path", path_id);
 		
 		#endif
 	}
@@ -429,6 +432,8 @@ class RenderController extends CoreDriver
 	 */
 	public void bindEvents(RenderDriverControl control, var elem, var attrs, bool is_new_elem = false)
 	{
+		string path_id = (elem instanceof Component) ? elem.getPath() : elem._path_id;
+		
 		#ifcode JAVASCRIPT then
 		if (is_new_elem)
 		{
@@ -474,7 +479,6 @@ class RenderController extends CoreDriver
 					}
 					
 					/* Find component */
-					var path_id = (elem instanceof Runtime.Web.Component) ? elem.getPath() : elem._path_id;
 					var class_name = value[0];
 					var callback = value[1];
 					var component = this.searchComponent(ctx, path_id, class_name);
