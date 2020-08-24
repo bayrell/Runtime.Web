@@ -172,6 +172,17 @@ class Component extends CoreObject
 	
 	
 	/**
+	 * Returns css name
+	 */
+	pure string getCssHash()
+	{
+		string class_name = static::getCurrentClassName();
+		return RenderDriver::getCssHashes(class_name);
+	}
+	
+	
+	
+	/**
 	 * Escape attr
 	 */
 	pure string escapeAttr(string s)

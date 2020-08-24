@@ -109,6 +109,28 @@ class RenderDriver extends CoreDriver
 	
 	
 	/**
+	 * Returns css hash
+	 */
+	pure memorize string getCssHashes(string class_name)
+	{
+		Collection<string> class_names = RuntimeUtils::getParents(class_name);
+		class_names = class_names.filter
+		(
+			bool (string class_name) =>
+				class_name != "Runtime.BaseObject" and
+				class_name != "Runtime.Core.CoreObject" and
+				class_name != "Runtime.Web.Component"
+		);
+		class_names = class_names.map
+		(
+			string (string class_name) => "h-" ~ static::getCssHash(class_name)
+		);
+		return rs::join(" ", class_names);
+	}
+	
+	
+	
+	/**
 	 * Returns required modules
 	 * @param string class_name
 	 * @return Collection<string>
