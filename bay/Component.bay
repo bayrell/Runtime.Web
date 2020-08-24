@@ -129,19 +129,16 @@ class Component extends CoreObject
 	 */
 	public async void handleMessage(Message msg)
 	{
-		if (msg.getObjectName() == this.getObjectName())
-		{
-			if (msg.data instanceof CoreEvent)
-			{
-				CoreEvent event = msg.data;
-				string callback = this.controller.findCallback(this.getObjectName(), msg.from, event.getClassName());
-				if (callback != "" and rtl::method_exists(this, callback))
-				{
-					fn f = rtl::method(this, callback);
-					await f(msg);
-				}
-			}
-		}
+	}
+	
+	
+	
+	/**
+	 * Send event
+	 */
+	public async void signal(CoreEvent event)
+	{
+		await this.controller.signal(this.object_name, event);
 	}
 	
 	

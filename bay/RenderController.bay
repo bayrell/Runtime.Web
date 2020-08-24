@@ -21,7 +21,9 @@ namespace Runtime.Web;
 use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
 use Runtime.Core.CoreDriver;
+use Runtime.Core.CoreEvent;
 use Runtime.Core.CoreObject;
+use Runtime.Core.Message;
 use Runtime.Web.Component;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
@@ -43,7 +45,6 @@ class RenderController extends CoreDriver
 	protected Vector remove_keys = null;
 	protected Map<CoreObject> components = null;
 	protected int next_component_id = 0;
-	protected Vector<Dict> callbacks = null;
 	protected string new_css = "";
 	protected string old_css = "";
 	
@@ -217,62 +218,29 @@ class RenderController extends CoreDriver
 	
 	
 	/**
-	 * Register callback
+	 * Send event
 	 */
-	public void registerCallback(string component_name, string from, string event_class_name, string callback)
+	public async void signal(string path_id, CoreEvent event)
 	{
-		for (int i=0; i<this.callbacks.count(); i++)
-		{
-			Dict item = this.callbacks[i];
-			if (
-				item["from"] == from and
-				item["component_name"] == component_name and
-				item["event_class_name"] == event_class_name
-			)
-			{
-				this.callbacks.set
-				(
-					i,
-					{
-						"from": from,
-						"component_name": component_name,
-						"event_class_name": event_class_name,
-						"callback": callback,
-					}
-				);
-				return;
-			}
-		}
-		this.callbacks.push
-		{
-			"from": from,
-			"component_name": component_name,
-			"event_class_name": event_class_name,
-			"callback": callback,
-		};
+		Message msg = new Message(event, path_id);
+		await @.sendLocalMessage(msg);
 	}
 	
 	
 	
 	/**
-	 * Find callback
+	 * Update elem params
 	 */
-	public void findCallback(string component_name, string from, string event_class_name, string callback)
+	public void @js_event(var e)
 	{
-		for (int i=0; i<this.callbacks.count(); i++)
-		{
-			Dict item = this.callbacks[i];
-			if
-			(
-				item["from"] == from and
-				item["component_name"] == component_name and
-				item["event_class_name"] == event_class_name
-			)
-			{
-				return item["callback"];
-			}
-		}
-		return null;
+		#ifcode JAVASCRIPT then
+		var ctx = Runtime.RuntimeUtils.getContext();
+		var path_id = e.currentTarget._path_id;
+		var event = Runtime.Web.Events.WebEvent.fromEvent(ctx, e);
+		
+		/* Send signal */
+		(async () => { await this.signal(ctx, path_id, event); })();
+		#endif
 	}
 	
 	
@@ -292,7 +260,6 @@ class RenderController extends CoreDriver
 		if (this.selector != "") this.root_elem = document.querySelector(this.selector);
 		#endif
 		
-		this.callbacks = new Vector();
 		this.components = new Map();
 		this.saveComponent(this);
 	}
@@ -434,7 +401,7 @@ class RenderController extends CoreDriver
 				if (key[0] == "@") continue;
 				if (elem.getAttribute(key) != value)
 				{
-					elem.setAttribute(key, value);
+					elem.setAttribute(key, Runtime.rs.trim(ctx, value));
 				}
 			}
 			
@@ -507,34 +474,11 @@ class RenderController extends CoreDriver
 						continue;
 					}
 					
-					/* Register callback */
-					this.registerCallback(ctx, component.getObjectName(), path_id, event_class_name, callback);
+					/* Register listener */
+					ctx.registerListener(ctx, path_id, event_class_name, component.getObjectName(), callback);
 					
-					/* Event handler */
-					var f_event = function (ctx, controller, component, path_id)
-					{
-						return function (e)
-						{
-							var event = Runtime.Web.Events.WebEvent.fromEvent(ctx, e);
-							var msg = new Runtime.Core.Message
-							(
-								ctx, /* context */
-								event, /* event */
-								component.getObjectName(ctx), /* dest */
-								path_id /* from */
-							);
-							
-							/* Send message */
-							(async () => { await ctx.sendLocalMessage(ctx, msg); })();
-						};
-					};
-					
-					elem.addEventListener
-					(
-						es6_name,
-						f_event(ctx, this, component, path_id)
-					);
-					
+					/* Register event listener */
+					elem.addEventListener(es6_name, this.js_event.bind(this));
 				}
 			}
 		}
