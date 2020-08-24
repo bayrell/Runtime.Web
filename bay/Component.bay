@@ -89,9 +89,9 @@ class Component extends CoreObject
 	
 	
 	/**
-	 * Commit model
+	 * Update model
 	 */
-	void commit(string method_name = "")
+	void updateModel(string method_name = "")
 	{
 		var args = new Vector();
 		#ifcode JAVASCRIPT then
@@ -113,11 +113,21 @@ class Component extends CoreObject
 	
 	
 	/**
+	 * Set new model
+	 */
+	void setModel(var model)
+	{
+		this.controller.updateModel(this.model_path, model);
+	}
+	
+	
+	
+	/**
 	 * Constructor
 	 */
-	void constructor(string object_name, string path_id, RenderController controller)
+	void constructor(string path_id, RenderController controller)
 	{
-		parent(object_name);
+		parent(path_id);
 		this.path_id = path_id;
 		this.controller = controller;
 	}
@@ -138,7 +148,8 @@ class Component extends CoreObject
 	 */
 	public async void signal(CoreEvent event)
 	{
-		await this.controller.signal(this.object_name, event);
+		Message msg = new Message(event, this.getObjectName());
+		await @.object_manager.handleMessage(msg);
 	}
 	
 	

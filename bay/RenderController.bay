@@ -223,7 +223,7 @@ class RenderController extends CoreDriver
 	public async void signal(string path_id, CoreEvent event)
 	{
 		Message msg = new Message(event, path_id);
-		await @.sendLocalMessage(msg);
+		await @.object_manager.handleMessage(msg);
 	}
 	
 	
@@ -417,6 +417,19 @@ class RenderController extends CoreDriver
 		}
 		
 		/* Bind element events */
+		this.bindEvents(ctx, control, elem, attrs, is_new_elem);
+		
+		#endif
+	}
+	
+	
+	
+	/**
+	 * Bind element events
+	 */
+	public void bindEvents(RenderDriverControl control, var elem, var attrs, bool is_new_elem = false)
+	{
+		#ifcode JAVASCRIPT then
 		if (is_new_elem)
 		{
 			for (var key in attrs)
@@ -427,19 +440,25 @@ class RenderController extends CoreDriver
 				
 				if (key == "@bind")
 				{
-					var f_event = function (ctx, controller, path_id, bind_value)
+					if (elem instanceof Runtime.Web.Component)
 					{
-						return function (e)
+					}
+					else
+					{
+						var f_event = function (ctx, controller, path_id, bind_value)
 						{
-							var model_path = controller.getBindModelPath(ctx, path_id, bind_value);
-							controller.updateModel(ctx, model_path, elem.value);
-						}
-					};
-					elem.addEventListener
-					(
-						"change",
-						f_event(ctx, this, path_id, value)
-					);
+							return function (e)
+							{
+								var model_path = controller.getBindModelPath(ctx, path_id, bind_value);
+								controller.updateModel(ctx, model_path, elem.value);
+							}
+						};
+						elem.addEventListener
+						(
+							"change",
+							f_event(ctx, this, path_id, value)
+						);
+					}
 				}
 				else if (is_event || is_event_async)
 				{
@@ -454,11 +473,8 @@ class RenderController extends CoreDriver
 						continue;
 					}
 					
-					var es6_name = event_class.ES6_EVENT_NAME;
-					if (es6_name == undefined) continue;
-					
 					/* Find component */
-					var path_id = elem._path_id;
+					var path_id = (elem instanceof Runtime.Web.Component) ? elem.getPath() : elem._path_id;
 					var class_name = value[0];
 					var callback = value[1];
 					var component = this.searchComponent(ctx, path_id, class_name);
@@ -467,22 +483,35 @@ class RenderController extends CoreDriver
 						continue;
 					}
 					
-					/* Find callback method */
-					if (!Runtime.rtl.method_exists(ctx, component, callback))
+					if (elem instanceof Runtime.Web.Component)
 					{
-						this.warning(ctx, "Method '" + callback + "' not found in ", component);
-						continue;
+						ctx.registerListener
+						(
+							ctx, elem.getObjectName(), event_class_name,
+							component.getObjectName(), callback
+						);
 					}
-					
-					/* Register listener */
-					ctx.registerListener(ctx, path_id, event_class_name, component.getObjectName(), callback);
-					
-					/* Register event listener */
-					elem.addEventListener(es6_name, this.js_event.bind(this));
+					else
+					{
+						var es6_name = event_class.ES6_EVENT_NAME;
+						if (es6_name == undefined) continue;
+						
+						/* Find callback method */
+						if (!Runtime.rtl.method_exists(ctx, component, callback))
+						{
+							this.warning(ctx, "Method '" + callback + "' not found in ", component);
+							continue;
+						}
+						
+						/* Register listener */
+						ctx.registerListener(ctx, path_id, event_class_name, component.getObjectName(), callback);
+						
+						/* Register event listener */
+						elem.addEventListener(es6_name, this.js_event.bind(this));
+					}
 				}
 			}
 		}
-		
 		#endif
 	}
 	

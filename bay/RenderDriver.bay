@@ -474,7 +474,7 @@ Object.assign(Runtime.Web.RenderDriver,
 			if (component == null)
 			{
 				/* Create component */
-				component = new class_obj(ctx, controller.nextComponentId(), path_id, controller);
+				component = new class_obj(ctx, path_id, controller);
 				controller.saveComponent(ctx, component);
 				created = true;
 			}
@@ -532,6 +532,7 @@ Object.assign(Runtime.Web.RenderDriver,
 			childs.push(res);
 			
 			controller.updateComponent(ctx, component, created);
+			controller.bindEvents(ctx, new_control, component, attrs, created);
 		}
 		
 		else if (type == 'element')
