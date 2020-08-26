@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.Web.RenderDriver;
 
 
 struct RenderDriverControl extends BaseStruct
@@ -31,4 +32,5 @@ struct RenderDriverControl extends BaseStruct
 	string path_id = "";
 	int index = 0;
 	bool is_new_elem = false;
+	RenderDriver driver = null;
 }

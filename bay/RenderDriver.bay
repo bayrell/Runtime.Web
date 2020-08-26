@@ -26,8 +26,8 @@ use Runtime.Web.LayoutModel;
 
 class RenderDriver extends CoreDriver
 {
-	
 	static const string LAYOUT_CHAIN = "Runtime.Web.RenderDriver::LAYOUT_CHAIN";
+	protected Map<bool> listen_events = new Map();
 	
 	
 	/**
@@ -35,6 +35,66 @@ class RenderDriver extends CoreDriver
 	 */
 	public async void startDriver()
 	{
+	}
+	
+	
+	
+	/**
+	 * Bind es6 event
+	 */
+	protected void bindGlobalEvent(string event_class_name)
+	{
+		if (not this.listen_events.has(event_class_name))
+		{
+			#ifcode JAVASCRIPT then
+			var body = document.getElementsByTagName("body")[0];
+			body._path_id = this.getObjectName();
+			var event_class = use(event_class_name);
+			if (event_class == undefined) return false;
+			
+			var es6_name = event_class.ES6_EVENT_NAME;
+			if (es6_name == undefined) return false;
+			
+			body.addEventListener(es6_name, Runtime.Web.RenderDriver.js_event);
+			#endif
+			
+			this.listen_events.set(event_class_name, true);
+		}
+		
+		return true;
+	}
+	
+	
+	
+	/**
+	 * Start listen event
+	 */
+	public void registerGlobalListener(string event_class_name, string object_name, string method_name = "")
+	{
+		if (this.bindGlobalEvent(event_class_name))
+		{
+			@.registerListener(this.getObjectName(), event_class_name, object_name, method_name);
+		}
+	}
+	
+	
+	
+	/**
+	 * JS Event
+	 */
+	public static void @js_event(var e)
+	{
+		#ifcode JAVASCRIPT then
+		var ctx = Runtime.RuntimeUtils.getContext();
+		var path_id = e.currentTarget._path_id;
+		var event = Runtime.Web.Events.WebEvent.fromEvent(ctx, e);
+		
+		/* Send signal */
+		(async () => {
+			var msg = new Runtime.Core.Message(ctx, event, path_id);
+			await ctx.object_manager.handleMessage(ctx, msg);
+		})();
+		#endif
 	}
 	
 	
@@ -240,6 +300,23 @@ class RenderDriver extends CoreDriver
 		return layout;
 	}
 	
+	
+	
+	/**
+	 * Returns rect of elem
+	 */
+	static Dict getRect(var elem)
+	{
+		int x = 0, y = 0, w = 0, h = 0;
+		#ifcode JAVASCRIPT then
+		x = elem.offsetLeft;
+		y = elem.offsetTop;
+		w = elem.clientWidth;
+		h = elem.clientHeight;
+		#endif
+		return { "x": x, "y": y, "w": w, "h": h };
+	}
+	
 }
 
 
@@ -430,7 +507,7 @@ Object.assign(Runtime.Web.RenderDriver,
 			for (var i=0; i<content.length; i++)
 			{
 				var item = this.normalizeContent(content[i], control);
-				new_content.push(item);
+				if (item != null) new_content.push(item);
 			}
 			
 			var res = [];
@@ -478,6 +555,7 @@ Object.assign(Runtime.Web.RenderDriver,
 			{
 				/* Create component */
 				component = new class_obj(ctx, path_id, controller);
+				component.driver = control.driver;
 				controller.saveComponent(ctx, component);
 				created = true;
 			}
@@ -534,10 +612,7 @@ Object.assign(Runtime.Web.RenderDriver,
 				
 				/* Add childs */
 				childs = childs.slice();
-				childs.push(res);
-				
-				controller.updateComponent(ctx, component, created);
-				controller.bindEvents(ctx, new_control, component, attrs, created);
+				if (res != null) childs.push(res);
 			}
 			else
 			{
@@ -546,8 +621,12 @@ Object.assign(Runtime.Web.RenderDriver,
 				
 				/* Add childs */
 				childs = childs.slice();
-				childs.push(res);
+				if (res != null) childs.push(res);
 			}
+			
+			controller.updateComponent(ctx, component, created);
+			controller.bindEvents(ctx, new_control, component, attrs, created);
+			component.update(ctx, created);
 		}
 		
 		else if (type == 'element')

@@ -263,23 +263,6 @@ class RenderController extends CoreDriver
 	
 	
 	/**
-	 * Update elem params
-	 */
-	public void @js_event(var e)
-	{
-		#ifcode JAVASCRIPT then
-		var ctx = Runtime.RuntimeUtils.getContext();
-		var path_id = e.currentTarget._path_id;
-		var event = Runtime.Web.Events.WebEvent.fromEvent(ctx, e);
-		
-		/* Send signal */
-		(async () => { await this.signal(ctx, path_id, event); })();
-		#endif
-	}
-	
-	
-	
-	/**
 	 * Start driver
 	 */
 	public async void startDriver()
@@ -360,6 +343,7 @@ class RenderController extends CoreDriver
 			"component": this,
 			"parent_elem": this.root_elem,
 			"path_id": this.getPath(),
+			"driver": this.parent,
 		};
 		
 		#ifcode JAVASCRIPT then
@@ -432,6 +416,11 @@ class RenderController extends CoreDriver
 				{
 					value = this.getBindModelValue(ctx, path_id, value);
 				}
+				if (key == "@ref")
+				{
+					this.setReference(ctx, path_id, value, elem);
+					continue;
+				}
 				if (key == "value" || key == "@bind")
 				{
 					if (elem.tagName == "INPUT" || elem.tagName == "SELECT" || elem.tagName == "TEXTAREA")
@@ -441,6 +430,11 @@ class RenderController extends CoreDriver
 					}
 				}
 				if (key[0] == "@") continue;
+				if (key == "style" && value instanceof Runtime.Dict)
+				{
+					value = value.transition(ctx, (ctx, v, k)=>{ return k + ": " + v; });
+					value = Runtime.rs.join(ctx, ";", value);
+				}
 				if (elem.getAttribute(key) != value)
 				{
 					elem.setAttribute(key, Runtime.rs.trim(ctx, value));
@@ -553,7 +547,7 @@ class RenderController extends CoreDriver
 						ctx.registerListener(ctx, path_id, event_class_name, component.getObjectName(), callback);
 						
 						/* Register event listener */
-						elem.addEventListener(es6_name, this.js_event.bind(this));
+						elem.addEventListener(es6_name, Runtime.Web.RenderDriver.js_event);
 					}
 				}
 			}

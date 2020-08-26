@@ -33,6 +33,7 @@ use Runtime.Web.Events.UIEvent;
 class Component extends CoreObject
 {
 	protected string path_id = "";
+	protected RenderDriver driver = null;
 	protected RenderController controller = null;
 	protected Dict params = null;
 	protected Collection<string> model_path = [];
@@ -190,6 +191,35 @@ class Component extends CoreObject
 	public Collection<var> repaint(RenderDriverControl control)
 	{
 		return [];
+	}
+	
+	
+	
+	/**
+	 * Update component
+	 */
+	public void update(bool created)
+	{
+		if (created) this.onCreated();
+		else this.onUpdated();
+	}
+	
+	
+	
+	/**
+	 * On component created
+	 */
+	public void onCreated()
+	{
+	}
+	
+	
+	
+	/**
+	 * On component updated
+	 */
+	public void onUpdated()
+	{
 	}
 	
 	
