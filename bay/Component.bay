@@ -26,6 +26,7 @@ use Runtime.Core.Message;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderController;
 use Runtime.Web.RenderDriver;
+use Runtime.Web.RenderDriverControl;
 use Runtime.Web.Events.UIEvent;
 
 
@@ -73,6 +74,7 @@ class Component extends CoreObject
 	 */
 	public void setParams(Dict params)
 	{
+		this.onChangeParams(this.params, params);
 		this.params = params;
 	}
 	
@@ -100,11 +102,20 @@ class Component extends CoreObject
 		
 		/* Get current model */
 		BaseStruct model = this.model();
-		args.unshift(model);
 		
 		/* Change model by function */
-		fn f = rtl::method(model.getClassName(), method_name);
-		model = rtl::apply(f, args);
+		if (rtl::method_exists(model, method_name))
+		{
+			fn f = rtl::method(model, method_name);
+			model = rtl::apply(f, args);
+		}
+		
+		if (rtl::method_exists(model.getClassName(), method_name))
+		{
+			args.unshift(model);
+			fn f = rtl::method(model.getClassName(), method_name);
+			model = rtl::apply(f, args);
+		}
 		
 		/* Set new model */
 		this.controller.updateModel(this.model_path, model);
@@ -150,6 +161,35 @@ class Component extends CoreObject
 	{
 		Message msg = new Message(event, this.getObjectName());
 		await @.object_manager.handleMessage(msg);
+	}
+	
+	
+	
+	/**
+	 * Change params
+	 */
+	public void onChangeParams(Dict old_params, Dict new_params)
+	{
+	}
+	
+	
+	
+	/**
+	 * Returns true if repaint overrided
+	 */
+	public bool isRepaintOverridden()
+	{
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Repaint component
+	 */
+	public Collection<var> repaint(RenderDriverControl control)
+	{
+		return [];
 	}
 	
 	

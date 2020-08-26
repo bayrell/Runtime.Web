@@ -492,7 +492,7 @@ Object.assign(Runtime.Web.RenderDriver,
 			if (model_path != null)
 			{
 				model = Runtime.rtl.attr(ctx, controller.layout, model_path, null);
-				attrs["value"] = model;
+				attrs["model"] = model;
 			}
 			
 			var dict_attrs = Runtime.Dict.from(attrs);
@@ -505,7 +505,7 @@ Object.assign(Runtime.Web.RenderDriver,
 			/* Set reference */
 			if (attrs != null && attrs["@ref"] != undefined)
 			{
-				/* controller.setReference(ctx, component.parent_component.path_id, attrs["@ref"], component); */
+				controller.setReference(ctx, component.path_id, attrs["@ref"], component);
 			}
 			
 			/* Create new control */
@@ -517,25 +517,37 @@ Object.assign(Runtime.Web.RenderDriver,
 				"model": model,
 			});
 			
-			/* Render component */
-			var render = class_obj.render.bind(class_obj);
-			var res = render
-			(
-				ctx, controller.layout, model, dict_attrs, content
-			);
-			
-			/* Call result */
-			if (res != null && typeof res == "function") res = res(new_control);
-			
-			/* Normalize content */
-			res = this.normalizeContent(res, new_control);
-			
-			/* Add childs */
-			childs = childs.slice();
-			childs.push(res);
-			
-			controller.updateComponent(ctx, component, created);
-			controller.bindEvents(ctx, new_control, component, attrs, created);
+			if (!component.isRepaintOverridden(ctx, new_control))
+			{
+				/* Render component */
+				var render = class_obj.render.bind(class_obj);
+				var res = render
+				(
+					ctx, controller.layout, model, dict_attrs, content
+				);
+				
+				/* Call result */
+				if (res != null && typeof res == "function") res = res(new_control);
+				
+				/* Normalize content */
+				res = this.normalizeContent(res, new_control);
+				
+				/* Add childs */
+				childs = childs.slice();
+				childs.push(res);
+				
+				controller.updateComponent(ctx, component, created);
+				controller.bindEvents(ctx, new_control, component, attrs, created);
+			}
+			else
+			{
+				/* Render component */
+				var res = component.repaint(ctx, new_control);
+				
+				/* Add childs */
+				childs = childs.slice();
+				childs.push(res);
+			}
 		}
 		
 		else if (type == 'element')
@@ -566,7 +578,7 @@ Object.assign(Runtime.Web.RenderDriver,
 			elem_new._attrs = attrs;
 			elem_new._path_id = path_id;
 			elem_new._component = control.component;
-			elem_new._params = Runtime.Dict.from(attrs);
+			elem_new.params = Runtime.Dict.from(attrs);
 			
 			/* Update element params */
 			controller.updateElemParams(ctx, new_control, elem_new);

@@ -218,6 +218,19 @@ class RenderController extends CoreDriver
 	
 	
 	/**
+	 * Set reference
+	 */
+	public void setReference(string path_id, Collection bind_value, Component item)
+	{
+		string class_name = bind_value[0];
+		string bind_name = bind_value[1];
+		Component component = this.searchComponent(path_id, class_name);
+		component[bind_name] = item;
+	}
+	
+	
+	
+	/**
 	 * Send event
 	 */
 	public async void signal(string path_id, CoreEvent event)
