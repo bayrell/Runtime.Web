@@ -19,47 +19,30 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.Web.Cookie;
+use Runtime.Web.LayoutModel;
+use Runtime.Web.Request;
+use Runtime.Web.Response;
 use Runtime.Web.Route;
 
 
-struct LayoutModel extends BaseStruct
+struct RenderContainer extends BaseStruct
 {
-	/* URL Info */
-	bool is_https = false;
-	int port = 80;
-	string hostname = "";
-	string uri = "";
-	string full_uri = "";
-	string route_prefix = "";
-	string locale_uri = "";
-	string f_inc = "";
+	Request request = null;
+	Response response = null;
 	Route route = null;
 	Dict<string> route_params = null;
+	Dict<Cookie> new_cookies = null;
+	LayoutModel layout = null;
+	string pattern_name = "default";
+	string pattern_class = "";
 	
-	/* Layout info */
-	string layout_name = "default";
-	string layout_class = "";
-	string page_class = "";
-	BaseStruct page_model = null;
 	
-	/* Base SEO Options */
-	string locale = "";
-	string title = "";
-	string description = "";
-	string favicon = "";
+	bool isResponseExists() => this.response != null;
+	bool isRouteExists() => 
+		this.route != null and this.route_params != null and
+		this.route.class_name != "" and this.route.class_method_name != ""
+	;
+	bool isPageExists() => this.layout != null and this.layout.page_class != "";
 	
-	/* Pagination */
-	int page = 0;
-	int pages = 0;
-	int count_in_page = 0;
-	
-	/* Breadcrumbs */
-	Collection<Dict> breadcrumbs = null;
-	
-	/* Other data */
-	Dict<primitive> storage = new Dict();
-	Dict<primitive> css_vars = new Dict();
-	
-	/* Additional components */
-	Collection<string> components = null;
 }

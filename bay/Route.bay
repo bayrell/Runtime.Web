@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
  
-namespace Runtime.Web.Annotations;
+namespace Runtime.Web;
 
 use Runtime.re;
 use Runtime.BaseStruct;
@@ -43,26 +43,26 @@ struct Route extends BaseStruct
 			string uri_match = this.uri;
 			uri_match = re::replace("\\/", "\\/", uri_match);
 			
-			Vector matches = re::matchAll("{(.*?)}", this.uri);
+			Collection matches = re::matchAll("{(.*?)}", this.uri);
 			if (matches)
 			{
-				Vector<string> params = matches.get(0, null);
-				params.each(
+				matches.each
+				(
 					void (string name) use (uri_match)
 					{
-						uri_match = re::replace(
+						uri_match = re::replace
+						(
 							"{" ~ name ~ "}", 
 							"([^\\/]*?)", 
 							uri_match
 						);
 					}
 				);
-				
-				this.assignValue("params", params.toCollection());
+				this.assignValue("params", matches);
 			}
 			else
 			{
-				this.assignValue("params", new Collection<string>());
+				this.assignValue("params", []);
 			}
 			
 			this.assignValue("uri_match", "^" ~ uri_match ~ "$");
@@ -75,7 +75,7 @@ struct Route extends BaseStruct
 	 * Get params
 	 * @return Map<string>
 	 */
-	pure memorize Dict<string> getParams(Vector<string> matches, Route info)
+	pure memorize Dict<string> getParams(Collection<string> matches, Route info)
 	{
 		if (info.params == null)
 		{

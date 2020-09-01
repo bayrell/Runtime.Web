@@ -18,17 +18,220 @@
 
 namespace Runtime.Web;
 
+use Runtime.re;
+use Runtime.lib;
+use Runtime.BaseStruct;
+use Runtime.RuntimeUtils;
+use Runtime.Annotations.IntrospectionClass;
 use Runtime.Core.CoreDriver;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderController;
+use Runtime.Web.RenderDriver;
+use Runtime.Web.Request;
+use Runtime.Web.Route;
+use Runtime.Web.RouteList;
 
 
 class RouteController extends CoreDriver
 {
+	Collection<Route> routes = null;
+	string route_prefix = "";
+	
 	
 	/**
 	 * Start driver
 	 */
 	public async void startDriver()
 	{
+		this.routes = static::getRoutesByEntities(@.entities);
+		this.route_prefix = @.config(["Runtime.Web", "route_prefix"], "");
+	}
+	
+	
+	
+	/**
+	 * Render
+	 */
+	public async void renderCurrentPage()
+	{
+		string uri = "/";
+		
+		#ifcode ES6 then
+		uri = window.location.pathname;
+		#endif
+		
+		await this.renderPage(uri);
+	}
+	
+	
+	
+	/**
+	 * Render page
+	 */
+	public async void renderPage(string uri = "/")
+	{
+		string host = "";
+		string method = "";
+		string protocol = "";
+		
+		#ifcode ES6 then
+		host = window.location.hostname;
+		protocol = window.location.protocol.substr(0, window.location.protocol.length - 1);
+		#endif
+		
+		Request request = new Request
+		{
+			"uri": uri,
+			"host": host,
+			"protocol": protocol,
+			"route_prefix": this.route_prefix,
+		};
+		
+		RenderContainer container = await this.renderRequest(request);
+		
+		/* Render container */
+		this.renderContainer(container);
+	}
+	
+	
+	
+	/**
+	 * Render request
+	 */
+	async RenderContainer renderRequest(Request request)
+	{
+		Route route = null;
+		Dict<string> params = null;
+		
+		/* Search route */
+		list res = this.findRoute(request);
+		route = res.item(0); params = res.item(1);
+		
+		/* Create render container  */
+		RenderContainer container = new RenderContainer
+		{
+			"request": request,
+			"route": route,
+			"route_params": params,
+		};
+		
+		/* Render container */
+		container = await RenderDriver::chainRender(container);
+		
+		/* Result */
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Render container
+	 */
+	void renderContainer(RenderContainer container)
+	{
+		Collection<RenderController> controllers = @.getDrivers(classof RenderController);
+		for (int i=0; i<controllers.count(); i++)
+		{
+			RenderController controller = controllers[i];
+			if (controller.isMainController())
+			{
+				controller.renderLayout(container.layout);
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * Find route
+	 */
+	list<string, string> findRoute(Request request)
+	{
+		Route route = null;
+		Dict<string> params = null;
+		
+		string request_uri = request.uri;
+		string route_prefix = request.route_prefix;
+		
+		request_uri = RenderDriver::splitRoutePrefix(request_uri, route_prefix);
+		if (request_uri === null) return [route, params];
+		
+		/* Find route */
+		for (int i=0; i<this.routes.count(); i++)
+		{
+			Route info = this.routes.item(i);
+			Collection<string> matches = re::matchAll( info.uri_match, request_uri );
+			if (matches != null)
+			{
+				params = info::getParams(matches, info);
+				route = info;
+				break;
+			}
+		}
+		
+		return [route, params];
+	}
+	
+	
+	
+	/**
+	 * Returns routes
+	 */
+	pure Collection<Route> getRoutesByEntities(Collection<BaseStruct> entitites)
+	{
+		Collection<RouteList> route_lists = entitites.filter( lib::isInstance(classof RouteList) );
+		
+		Vector<BaseStruct> routes = new Vector();
+		routes.appendVector( entitites.filter(lib::isInstance( classof Route )) );
+		
+		for (int i=0; i<route_lists.count(); i++)
+		{
+			RouteList route_list = route_lists.item(i);
+			string class_name = route_list.className();
+			if (class_name == "") continue;
+			routes.appendVector( static::getRoutesByClassName(class_name) );
+		}
+		
+		return routes.toCollection();
+	}
+	
+	
+	
+	/**
+	 * Returns routes
+	 */
+	pure Collection<Route> getRoutesByClassName(string class_name)
+	{
+		Vector<Route> routes = new Vector<Route>();
+		IntrospectionClass class_info = RuntimeUtils::getClassIntrospection(class_name);
+		
+		/* Get routes info */
+		class_info.methods.each
+		(
+			void (Collection<Route> annotations, string class_method_name) use (routes, class_name)
+			{
+				annotations.each
+				(
+					void (Route route) use (routes, class_name, class_method_name)
+					{
+						if (route == null) return;
+						if (route instanceof Route)
+						{
+							routes.push
+							(
+								route.copy
+								{
+									"class_name": class_name,
+									"class_method_name": class_method_name,
+								}
+							);
+						}
+					}
+				);
+			}
+		);
+		
+		return routes.toCollection();
 	}
 	
 }

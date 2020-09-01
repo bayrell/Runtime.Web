@@ -20,13 +20,33 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.RuntimeUtils;
+use Runtime.Annotations.IntrospectionInfo;
 use Runtime.Core.CoreDriver;
+use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteMiddleware;
 
 
 class RenderDriver extends CoreDriver
 {
+	/* Chains */
 	static const string LAYOUT_CHAIN = "Runtime.Web.RenderDriver::LAYOUT_CHAIN";
+	static const string RENDER_CHAIN = "Runtime.Web.RenderDriver::RENDER_CHAIN";
+	
+	/* Render Chain */
+	static const int RENDER_CHAIN_START = 500;
+	static const int RENDER_CHAIN_CREATE_LAYOUT_MODEL = 1000;
+	static const int RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS = 1200;
+	static const int RENDER_CHAIN_MIDDLEWARE = 1500;
+	static const int RENDER_CHAIN_CALL_ROUTE_PRE = 1900;
+	static const int RENDER_CHAIN_CALL_ROUTE = 2000;
+	static const int RENDER_CHAIN_CALL_PAGE_NOT_FOUND = 2050;
+	static const int RENDER_CHAIN_CALL_ROUTE_POST = 2100;
+	static const int RENDER_CHAIN_INIT_ASSETS = 3000;
+	static const int RENDER_CHAIN_RESPONSE = 4000;
+	static const int RENDER_CHAIN_RESPONSE_POST = 4500;
+	
 	protected Map<bool> listen_events = new Map();
 	
 	
@@ -250,11 +270,10 @@ class RenderDriver extends CoreDriver
 	 */
 	pure Collection<string> getLayoutComponents(LayoutModel layout)
 	{
-		Collection<string> components = [ layout.layout_class, layout.page_class ];
-		if (layout.components != null)
-		{
-			components = components.appendCollectionIm(layout.components);
-		}
+		Collection<string> components = [];
+		if (layout.layout_class != "") components = components.pushIm(layout.layout_class);
+		if (layout.page_class != "") components = components.pushIm(layout.page_class);
+		if (layout.components != null) components = components.appendCollectionIm(layout.components);
 		components = components.removeDublicatesIm();
 		components = RenderDriver::getRequiredComponents(components);
 		components = components.filter( lib::equalNot("") );
@@ -298,6 +317,142 @@ class RenderDriver extends CoreDriver
 	{
 		layout = @.chain(static::LAYOUT_CHAIN, [layout]) |> attr 0;
 		return layout;
+	}
+	
+	
+	
+	/**
+	 * Render chain
+	 */
+	static async RenderContainer chainRender(RenderContainer container)
+	{
+		container = await @.chainAsync(static::RENDER_CHAIN, [container]) |> attr 0;
+		return container;
+	}
+	
+	
+	
+	/**
+	 * Layout chain
+	 */
+	pure LayoutModel chainLayoutModel(LayoutModel layout)
+	{
+		if (layout.layout_name == "default" and layout.layout_class == "" or layout.layout_class == "")
+		{
+			layout <= layout_class <= classof Layout;
+		}
+		return [ layout ];
+	}
+	
+	
+	
+	/**
+	 * Split route prefix
+	 */
+	pure memorize string splitRoutePrefix(string request_uri, string route_prefix)
+	{
+		int prefix_len = rs::strlen(route_prefix);
+		if (prefix_len > 0)
+		{
+			int pos = rs::search(request_uri, route_prefix);
+			if (pos == -1)
+			{
+				return null;
+			}
+			request_uri = rs::substr(request_uri, prefix_len);
+		}
+		if (request_uri == "") request_uri = "/";
+		return request_uri;
+	}
+	
+	
+	
+	/**
+	 * Render chain
+	 * Create layout model
+	 */
+	static RenderContainer createLayoutModel(RenderContainer container)
+	{
+		if (container == null) return [ container ];
+		if (container.response != null) return [ container ];
+		
+		/* Create PocketModel */
+		container <= layout <= new LayoutModel
+		{
+			"uri": static::splitRoutePrefix(container.request.uri, container.request.route_prefix),
+			"f_inc": @.config(["Runtime.Web", "f_inc"], 1),
+			"full_uri": container.request.uri,
+			"route": container.route,
+			"route_prefix": container.request.route_prefix,
+			"route_params": container.route_params,
+		};
+		
+		return [ container ];
+	}
+	
+	
+	
+	/**
+	 * Render chain
+	 * Call route middlewares
+	 */
+	static async RenderContainer callRouteMiddleware(RenderContainer container)
+	{
+		if (container == null) return [ container ];
+		if (container.isResponseExists()) return [ container ];
+		if (not container.isRouteExists()) return [ container ];
+		
+		Collection<RouteMiddleware> middlewares = [];
+		
+		/* Get middleware from class */
+		fn getMethodInfoByName = rtl::method(container.route.class_name, "getClassInfo");
+		IntrospectionInfo info = getMethodInfoByName();
+		middlewares = middlewares.concatIm
+		(
+			info.annotations.filter( lib::isInstance(classof RouteMiddleware) )
+		)
+		
+		/* Get middleware from method */
+		fn getMethodInfoByName = rtl::method(container.route.class_name, "getMethodInfoByName");
+		IntrospectionInfo info = getMethodInfoByName(container.route.class_method_name);
+		middlewares = middlewares.concatIm
+		(
+			info.annotations.filter( lib::isInstance(classof RouteMiddleware) )
+		);
+		
+		/* Run each middleware */
+		for (int i=0; i<middlewares.count(i); i++)
+		{
+			RouteMiddleware m = middlewares.item(i);
+			Collection arr = rs::split("::", m.value);
+			string class_name = arr.get(0, "");
+			string method_name = arr.get(1, "");
+			fn f = rtl::method(class_name, method_name);
+			
+			/* Run method */
+			container = await f(container);
+		}
+		
+		return [ container ];
+	}
+	
+	
+	
+	/**
+	 * Render chain
+	 * Call route
+	 */
+	static async RenderContainer callRoute(RenderContainer container)
+	{
+		if (container == null) return [ container ];
+		if (container.isResponseExists()) return [ container ];
+		if (container.isPageExists()) return [ container ];
+		if (not container.isRouteExists()) return [ container ];
+		
+		fn f = rtl::method(container.route.class_name, container.route.class_method_name);
+		container = await f(container);
+		
+		return [ container ];
 	}
 	
 	

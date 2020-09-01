@@ -25,6 +25,7 @@ use Runtime.Core.LambdaChain;
 use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
+use Runtime.Web.RouteController;
 
 
 class ModuleDescription implements 
@@ -104,11 +105,42 @@ class ModuleDescription implements
 	[
 		/* Render Driver */
 		new Driver{ "name": classof RenderDriver },
+		
+		/* Register RouteController */
+		new Driver{ "name": classof RouteController },
+		
+		/* Layout chain */
 		new LambdaChain
 		{
 			"name": RenderDriver::LAYOUT_CHAIN,
 			"pos": 10000,
-			"value": "Runtime.Web.ModuleDescription::chainLayoutModel",
+			"value": "Runtime.Web.RenderDriver::chainLayoutModel",
+		},
+		
+		/* Render Chain. Create layout model */
+		new LambdaChain
+		{
+			"name": RenderDriver::RENDER_CHAIN,
+			"value": "Runtime.Web.RenderDriver::createLayoutModel",
+			"pos": RenderDriver::RENDER_CHAIN_CREATE_LAYOUT_MODEL,
+		},
+		
+		/* Render Chain. Call middleware route */
+		new LambdaChain
+		{
+			"name": RenderDriver::RENDER_CHAIN,
+			"value": "Runtime.Web.RenderDriver::callRouteMiddleware",
+			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE_PRE,
+			"is_async": true,
+		},
+		
+		/* Render Chain. Call route */
+		new LambdaChain
+		{
+			"name": RenderDriver::RENDER_CHAIN,
+			"value": "Runtime.Web.RenderDriver::callRoute",
+			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE,
+			"is_async": true,
 		},
 	];
 	
@@ -118,19 +150,5 @@ class ModuleDescription implements
 	 * Returns sync loaded files
 	 */		
 	pure Vector<string> resources() => null;
-	
-	
-	
-	/**
-	 * Layout chain
-	 */
-	pure LayoutModel chainLayoutModel(LayoutModel layout)
-	{
-		if (layout.layout_name == "default" and layout.layout_class == "")
-		{
-			layout <= layout_class <= classof Layout;
-		}
-		return [ layout ];
-	}
 	
 }
