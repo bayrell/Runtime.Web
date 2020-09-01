@@ -395,6 +395,13 @@ class RenderController extends CoreDriver
 			}
 			elem.textContent = this.new_css;
 		}
+		
+		/* Set title */
+		if (this.isMainController(ctx))
+		{
+			document.title = this.layout.title;
+		}
+		
 		#endif
 		
 		this.old_css = this.new_css;
