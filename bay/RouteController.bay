@@ -34,6 +34,7 @@ use Runtime.Web.RouteList;
 
 class RouteController extends CoreDriver
 {
+	Vector history = null;
 	Collection<Route> routes = null;
 	string route_prefix = "";
 	
@@ -43,8 +44,90 @@ class RouteController extends CoreDriver
 	 */
 	public async void startDriver()
 	{
+		this.history = new Vector();
 		this.routes = static::getRoutesByEntities(@.entities);
 		this.route_prefix = @.config(["Runtime.Web", "route_prefix"], "");
+		
+		#ifcode ES6 then
+		
+		/* Add mouse listener */
+		var body = document.getElementsByTagName("body")[0];
+		body.addEventListener("click", Runtime.Web.RouteController.js_click);
+		
+		/* Add history listener */
+		window.onpopstate = Runtime.Web.RouteController.js_onpopstate;
+		
+		#endif
+	}
+	
+	
+	
+	/**
+	 * JS Click Event
+	 */
+	public static void @js_click(var e)
+	{
+		@ = RuntimeUtils::getContext();
+		RenderController controller = @.getDriver(@, classof RouteController);
+		
+		#ifcode JAVASCRIPT then
+		var elem = e.target;
+		
+		if (elem.tagName == "A")
+		{
+			var target = elem.getAttribute("target");
+			var href = elem.getAttribute("href");
+			if (target == null)
+			{
+				e.preventDefault();
+				controller.openUrl(ctx, href);
+			}
+		}
+		
+		#endif
+	}
+	
+	
+	
+	/**
+	 * JS onpopstate event
+	 */
+	public static void @js_onpopstate(var e)
+	{
+		@ = RuntimeUtils::getContext();
+		RenderController controller = @.getDriver(@, classof RouteController);
+		
+		#ifcode JAVASCRIPT then
+		if (controller.history.count() == 0)
+		{
+			document.location = document.location;
+		}
+		else if (e.state != null && typeof e.state.href == "string")
+		{
+			controller.history.pop(ctx);
+			controller.renderPage(ctx, e.state.href);
+		}
+		else
+		{
+			controller.history.pop(ctx);
+			controller.renderCurrentPage(ctx);
+		}
+		#endif
+	}
+	
+	
+	
+	/**
+	 * Open url
+	 */
+	public void openUrl(string href = "/")
+	{
+		#ifcode JAVASCRIPT then
+		var obj = { "href": href, };
+		history.pushState(obj, "", href);
+		#endif
+		this.history.push(href);
+		this.renderPage(href);
 	}
 	
 	
