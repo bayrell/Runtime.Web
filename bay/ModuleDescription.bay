@@ -18,8 +18,6 @@
 
 namespace Runtime.Web;
 
-use Runtime.Interfaces.AssetsInterface;
-use Runtime.Interfaces.ModuleDescriptionInterface;
 use Runtime.Core.Driver;
 use Runtime.Core.LambdaChain;
 use Runtime.Web.Layout;
@@ -28,9 +26,7 @@ use Runtime.Web.RenderDriver;
 use Runtime.Web.RouteController;
 
 
-class ModuleDescription implements 
-	ModuleDescriptionInterface,
-	AssetsInterface
+static class ModuleDescription
 {
 
 	
@@ -63,42 +59,6 @@ class ModuleDescription implements
 	
 	
 	/**
-	 * Returns module files load order
-	 * @return Collection<string>
-	 */
-	pure Collection<string> assets() => 
-	[
-		"Runtime.Web/Events/UIEvent",
-		"Runtime.Web/Events/WebEvent",
-		"Runtime.Web/Events/BlurEvent",
-		"Runtime.Web/Events/ChangeEvent",
-		"Runtime.Web/Events/FocusEvent",
-		"Runtime.Web/Events/KeyboardEvent",
-		"Runtime.Web/Events/KeyDownEvent",
-		"Runtime.Web/Events/KeyPressEvent",
-		"Runtime.Web/Events/KeyUpEvent",
-		"Runtime.Web/Events/MouseEvent",
-		"Runtime.Web/Events/MouseClickEvent",
-		"Runtime.Web/Events/MouseContextMenuEvent",
-		"Runtime.Web/Events/MouseDoubleClickEvent",
-		"Runtime.Web/Events/MouseDownEvent",
-		"Runtime.Web/Events/MouseEnterEvent",
-		"Runtime.Web/Events/MouseLeaveEvent",
-		"Runtime.Web/Events/MouseMoveEvent",
-		"Runtime.Web/Events/MouseOutEvent",
-		"Runtime.Web/Events/MouseOverEvent",
-		"Runtime.Web/Events/MouseUpEvent",
-		"Runtime.Web/Events/MouseWheelEvent",
-		"Runtime.Web/Component",
-		"Runtime.Web/Layout",
-		"Runtime.Web/LayoutModel",
-		"Runtime.Web/SeoModel",
-		"Runtime.Web/ModuleDescription",
-	];
-	
-	
-	
-	/**
 	 * Returns enities
 	 */
 	pure Collection<Dict> entities() => 
@@ -121,7 +81,7 @@ class ModuleDescription implements
 		new LambdaChain
 		{
 			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::createLayoutModel",
+			"value": "Runtime.Web.RenderDriver::chainRenderCreateLayoutModel",
 			"pos": RenderDriver::RENDER_CHAIN_CREATE_LAYOUT_MODEL,
 		},
 		
@@ -129,7 +89,7 @@ class ModuleDescription implements
 		new LambdaChain
 		{
 			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::callRouteMiddleware",
+			"value": "Runtime.Web.RenderDriver::chainRenderCallRouteMiddleware",
 			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE_PRE,
 			"is_async": true,
 		},
@@ -138,17 +98,10 @@ class ModuleDescription implements
 		new LambdaChain
 		{
 			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::callRoute",
+			"value": "Runtime.Web.RenderDriver::chainRenderCallRoute",
 			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE,
 			"is_async": true,
 		},
 	];
-	
-	
-	
-	/**
-	 * Returns sync loaded files
-	 */		
-	pure Vector<string> resources() => null;
 	
 }

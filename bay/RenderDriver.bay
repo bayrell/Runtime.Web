@@ -32,20 +32,21 @@ class RenderDriver extends CoreDriver
 {
 	/* Chains */
 	static const string LAYOUT_CHAIN = "Runtime.Web.RenderDriver::LAYOUT_CHAIN";
+	static const string PATTERN_CHAIN = "Runtime.Web.RenderDriver::PATTERN_CHAIN";
 	static const string RENDER_CHAIN = "Runtime.Web.RenderDriver::RENDER_CHAIN";
 	
 	/* Render Chain */
 	static const int RENDER_CHAIN_START = 500;
 	static const int RENDER_CHAIN_CREATE_LAYOUT_MODEL = 1000;
-	static const int RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS = 1200;
-	static const int RENDER_CHAIN_MIDDLEWARE = 1500;
-	static const int RENDER_CHAIN_CALL_ROUTE_PRE = 1900;
-	static const int RENDER_CHAIN_CALL_ROUTE = 2000;
-	static const int RENDER_CHAIN_CALL_PAGE_NOT_FOUND = 2050;
-	static const int RENDER_CHAIN_CALL_ROUTE_POST = 2100;
-	static const int RENDER_CHAIN_INIT_ASSETS = 3000;
-	static const int RENDER_CHAIN_RESPONSE = 4000;
-	static const int RENDER_CHAIN_RESPONSE_POST = 4500;
+	static const int RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS = 1500;
+	static const int RENDER_CHAIN_MIDDLEWARE = 2000;
+	static const int RENDER_CHAIN_CALL_ROUTE_PRE = 2500;
+	static const int RENDER_CHAIN_CALL_ROUTE = 3000;
+	static const int RENDER_CHAIN_CALL_PAGE_NOT_FOUND = 3100;
+	static const int RENDER_CHAIN_CALL_ROUTE_POST = 3500;
+	static const int RENDER_CHAIN_RESPONSE_BEFORE = 4000;
+	static const int RENDER_CHAIN_RESPONSE = 4500;
+	static const int RENDER_CHAIN_RESPONSE_POST = 5000;
 	
 	protected Map<bool> listen_events = new Map();
 	
@@ -311,6 +312,18 @@ class RenderDriver extends CoreDriver
 	
 	
 	/**
+	 * Returns css
+	 */
+	string getLayoutCSS(LayoutModel layout)
+	{
+		Collection<string> components = RenderDriver::getLayoutComponents(layout);
+		string css = RenderDriver::getCSSFromComponents(components, layout.css_vars);
+		return css;
+	}
+	
+	
+	
+	/**
 	 * Layout chain
 	 */
 	pure LayoutModel chainLayout(LayoutModel layout)
@@ -371,10 +384,10 @@ class RenderDriver extends CoreDriver
 	 * Render chain
 	 * Create layout model
 	 */
-	static RenderContainer createLayoutModel(RenderContainer container)
+	static RenderContainer chainRenderCreateLayoutModel(RenderContainer container)
 	{
 		if (container == null) return [ container ];
-		if (container.response != null) return [ container ];
+		if (container.isResponseExists()) return [ container ];
 		
 		/* Create PocketModel */
 		container <= layout <= new LayoutModel
@@ -396,7 +409,7 @@ class RenderDriver extends CoreDriver
 	 * Render chain
 	 * Call route middlewares
 	 */
-	static async RenderContainer callRouteMiddleware(RenderContainer container)
+	static async RenderContainer chainRenderCallRouteMiddleware(RenderContainer container)
 	{
 		if (container == null) return [ container ];
 		if (container.isResponseExists()) return [ container ];
@@ -442,7 +455,7 @@ class RenderDriver extends CoreDriver
 	 * Render chain
 	 * Call route
 	 */
-	static async RenderContainer callRoute(RenderContainer container)
+	static async RenderContainer chainRenderCallRoute(RenderContainer container)
 	{
 		if (container == null) return [ container ];
 		if (container.isResponseExists()) return [ container ];

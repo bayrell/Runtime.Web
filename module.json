@@ -38,6 +38,7 @@
 		"Events/MouseOverEvent",
 		"Events/MouseUpEvent",
 		"Events/MouseWheelEvent",
-		"ModuleDescription"
+		"ModuleDescription",
+		"webApp"
 	]
 }
