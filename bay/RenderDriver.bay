@@ -19,8 +19,8 @@
 namespace Runtime.Web;
 
 use Runtime.lib;
+use Runtime.IntrospectionInfo;
 use Runtime.RuntimeUtils;
-use Runtime.Annotations.IntrospectionInfo;
 use Runtime.Core.CoreDriver;
 use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
