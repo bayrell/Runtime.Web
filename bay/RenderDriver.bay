@@ -22,9 +22,11 @@ use Runtime.lib;
 use Runtime.IntrospectionInfo;
 use Runtime.RuntimeUtils;
 use Runtime.Core.CoreDriver;
+use Runtime.Web.FrontendStorageDriver;
 use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderController;
 use Runtime.Web.RouteMiddleware;
 
 
@@ -40,8 +42,8 @@ class RenderDriver extends CoreDriver
 	static const int RENDER_CHAIN_START = 500;
 	static const int RENDER_CHAIN_CREATE_LAYOUT_MODEL = 1000;
 	static const int RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS = 1500;
-	static const int RENDER_CHAIN_MIDDLEWARE = 2000;
-	static const int RENDER_CHAIN_CALL_ROUTE_BEFORE = 2500;
+	static const int RENDER_CHAIN_CALL_ROUTE_BEFORE = 2000;
+	static const int RENDER_CHAIN_CALL_ROUTE_MIDDLEWARE = 2500;
 	static const int RENDER_CHAIN_CALL_ROUTE = 3000;
 	static const int RENDER_CHAIN_CALL_PAGE_NOT_FOUND = 3100;
 	static const int RENDER_CHAIN_CALL_ROUTE_AFTER = 3500;
@@ -97,6 +99,25 @@ class RenderDriver extends CoreDriver
 		{
 			@.registerListener(this.getObjectName(), event_class_name, object_name, method_name);
 		}
+	}
+	
+	
+	
+	/**
+	 * Returns main controller
+	 */
+	public static RenderController getMainController()
+	{
+		Collection<RenderController> controllers = @.getDrivers(classof RenderController);
+		for (int i=0; i<controllers.count(); i++)
+		{
+			RenderController controller = controllers[i];
+			if (controller.isMainController())
+			{
+				return controller;
+			}
+		}
+		return null;
 	}
 	
 	
@@ -397,7 +418,20 @@ class RenderDriver extends CoreDriver
 		if (container == null) return [ container ];
 		if (container.isResponseExists()) return [ container ];
 		
-		/* Create PocketModel */
+		FrontendStorageDriver driver = @.getDriver(classof FrontendStorageDriver);
+		Dict frontend_keep_data = {};
+		
+		/* Load frontend data */
+		if (driver != null and container.frontend_controller_name != "")
+		{
+			layout_old = driver.loadControllerModel(container.frontend_controller_name);
+			if (layout_old != null)
+			{
+				frontend_keep_data = layout_old.keep_data;
+			}
+		}
+		
+		/* Create LayoutModel */
 		container <= layout <= new LayoutModel
 		{
 			"uri": static::splitRoutePrefix(container.request.uri, container.request.route_prefix),
@@ -406,6 +440,7 @@ class RenderDriver extends CoreDriver
 			"route": container.route,
 			"route_prefix": container.request.route_prefix,
 			"route_params": container.route_params,
+			"keep_data": frontend_keep_data,
 		};
 		
 		return [ container ];
@@ -421,6 +456,7 @@ class RenderDriver extends CoreDriver
 	{
 		if (container == null) return [ container ];
 		if (container.isResponseExists()) return [ container ];
+		if (container.isPageExists()) return [ container ];
 		if (not container.isRouteExists()) return [ container ];
 		
 		Collection<RouteMiddleware> middlewares = [];

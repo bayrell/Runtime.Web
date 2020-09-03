@@ -186,17 +186,20 @@ class Component extends CoreObject
 		list res = @.chain(RenderDriver::API_PREPARE_CHAIN, [request]);
 		request = res[0];
 		
-		BusDriverInterface bus = @.getDriver("default:external_bus");
-		RemoteCallAnswer answer = await bus.remoteBusCall
+		/* Restore request */
+		request = request.copy
 		{
 			"uri": items.get("uri", ""),
 			"app_name": items.get("app_name", "self"),
 			"object_name": items.get("object_name", ""),
 			"interface_name": items.get("interface_name", "default"),
 			"method_name": items.get("method_name", ""),
-			"data": request.data,
-			"storage": request.storage,
 		};
+		
+		/* Send request */
+		BusDriverInterface bus = @.getDriver("default:external_bus");
+		RemoteCallAnswer answer = await bus.remoteBusCall(request);
+		
 		return answer;
 	}
 	

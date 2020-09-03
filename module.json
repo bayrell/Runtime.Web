@@ -5,6 +5,7 @@
 		"Component",
 		"Cookie",
 		"ExternalBusDriver",
+		"FrontendStorageDriver",
 		"Layout",
 		"LayoutModel",
 		"RenderContainer",

@@ -24,6 +24,7 @@ use Runtime.BaseStruct;
 use Runtime.IntrospectionClass;
 use Runtime.RuntimeUtils;
 use Runtime.Core.CoreDriver;
+use Runtime.Web.FrontendStorageDriver;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderController;
 use Runtime.Web.RenderDriver;
@@ -218,7 +219,20 @@ class RouteController extends CoreDriver
 			"route_prefix": this.route_prefix,
 		};
 		
-		RenderContainer container = await this.renderRequest(request);
+		/* Find main controller name */
+		string frontend_controller_name = "";
+		RenderController controller = RenderDriver::getMainController();
+		if (controller)
+		{
+			frontend_controller_name = controller.getObjectName();
+		}
+		
+		/* Save controllers */
+		FrontendStorageDriver driver = @.getDriver(classof FrontendStorageDriver);
+		driver.saveControllers();
+		
+		/* Render request */
+		RenderContainer container = await this.renderRequest(request, frontend_controller_name);
 		
 		/* Render container */
 		this.renderContainer(container);
@@ -229,7 +243,7 @@ class RouteController extends CoreDriver
 	/**
 	 * Render request
 	 */
-	async RenderContainer renderRequest(Request request)
+	async RenderContainer renderRequest(Request request, string frontend_controller_name = "")
 	{
 		Route route = null;
 		Dict<string> params = null;
@@ -244,6 +258,7 @@ class RouteController extends CoreDriver
 			"request": request,
 			"route": route,
 			"route_params": params,
+			"frontend_controller_name": frontend_controller_name,
 		};
 		
 		/* Render container */
@@ -260,14 +275,10 @@ class RouteController extends CoreDriver
 	 */
 	void renderContainer(RenderContainer container)
 	{
-		Collection<RenderController> controllers = @.getDrivers(classof RenderController);
-		for (int i=0; i<controllers.count(); i++)
+		RenderController controller = RenderDriver::getMainController();
+		if (controller)
 		{
-			RenderController controller = controllers[i];
-			if (controller.isMainController())
-			{
-				controller.renderLayout(container.layout);
-			}
+			controller.renderLayout(container.layout);
 		}
 	}
 	

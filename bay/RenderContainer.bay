@@ -34,14 +34,16 @@ struct RenderContainer extends BaseStruct
 	Dict<string> route_params = null;
 	LayoutModel layout = null;
 	
-	/* New headers for backend */
+	/* Backend settings */
+	Dict<primitive> backend_storage = new Dict();
 	Dict<Cookie> new_cookies = {};
 	Dict<string> new_headers = {};
 	int new_http_code = 200;
 	
 	/* Frontend settings */
-	Dict<primitive> bag = new Dict();
-	Dict<primitive> env = new Dict();
+	string frontend_controller_name = "";
+	Dict<primitive> frontend_storage = new Dict();
+	Dict<primitive> frontend_env = new Dict();
 	string pattern_name = "default";
 	string pattern_class = "";
 	

@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.Core.Driver;
 use Runtime.Core.LambdaChain;
 use Runtime.Web.ExternalBusDriver;
+use Runtime.Web.FrontendStorageDriver;
 use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
@@ -91,7 +92,7 @@ static class ModuleDescription
 		{
 			"name": RenderDriver::RENDER_CHAIN,
 			"value": "Runtime.Web.RenderDriver::renderChainCallRouteMiddleware",
-			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE_BEFORE,
+			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE_MIDDLEWARE,
 			"is_async": true,
 		},
 		
@@ -105,8 +106,13 @@ static class ModuleDescription
 		},
 		
 		#ifdef ES6 then
+		
 		/* Register external bus driver */
 		new Driver{ "name": "default:external_bus", "value": classof ExternalBusDriver },
+		
+		/* Storage Driver */
+		new Driver{ "name": classof FrontendStorageDriver },
+		
 		#endif
 	];
 	

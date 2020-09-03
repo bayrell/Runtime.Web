@@ -56,8 +56,13 @@ struct LayoutModel extends BaseStruct
 	/* Breadcrumbs */
 	Collection<Dict> breadcrumbs = null;
 	
-	/* Other data */
-	Dict<primitive> storage = new Dict();
+	/* Frontend data */
+	Dict<primitive> data = new Dict();
+	
+	/* Frontend keep data */
+	Dict<primitive> keep_data = new Dict();
+	
+	/* CSS params */
 	Dict<primitive> css_vars = new Dict();
 	
 	/* Additional components */

@@ -23,6 +23,7 @@ use Runtime.Core.BusDriverInterface;
 use Runtime.Core.CoreDriver;
 use Runtime.Core.Message;
 use Runtime.Core.RemoteCallAnswer;
+use Runtime.Core.RemoteCallRequest;
 
 
 class ExternalBusDriver extends CoreDriver implements BusDriverInterface
@@ -42,15 +43,15 @@ class ExternalBusDriver extends CoreDriver implements BusDriverInterface
 	 * Send message
 	 * @return string
 	 */
-	async RemoteCallAnswer remoteBusCall(Dict items)
+	async RemoteCallAnswer remoteBusCall(RemoteCallRequest request)
 	{
-		string uri = items.get("uri", "");
-		string app_name = items.get("app_name", "app");
-		string object_name = items.get("object_name", "");
-		string interface_name = items.get("interface_name", "default");
-		string method_name = items.get("method_name", "");
-		var data = items["data"];
-		var storage = items["storage"];
+		string uri = request.uri;
+		string app_name = request.app_name;
+		string object_name = request.object_name;
+		string interface_name = request.interface_name;
+		string method_name = request.method_name;
+		var data = request.data;
+		var storage = request.storage;
 		
 		string bus_gate = @.env("X-ROUTE-PREFIX", "") ~ "/api";
 		string url = (uri != "") ? uri : 
@@ -68,7 +69,7 @@ class ExternalBusDriver extends CoreDriver implements BusDriverInterface
 		/* Answer */
 		try
 		{
-			res = rtl::json_decode(res.responseText);
+			res = rtl::json_decode(res);
 		}
 		catch (var e)
 		{
@@ -84,7 +85,7 @@ class ExternalBusDriver extends CoreDriver implements BusDriverInterface
 			res = new RemoteCallAnswer
 			{
 				"have_answer": false,
-				"error": "Json parse error",
+				"error_message": "Json parse error",
 				"code": rtl::ERROR_PARSE_SERIALIZATION_ERROR,
 				"response": null,
 			};
