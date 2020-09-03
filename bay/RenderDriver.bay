@@ -424,10 +424,10 @@ class RenderDriver extends CoreDriver
 		/* Load frontend data */
 		if (driver != null and container.frontend_controller_name != "")
 		{
-			layout_old = driver.loadControllerModel(container.frontend_controller_name);
-			if (layout_old != null)
+			LayoutModel old_layout = driver.loadControllerModel(container.frontend_controller_name);
+			if (old_layout != null)
 			{
-				frontend_keep_data = layout_old.keep_data;
+				frontend_keep_data = old_layout.keep_data;
 			}
 		}
 		
@@ -487,7 +487,8 @@ class RenderDriver extends CoreDriver
 			fn f = rtl::method(class_name, method_name);
 			
 			/* Run method */
-			container = await f(container);
+			list res = await f(container);
+			container = res[0];
 		}
 		
 		return [ container ];
@@ -507,7 +508,8 @@ class RenderDriver extends CoreDriver
 		if (not container.isRouteExists()) return [ container ];
 		
 		fn f = rtl::method(container.route.class_name, container.route.class_method_name);
-		container = await f(container);
+		list res = await f(container);
+		container = res[0];
 		
 		return [ container ];
 	}
