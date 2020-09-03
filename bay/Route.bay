@@ -43,22 +43,25 @@ struct Route extends BaseStruct
 			string uri_match = this.uri;
 			uri_match = re::replace("\\/", "\\/", uri_match);
 			
+			Vector<string> params = new Vector();
 			Collection matches = re::matchAll("{(.*?)}", this.uri);
 			if (matches)
 			{
 				matches.each
 				(
-					void (string name) use (uri_match)
+					void (Collection arr) use (uri_match, params)
 					{
+						string name = arr[1];
 						uri_match = re::replace
 						(
 							"{" ~ name ~ "}", 
 							"([^\\/]*?)", 
 							uri_match
 						);
+						params.push(name);
 					}
 				);
-				this.assignValue("params", matches);
+				this.assignValue("params", params);
 			}
 			else
 			{
@@ -77,13 +80,11 @@ struct Route extends BaseStruct
 	 */
 	pure memorize Dict<string> getParams(Collection<string> matches, Route info)
 	{
-		if (info.params == null)
-		{
-			return new Dict<string>();
-		}
+		if (info.params == null or matches == null) return {};
 		
 		Map<string> res = new Map();
-		info.params.each(
+		info.params.each
+		(
 			void (string name, int pos) use (matches, res)
 			{
 				string match = matches.get(pos, null);

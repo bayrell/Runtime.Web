@@ -34,19 +34,20 @@ class RenderDriver extends CoreDriver
 	static const string LAYOUT_CHAIN = "Runtime.Web.RenderDriver::LAYOUT_CHAIN";
 	static const string PATTERN_CHAIN = "Runtime.Web.RenderDriver::PATTERN_CHAIN";
 	static const string RENDER_CHAIN = "Runtime.Web.RenderDriver::RENDER_CHAIN";
+	static const string API_PREPARE_CHAIN = "Runtime.Web.RenderDriver::API_PREPARE_CHAIN";
 	
 	/* Render Chain */
 	static const int RENDER_CHAIN_START = 500;
 	static const int RENDER_CHAIN_CREATE_LAYOUT_MODEL = 1000;
 	static const int RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS = 1500;
 	static const int RENDER_CHAIN_MIDDLEWARE = 2000;
-	static const int RENDER_CHAIN_CALL_ROUTE_PRE = 2500;
+	static const int RENDER_CHAIN_CALL_ROUTE_BEFORE = 2500;
 	static const int RENDER_CHAIN_CALL_ROUTE = 3000;
 	static const int RENDER_CHAIN_CALL_PAGE_NOT_FOUND = 3100;
-	static const int RENDER_CHAIN_CALL_ROUTE_POST = 3500;
+	static const int RENDER_CHAIN_CALL_ROUTE_AFTER = 3500;
 	static const int RENDER_CHAIN_RESPONSE_BEFORE = 4000;
 	static const int RENDER_CHAIN_RESPONSE = 4500;
-	static const int RENDER_CHAIN_RESPONSE_POST = 5000;
+	static const int RENDER_CHAIN_RESPONSE_AFTER = 5000;
 	
 	protected Map<bool> listen_events = new Map();
 	
@@ -112,8 +113,15 @@ class RenderDriver extends CoreDriver
 		
 		/* Send signal */
 		(async () => {
-			var msg = new Runtime.Core.Message(ctx, event, path_id);
-			await ctx.object_manager.handleMessage(ctx, msg);
+			try
+			{
+				var msg = new Runtime.Core.Message(ctx, event, path_id);
+				await ctx.object_manager.handleMessage(ctx, msg);
+			}
+			catch (e)
+			{
+				console.log(e.stack);
+			}
 		})();
 		#endif
 	}
@@ -348,7 +356,7 @@ class RenderDriver extends CoreDriver
 	/**
 	 * Layout chain
 	 */
-	pure LayoutModel chainLayoutModel(LayoutModel layout)
+	pure LayoutModel layoutChainDefault(LayoutModel layout)
 	{
 		if (layout.layout_name == "default" and layout.layout_class == "" or layout.layout_class == "")
 		{
@@ -384,7 +392,7 @@ class RenderDriver extends CoreDriver
 	 * Render chain
 	 * Create layout model
 	 */
-	static RenderContainer chainRenderCreateLayoutModel(RenderContainer container)
+	static RenderContainer renderChainCreateLayoutModel(RenderContainer container)
 	{
 		if (container == null) return [ container ];
 		if (container.isResponseExists()) return [ container ];
@@ -393,7 +401,7 @@ class RenderDriver extends CoreDriver
 		container <= layout <= new LayoutModel
 		{
 			"uri": static::splitRoutePrefix(container.request.uri, container.request.route_prefix),
-			"f_inc": @.config(["Runtime.Web", "f_inc"], 1),
+			"f_inc": @.config(["Runtime.Web", "f_inc"], "1"),
 			"full_uri": container.request.uri,
 			"route": container.route,
 			"route_prefix": container.request.route_prefix,
@@ -409,7 +417,7 @@ class RenderDriver extends CoreDriver
 	 * Render chain
 	 * Call route middlewares
 	 */
-	static async RenderContainer chainRenderCallRouteMiddleware(RenderContainer container)
+	static async RenderContainer renderChainCallRouteMiddleware(RenderContainer container)
 	{
 		if (container == null) return [ container ];
 		if (container.isResponseExists()) return [ container ];
@@ -455,7 +463,7 @@ class RenderDriver extends CoreDriver
 	 * Render chain
 	 * Call route
 	 */
-	static async RenderContainer chainRenderCallRoute(RenderContainer container)
+	static async RenderContainer renderChainCallRoute(RenderContainer container)
 	{
 		if (container == null) return [ container ];
 		if (container.isResponseExists()) return [ container ];

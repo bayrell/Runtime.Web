@@ -4,6 +4,7 @@
 	[
 		"Component",
 		"Cookie",
+		"ExternalBusDriver",
 		"Layout",
 		"LayoutModel",
 		"RenderContainer",

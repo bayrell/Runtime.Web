@@ -80,7 +80,11 @@ class RouteController extends CoreDriver
 			if (target == null)
 			{
 				e.preventDefault();
-				controller.openUrl(ctx, href);
+				(async () => {
+					try { await controller.openUrl(ctx, href); }
+					catch (e) { console.log(e.stack); }
+				})();
+				return false;
 			}
 		}
 		
@@ -105,12 +109,18 @@ class RouteController extends CoreDriver
 		else if (e.state != null && typeof e.state.href == "string")
 		{
 			controller.history.pop(ctx);
-			controller.renderPage(ctx, e.state.href);
+			(async () => {
+				try { await controller.renderPage(ctx, e.state.href); }
+				catch (e) { console.log(e.stack); }
+			})();
 		}
 		else
 		{
 			controller.history.pop(ctx);
-			controller.renderCurrentPage(ctx);
+			(async () => {
+				try { await controller.renderCurrentPage(ctx); }
+				catch (e) { console.log(e.stack); }
+			})();
 		}
 		#endif
 	}
@@ -120,14 +130,14 @@ class RouteController extends CoreDriver
 	/**
 	 * Open url
 	 */
-	public void openUrl(string href = "/")
+	public async void openUrl(string href = "/")
 	{
 		#ifcode JAVASCRIPT then
 		var obj = { "href": href, };
 		history.pushState(obj, "", href);
 		#endif
 		this.history.push(href);
-		this.renderPage(href);
+		await this.renderPage(href);
 	}
 	
 	
@@ -151,10 +161,20 @@ class RouteController extends CoreDriver
 			}
 		}
 		
+		/* Render all controllers */
+		for (int i=0; i<controllers.count(); i++)
+		{
+			RenderController controller = controllers[i];
+			if (controller.layout != null)
+			{
+				controller.repaint();
+			}
+		}
+		
 		/* render */
 		if (render)
 		{
-			this.renderCurrentPage();
+			await this.renderCurrentPage();
 		}
 	}
 	
@@ -274,6 +294,8 @@ class RouteController extends CoreDriver
 			Collection<string> matches = re::matchAll( info.uri_match, request_uri );
 			if (matches != null)
 			{
+				matches = matches.get(0, null);
+				if (matches) matches = matches.removeFirstIm();
 				params = info::getParams(matches, info);
 				route = info;
 				break;

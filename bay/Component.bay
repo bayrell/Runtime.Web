@@ -20,9 +20,12 @@ namespace Runtime.Web;
 
 use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
+use Runtime.Core.BusDriverInterface;
 use Runtime.Core.CoreEvent;
 use Runtime.Core.CoreObject;
 use Runtime.Core.Message;
+use Runtime.Core.RemoteCallAnswer;
+use Runtime.Core.RemoteCallRequest;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderController;
 use Runtime.Web.RenderDriver;
@@ -162,6 +165,39 @@ class Component extends CoreObject
 	{
 		Message msg = new Message(event, this.getObjectName());
 		await @.object_manager.handleMessage(msg);
+	}
+	
+	
+	
+	/**
+	 * Remote bus call
+	 */
+	public async RemoteCallAnswer remoteBusCall(Dict items)
+	{
+		/* Set default params */
+		items = items.copy
+		{
+			"app_name": items.get("app_name", "self"),
+			"interface_name": items.get("interface_name", "default"),
+		};
+		
+		/* Change api request */
+		RemoteCallRequest request = new RemoteCallRequest(items);
+		list res = @.chain(RenderDriver::API_PREPARE_CHAIN, [request]);
+		request = res[0];
+		
+		BusDriverInterface bus = @.getDriver("default:external_bus");
+		RemoteCallAnswer answer = await bus.remoteBusCall
+		{
+			"uri": items.get("uri", ""),
+			"app_name": items.get("app_name", "self"),
+			"object_name": items.get("object_name", ""),
+			"interface_name": items.get("interface_name", "default"),
+			"method_name": items.get("method_name", ""),
+			"data": request.data,
+			"storage": request.storage,
+		};
+		return answer;
 	}
 	
 	

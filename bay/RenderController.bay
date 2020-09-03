@@ -282,14 +282,17 @@ class RenderController extends CoreDriver
 		if (window_name != "") window[window_name] = this;
 		if (this.selector != "") this.root_elem = document.querySelector(this.selector);
 		
-		/* get model */
+		/* Get controller model */
 		if (selector_model != "" && selector_model != null)
 		{
 			var layout_input = document.querySelector(selector_model);
-			var layout = layout_input.value;
-			layout = Runtime.rs.base64_decode_url(ctx, layout);
-			layout = Runtime.RuntimeUtils.json_decode(ctx, layout);
-			this.layout = layout;
+			if (layout_input)
+			{
+				var layout = layout_input.value;
+				layout = Runtime.rs.base64_decode_url(ctx, layout);
+				layout = Runtime.RuntimeUtils.json_decode(ctx, layout);
+				this.layout = layout;
+			}
 		}
 		
 		#endif

@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.Core.Driver;
 use Runtime.Core.LambdaChain;
+use Runtime.Web.ExternalBusDriver;
 use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
@@ -74,14 +75,14 @@ static class ModuleDescription
 		{
 			"name": RenderDriver::LAYOUT_CHAIN,
 			"pos": 10000,
-			"value": "Runtime.Web.RenderDriver::chainLayoutModel",
+			"value": "Runtime.Web.RenderDriver::layoutChainDefault",
 		},
 		
 		/* Render Chain. Create layout model */
 		new LambdaChain
 		{
 			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::chainRenderCreateLayoutModel",
+			"value": "Runtime.Web.RenderDriver::renderChainCreateLayoutModel",
 			"pos": RenderDriver::RENDER_CHAIN_CREATE_LAYOUT_MODEL,
 		},
 		
@@ -89,8 +90,8 @@ static class ModuleDescription
 		new LambdaChain
 		{
 			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::chainRenderCallRouteMiddleware",
-			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE_PRE,
+			"value": "Runtime.Web.RenderDriver::renderChainCallRouteMiddleware",
+			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE_BEFORE,
 			"is_async": true,
 		},
 		
@@ -98,10 +99,15 @@ static class ModuleDescription
 		new LambdaChain
 		{
 			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::chainRenderCallRoute",
+			"value": "Runtime.Web.RenderDriver::renderChainCallRoute",
 			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE,
 			"is_async": true,
 		},
+		
+		#ifdef ES6 then
+		/* Register external bus driver */
+		new Driver{ "name": "default:external_bus", "value": classof ExternalBusDriver },
+		#endif
 	];
 	
 }
