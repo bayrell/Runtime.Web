@@ -21,12 +21,16 @@ namespace Runtime.Web;
 use Runtime.lib;
 use Runtime.IntrospectionInfo;
 use Runtime.RuntimeUtils;
+use Runtime.Core.BusDriverInterface;
 use Runtime.Core.CoreDriver;
+use Runtime.Core.RemoteCallAnswer;
+use Runtime.Core.RemoteCallRequest;
 use Runtime.Web.FrontendStorageDriver;
 use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderController;
+use Runtime.Web.Request;
 use Runtime.Web.RouteMiddleware;
 
 
@@ -137,6 +141,7 @@ class RenderDriver extends CoreDriver
 			try
 			{
 				var msg = new Runtime.Core.Message(ctx, event, path_id);
+				msg.sender = event.target;
 				await ctx.object_manager.handleMessage(ctx, msg);
 			}
 			catch (e)
@@ -531,6 +536,63 @@ class RenderDriver extends CoreDriver
 		return { "x": x, "y": y, "w": w, "h": h };
 	}
 	
+	
+	
+	/**
+	 * Remote bus call
+	 * @param Dict items
+	 * @return RemoteCallAnswer
+	 */
+	static async RemoteCallAnswer remoteBusCall(Dict items, RenderContainer container = null)
+	{
+		/* Set default params */
+		items = items.copy
+		{
+			"app_name": items.get("app_name", "self"),
+			"interface_name": items.get("interface_name", "default"),
+		};
+		
+		/* Change api request */
+		RemoteCallRequest request = new RemoteCallRequest(items);
+		list res = @.chain(RenderDriver::API_PREPARE_CHAIN, [request, container]);
+		request = res[0];
+		
+		/* Restore request */
+		request = request.copy
+		{
+			"uri": items.get("uri", ""),
+			"app_name": items.get("app_name", "self"),
+			"object_name": items.get("object_name", ""),
+			"interface_name": items.get("interface_name", "default"),
+			"method_name": items.get("method_name", ""),
+		};
+		
+		/* Send request */
+		BusDriverInterface bus = @.getDriver("default:external_bus");
+		RemoteCallAnswer answer = await bus.remoteBusCall(request);
+		
+		return answer;
+	}
+	
+	
+	
+	/**
+	 * Crud search
+	 */
+	static RemoteCallAnswer getCrudSearchParams(Request request)
+	{
+		Map data = new Map();
+		
+		if (rtl::exists(request.query))
+		{
+			string page = request.query.get("page", "0");
+			data.set("page", page);
+			data.set("limit", 100);
+		}
+		
+		return data.toDict();
+	}
+	
 }
 
 
@@ -779,6 +841,10 @@ Object.assign(Runtime.Web.RenderDriver,
 			{
 				model_path = controller.getBindModelPath(ctx, path_id, attrs["@bind"]);
 			}
+			if (attrs != null && attrs["@name"] != undefined)
+			{
+				model_path = controller.getBindModelPath(ctx, path_id, attrs["@name"]);
+			}
 			
 			/* Get model */
 			if (model_path != null)
@@ -798,6 +864,10 @@ Object.assign(Runtime.Web.RenderDriver,
 			if (attrs != null && attrs["@ref"] != undefined)
 			{
 				controller.setReference(ctx, component.path_id, attrs["@ref"], component);
+			}
+			if (attrs != null && attrs["@name"] != undefined)
+			{
+				controller.setReference(ctx, component.path_id, attrs["@name"], component);
 			}
 			
 			/* Create new control */
@@ -840,7 +910,7 @@ Object.assign(Runtime.Web.RenderDriver,
 			
 			controller.updateComponent(ctx, component, created);
 			controller.bindEvents(ctx, new_control, component, attrs, created);
-			component.update(ctx, created);
+			component.updateComponent(ctx, created);
 		}
 		
 		else if (type == 'element')

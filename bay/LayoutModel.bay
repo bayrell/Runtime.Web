@@ -48,11 +48,6 @@ struct LayoutModel extends BaseStruct
 	string description = "";
 	string favicon = "";
 	
-	/* Pagination */
-	int page = 0;
-	int pages = 0;
-	int count_in_page = 0;
-	
 	/* Breadcrumbs */
 	Collection<Dict> breadcrumbs = null;
 	

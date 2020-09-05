@@ -465,7 +465,12 @@ class RenderController extends CoreDriver
 					this.setReference(ctx, path_id, value, elem);
 					continue;
 				}
-				if (key == "value" || key == "@bind")
+				if (key == "@name")
+				{
+					value = this.getBindModelValue(ctx, path_id, value);
+					this.setReference(ctx, path_id, value, elem);
+				}
+				if (key == "value" || key == "@bind" || key == "@name")
 				{
 					if (elem.tagName == "INPUT" || elem.tagName == "SELECT" || elem.tagName == "TEXTAREA")
 					{
@@ -489,7 +494,7 @@ class RenderController extends CoreDriver
 			for (var i=elem.attributes.length - 1; i>=0; i--)
 			{
 				var attr = elem.attributes[i];
-				if (attrs[attr.name] == undefined && attr.name != "data-path")
+				if (attrs[attr.name] == undefined /*&& attr.name != "data-path"*/)
 				{
 					elem.removeAttribute(attr.name);
 				}
@@ -500,7 +505,7 @@ class RenderController extends CoreDriver
 		this.bindEvents(ctx, control, elem, attrs, is_new_elem);
 		
 		/* Set data-path attribute */
-		elem.setAttribute("data-path", path_id);
+		/*elem.setAttribute("data-path", path_id);*/
 		
 		#endif
 	}
