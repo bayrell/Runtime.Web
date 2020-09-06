@@ -356,6 +356,7 @@ class RenderController extends CoreDriver
 		
 		this.updated_components = new Vector();
 		this.remove_keys = new Vector();
+		this.register_listeners = new Vector();
 		
 		RenderDriverControl root_control = new RenderDriverControl
 		{
@@ -390,6 +391,8 @@ class RenderController extends CoreDriver
 			0
 		);
 		RenderDriver.p(root_control, res[1]);
+		
+		/* console.log(this.remove_keys); */
 		
 		/* Remove objects */
 		for (var i=0; i<this.remove_keys.count(); i++)
@@ -427,6 +430,28 @@ class RenderController extends CoreDriver
 		if (this.isMainController(ctx))
 		{
 			document.title = this.layout.title;
+		}
+		
+		/* Register listeners */
+		for (var i=0; i<this.register_listeners.count(); i++)
+		{
+			var listen = this.register_listeners[i];
+			ctx.registerListener
+			(
+				ctx,
+				listen.from,
+				listen.event_class_name,
+				listen.object_name,
+				listen.method_name
+			);
+		}
+		
+		/* Save updated components */
+		for (var i=0; i<this.updated_components.count(); i++)
+		{
+			var obj = this.updated_components[i];
+			var component = obj.get(ctx, "component");
+			this.saveComponent(ctx, component);
 		}
 		
 		#endif
@@ -494,7 +519,7 @@ class RenderController extends CoreDriver
 			for (var i=elem.attributes.length - 1; i>=0; i--)
 			{
 				var attr = elem.attributes[i];
-				if (attrs[attr.name] == undefined /*&& attr.name != "data-path"*/)
+				if (attrs[attr.name] == undefined && attr.name != "data-path")
 				{
 					elem.removeAttribute(attr.name);
 				}
@@ -505,7 +530,7 @@ class RenderController extends CoreDriver
 		this.bindEvents(ctx, control, elem, attrs, is_new_elem);
 		
 		/* Set data-path attribute */
-		/*elem.setAttribute("data-path", path_id);*/
+		elem.setAttribute("data-path", path_id);
 		
 		#endif
 	}
@@ -574,10 +599,15 @@ class RenderController extends CoreDriver
 					
 					if (elem instanceof Runtime.Web.Component)
 					{
-						ctx.registerListener
+						this.register_listeners.push
 						(
-							ctx, elem.getObjectName(), event_class_name,
-							component.getObjectName(), callback
+							ctx,
+							{
+								"from": elem.getObjectName(),
+								"event_class_name": event_class_name,
+								"object_name": component.getObjectName(),
+								"method_name": callback
+							}
 						);
 					}
 					else
@@ -593,7 +623,16 @@ class RenderController extends CoreDriver
 						}
 						
 						/* Register listener */
-						ctx.registerListener(ctx, path_id, event_class_name, component.getObjectName(), callback);
+						this.register_listeners.push
+						(
+							ctx,
+							{
+								"from": path_id,
+								"event_class_name": event_class_name,
+								"object_name": component.getObjectName(),
+								"method_name": callback
+							}
+						);
 						
 						/* Register event listener */
 						elem.addEventListener(es6_name, Runtime.Web.RenderDriver.js_event);
@@ -666,7 +705,10 @@ class RenderController extends CoreDriver
 			if (new_childs.indexOf(e) == -1)
 			{
 				parent_elem.removeChild(e);
-				this.remove_keys.push(null, e._path_id);
+				if (e._path_id != undefined)
+				{
+					this.remove_keys.push(null, e._path_id);
+				}
 				/* console.log('Remove child ', i); */
 			}
 			i--;
@@ -725,14 +767,14 @@ class RenderController extends CoreDriver
 					}
 				}
 			}
-			
+			/*
 			if (flag)
 			{
 				var index = this.remove_keys.indexOf(null, new_e._path_id);
 				if (index != -1)
 					this.remove_keys.remove(null, index, 1);
 			}
-			
+			*/
 			prevElem = new_e;
 		}
 		#endif

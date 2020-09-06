@@ -680,7 +680,8 @@ Object.assign(Runtime.Web.RenderDriver,
 	{
 		for (var i = 0; i < parent_elem.childNodes.length; i++)
 		{
-			if (parent_elem.childNodes[i]._path_id == path)
+			var e = parent_elem.childNodes[i];
+			if (e._path_id == path)
 			{
 				return i;
 			}
