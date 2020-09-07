@@ -1,4 +1,4 @@
-function runWebApp(env)
+function runWebApp(main_module, env)
 {
 	/* Create context */
 	var context = Runtime.Core.Context.create(null, Runtime.Dict.from(env));
@@ -9,7 +9,7 @@ function runWebApp(env)
 	});
 
 	/* Set entry point */
-	context = context.constructor.setMainModule(context, context, "App");
+	context = context.constructor.setMainModule(context, context, main_module);
 	
 	/* Set global context */
 	Runtime.RuntimeUtils.setContext(context);
