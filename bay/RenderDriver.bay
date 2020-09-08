@@ -45,6 +45,7 @@ class RenderDriver extends CoreDriver
 	/* Render Chain */
 	static const int RENDER_CHAIN_START = 500;
 	static const int RENDER_CHAIN_CREATE_LAYOUT_MODEL = 1000;
+	static const int RENDER_CHAIN_CHANGE_LAYOUT_MODEL = 1050;
 	static const int RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS = 1500;
 	static const int RENDER_CHAIN_CALL_ROUTE_BEFORE = 2000;
 	static const int RENDER_CHAIN_CALL_ROUTE_MIDDLEWARE = 2500;
@@ -335,7 +336,7 @@ class RenderDriver extends CoreDriver
 				{
 					fn f = rtl::method(component_name, "css");
 					string css = f(css_vars);
-					res.push(css);
+					if (not rtl::isEmpty(css)) res.push(css);
 				}
 			}
 		}
@@ -446,6 +447,78 @@ class RenderDriver extends CoreDriver
 			"route_prefix": container.request.route_prefix,
 			"route_params": container.route_params,
 			"keep_data": frontend_keep_data,
+			"css_vars":
+			{
+				"colors":
+				{
+					"default":
+					{
+						"background": "#fff",
+						"border": "#ccc",
+						"text": "#000",
+						"hover-background": "#eee",
+						"hover-text": "inherit",
+					},
+					
+					"active":
+					{
+						"background": "#337ab7",
+						"border": "#22527b",
+						"text": "#fff",
+						"hover-background": "#337ab7",
+						"hover-text": "#fff",
+					},
+					
+					"primary":
+					{
+						"background": "#337ab7",
+						"border": "#22527b",
+						"text": "#fff",
+						"hover-background": "#286090",
+						"hover-text": "#fff",
+						"active-background": "#286090",
+						"active-tet": "#fff",
+					},
+					
+					"danger":
+					{
+						"background": "#d14b42",
+						"border": "#a02e27",
+						"text": "#fff",
+						"hover-background": "#e60000",
+						"hover-text": "#fff",
+						"active-background": "#e60000",
+						"active-tet": "#fff",
+					},
+					
+					"success":
+					{
+						"background": "green",
+						"border": "green",
+						"text": "#fff",
+						"hover": "green",
+						"hover-text": "#fff",
+						"active": "green",
+						"active-tet": "#fff",
+					},
+					
+					"warning":
+					{
+						"background": "yellow",
+						"border": "yellow",
+						"text": "#fff",
+						"hover": "yellow",
+						"hover-text": "#fff",
+						"active": "yellow",
+						"active-tet": "#fff",
+					},
+					
+				},
+				"font":
+				{
+					"size": "14px",
+				},
+			},
 		};
 		
 		return [ container ];
@@ -572,25 +645,6 @@ class RenderDriver extends CoreDriver
 		RemoteCallAnswer answer = await bus.remoteBusCall(request);
 		
 		return answer;
-	}
-	
-	
-	
-	/**
-	 * Crud search
-	 */
-	static RemoteCallAnswer getCrudSearchParams(Request request)
-	{
-		Map data = new Map();
-		
-		if (rtl::exists(request.query))
-		{
-			string page = request.query.get("page", "0");
-			data.set("page", page);
-			data.set("limit", 100);
-		}
-		
-		return data.toDict();
 	}
 	
 }

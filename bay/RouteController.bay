@@ -200,7 +200,7 @@ class RouteController extends CoreDriver
 	/**
 	 * Render page
 	 */
-	public async void renderPage(string uri = "/")
+	public async void renderPage(string url = "/")
 	{
 		string host = "";
 		string method = "";
@@ -211,11 +211,32 @@ class RouteController extends CoreDriver
 		protocol = window.location.protocol.substr(0, window.location.protocol.length - 1);
 		#endif
 		
+		int pos = rs::strpos(url, "?");
+		string uri = rs::substr(url, 0, pos);
+		string get = (pos >= 0) ? rs::substr(url, pos + 1) : "";
+		Dict<string> query = new Map();
+		
+		if (get != "")
+		{
+			Collection arr = rs::explode("&", get);
+			arr.each
+			(
+				void (string s) use (query)
+				{
+					Collection arr = rs::explode("=", s);
+					string key = arr[0];
+					string value = arr[1];
+					query.set(key, value);
+				}
+			);
+		}
+		
 		Request request = new Request
 		{
 			"uri": uri,
 			"host": host,
 			"protocol": protocol,
+			"query": query.toDict(),
 			"route_prefix": this.route_prefix,
 		};
 		
