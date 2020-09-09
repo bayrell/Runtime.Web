@@ -371,7 +371,7 @@ class RouteController extends CoreDriver
 		IntrospectionClass class_info = RuntimeUtils::getClassIntrospection(class_name);
 		
 		/* Get routes info */
-		class_info.methods.each
+		if (class_info) class_info.methods.each
 		(
 			void (Collection<Route> annotations, string class_method_name) use (routes, class_name)
 			{
