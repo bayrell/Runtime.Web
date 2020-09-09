@@ -212,7 +212,7 @@ class RouteController extends CoreDriver
 		#endif
 		
 		int pos = rs::strpos(url, "?");
-		string uri = rs::substr(url, 0, pos);
+		string uri = (pos >= 0) ? rs::substr(url, 0, pos) : url;
 		string get = (pos >= 0) ? rs::substr(url, pos + 1) : "";
 		Dict<string> query = new Map();
 		
