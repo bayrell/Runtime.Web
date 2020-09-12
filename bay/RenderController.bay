@@ -499,7 +499,8 @@ class RenderController extends CoreDriver
 				{
 					if (elem.tagName == "INPUT" || elem.tagName == "SELECT" || elem.tagName == "TEXTAREA")
 					{
-						if (elem.value != value) elem.value = value;
+						if (value == null && elem.value != "") elem.value = "";
+						else if (elem.value != value) elem.value = value;
 						continue;
 					}
 				}
