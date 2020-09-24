@@ -1108,6 +1108,35 @@ Object.assign(Runtime.Web.RenderDriver,
 		
 		/* Patch element params */
 		/* controller.updateElemParams(ctx, control, control.parent_elem); */
+	},
+	
+	
+	
+	/**
+	 * Find listeners
+	 */
+	findListeners: function (path_id)
+	{
+		var arr = [];
+		var ctx = globalContext;
+		for (var i=0; i<ctx.object_manager.listeners.count(); i++)
+		{
+			var listener = ctx.object_manager.listeners[i];
+			var from = listener.get(ctx, "from");
+			if (from.indexOf(path_id) == 0) arr.push(listener);
+		}
+		return Runtime.Collection.from(arr);
+	},
+	
+	
+	
+	/**
+	 * Returns object
+	 */
+	getObject: function (path_id)
+	{
+		var ctx = globalContext;
+		return ctx.object_manager.objects.get(ctx, path_id);
 	}
 	
 });
