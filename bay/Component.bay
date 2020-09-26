@@ -324,8 +324,13 @@ class Component extends CoreObject
 	/**
 	 * Escape attr
 	 */
-	pure string escapeAttr(string s)
+	pure string escapeAttr(var s)
 	{
+		if (s instanceof Dict) s = s.reduce
+		(
+			string (string s, string val, string key) => s ~ key ~ ":" ~ val ~ ";",
+			""
+		);
 		return rs::escapeHtml(s);
 	}
 	
