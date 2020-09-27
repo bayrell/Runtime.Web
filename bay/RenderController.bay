@@ -29,6 +29,7 @@ use Runtime.Web.Component;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
 use Runtime.Web.RenderDriverControl;
+use Runtime.Web.Events.ChangeEvent;
 
 
 class RenderController extends CoreDriver
@@ -539,6 +540,19 @@ class RenderController extends CoreDriver
 	
 	
 	/**
+	 * Component model changed
+	 */
+	public void onChangeComponent(Message<ChangeEvent> msg)
+	{
+		Component component = msg.sender;
+		Collection<string> model_path = component.getModelPath();
+		var new_value = msg.data.value;
+		this.updateModel(model_path, new_value);
+	}
+	
+	
+	
+	/**
 	 * Bind element events
 	 */
 	public void bindEvents(RenderDriverControl control, var elem, var attrs, bool is_new_elem = false)
@@ -553,10 +567,20 @@ class RenderController extends CoreDriver
 			var is_event = key.substring(0, 7) == "@event:";
 			var is_event_async = key.substring(0, 12) == "@eventAsync:";
 			
-			if (key == "@bind")
+			if (key == "@bind" || key == "@name")
 			{
 				if (elem instanceof Runtime.Web.Component)
 				{
+					this.register_listeners.push
+					(
+						ctx,
+						{
+							"from": elem.getObjectName(),
+							"event_class_name": "Runtime.Web.Events.ChangeEvent",
+							"object_name": this.getObjectName(),
+							"method_name": "onChangeComponent"
+						}
+					);
 				}
 				else
 				{
@@ -565,7 +589,7 @@ class RenderController extends CoreDriver
 						return function (e)
 						{
 							var model_path = controller.getBindModelPath(ctx, path_id, bind_value);
-							controller.updateModel(ctx, model_path, elem.value);
+							controller.updateModel(ctx, model_path, e.value);
 						}
 					};
 					elem.addEventListener

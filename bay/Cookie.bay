@@ -30,5 +30,5 @@ struct Cookie extends BaseStruct
 	public string path = "";
 	public bool secure = false;
 	public bool httponly = false;
-	public bool changed = false;	
+	public bool changed = false;
 }

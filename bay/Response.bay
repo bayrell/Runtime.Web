@@ -25,7 +25,7 @@ struct Response extends BaseStruct
 {
 	public int http_code = 200;
 	public string content = "";
-	public Dict<string> headers = new Dict<string>();
+	public Collection<string> headers = new Collection<string>();
 	
 	
 	/**
