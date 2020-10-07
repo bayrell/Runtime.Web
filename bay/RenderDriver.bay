@@ -646,8 +646,8 @@ class RenderDriver extends CoreDriver
 		
 		/* Change api request */
 		RemoteCallRequest request = new RemoteCallRequest(items);
-		list res = await @.chainAsync(RenderDriver::API_EXTERNAL_BUS_PREPARE_CHAIN, [container, request]);
-		request = res[1];
+		list res = await @.chainAsync(RenderDriver::API_EXTERNAL_BUS_PREPARE_CHAIN, [request, container]);
+		request = res[0];
 		
 		/* Restore request */
 		request = request.copy
