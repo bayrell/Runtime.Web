@@ -36,15 +36,18 @@ struct Route extends BaseStruct
 	/**
 	 * Init struct data
 	 */
-	protected void initData(Route old_model, Dict changed = null)
+	protected static Dict _initData(Route old, Dict changed)
 	{
-		if (this.uri_match == "")
+		string uri = static::_initDataGet(old, changed, "uri");
+		string uri_match = static::_initDataGet(old, changed, "uri_match");
+		
+		if (uri_match == "")
 		{
-			string uri_match = this.uri;
+			string uri_match = uri;
 			uri_match = re::replace("\\/", "\\/", uri_match);
 			
 			Vector<string> params = new Vector();
-			Collection matches = re::matchAll("{(.*?)}", this.uri);
+			Collection matches = re::matchAll("{(.*?)}", uri);
 			if (matches)
 			{
 				matches.each
@@ -61,15 +64,17 @@ struct Route extends BaseStruct
 						params.push(name);
 					}
 				);
-				this.assignValue("params", params);
+				changed = changed.setIm("params", params);
 			}
 			else
 			{
-				this.assignValue("params", []);
+				changed = changed.setIm("params", []);
 			}
 			
-			this.assignValue("uri_match", "^" ~ uri_match ~ "$");
+			changed = changed.setIm("uri_match", "^" ~ uri_match ~ "$");
 		}
+		
+		return changed;
 	}
 	
 	
