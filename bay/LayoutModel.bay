@@ -47,6 +47,7 @@ struct LayoutModel extends BaseStruct
 	string title = "";
 	string description = "";
 	string favicon = "";
+	string tz = "UTC";
 	
 	/* Breadcrumbs */
 	Collection<Dict> breadcrumbs = null;
