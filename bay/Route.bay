@@ -103,4 +103,24 @@ struct Route extends BaseStruct
 		return res.toDict();
 	}
 	
+	
+	
+	/**
+	 * Replace url
+	 */
+	pure string replace(string url, Dict params = null)
+	{
+		url = (params == null) ? url :
+			params.reduce
+			(
+				string (string message, string value, string key) =>
+					rs::replace("{" ~ key ~ "}", value, message)
+				,
+				url
+			)
+		;
+		return url;
+	}
+	
+	
 }

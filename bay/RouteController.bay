@@ -73,7 +73,7 @@ class RouteController extends CoreDriver
 		
 		#ifcode JAVASCRIPT then
 		var elem = e.target;
-		
+		while (elem.nodeName !== "A" && elem !== null) elem = elem.parentNode;
 		if (elem.tagName == "A")
 		{
 			var target = elem.getAttribute("target");

@@ -40,6 +40,7 @@ class RenderDriver extends CoreDriver
 	static const string LAYOUT_CHAIN = "Runtime.Web.Layout";
 	static const string PATTERN_CHAIN = "Runtime.Web.Pattern";
 	static const string RENDER_CHAIN = "Runtime.Web.Render";
+	static const string TITLE_CHAIN = "Runtime.Web.Title";
 	static const string API_EXTERNAL_BUS_PREPARE_CHAIN = "Runtime.Web.Api.ExternalBusPrepare";
 	
 	/* Render Chain */
@@ -355,6 +356,17 @@ class RenderDriver extends CoreDriver
 		Collection<string> components = RenderDriver::getLayoutComponents(layout);
 		string css = RenderDriver::getCSSFromComponents(components, layout.css_vars);
 		return css;
+	}
+	
+	
+	
+	/**
+	 * Returns title
+	 */
+	pure string chainTitle(LayoutModel layout, string title)
+	{
+		title = @.chain(static::TITLE_CHAIN, [layout, title]) |> attr 1;
+		return title;
 	}
 	
 	
@@ -1150,13 +1162,32 @@ Object.assign(Runtime.Web.RenderDriver,
 	
 	
 	/**
+	 * Find objects by path
+	 */
+	findObjects: function (path_id)
+	{
+		var arr = [];
+		var ctx = globalContext;
+		var keys = ctx.object_manager.objects.keys(ctx);
+		for (var i=0; i<keys.count(); i++)
+		{
+			var key = keys[i];
+			var object = ctx.object_manager.objects.get(ctx, key);
+			if (object.path_id != undefined && object.path_id.indexOf(path_id) == 0) arr.push(object);
+		}
+		return Runtime.Collection.from(arr);
+	},
+	
+	
+	
+	/**
 	 * Returns object
 	 */
 	getObject: function (path_id)
 	{
 		var ctx = globalContext;
 		return ctx.object_manager.objects.get(ctx, path_id);
-	}
+	},
 	
 });
 #endif
