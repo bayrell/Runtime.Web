@@ -218,16 +218,6 @@ class Component extends CoreObject
 	
 	
 	/**
-	 * Remote bus call
-	 */
-	public async RemoteCallAnswer remoteBusCall(Dict items)
-	{
-		return await RenderDriver::remoteBusCall(items);
-	}
-	
-	
-	
-	/**
 	 * Change params
 	 */
 	public void onChangeParams(Dict old_params, Dict new_params)

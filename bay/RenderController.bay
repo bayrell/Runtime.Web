@@ -455,6 +455,15 @@ class RenderController extends CoreDriver
 			this.saveComponent(ctx, component);
 		}
 		
+		/* Call update components */
+		for (var i=0; i<this.updated_components.count(); i++)
+		{
+			var obj = this.updated_components[i];
+			var component = obj.get(ctx, "component");
+			var created = obj.get(ctx, "created");
+			component.updateComponent(ctx, created);
+		}
+		
 		#endif
 		
 		this.old_css = this.new_css;

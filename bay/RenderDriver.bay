@@ -41,6 +41,7 @@ class RenderDriver extends CoreDriver
 	static const string PATTERN_CHAIN = "Runtime.Web.Pattern";
 	static const string RENDER_CHAIN = "Runtime.Web.Render";
 	static const string TITLE_CHAIN = "Runtime.Web.Title";
+	static const string API_EXTERNAL_BUS_CHAIN = "Runtime.Web.Api.ExternalBus";
 	static const string API_EXTERNAL_BUS_PREPARE_CHAIN = "Runtime.Web.Api.ExternalBusPrepare";
 	
 	/* Render Chain */
@@ -647,7 +648,7 @@ class RenderDriver extends CoreDriver
 	 * @param Dict items
 	 * @return RemoteCallAnswer
 	 */
-	static async RemoteCallAnswer remoteBusCall(Dict items, RenderContainer container = null)
+	static async RemoteCallAnswer externalBusCall(Dict items)
 	{
 		/* Set default params */
 		items = items.copy
@@ -658,18 +659,8 @@ class RenderDriver extends CoreDriver
 		
 		/* Change api request */
 		RemoteCallRequest request = new RemoteCallRequest(items);
-		list res = await @.chainAsync(RenderDriver::API_EXTERNAL_BUS_PREPARE_CHAIN, [request, container]);
+		list res = await @.chainAsync(RenderDriver::API_EXTERNAL_BUS_CHAIN, [request]);
 		request = res[0];
-		
-		/* Restore request */
-		request = request.copy
-		{
-			"uri": items.get("uri", ""),
-			"app_name": items.get("app_name", "self"),
-			"object_name": items.get("object_name", ""),
-			"interface_name": items.get("interface_name", "default"),
-			"method_name": items.get("method_name", ""),
-		};
 		
 		/* Send request */
 		BusDriverInterface bus = @.getDriver("default:external_bus");
@@ -677,7 +668,6 @@ class RenderDriver extends CoreDriver
 		
 		return answer;
 	}
-	
 }
 
 
@@ -996,7 +986,6 @@ Object.assign(Runtime.Web.RenderDriver,
 			
 			controller.updateComponent(ctx, component, created);
 			controller.bindEvents(ctx, new_control, component, attrs, created);
-			component.updateComponent(ctx, created);
 		}
 		
 		else if (type == 'element')

@@ -19,8 +19,12 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.Core.Message;
+use Runtime.Core.RemoteCallAnswer;
+use Runtime.Core.RemoteCallRequest;
 use Runtime.Web.Cookie;
 use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderDriver;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.Route;
@@ -44,6 +48,7 @@ struct RenderContainer extends BaseStruct
 	string frontend_controller_name = "";
 	
 	/* Backend */
+	Dict<primitive> api_storage = new Dict();
 	Dict<primitive> backend_storage = new Dict();
 	Dict<Cookie> new_cookies = {};
 	Collection<string> new_headers = [];
@@ -58,4 +63,22 @@ struct RenderContainer extends BaseStruct
 	;
 	bool isPageExists() => this.layout != null and this.layout.page_class != "";
 	
+	
+	
+	/**
+	 * Remote bus call
+	 * @param Dict items
+	 * @return RemoteCallAnswer
+	 */
+	async RemoteCallAnswer externalBusCall(Dict items)
+	{
+		/* Set storage */
+		items = items.copy
+		{
+			"storage": this.api_storage,
+		};
+		
+		/* Send request */
+		return await RenderDriver::externalBusCall(items);
+	}
 }
