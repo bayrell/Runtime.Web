@@ -41,6 +41,7 @@
 		"Events/MouseUpEvent",
 		"Events/MouseWheelEvent",
 		"ModuleDescription",
-		"webApp"
+		"webApp",
+		"@core.css"
 	]
 }

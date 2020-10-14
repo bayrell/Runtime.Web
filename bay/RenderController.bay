@@ -177,9 +177,9 @@ class RenderController extends CoreDriver
 	/**
 	 * Add to update component
 	 */
-	void updateComponent(Component component, bool created = false)
+	void updateComponent(RenderDriverControl control, Component component, bool created = false)
 	{
-		this.updated_components.push({ "component": component, "created": created });
+		this.updated_components.push({ "control": control, "component": component, "created": created });
 	}
 	
 	
@@ -459,9 +459,10 @@ class RenderController extends CoreDriver
 		for (var i=0; i<this.updated_components.count(); i++)
 		{
 			var obj = this.updated_components[i];
+			var control = obj.get(ctx, "control");
 			var component = obj.get(ctx, "component");
 			var created = obj.get(ctx, "created");
-			component.updateComponent(ctx, created);
+			component.updateComponent(ctx, control, created);
 		}
 		
 		#endif

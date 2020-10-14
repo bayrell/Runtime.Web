@@ -43,10 +43,9 @@ struct LayoutModel extends BaseStruct
 	BaseStruct page_model = null;
 	
 	/* Base SEO Options */
-	string locale = "";
+	string locale = "en";
 	string title = "";
 	string description = "";
-	string favicon = "";
 	string tz = "UTC";
 	
 	/* Breadcrumbs */

@@ -977,14 +977,20 @@ Object.assign(Runtime.Web.RenderDriver,
 			else
 			{
 				/* Render component */
-				var res = component.repaint(ctx, new_control);
+				var res = component.repaint(ctx, controller.layout, model, dict_attrs, content, new_control, created);
+				
+				/* Call result */
+				if (res != null && typeof res == "function") res = res(new_control);
+				
+				/* Normalize content */
+				res = this.normalizeContent(res, new_control);
 				
 				/* Add childs */
 				childs = childs.slice();
 				if (res != null) childs.push(res);
 			}
 			
-			controller.updateComponent(ctx, component, created);
+			controller.updateComponent(ctx, new_control, component, created);
 			controller.bindEvents(ctx, new_control, component, attrs, created);
 		}
 		
@@ -1177,6 +1183,21 @@ Object.assign(Runtime.Web.RenderDriver,
 		var ctx = globalContext;
 		return ctx.object_manager.objects.get(ctx, path_id);
 	},
+	
+	
+	
+	/**
+	 * Nodes to Array
+	 */
+	nodesArray: function(nodes)
+	{
+		var arr = [];
+		for (var i=0; i<nodes.length; i++)
+		{
+			arr.push(nodes[i]);
+		}
+		return arr;
+	}
 	
 });
 #endif

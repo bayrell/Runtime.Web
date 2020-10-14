@@ -239,7 +239,11 @@ class Component extends CoreObject
 	/**
 	 * Repaint component
 	 */
-	public Collection<var> repaint(RenderDriverControl control)
+	public Collection<var> repaint
+	(
+		LayoutModel layout, BaseStruct model, Dict params, html content,
+		RenderDriverControl control, bool created
+	)
 	{
 		return [];
 	}
@@ -249,10 +253,11 @@ class Component extends CoreObject
 	/**
 	 * Update component
 	 */
-	public void updateComponent(bool created)
+	public void updateComponent(RenderDriverControl control, bool created)
 	{
 		if (created) this.onCreated();
 		else this.onUpdated();
+		this.onRender(created);
 	}
 	
 	
@@ -270,6 +275,15 @@ class Component extends CoreObject
 	 * On component updated
 	 */
 	public void onUpdated()
+	{
+	}
+	
+	
+	
+	/**
+	 * On render
+	 */
+	public void onRender(bool created)
 	{
 	}
 	
