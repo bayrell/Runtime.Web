@@ -40,7 +40,7 @@ struct LayoutModel extends BaseStruct
 	string layout_name = "default";
 	string layout_class = "";
 	string page_class = "";
-	BaseStruct page_model = null;
+	var page_model = null;
 	
 	/* Base SEO Options */
 	string locale = "en";
