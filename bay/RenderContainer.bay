@@ -49,7 +49,6 @@ struct RenderContainer extends BaseStruct
 	
 	/* Backend */
 	Dict<primitive> api_storage = new Dict();
-	Dict<primitive> backend_storage = new Dict();
 	Dict<Cookie> new_cookies = {};
 	Collection<string> new_headers = [];
 	int new_http_code = 200;
