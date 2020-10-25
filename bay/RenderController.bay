@@ -512,6 +512,7 @@ class RenderController extends CoreDriver
 					{
 						if (value == null && elem.value != "") elem.value = "";
 						else if (elem.value != value) elem.value = value;
+						elem._old_value = value;
 						continue;
 					}
 				}

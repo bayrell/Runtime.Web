@@ -24,7 +24,8 @@ use Runtime.Web.Events.WebEvent;
 struct ChangeEvent extends WebEvent
 {
 	static const string ES6_EVENT_NAME = "change";
-	public string value="";
+	public string value = "";
+	public string old_value = "";
 	
 	
 	static void assignEventObject(var obj, var e)
@@ -34,6 +35,7 @@ struct ChangeEvent extends WebEvent
 		#switch
 		#case ifcode ES6 then
 		obj.set(ctx, "value", e.currentTarget.value);
+		obj.set(ctx, "old_value", e.currentTarget._old_value);
 		#endswitch
 	}
 	
