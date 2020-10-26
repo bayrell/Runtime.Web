@@ -421,4 +421,12 @@ class Component extends CoreObject
 	}
 	#endif
 	
+	
+	
+	/**
+	 * Remote bus call
+	 * @param Dict items
+	 * @return RemoteCallAnswer
+	 */
+	async RemoteCallAnswer externalBusCall(Dict items) => await RenderDriver::externalBusCall(items);
 }
