@@ -198,6 +198,18 @@ class RouteController extends CoreDriver
 	
 	
 	/**
+	 * Get query keys
+	 */
+	pure Collection getQueryKeys(string key)
+	{
+		key = rs::replace("]", "", key);
+		Collection arr = rs::split("\\[", key);
+		return arr;
+	}
+	
+	
+	
+	/**
 	 * Render page
 	 */
 	public async void renderPage(string url = "/")
@@ -226,7 +238,8 @@ class RouteController extends CoreDriver
 					Collection arr = rs::explode("=", s);
 					string key = arr[0];
 					string value = arr[1];
-					query.set(key, value);
+					Collection keys = static::getQueryKeys(key);
+					query = rtl::setAttr(query, keys, value);
 				}
 			);
 		}

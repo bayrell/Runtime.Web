@@ -929,12 +929,36 @@ Object.assign(Runtime.Web.RenderDriver,
 				attrs["model"] = model;
 			}
 			
+			/* Create new control */
+			new_control = control.copy(ctx, {
+				"type": type,
+				"index": index,
+				"path_id": path_id,
+				"component": component,
+				"model": model,
+			});
+			
+			/* Render optimization */
+			/*
+			if (!created)
+			{
+				if (this.equalAttrs(component.old_attrs, attrs) && component.old_model == model)
+				{
+					childs.push( component.elements.slice() );
+					return [new_control, childs];
+				}
+			}
+			*/
+			
+			/* Get dict attrs */
 			var dict_attrs = Runtime.Dict.from(attrs);
 			
 			/* Set new model */
 			component.setParams(ctx, dict_attrs);
 			component.setModelPath(ctx, model_path);
 			component.setParent(ctx, control.component);
+			component.old_attrs = attrs;
+			component.old_model = model;
 			
 			/* Set reference */
 			if (attrs != null && attrs["@ref"] != undefined)
@@ -945,15 +969,6 @@ Object.assign(Runtime.Web.RenderDriver,
 			{
 				controller.setReference(ctx, component.path_id, attrs["@name"], component);
 			}
-			
-			/* Create new control */
-			new_control = control.copy(ctx, {
-				"type": type,
-				"index": index,
-				"path_id": path_id,
-				"component": component,
-				"model": model,
-			});
 			
 			if (!component.isRepaintOverridden(ctx, new_control))
 			{
@@ -973,6 +988,9 @@ Object.assign(Runtime.Web.RenderDriver,
 				/* Add childs */
 				childs = childs.slice();
 				if (res != null) childs.push(res);
+				
+				/* Set childs */
+				component.elements = childs;
 			}
 			else
 			{

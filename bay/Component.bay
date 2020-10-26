@@ -30,6 +30,7 @@ use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderController;
 use Runtime.Web.RenderDriver;
 use Runtime.Web.RenderDriverControl;
+use Runtime.Web.RouteController;
 use Runtime.Web.Events.UIEvent;
 
 
@@ -40,6 +41,8 @@ class Component extends CoreObject
 	protected RenderController controller = null;
 	protected Dict params = null;
 	protected Collection<string> model_path = [];
+	protected var old_model = null;
+	protected var elements = null;
 	
 	
 	/**
@@ -429,4 +432,16 @@ class Component extends CoreObject
 	 * @return RemoteCallAnswer
 	 */
 	async RemoteCallAnswer externalBusCall(Dict items) => await RenderDriver::externalBusCall(items);
+	
+	
+	
+	/**
+	 * Open url
+	 */
+	async string openUrl(string url)
+	{
+		RouteController controller = @.getDriver(classof RouteController);
+		await controller.openUrl(url);
+	}
+	async string pageOpen(string url) => await this.openUrl(url);
 }
