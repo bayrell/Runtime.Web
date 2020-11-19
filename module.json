@@ -3,7 +3,6 @@
 	"assets":
 	[
 		"Component",
-		"Cookie",
 		"ExternalBusDriver",
 		"FrontendStorageDriver",
 		"Layout",
@@ -12,8 +11,6 @@
 		"RenderController",
 		"RenderDriver",
 		"RenderDriverControl",
-		"Request",
-		"Response",
 		"Route",
 		"RouteController",
 		"RouteList",

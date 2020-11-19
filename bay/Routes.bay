@@ -1,0 +1,158 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.RuntimeUtils;
+use Runtime.Core.ApiException;
+use Runtime.Core.JsonResponse;
+use Runtime.Core.RemoteCallAnswer;
+use Runtime.Exceptions.FileNotFound;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderDriver;
+use Runtime.Web.Route;
+use Runtime.Web.RouteList;
+
+
+@RouteList{}
+static class Routes
+{
+	
+	/**
+	 * Api Action
+	 * @return Response
+	 */
+	@Route
+	{ 
+		"uri": "/api/{app_name}/{object_name}/{interface_name}/{method_name}/", 
+		"name": "api:route" 
+	} 
+	static async RenderContainer ApiAction(RenderContainer container)
+	{
+		RemoteCallAnswer answer = null;
+		
+		if (not container.isRequestExists()) return [ container ];
+		if (container.request.method != "POST")
+		{
+			answer = new RemoteCallAnswer();
+			
+			/* Set exception */
+			answer = answer::exception
+			(
+				answer,
+				new ApiException
+				(
+					_("Runtime", "The request must be POST method"),
+					rtl::ERROR_API_WRONG_FORMAT
+				)
+			);
+			
+			/* Set 400 code */
+			answer <= new_http_code <= 400;
+		}
+		else
+		{
+			/* Decode data */
+			string data1 = container.request.payload.get("data", "");
+			var data = RuntimeUtils::json_decode(data1);
+			
+			/* Decode storage */
+			string storage1 = container.request.payload.get("storage", "");
+			var storage = RuntimeUtils::json_decode(storage1);
+			
+			/* Get time and sign */
+			string sign = container.request.payload.get("sign", "") |> default string "";
+			int time = container.request.payload.get("time", "") |> default int 0;
+			
+			/* Check correct app name */
+			string app_name = container.route_params.item("app_name");
+			if (app_name != "self" and app_name != @.main_module)
+			{
+				/* Set exception */
+				answer = answer::exception
+				(
+					answer,
+					new FileNotFound
+					(
+						app_name,
+						_("Runtime", "App"),
+						rtl::ERROR_API_WRONG_APP_NAME
+					)
+				);
+				
+				/* Set 404 code */
+				answer <= new_http_code <= 404;
+				
+				return answer;
+			}
+			
+			/* Send request */
+			answer = await container.externalBusCall
+			{
+				"object_name": container.route_params.item("object_name"),
+				"interface_name": container.route_params.item("interface_name"),
+				"method_name": container.route_params.item("method_name"),
+				"data": data,
+				"time": time,
+				"sign": sign,
+			};
+		}
+		
+		if (answer == null)
+		{
+			answer = new RemoteCallAnswer
+			{
+				"app_name": @.main_module,
+				"object_name": container.route_params.item("object_name"),
+				"interface_name": container.route_params.item("interface_name"),
+				"method_name": container.route_params.item("method_name"),
+			};
+		}
+		
+		JsonResponse response = new JsonResponse
+		{
+			"data": answer != null ? answer.takeDict().intersect([
+				"app_name",
+				"object_name",
+				"interface_name",
+				"method_name",
+				"code",
+				"success_message",
+				"error_message",
+				"error_name",
+				"have_answer",
+				"response",
+			]) : null
+		};
+		container <= response <= response;
+		
+		/* Add answer cookies */
+		if (container.new_cookies == null) container <= new_cookies <= new Dict();
+		if (answer.new_cookies != null) container <= new_cookies <= container.new_cookies.concat(answer.new_cookies);
+		
+		/* Add answer headers */
+		if (container.new_headers == null) container <= new_headers <= new Collection();
+		if (answer.new_headers != null) container <= new_headers <= container.new_headers.concat(answer.new_headers);
+		
+		/* HTTP code */
+		container <= response <= http_code <= answer.new_http_code;
+		
+		return [ container ];
+	}
+	
+}

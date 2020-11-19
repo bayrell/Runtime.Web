@@ -19,14 +19,14 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.Core.Cookie;
 use Runtime.Core.Message;
 use Runtime.Core.RemoteCallAnswer;
 use Runtime.Core.RemoteCallRequest;
-use Runtime.Web.Cookie;
+use Runtime.Core.Request;
+use Runtime.Core.Response;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
-use Runtime.Web.Request;
-use Runtime.Web.Response;
 use Runtime.Web.Route;
 
 
@@ -52,6 +52,7 @@ struct RenderContainer extends BaseStruct
 	Dict<Cookie> new_cookies = {};
 	Collection<string> new_headers = [];
 	int new_http_code = 200;
+	
 	
 	/* Functions */
 	bool isRequestExists() => this.request != null;

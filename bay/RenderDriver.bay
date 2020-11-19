@@ -25,9 +25,12 @@ use Runtime.Core.BusDriverInterface;
 use Runtime.Core.CoreDriver;
 use Runtime.Core.RemoteCallAnswer;
 use Runtime.Core.RemoteCallRequest;
+use Runtime.Core.Request;
+use Runtime.Core.Response;
 use Runtime.Web.FrontendStorageDriver;
 use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
+use Runtime.Web.Pattern;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderController;
 use Runtime.Web.Request;
@@ -43,6 +46,7 @@ class RenderDriver extends CoreDriver
 	static const string TITLE_CHAIN = "Runtime.Web.Title";
 	static const string API_EXTERNAL_BUS_CHAIN = "Runtime.Web.Api.ExternalBus";
 	static const string API_EXTERNAL_BUS_PREPARE_CHAIN = "Runtime.Web.Api.ExternalBusPrepare";
+	static const string API_BACKEND_PREPARE_CHAIN = "Runtime.Web.Api.BackendPrepareChain";
 	
 	/* Render Chain */
 	static const int RENDER_CHAIN_START = 500;
@@ -558,6 +562,23 @@ class RenderDriver extends CoreDriver
 	
 	
 	
+	#ifdef BACKEND then
+	
+	/**
+	 * Layout chain
+	 */
+	pure RenderContainer renderChainSetFrontendEnv(RenderContainer container)
+	{
+		container <= frontend_env <= "APP_MODE" <= @.env("APP_MODE", "prod");
+		container <= frontend_env <= "X-APP-HASH" <= RenderDriver::getCssHash(@.main_class);
+		container <= frontend_env <= "X-ROUTE-PREFIX" <= @.env("X-ROUTE-PREFIX", "");
+		return [ container ];
+	}
+	
+	#endif
+	
+	
+	
 	/**
 	 * Render chain
 	 * Call route middlewares
@@ -623,6 +644,58 @@ class RenderDriver extends CoreDriver
 		
 		return [ container ];
 	}
+	
+	
+	
+	#ifdef BACKEND then
+	
+	/**
+	 * Render chain. Set default pattern
+	 */
+	pure RenderContainer renderChainPatternDefault(RenderContainer container)
+	{
+		if (container.pattern_name == "default" and container.pattern_class == "" or container.pattern_class == "")
+		{
+			container <= pattern_class <= classof Pattern;
+		}
+		return [ container ];
+	}
+	
+	
+	
+	/**
+	 * Render chain
+	 * Create layout model
+	 */
+	static RenderContainer renderChainCreateResponse(RenderContainer container)
+	{
+		if (container == null) return [ container ];
+		if (container.isResponseExists()) return [ container ];
+		
+		/* Get params */
+		LayoutModel layout = RenderDriver::chainLayout(container.layout);
+		Dict params = {};
+		
+		/* Render layout */
+		fn render = rtl::method(layout.layout_class, "render");
+		string layout_content = render(layout, layout, {}, null);
+		
+		/* Render pattern */
+		fn render = rtl::method(container.pattern_class, "render");
+		string patter_content = render(container, layout, params, layout_content);
+		
+		/* Create response */
+		container <= response <= new Response
+		{
+			"content": patter_content,
+			"headers": container.new_headers,
+			"http_code": container.new_http_code,
+		};
+		
+		return [ container ];
+	}
+	
+	#endif
 	
 	
 	

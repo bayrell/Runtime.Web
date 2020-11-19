@@ -18,7 +18,10 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseStruct;
+use Runtime.Core.Context;
 use Runtime.Core.Driver;
+use Runtime.Core.Entity;
 use Runtime.Core.LambdaChain;
 use Runtime.Web.ExternalBusDriver;
 use Runtime.Web.FrontendStorageDriver;
@@ -26,6 +29,7 @@ use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
 use Runtime.Web.RouteController;
+use Runtime.Web.Routes;
 
 
 static class ModuleDescription
@@ -105,6 +109,44 @@ static class ModuleDescription
 			"is_async": true,
 		},
 		
+		/* Extend entities */
+		new LambdaChain
+		{
+			"name": "Runtime.Entities",
+			"value": "Runtime.Web.ModuleDescription::extendEntities",
+		},
+		
+		
+		#ifdef BACKEND then
+		
+		/* Render Chain. Set enviroments */
+		new LambdaChain
+		{
+			"name": RenderDriver::RENDER_CHAIN,
+			"value": "Runtime.Web.RenderDriver::renderChainSetFrontendEnv",
+			"pos": RenderDriver::RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS,
+		},
+		
+		/* Render Chain. Pattern */
+		new LambdaChain
+		{
+			"name": RenderDriver::RENDER_CHAIN,
+			"value": "Runtime.Web.RenderDriver::renderChainPatternDefault",
+			"pos": RenderDriver::RENDER_CHAIN_RESPONSE - 1,
+		},
+		
+		/* Render Chain. Response */
+		new LambdaChain
+		{
+			"name": RenderDriver::RENDER_CHAIN,
+			"value": "Runtime.Web.RenderDriver::renderChainCreateResponse",
+			"pos": RenderDriver::RENDER_CHAIN_RESPONSE,
+		},
+		
+		#endif
+		
+		
+		
 		#ifdef ES6 then
 		
 		/* Register external bus driver */
@@ -115,5 +157,27 @@ static class ModuleDescription
 		
 		#endif
 	];
+	
+	
+	
+	/**
+	 * Extend entities
+	 */
+	pure Collection<BaseStruct> extendEntities(Context c, Collection<BaseStruct> entities)
+	{
+		#ifdef BACKEND then
+		
+		bool api = c |> "Runtime.Backend", "api" |> default bool true;
+		
+		/* Enable api service */
+		if (api)
+		{
+			entities = entities.prependIm( new Entity{ "name": "Runtime.Web.Routes" } );
+		}
+		
+		#endif
+		
+		return [c, entities];
+	}
 	
 }

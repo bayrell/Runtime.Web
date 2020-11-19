@@ -1,0 +1,155 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+ 
+namespace Runtime.Web;
+
+use Runtime.Web.LayoutModel;
+use Runtime.Web.Pattern;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderDriver;
+use Runtime.Web.Request;
+use Runtime.Web.Response;
+use Runtime.Web.RouteController;
+
+
+static class CGI
+{
+	
+	/**
+	 * Run cron
+	 */
+	static async void appRun()
+	{
+		RouteController controller = @.getDriver(classof RouteController);
+		Request request = static::createRequest();
+		RenderContainer container = await controller.renderRequest(request);
+		static::output(container);
+	}
+	
+	
+	
+	/**
+	 * Create request
+	 */
+	static Request createRequest()
+	{
+		#ifcode PHP then
+		$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : "";
+		$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : "";
+		$method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : "";
+		$start_time = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : "";
+		$query = new \Runtime\Map($ctx);
+		$payload = new \Runtime\Map($ctx);
+		$cookies = new \Runtime\Map($ctx);
+		foreach ($_GET as $key => $val) $query->set($ctx, $key, $val);
+		foreach ($_POST as $key => $val)
+		{
+			$payload->set($ctx, $key, \Runtime\RuntimeUtils::NativeToObject($ctx, $val));
+		}
+		foreach ($_COOKIE as $key => $val)
+		{
+			$cookies->set
+			(
+				$ctx, 
+				$key,
+				new \Runtime\Core\Cookie
+				(
+					$ctx,
+					\Runtime\Dict::from([
+						'name' => $key,
+						'value' => $val,
+					])
+				)
+			);
+		}
+		$arr = parse_url($uri);
+		$uri = isset($arr['path']) ? $arr['path'] : "";
+		$r = new \Runtime\Core\Request
+		(
+			$ctx, 
+			\Runtime\Dict::from([
+				"host" => $host,
+				"uri" => $uri,
+				"method" => $method,
+				"query" => $query->toDict($ctx),
+				"payload" => $payload->toDict($ctx),
+				"cookies" => $cookies->toDict($ctx),
+				"start_time" => $start_time,
+				"route_prefix" => $ctx->enviroments->get($ctx, "X-ROUTE-PREFIX", ""),
+			])
+		);
+		return $r;
+		#endif
+		
+		return new Request();
+	}
+	
+	
+	
+	
+	/**
+	 * Output result
+	 */
+	static Request output(RenderContainer container)
+	{
+		#ifcode PHP then
+		if ($container != null && $container->response)
+		{
+			http_response_code($container->response->http_code);
+			if ($container->new_cookies != null)
+			{
+				$keys = $container->new_cookies->keys($ctx);
+				for ($i=0; $i<$keys->count($ctx); $i++)
+				{
+					$key = $keys->item($ctx, $i);
+					$cookie = $container->new_cookies->item($ctx, $key);
+					if ($cookie != null && $cookie->name)
+					{
+						$str = [];
+						$str[] = "Set-Cookie: " . urlencode($cookie->name) . "=" . urlencode($cookie->value);
+						$str[] = "Expires=" . date(DATE_RFC822, $cookie->expire);
+						if ($cookie->domain) $str[] = "Domain=" . $cookie->domain;
+						if ($cookie->path) $str[] = "Path=" . $cookie->path;
+						if ($cookie->secure) $str[] = "Secure";
+						if ($cookie->httponly) $str[] = "HttpOnly";
+						
+						/* Set cookie */
+						header( implode(";", $str) );
+					}
+				}
+			}
+			if ($container->response->headers != null)
+			{
+				for ($i=0; $i<$container->response->headers->count($ctx); $i++)
+				{
+					$value = $container->response->headers->item($ctx, $i);
+					header($value);
+				}
+			}
+			$response = $container->response;
+			echo $response->getContent($ctx);
+		}
+		else
+		{
+			http_response_code(404);
+			echo "404 Response not found";
+		}
+		#endif
+	}
+	
+}

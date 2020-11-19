@@ -1,0 +1,35 @@
+<class version="1.0"
+	name="Runtime.Web.Pattern" extends="Runtime.Web.Component" 
+	module="Runtime.Web" model="Runtime.Web.LayoutModel"
+>
+
+<use name="Runtime.Web.RenderDriver" />
+
+<template name="render" args="RenderContainer container, LayoutModel layout, Dict params, var content">
+<html>
+<head>
+<title>{ layout.title }</title>
+<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
+<style id='root_style'>@raw{ rs::spaceless( RenderDriver::getLayoutCSS(layout) ) }</style>
+</head>
+<body>
+
+%var string model_encoded = rs::base64_encode_url(rtl::json_encode(layout));
+%var string frontend_storage = rs::base64_encode_url(rtl::json_encode(layout.frontend_storage));
+
+<div id='root'>{ content }</div>
+<input id='root_model' type='hidden' value={ model_encoded } />
+<input id='frontend_storage' type='hidden' value={ frontend_storage } />
+
+<script src={ layout.route_prefix ~ "/js/runtime.js?_=" ~ layout.f_inc }></script>
+<script src={ layout.route_prefix ~ "/js/app.js?_=" ~ layout.f_inc }></script>
+
+<script>
+runWebApp(@json{ @.main_module }, @json{ container.frontend_env });
+</script>
+
+</body>
+</html>
+</template>
+
+</class>
