@@ -168,7 +168,7 @@ class RenderController extends CoreDriver
 	 */
 	void saveComponent(Component component)
 	{
-		this.components.set(component.getPath(), component);
+		this.components.setValue(component.getPath(), component);
 		@.addObject(component);
 	}
 	
@@ -179,7 +179,7 @@ class RenderController extends CoreDriver
 	 */
 	void updateComponent(RenderDriverControl control, Component component, bool created = false)
 	{
-		this.updated_components.push({ "control": control, "component": component, "created": created });
+		this.updated_components.pushValue({ "control": control, "component": component, "created": created });
 	}
 	
 	
@@ -195,7 +195,7 @@ class RenderController extends CoreDriver
 			string item_name = keys[i];
 			if (rs::strpos(item_name, path_id) == 0)
 			{
-				this.components.remove(item_name);
+				this.components.removeValue(item_name);
 			}
 		}
 	}

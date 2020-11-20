@@ -61,10 +61,10 @@ struct Route extends BaseStruct
 							"([^\\/]*?)", 
 							uri_match
 						);
-						params.push(name);
+						params.pushValue(name);
 					}
 				);
-				changed = changed.setIm("params", params);
+				changed = changed.setIm("params", params.toCollection());
 			}
 			else
 			{

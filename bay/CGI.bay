@@ -56,14 +56,14 @@ static class CGI
 		$query = new \Runtime\Map($ctx);
 		$payload = new \Runtime\Map($ctx);
 		$cookies = new \Runtime\Map($ctx);
-		foreach ($_GET as $key => $val) $query->set($ctx, $key, $val);
+		foreach ($_GET as $key => $val) $query->setValue($ctx, $key, $val);
 		foreach ($_POST as $key => $val)
 		{
-			$payload->set($ctx, $key, \Runtime\RuntimeUtils::NativeToObject($ctx, $val));
+			$payload->setValue($ctx, $key, \Runtime\RuntimeUtils::NativeToObject($ctx, $val));
 		}
 		foreach ($_COOKIE as $key => $val)
 		{
-			$cookies->set
+			$cookies->setValue
 			(
 				$ctx, 
 				$key,

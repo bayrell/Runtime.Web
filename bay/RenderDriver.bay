@@ -94,7 +94,7 @@ class RenderDriver extends CoreDriver
 			body.addEventListener(es6_name, Runtime.Web.RenderDriver.js_event);
 			#endif
 			
-			this.listen_events.set(event_class_name, true);
+			this.listen_events.setValue(event_class_name, true);
 		}
 		
 		return true;
@@ -273,7 +273,7 @@ class RenderDriver extends CoreDriver
 			string class_name = components.item(i);
 			if (cache.get(class_name, false) == false)
 			{
-				cache.set(class_name, true);
+				cache.setValue(class_name, true);
 				if (rtl::method_exists(class_name, "components"))
 				{
 					fn f = rtl::method(class_name, "components");
@@ -283,7 +283,7 @@ class RenderDriver extends CoreDriver
 						static::_getRequiredComponents(res, cache, sub_components);
 					}
 				}
-				res.push(class_name);
+				res.pushValue(class_name);
 			}
 		}
 	}
@@ -300,7 +300,7 @@ class RenderDriver extends CoreDriver
 		Vector<string> res = new Vector();
 		Map<string> cache = new Map();
 		static::_getRequiredComponents(res, cache, components);
-		res = res.removeDublicatesIm();
+		res = res.removeDuplicates();
 		return res.toCollection();
 	}
 	
@@ -317,7 +317,7 @@ class RenderDriver extends CoreDriver
 		if (layout.layout_class != "") components = components.pushIm(layout.layout_class);
 		if (layout.page_class != "") components = components.pushIm(layout.page_class);
 		if (layout.components != null) components = components.appendCollectionIm(layout.components);
-		components = components.removeDublicatesIm();
+		components = components.removeDuplicates();
 		components = RenderDriver::getRequiredComponents(components);
 		components = components.filter( lib::equalNot("") );
 		return components;
@@ -343,7 +343,7 @@ class RenderDriver extends CoreDriver
 				{
 					fn f = rtl::method(component_name, "css");
 					string css = f(css_vars);
-					if (not rtl::isEmpty(css)) res.push(css);
+					if (not rtl::isEmpty(css)) res.pushValue(css);
 				}
 			}
 		}
