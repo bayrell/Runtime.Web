@@ -582,7 +582,7 @@ class RenderController extends CoreDriver
 			{
 				if (elem instanceof Runtime.Web.Component)
 				{
-					this.register_listeners.push
+					this.register_listeners.pushValue
 					(
 						ctx,
 						{
@@ -634,7 +634,7 @@ class RenderController extends CoreDriver
 				
 				if (elem instanceof Runtime.Web.Component)
 				{
-					this.register_listeners.push
+					this.register_listeners.pushValue
 					(
 						ctx,
 						{
@@ -658,7 +658,7 @@ class RenderController extends CoreDriver
 					}
 					
 					/* Register listener */
-					this.register_listeners.push
+					this.register_listeners.pushValue
 					(
 						ctx,
 						{
@@ -741,7 +741,7 @@ class RenderController extends CoreDriver
 				parent_elem.removeChild(e);
 				if (e._path_id != undefined)
 				{
-					this.remove_keys.push(null, e._path_id);
+					this.remove_keys.pushValue(null, e._path_id);
 				}
 				/* console.log('Remove child ', i); */
 			}

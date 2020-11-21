@@ -95,7 +95,7 @@ struct Route extends BaseStruct
 				string match = matches.get(pos, null);
 				if (match)
 				{
-					res.set(name, match);
+					res.setValue(name, match);
 				}
 			}
 		);

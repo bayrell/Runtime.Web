@@ -37,9 +37,9 @@ struct MouseWheelEvent extends MouseEvent
 		
 		#switch
 		#case ifcode ES6 then
-		obj.set(ctx, "wheelDelta", e.wheelDelta);
-		obj.set(ctx, "wheelDeltaX", e.wheelDeltaX);
-		obj.set(ctx, "wheelDeltaY", e.wheelDeltaY);
+		obj.setValue(ctx, "wheelDelta", e.wheelDelta);
+		obj.setValue(ctx, "wheelDeltaX", e.wheelDeltaX);
+		obj.setValue(ctx, "wheelDeltaY", e.wheelDeltaY);
 		#endswitch
 	}
 	

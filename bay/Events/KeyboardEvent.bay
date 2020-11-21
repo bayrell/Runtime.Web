@@ -48,18 +48,18 @@ struct KeyboardEvent extends WebEvent
 		#switch
 		#case ifcode ES6 then
 		
-		obj.set(ctx, "altKey", e.altKey);
-		obj.set(ctx, "charCode", e.charCode);
-		obj.set(ctx, "code", e.code);
-		obj.set(ctx, "ctrlKey", e.ctrlKey);
-		obj.set(ctx, "key", e.key);
-		obj.set(ctx, "keyCode", e.keyCode);
-		obj.set(ctx, "locale", e.locale);
-		obj.set(ctx, "location", e.location);
-		obj.set(ctx, "repeat", e.repeat);
-		obj.set(ctx, "shiftKey", e.shiftKey);
-		obj.set(ctx, "which", e.which);
-		obj.set(ctx, "value", e.currentTarget.value);
+		obj.setValue(ctx, "altKey", e.altKey);
+		obj.setValue(ctx, "charCode", e.charCode);
+		obj.setValue(ctx, "code", e.code);
+		obj.setValue(ctx, "ctrlKey", e.ctrlKey);
+		obj.setValue(ctx, "key", e.key);
+		obj.setValue(ctx, "keyCode", e.keyCode);
+		obj.setValue(ctx, "locale", e.locale);
+		obj.setValue(ctx, "location", e.location);
+		obj.setValue(ctx, "repeat", e.repeat);
+		obj.setValue(ctx, "shiftKey", e.shiftKey);
+		obj.setValue(ctx, "which", e.which);
+		obj.setValue(ctx, "value", e.currentTarget.value);
 		
 		#endswitch
 	}

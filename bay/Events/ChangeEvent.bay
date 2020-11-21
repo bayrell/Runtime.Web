@@ -34,8 +34,8 @@ struct ChangeEvent extends WebEvent
 		
 		#switch
 		#case ifcode ES6 then
-		obj.set(ctx, "value", e.currentTarget.value);
-		obj.set(ctx, "old_value", e.currentTarget._old_value);
+		obj.setValue(ctx, "value", e.currentTarget.value);
+		obj.setValue(ctx, "old_value", e.currentTarget._old_value);
 		#endswitch
 	}
 	

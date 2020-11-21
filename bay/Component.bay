@@ -104,7 +104,7 @@ class Component extends CoreObject
 	{
 		var args = new Vector();
 		#ifcode JAVASCRIPT then
-		for (var i=2; i<arguments.length; i++) args.push(ctx, arguments[i]);
+		for (var i=2; i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
 		#endif
 		
 		/* Result */
@@ -122,7 +122,7 @@ class Component extends CoreObject
 		
 		if (rtl::method_exists(model.getClassName(), method_name))
 		{
-			args.unshift(model);
+			args.unshiftValue(model);
 			fn f = rtl::method(model.getClassName(), method_name);
 			res = rtl::apply(f, args);
 		}
@@ -151,7 +151,7 @@ class Component extends CoreObject
 	{
 		var args = new Vector();
 		#ifcode JAVASCRIPT then
-		for (var i=2; i<arguments.length; i++) args.push(ctx, arguments[i]);
+		for (var i=2; i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
 		#endif
 		
 		/* Get current model */
@@ -166,7 +166,7 @@ class Component extends CoreObject
 		
 		if (rtl::method_exists(model.getClassName(), method_name))
 		{
-			args.unshift(model);
+			args.unshiftValue(model);
 			fn f = rtl::method(model.getClassName(), method_name);
 			model = rtl::apply(f, args);
 		}

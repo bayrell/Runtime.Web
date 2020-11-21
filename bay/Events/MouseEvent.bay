@@ -55,27 +55,27 @@ struct MouseEvent extends WebEvent
 		#switch
 		#case ifcode ES6 then
 		
-		obj.set(ctx, "altKey", e.altKey);
-		obj.set(ctx, "button", e.button);
-		obj.set(ctx, "buttons", e.buttons);
-		obj.set(ctx, "clientX", e.clientX);
-		obj.set(ctx, "clientY", e.clientY);
-		obj.set(ctx, "ctrlKey", e.ctrlKey);
-		obj.set(ctx, "detail", e.detail);
-		obj.set(ctx, "layerX", e.layerX);
-		obj.set(ctx, "layerY", e.layerY);
-		obj.set(ctx, "metaKey", e.metaKey);
-		obj.set(ctx, "movementX", e.movementX);
-		obj.set(ctx, "movementY", e.movementY);
-		obj.set(ctx, "offsetX", e.offsetX);
-		obj.set(ctx, "offsetY", e.offsetY);
-		obj.set(ctx, "pageX", e.pageX);
-		obj.set(ctx, "pageY", e.pageY);
-		obj.set(ctx, "screenX", e.screenX);
-		obj.set(ctx, "screenY", e.screenY);
-		obj.set(ctx, "shiftKey", e.shiftKey);
-		obj.set(ctx, "x", e.x);
-		obj.set(ctx, "y", e.y);
+		obj.setValue(ctx, "altKey", e.altKey);
+		obj.setValue(ctx, "button", e.button);
+		obj.setValue(ctx, "buttons", e.buttons);
+		obj.setValue(ctx, "clientX", e.clientX);
+		obj.setValue(ctx, "clientY", e.clientY);
+		obj.setValue(ctx, "ctrlKey", e.ctrlKey);
+		obj.setValue(ctx, "detail", e.detail);
+		obj.setValue(ctx, "layerX", e.layerX);
+		obj.setValue(ctx, "layerY", e.layerY);
+		obj.setValue(ctx, "metaKey", e.metaKey);
+		obj.setValue(ctx, "movementX", e.movementX);
+		obj.setValue(ctx, "movementY", e.movementY);
+		obj.setValue(ctx, "offsetX", e.offsetX);
+		obj.setValue(ctx, "offsetY", e.offsetY);
+		obj.setValue(ctx, "pageX", e.pageX);
+		obj.setValue(ctx, "pageY", e.pageY);
+		obj.setValue(ctx, "screenX", e.screenX);
+		obj.setValue(ctx, "screenY", e.screenY);
+		obj.setValue(ctx, "shiftKey", e.shiftKey);
+		obj.setValue(ctx, "x", e.x);
+		obj.setValue(ctx, "y", e.y);
 		
 		#endswitch
 	}

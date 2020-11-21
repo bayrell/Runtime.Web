@@ -42,17 +42,17 @@ struct WebEvent extends UIEvent
 		#switch
 		#case ifcode ES6 then
 		
-		obj.set(ctx, "name", e.type);
-		obj.set(ctx, "currentElement", e.target);
-		obj.set(ctx, "target", e.currentTarget);
-		obj.set(ctx, "bubbles", e.bubbles);
-		obj.set(ctx, "cancel_bubble", e.cancel_bubble);
-		obj.set(ctx, "cancelable", e.cancelable);
-		obj.set(ctx, "composed", e.composed);
-		obj.set(ctx, "default_prevented", e.default_prevented);
-		obj.set(ctx, "event_phase", e.event_phase);
-		obj.set(ctx, "is_trusted", e.isTrusted);
-		obj.set(ctx, "es6_event", e);
+		obj.setValue(ctx, "name", e.type);
+		obj.setValue(ctx, "currentElement", e.target);
+		obj.setValue(ctx, "target", e.currentTarget);
+		obj.setValue(ctx, "bubbles", e.bubbles);
+		obj.setValue(ctx, "cancel_bubble", e.cancel_bubble);
+		obj.setValue(ctx, "cancelable", e.cancelable);
+		obj.setValue(ctx, "composed", e.composed);
+		obj.setValue(ctx, "default_prevented", e.default_prevented);
+		obj.setValue(ctx, "event_phase", e.event_phase);
+		obj.setValue(ctx, "is_trusted", e.isTrusted);
+		obj.setValue(ctx, "es6_event", e);
 		
 		#endswitch
 	}

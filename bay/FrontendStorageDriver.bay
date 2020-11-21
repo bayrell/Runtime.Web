@@ -63,7 +63,7 @@ class FrontendStorageDriver extends CoreDriver
 			if (controller.isMainController())
 			{
 				string controller_name = controller.getObjectName()
-				this.save_models.set(controller_name, controller.layout);
+				this.save_models.setValue(controller_name, controller.layout);
 			}
 		}
 	}

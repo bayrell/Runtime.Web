@@ -58,6 +58,9 @@ class RouteController extends CoreDriver
 		/* Add history listener */
 		window.onpopstate = Runtime.Web.RouteController.js_onpopstate;
 		
+		/* Set RouteController */
+		window["RouteController"] = this;
+		
 		#endif
 	}
 	
@@ -137,7 +140,7 @@ class RouteController extends CoreDriver
 		var obj = { "href": href, };
 		history.pushState(obj, "", href);
 		#endif
-		this.history.push(href);
+		this.history.pushValue(href);
 		await this.renderPage(href);
 	}
 	
