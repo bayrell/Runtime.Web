@@ -92,7 +92,16 @@ class Component extends CoreObject
 	 */
 	var model(Collection<string> model_path = null, var def_val = null) =>
 		this.model_path == null ? null :
-			rtl::attr(this.controller.layout, this.model_path.concat(model_path), def_val)
+			rtl::attr
+			(
+				this.controller.layout,
+				this.model_path.concat
+				(
+					(rtl::isEmpty(model_path)) ? null :
+					(model_path instanceof Collection) ? model_path : [ model_path ]
+				),
+				def_val
+			)
 	;
 	
 	
