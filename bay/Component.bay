@@ -18,19 +18,14 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
-use Runtime.Core.BusDriverInterface;
 use Runtime.Core.CoreEvent;
 use Runtime.Core.CoreObject;
 use Runtime.Core.Message;
-use Runtime.Core.RemoteCallAnswer;
-use Runtime.Core.RemoteCallRequest;
-use Runtime.Web.LayoutModel;
-use Runtime.Web.RenderController;
+use Runtime.Web.Control;
 use Runtime.Web.RenderDriver;
-use Runtime.Web.RenderDriverControl;
-use Runtime.Web.RouteController;
 use Runtime.Web.Events.UIEvent;
 
 
@@ -38,7 +33,6 @@ class Component extends CoreObject
 {
 	protected string path_id = "";
 	protected RenderDriver driver = null;
-	protected RenderController controller = null;
 	protected Dict params = null;
 	protected Collection<string> model_path = [];
 	protected var old_model = null;
@@ -94,7 +88,7 @@ class Component extends CoreObject
 		this.model_path == null ? null :
 			rtl::attr
 			(
-				this.controller.layout,
+				this.driver.model,
 				this.model_path.concat
 				(
 					(rtl::isEmpty(model_path)) ? null :
@@ -181,7 +175,7 @@ class Component extends CoreObject
 		}
 		
 		/* Set new model */
-		this.controller.updateModel(this.model_path, model);
+		this.driver.updateModel(this.model_path, model);
 	}
 	
 	
@@ -191,7 +185,7 @@ class Component extends CoreObject
 	 */
 	void setModel(var model)
 	{
-		this.controller.updateModel(this.model_path, model);
+		this.driver.updateModel(this.model_path, model);
 	}
 	
 	
@@ -199,11 +193,11 @@ class Component extends CoreObject
 	/**
 	 * Constructor
 	 */
-	void constructor(string path_id, RenderController controller)
+	void constructor(string path_id, RenderDriver driver)
 	{
 		parent(path_id);
 		this.path_id = path_id;
-		this.controller = controller;
+		this.driver = driver;
 	}
 	
 	
@@ -224,7 +218,7 @@ class Component extends CoreObject
 	{
 		Message msg = new Message(event, this.getObjectName());
 		msg.sender = this;
-		await @.object_manager.handleMessage(msg);
+		await @.handleMessage(msg);
 	}
 	
 	
@@ -253,8 +247,8 @@ class Component extends CoreObject
 	 */
 	public Collection<var> repaint
 	(
-		LayoutModel layout, BaseStruct model, Dict params, html content,
-		RenderDriverControl control, bool created
+		BaseStruct layout, BaseStruct model, Dict params, html content,
+		Control control, bool created
 	)
 	{
 		return [];
@@ -265,7 +259,7 @@ class Component extends CoreObject
 	/**
 	 * Update component
 	 */
-	public void updateComponent(RenderDriverControl control, bool created)
+	public void updateComponent(Control control, bool created)
 	{
 		if (created) this.onCreated();
 		else this.onUpdated();
@@ -311,7 +305,7 @@ class Component extends CoreObject
 	/**
 	 * Component render
 	 */
-	pure html render(LayoutModel layout, BaseStruct model, Dict params, html content) => null;
+	pure html render(BaseStruct layout, BaseStruct model, Dict params, html content) => null;
 	
 	
 	
@@ -432,25 +426,4 @@ class Component extends CoreObject
 		}
 	}
 	#endif
-	
-	
-	
-	/**
-	 * Remote bus call
-	 * @param Dict items
-	 * @return RemoteCallAnswer
-	 */
-	async RemoteCallAnswer externalBusCall(Dict items) => await RenderDriver::externalBusCall(items);
-	
-	
-	
-	/**
-	 * Open url
-	 */
-	async string openUrl(string url)
-	{
-		RouteController controller = @.getDriver(classof RouteController);
-		await controller.openUrl(url);
-	}
-	async string pageOpen(string url) => await this.openUrl(url);
 }

@@ -18,10 +18,7 @@
 
 namespace Runtime.Web;
 
-use Runtime.BaseStruct;
-use Runtime.Core.Context;
 use Runtime.Core.Driver;
-use Runtime.Core.Entity;
 use Runtime.Core.LambdaChain;
 use Runtime.Web.ExternalBusDriver;
 use Runtime.Web.FrontendStorageDriver;
@@ -29,7 +26,6 @@ use Runtime.Web.Layout;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderDriver;
 use Runtime.Web.RouteController;
-use Runtime.Web.Routes;
 
 
 static class ModuleDescription
@@ -59,7 +55,6 @@ static class ModuleDescription
 	pure Dict<string> requiredModules() =>
 	{
 		'Runtime': '>=0.3',
-		'Runtime.Web': '*',
 	};
 	
 	
@@ -69,115 +64,6 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		/* Render Driver */
-		new Driver{ "name": classof RenderDriver },
-		
-		/* Register RouteController */
-		new Driver{ "name": classof RouteController },
-		
-		/* Layout chain */
-		new LambdaChain
-		{
-			"name": RenderDriver::LAYOUT_CHAIN,
-			"pos": 10000,
-			"value": "Runtime.Web.RenderDriver::layoutChainDefault",
-		},
-		
-		/* Render Chain. Create layout model */
-		new LambdaChain
-		{
-			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::renderChainCreateLayoutModel",
-			"pos": RenderDriver::RENDER_CHAIN_CREATE_LAYOUT_MODEL,
-		},
-		
-		/* Render Chain. Call middleware route */
-		new LambdaChain
-		{
-			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::renderChainCallRouteMiddleware",
-			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE_MIDDLEWARE,
-			"is_async": true,
-		},
-		
-		/* Render Chain. Call route */
-		new LambdaChain
-		{
-			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::renderChainCallRoute",
-			"pos": RenderDriver::RENDER_CHAIN_CALL_ROUTE,
-			"is_async": true,
-		},
-		
-		/* Extend entities */
-		new LambdaChain
-		{
-			"name": "Runtime.Entities",
-			"value": "Runtime.Web.ModuleDescription::extendEntities",
-		},
-		
-		
-		#ifdef BACKEND then
-		
-		/* Render Chain. Set enviroments */
-		new LambdaChain
-		{
-			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::renderChainSetFrontendEnv",
-			"pos": RenderDriver::RENDER_CHAIN_SET_FRONTEND_ENVIROMENTS,
-		},
-		
-		/* Render Chain. Pattern */
-		new LambdaChain
-		{
-			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::renderChainPatternDefault",
-			"pos": RenderDriver::RENDER_CHAIN_RESPONSE - 1,
-		},
-		
-		/* Render Chain. Response */
-		new LambdaChain
-		{
-			"name": RenderDriver::RENDER_CHAIN,
-			"value": "Runtime.Web.RenderDriver::renderChainCreateResponse",
-			"pos": RenderDriver::RENDER_CHAIN_RESPONSE,
-		},
-		
-		#endif
-		
-		
-		
-		#ifdef ES6 then
-		
-		/* Register external bus driver */
-		new Driver{ "name": "default:external_bus", "value": classof ExternalBusDriver },
-		
-		/* Storage Driver */
-		new Driver{ "name": classof FrontendStorageDriver },
-		
-		#endif
 	];
-	
-	
-	
-	/**
-	 * Extend entities
-	 */
-	pure Collection<BaseStruct> extendEntities(Context c, Collection<BaseStruct> entities)
-	{
-		#ifdef BACKEND then
-		
-		bool api = c |> "Runtime.Backend", "api" |> default bool true;
-		
-		/* Enable api service */
-		if (api)
-		{
-			entities = entities.prependIm( new Entity{ "name": "Runtime.Web.Routes" } );
-		}
-		
-		#endif
-		
-		return [c, entities];
-	}
 	
 }
