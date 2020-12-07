@@ -3,19 +3,9 @@
 	"assets":
 	[
 		"Component",
-		"ExternalBusDriver",
-		"FrontendStorageDriver",
-		"Layout",
-		"LayoutModel",
-		"RenderContainer",
-		"RenderController",
+		"Control",
+		"ModuleDescription",
 		"RenderDriver",
-		"RenderDriverControl",
-		"Route",
-		"RouteController",
-		"RouteList",
-		"RouteMiddleware",
-		"SeoModel",
 		"Events/UIEvent",
 		"Events/WebEvent",
 		"Events/BlurEvent",
@@ -37,8 +27,6 @@
 		"Events/MouseOverEvent",
 		"Events/MouseUpEvent",
 		"Events/MouseWheelEvent",
-		"ModuleDescription",
-		"webApp",
-		"@core.css"
+		"ModuleDescription"
 	]
 }

@@ -426,7 +426,7 @@ class RenderDriver extends CoreDriver
 			"ctx": ctx,
 			"component": this,
 			"parent_elem": this.root_elem,
-			"path_id": this.getPath(),
+			"path_id": this.getObjectName(),
 			"driver": this,
 		};
 		
