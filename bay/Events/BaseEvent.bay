@@ -16,12 +16,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Core;
+namespace Runtime.Web.Events;
 
 use Runtime.BaseStruct;
 
 
-struct CoreEvent extends BaseStruct
+struct BaseEvent extends BaseStruct
 {
 	
 	/**
@@ -33,6 +33,6 @@ struct CoreEvent extends BaseStruct
 	/**
 	 * Cancel event
 	 */
-	pure CoreEvent cancel(CoreEvent event) => event;
+	pure BaseEvent cancel(BaseEvent event) => event;
 	
 }

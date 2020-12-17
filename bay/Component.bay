@@ -21,15 +21,13 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
-use Runtime.Core.CoreEvent;
-use Runtime.Core.CoreObject;
-use Runtime.Core.Message;
 use Runtime.Web.Control;
+use Runtime.Web.Message;
 use Runtime.Web.RenderDriver;
-use Runtime.Web.Events.UIEvent;
+use Runtime.Web.Events.BaseEvent;
 
 
-class Component extends CoreObject
+class Component extends BaseObject
 {
 	protected string path_id = "";
 	protected RenderDriver driver = null;
@@ -37,12 +35,39 @@ class Component extends CoreObject
 	protected Collection<string> model_path = [];
 	protected var old_model = null;
 	protected var elements = null;
+	protected var manager = null;
+	protected Vector<var> childs = null;
+	protected var parent = null;
 	
 	
 	/**
-	 * Component get path
+	 * Component returns object name
 	 */
 	string getPath() => this.path_id;
+	string getObjectName() => this.path_id;
+	
+	
+	
+	/**
+	 * Constructor
+	 */
+	void constructor(string path_id, RenderDriver driver)
+	{
+		parent();
+		this.path_id = path_id;
+		this.driver = driver;
+		this.childs = new Vector<var>();
+	}
+	
+	
+	
+	/**
+	 * Set parent
+	 */
+	void setParent(Component parent_obj)
+	{
+		this.manager.changeParent(this, parent_obj);
+	}
 	
 	
 	
@@ -191,18 +216,6 @@ class Component extends CoreObject
 	
 	
 	/**
-	 * Constructor
-	 */
-	void constructor(string path_id, RenderDriver driver)
-	{
-		parent(path_id);
-		this.path_id = path_id;
-		this.driver = driver;
-	}
-	
-	
-	
-	/**
 	 * Handle message
 	 */
 	public async void handleMessage(Message msg)
@@ -214,12 +227,13 @@ class Component extends CoreObject
 	/**
 	 * Send event
 	 */
-	public async void signal(CoreEvent event)
+	public async void sendEvent(BaseEvent event)
 	{
 		Message msg = new Message(event, this.getObjectName());
 		msg.sender = this;
 		await @.handleMessage(msg);
 	}
+	public async void signal(BaseEvent event) => this.sendEvent(event);
 	
 	
 	

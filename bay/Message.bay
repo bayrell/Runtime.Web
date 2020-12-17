@@ -16,20 +16,20 @@
  *  limitations under the License.
  */
  
-namespace Runtime.Core;
+namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
-use Runtime.Core.CoreEvent;
+use Runtime.Web.Events.BaseEvent;
 
 
-class Message<T> extends BaseObject
+class Message<BaseEvent> extends BaseObject
 {
 	protected var sender = null;
 	protected string from = "";
 	protected string message_id = "";
 	protected bool is_cancel = false;
-	protected T data = null;
+	protected BaseEvent data = null;
 	public Map tags = new Map();
 	
 	
@@ -39,7 +39,7 @@ class Message<T> extends BaseObject
 	string getMessageID() => this.message_id;
 	string getFrom() => this.from;
 	string isCancel() => this.is_cancel;
-	T getData() => this.data;
+	BaseEvent getData() => this.data;
 	
 	
 	
@@ -50,7 +50,7 @@ class Message<T> extends BaseObject
 	{
 		this.is_cancel = true;
 		
-		if (this.data instanceof CoreEvent)
+		if (this.data instanceof BaseEvent)
 		{
 			this.data = this.data::cancel(this.data);
 		}
@@ -62,7 +62,7 @@ class Message<T> extends BaseObject
 	/** 
 	 * Constructor
 	 */
-	public void constructor(T data, string from = "", string message_id = "")
+	public void constructor(BaseEvent data, string from = "", string message_id = "")
 	{
 		parent();
 		

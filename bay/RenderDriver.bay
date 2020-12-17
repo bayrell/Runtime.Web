@@ -20,25 +20,26 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.IntrospectionInfo;
+use Runtime.BaseDriver;
+use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.RuntimeUtils;
 use Runtime.Exceptions.RuntimeException;
-use Runtime.Core.BusDriverInterface;
-use Runtime.Core.CoreObject;
-use Runtime.Core.CoreDriver;
-use Runtime.Core.CoreEvent;
-use Runtime.Core.Message;
-use Runtime.Core.ObjectManager;
 use Runtime.Web.Component;
 use Runtime.Web.Control;
+use Runtime.Web.Message;
+use Runtime.Web.ObjectManager;
+use Runtime.Web.Events.BaseEvent;
 use Runtime.Web.Events.ChangeEvent;
 
 
-class RenderDriver extends CoreDriver
+class RenderDriver extends BaseDriver
 {
 	protected string object_name = "";
 	protected Map<bool> listen_events = new Map();
 	protected ObjectManager manager = null;
+	protected Vector<var> childs = null;
+	protected var parent = null;
 	protected var root_elem = null;
 	protected var layout = null;
 	protected var model = null;
@@ -48,10 +49,28 @@ class RenderDriver extends CoreDriver
 	/* Render variable */
 	protected Vector updated_components = null;
 	protected Vector remove_keys = null;
-	protected Map<CoreObject> components = null;
+	protected Map<BaseObject> components = null;
 	protected int next_component_id = 0;
 	protected string new_css = "";
 	protected string old_css = "";
+	
+	
+	
+	/**
+	 * Constructor
+	 */
+	void constructor(string object_name = "")
+	{
+		parent(object_name);
+		
+		/* Create object */
+		this.childs = new Vector<var>();
+		this.listeners = new Vector<Dict>();
+		this.manager = new ObjectManager();
+		this.components = new Map();
+		this.saveComponent(this);
+	}
+	
 	
 	
 	/**
@@ -130,22 +149,6 @@ class RenderDriver extends CoreDriver
 	
 	
 	/**
-	 * Constructor
-	 */
-	void constructor(string object_name = "")
-	{
-		parent(object_name);
-		
-		/* Create object */
-		this.listeners = new Vector<Dict>();
-		this.manager = new ObjectManager();
-		this.components = new Map();
-		this.saveComponent(this);
-	}
-	
-	
-	
-	/**
 	 * Returns model path
 	 */
 	Collection<string> getModelPath() => [];
@@ -201,7 +204,7 @@ class RenderDriver extends CoreDriver
 	{
 		if (not this.components.has(path_id)) return null;
 		
-		CoreObject component = this.components.item(path_id);
+		Component component = this.components.item(path_id);
 		if (class_name != "")
 		{
 			string component_class_name = component.getClassName();
@@ -321,7 +324,7 @@ class RenderDriver extends CoreDriver
 	/**
 	 * Send event
 	 */
-	public async void signal(string path_id, CoreEvent event)
+	public async void signal(string path_id, BaseEvent event)
 	{
 		Message msg = new Message(event, path_id);
 		await this.manager.handleMessage(msg);
@@ -398,7 +401,7 @@ class RenderDriver extends CoreDriver
 	 */
 	protected void render()
 	{
-		var ctx = RuntimeUtils::getContext();
+		var ctx = rtl::getContext();
 		this.animation_id = null;
 		
 		this.updated_components = new Vector();

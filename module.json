@@ -4,9 +4,10 @@
 	[
 		"Component",
 		"Control",
-		"ModuleDescription",
+		"Message",
+		"ObjectManager",
 		"RenderDriver",
-		"Events/UIEvent",
+		"Events/BaseEvent",
 		"Events/WebEvent",
 		"Events/BlurEvent",
 		"Events/ChangeEvent",
