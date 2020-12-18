@@ -23,6 +23,7 @@ use Runtime.IntrospectionInfo;
 use Runtime.BaseDriver;
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
+use Runtime.Entity;
 use Runtime.RuntimeUtils;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.Component;
@@ -35,6 +36,9 @@ use Runtime.Web.Events.ChangeEvent;
 
 class RenderDriver extends BaseDriver
 {
+	static const string RENDER_CHAIN_CSS = "RenderDriver.CSS";
+	
+	/* Variables */
 	protected string object_name = "";
 	protected Map<bool> listen_events = new Map();
 	protected ObjectManager manager = null;
@@ -53,15 +57,17 @@ class RenderDriver extends BaseDriver
 	protected int next_component_id = 0;
 	protected string new_css = "";
 	protected string old_css = "";
-	
+	protected string selector = "";
+	protected string selector_style = "";
+	protected Dict css_vars = new Dict{};
 	
 	
 	/**
 	 * Constructor
 	 */
-	void constructor(string object_name = "")
+	void constructor(string object_name = "", Entity entity = null)
 	{
-		parent(object_name);
+		parent(object_name, entity);
 		
 		/* Create object */
 		this.childs = new Vector<var>();
@@ -69,6 +75,21 @@ class RenderDriver extends BaseDriver
 		this.manager = new ObjectManager();
 		this.components = new Map();
 		this.saveComponent(this);
+		
+		/* Assing variables */
+		this.selector = entity["params", "selector"] |> default string "";
+		this.selector_style = entity["params", "selector_style"] |> default string "";
+		this.component_class_name = entity["params", "class_name"] |> default string "";
+		this.model = entity["params", "model"] |> default BaseStruct null;
+	}
+	
+	
+	
+	/**
+	 * Start driver
+	 */
+	async void startDriver()
+	{
 	}
 	
 	
@@ -107,9 +128,19 @@ class RenderDriver extends BaseDriver
 	 */
 	public RenderDriver setSelector(string selector_name)
 	{
-		#ifcode JAVASCRIPT then
-		this.root_elem = document.querySelector(selector_name);
-		#endif
+		this.selector = selector_name;
+		this.selector_style = selector_name ~ "_style";
+		return this;
+	}
+	
+	
+	
+	/**
+	 * Set selector style
+	 */
+	public RenderDriver setSelectorStyle(string selector_name)
+	{
+		this.selector_style = selector_name;
 		return this;
 	}
 	
@@ -410,6 +441,13 @@ class RenderDriver extends BaseDriver
 		
 		if (rtl::isEmpty(this.root_elem))
 		{
+			#ifcode JAVASCRIPT then
+			this.root_elem = document.querySelector(this.selector);
+			#endif
+		}
+		
+		if (rtl::isEmpty(this.root_elem))
+		{
 			throw new RuntimeException
 			(
 				"Root elem is null",
@@ -449,8 +487,6 @@ class RenderDriver extends BaseDriver
 		);
 		RenderDriver.p(root_control, res[1]);
 		
-		/* console.log(this.remove_keys); */
-		
 		/* Remove objects */
 		for (var i=0; i<this.remove_keys.count(); i++)
 		{
@@ -459,10 +495,31 @@ class RenderDriver extends BaseDriver
 			this.manager.removeObjectRecursive(ctx, path_id);
 		}
 		
+		var arr = ctx.chain
+		(
+			ctx,
+			this.constructor.RENDER_CHAIN_CSS,
+			Runtime.Collection.from
+			([
+				Runtime.Collection.from([ this.component_class_name ]),
+				this.layout,
+				this.model
+			])
+		);
+		var components = arr[0];
+		
+		/* Get new css */
+		this.new_css = this.constructor.getCSSFromComponents
+		(
+			ctx,
+			components,
+			this.css_vars
+		);
+		
 		/* Add new css */
 		if (this.new_css != this.old_css)
 		{
-			var elem = document.querySelector(this.selector + "_style");
+			var elem = document.querySelector(this.selector_style);
 			if (elem != null)
 			{
 				if (elem.textContent != this.new_css) elem.textContent = this.new_css;
