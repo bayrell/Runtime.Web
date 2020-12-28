@@ -18,14 +18,8 @@
 
 namespace Runtime.Web;
 
-use Runtime.Core.Driver;
-use Runtime.Core.LambdaChain;
-use Runtime.Web.ExternalBusDriver;
-use Runtime.Web.FrontendStorageDriver;
-use Runtime.Web.Layout;
-use Runtime.Web.LayoutModel;
-use Runtime.Web.RenderDriver;
-use Runtime.Web.RouteController;
+use Runtime.Driver;
+use Runtime.Entity;
 
 
 static class ModuleDescription
@@ -44,7 +38,7 @@ static class ModuleDescription
 	 * Returns module name
 	 * @return string
 	 */
-	pure string getModuleVersion() => "0.10.0";
+	pure string getModuleVersion() => "0.11.0";
 	
 	
 	
@@ -64,6 +58,15 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
+		new Driver
+		{
+			"name": "RenderDriver",
+			"value": "Runtime.Web.RenderDriver",
+			"global": true,
+			"params":
+			{
+			},
+		},
 	];
 	
 }

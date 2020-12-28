@@ -3,9 +3,9 @@
 	"assets":
 	[
 		"Component",
-		"Control",
+		"Controller",
+		"Element",
 		"Message",
-		"ObjectManager",
 		"RenderDriver",
 		"Events/BaseEvent",
 		"Events/WebEvent",

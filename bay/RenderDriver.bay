@@ -18,149 +18,44 @@
 
 namespace Runtime.Web;
 
-use Runtime.lib;
-use Runtime.IntrospectionInfo;
 use Runtime.BaseDriver;
-use Runtime.BaseObject;
 use Runtime.BaseStruct;
-use Runtime.Entity;
-use Runtime.RuntimeUtils;
-use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.Component;
-use Runtime.Web.Control;
-use Runtime.Web.Message;
-use Runtime.Web.ObjectManager;
-use Runtime.Web.Events.BaseEvent;
-use Runtime.Web.Events.ChangeEvent;
+use Runtime.Web.Controller;
+use Runtime.Web.Element;
 
 
 class RenderDriver extends BaseDriver
 {
-	static const string RENDER_CHAIN_CSS = "RenderDriver.CSS";
+	static const string RENDER_CHAIN_CSS = "Runtime.Web.RenderDriver.CSS";
 	
-	/* Variables */
-	protected string object_name = "";
-	protected Map<bool> listen_events = new Map();
-	protected ObjectManager manager = null;
-	protected Vector<var> childs = null;
-	protected var parent = null;
-	protected var root_elem = null;
-	protected var layout = null;
-	protected var model = null;
-	protected var component_class_name = null;
-	protected var animation_id = null;
+	public BaseStruct layout = null;
+	var animation_id = null;
+	Vector<Map> controllers = new Vector();
+	Collection<Map> components = new Collection();
 	
-	/* Render variable */
-	protected Vector updated_components = null;
-	protected Vector remove_keys = null;
-	protected Map<BaseObject> components = null;
-	protected int next_component_id = 0;
-	protected string new_css = "";
-	protected string old_css = "";
-	protected string selector = "";
-	protected string selector_style = "";
-	protected Dict css_vars = new Dict{};
+	/* CSS */
+	Dict css_vars = {};
+	var css_elem = null;
+	string new_css = "";
+	string old_css = "";
 	
 	
 	/**
-	 * Constructor
+	 * Add component
 	 */
-	void constructor(string object_name = "", Entity entity = null)
+	RenderDriver addComponent(string component_name)
 	{
-		parent(object_name, entity);
-		
-		/* Create object */
-		this.childs = new Vector<var>();
-		this.listeners = new Vector<Dict>();
-		this.manager = new ObjectManager();
-		this.components = new Map();
-		this.saveComponent(this);
-		
-		/* Assing variables */
-		this.selector = entity["params", "selector"] |> default string "";
-		this.selector_style = entity["params", "selector_style"] |> default string "";
-		this.component_class_name = entity["params", "class_name"] |> default string "";
-		this.model = entity["params", "model"] |> default BaseStruct null;
-	}
-	
-	
-	
-	/**
-	 * Start driver
-	 */
-	async void startDriver()
-	{
-	}
-	
-	
-	
-	/**
-	 * Output warning message
-	 */
-	void warning(string msg)
-	{
-		#ifcode JAVASCRIPT then
-		var arr = Array.apply(null, arguments);
-		arr.shift(); /* Remove ctx */
-		arr.unshift("[Warning]");
-		console.log.apply(null, arr);
-		#endif
-	}
-	
-	
-	
-	/**
-	 * Component get path
-	 */
-	string getPath() => this.object_name;
-	
-	
-	
-	/**
-	 * Returns object name
-	 */
-	public string getObjectName() => this.object_name;
-	
-	
-	
-	/**
-	 * Set selector
-	 */
-	public RenderDriver setSelector(string selector_name)
-	{
-		this.selector = selector_name;
-		this.selector_style = selector_name ~ "_style";
+		this.components = this.components.pushIm(component_name);
 		return this;
 	}
 	
 	
 	
 	/**
-	 * Set selector style
+	 * Setup
 	 */
-	public RenderDriver setSelectorStyle(string selector_name)
-	{
-		this.selector_style = selector_name;
-		return this;
-	}
-	
-	
-	
-	/**
-	 * Set class name
-	 */
-	public RenderDriver setClassName(string component_class_name)
-	{
-		this.component_class_name = component_class_name;
-		return this;
-	}
-	
-	
-	
-	/**
-	 * Set layout
-	 */
-	public RenderDriver setLayout(BaseStruct layout)
+	RenderDriver setLayout(BaseStruct layout)
 	{
 		this.layout = layout;
 		return this;
@@ -169,818 +64,243 @@ class RenderDriver extends BaseDriver
 	
 	
 	/**
-	 * Set model
-	 */
-	public RenderDriver setModel(BaseStruct model)
-	{
-		this.model = model;
-		return this;
-	}
-	
-	
-	
-	/**
-	 * Returns model path
-	 */
-	Collection<string> getModelPath() => [];
-	
-	
-	
-	/**
 	 * Returns model
 	 */
-	var getModel(Collection<string> model_path = null, var def_val = null) =>
-		rtl::attr(this.model, model_path, def_val)
+	var model(Collection<string> model_path = null, var def_val = null) =>
+		rtl::attr(this.layout, model_path, def_val)
 	;
 	
 	
 	
 	/**
-	 * Update model
+	 * Find controller
 	 */
-	void updateModel(Collection<string> model_path = null, var value = null)
+	Controller findControllerByElem(var e)
 	{
-		this.model = rtl::setAttr(this.model, model_path, value);
-		this.repaint();
-	}
-	
-	
-	
-	/**
-	 * Returns next unique component id
-	 */
-	string nextComponentId()
-	{
-		this.next_component_id = this.next_component_id + 1;
-		return this.getObjectName() ~ ".obj." ~ this.next_component_id;
-	}
-	
-	
-	
-	/**
-	 * Save component
-	 */
-	void saveComponent(Component component)
-	{
-		this.components.setValue(component.getPath(), component);
-		this.manager.addObject(component);
-	}
-	
-	
-	
-	/**
-	 * Returns component by path
-	 */
-	Component getComponent(string path_id, string class_name = "")
-	{
-		if (not this.components.has(path_id)) return null;
-		
-		Component component = this.components.item(path_id);
-		if (class_name != "")
+		for (int i=0; i<this.controllers.count(); i++)
 		{
-			string component_class_name = component.getClassName();
-			Vector<string> component_parents = RuntimeUtils::getParents(component_class_name);
-			if (component_class_name != class_name and component_parents.indexOf(class_name) == -1)
+			Controller c = this.controllers[i];
+			if (c.parent_elem == e)
 			{
-				return null;
+				return c;
 			}
 		}
-		
-		return component;
-	}
-	
-	
-	
-	/**
-	 * Search component in parents
-	 */
-	Component searchComponent(string path_id, string class_name)
-	{
-		Vector<string> arr = Vector::@from( rs::split("\\.", path_id) );
-		while (arr.count() > 0)
-		{
-			string path = rs::join(".", arr);
-			Component component = this.getComponent(path, class_name);
-			if (component != null)
-			{
-				return component;
-			}
-			arr.pop();
-		}
-		if (class_name == this.getClassName()) return this;
 		return null;
 	}
 	
 	
 	
 	/**
-	 * Add to update component
+	 * Setup controller
 	 */
-	void updateComponent(Control control, Component component, bool created = false)
+	Controller addController
+	(
+		var e,
+		string class_name = "", Collection model_path = [],
+		Dict params = {}, var content = null
+	)
 	{
-		this.updated_components.pushValue({ "control": control, "component": component, "created": created });
-	}
-	
-	
-	
-	/**
-	 * Remove component recursive
-	 */
-	void removeComponentsRecursive(string path_id)
-	{
-		Collection<string> keys = this.components.keys();
-		for (int i=0; i<keys.count(); i++)
+		Controller controller = this.findControllerByElem(e);
+		if (controller == null)
 		{
-			string item_name = keys[i];
-			if (rs::strpos(item_name, path_id) == 0)
-			{
-				this.components.removeValue(item_name);
-			}
-		}
-	}
-	
-	
-	
-	/**
-	 * Returns model path from @bind value
-	 */
-	Collection<string> getBindModelPath(string path_id, Collection bind_value)
-	{
-		string class_name = bind_value[0];
-		Collection bind_name = bind_value[1];
-		if (rtl::isString(bind_name))
-		{
-			bind_name = Collection::@from([bind_name]);
+			controller = new Controller();
+			controller.driver = this;
+			controller.parent_elem = e;
+			this.controllers.pushValue(controller);
 		}
 		
-		Component component = this.searchComponent(path_id, class_name);
-		if (component == null)
-		{
-			this.warning("Bind model: " ~ class_name ~ " not found");
-			return;
-		}
+		controller.class_name = class_name;
+		controller.model_path = model_path;
+		controller.params = params;
+		controller.content = content;
 		
-		/* Get model path */
-		Collection<string> model_path = component.getModelPath();
-		model_path = model_path.concat(bind_name);
-		return model_path;
+		return controller;
 	}
 	
 	
 	
 	/**
-	 * Returns model value from @bind value
+	 * Setup controller
 	 */
-	var getBindModelValue(string path_id, Collection bind_value, var def_val = null)
+	RenderDriver setupController
+	(
+		var e,
+		string class_name = "", Collection model_path = [],
+		Dict params = {}, var content = null
+	)
 	{
-		Collection<string> model_path = this.getBindModelPath(path_id, bind_value);
-		return this.model(model_path, def_val);
+		this.addController(e, class_name, model_path, params, content);
+		return this;
 	}
 	
 	
 	
 	/**
-	 * Set reference
+	 * Setup css
 	 */
-	public void setReference(string path_id, Collection bind_value, Component item)
+	RenderDriver setupCSS(var e)
 	{
-		string class_name = bind_value[0];
-		string bind_name = bind_value[1];
-		Component component = this.searchComponent(path_id, class_name);
-		component[bind_name] = item;
+		this.css_elem = e;
+		return this;
 	}
 	
 	
 	
 	/**
-	 * Send event
+	 * Get css
 	 */
-	public async void signal(string path_id, BaseEvent event)
+	string getCSS()
 	{
-		Message msg = new Message(event, path_id);
-		await this.manager.handleMessage(msg);
-	}
-	
-	
-	/**
-	 * Bind es6 event
-	 */
-	protected void bindGlobalEvent(string event_class_name)
-	{
-		if (not this.listen_events.has(event_class_name))
-		{
-			#ifcode JAVASCRIPT then
-			var body = document.getElementsByTagName("body")[0];
-			body._path_id = this.getObjectName();
-			var event_class = use(event_class_name);
-			if (event_class == undefined) return false;
-			
-			var es6_name = event_class.ES6_EVENT_NAME;
-			if (es6_name == undefined) return false;
-			
-			body.addEventListener(es6_name, Runtime.Web.RenderDriver.js_event);
-			#endif
-			
-			this.listen_events.setValue(event_class_name, true);
-		}
+		/* Get css from components */
+		string css = static::getCSSFromComponents( this.components );
 		
-		return true;
+		/* Chain css */
+		list res = @.chain(static::RENDER_CHAIN_CSS, [css, this]);
+		css = res[0];
+		
+		return css;
 	}
 	
 	
 	
 	/**
-	 * Start listen event
+	 * Repaint
 	 */
-	public void registerGlobalListener(string event_class_name, string object_name, string method_name = "")
+	void repaint()
 	{
-		if (this.bindGlobalEvent(event_class_name))
-		{
-			this.manager.registerListener(this.getObjectName(), event_class_name, object_name, method_name);
-		}
-	}
-	
-	
-	
-	/**
-	 * Repaint layout
-	 */
-	public void repaint()
-	{
-		#ifcode JAVASCRIPT then
 		if (this.animation_id == null)
 		{
-			this.animation_id = requestAnimationFrame( this.render.bind(this) );
+			this.animation_id = window.requestAnimationFrame( method this.render );
 		}
-		#endif
 	}
 	
 	
 	
 	/**
-	 * Apply css
+	 * Render function
 	 */
-	public void applyCss(string css)
+	void render()
 	{
-		this.new_css = css;
-	}
-	
-	
-	
-	/**
-	 * Render layout
-	 */
-	protected void render()
-	{
-		var ctx = rtl::getContext();
-		this.animation_id = null;
-		
-		this.updated_components = new Vector();
-		this.remove_keys = new Vector();
-		this.register_listeners = new Vector();
-		
-		if (rtl::isEmpty(this.root_elem))
+		/* Render controllers */
+		for (int i=0; i<this.controllers.count(); i++)
 		{
-			#ifcode JAVASCRIPT then
-			this.root_elem = document.querySelector(this.selector);
-			#endif
-		}
-		
-		if (rtl::isEmpty(this.root_elem))
-		{
-			throw new RuntimeException
-			(
-				"Root elem is null",
-			);
-		}
-		
-		if (rtl::isEmpty(this.component_class_name))
-		{
-			throw new RuntimeException
-			(
-				"Layout " ~ this.component_class_name ~ " not found",
-			);
-		}
-		
-		Control root_control = new Control
-		{
-			"ctx": ctx,
-			"component": this,
-			"parent_elem": this.root_elem,
-			"path_id": this.getObjectName(),
-			"driver": this,
-		};
-		
-		#ifcode JAVASCRIPT then
-		var res = RenderDriver.e
-		(
-			root_control, [],
-			"component",
-			{
-				"name": this.component_class_name,
-				"attrs": {
-					"@bind": ["Runtime.Web.RenderDriver", []],
-					"@key": ""
-				},
-			},
-			0
-		);
-		RenderDriver.p(root_control, res[1]);
-		
-		/* Remove objects */
-		for (var i=0; i<this.remove_keys.count(); i++)
-		{
-			var path_id = this.remove_keys[i];
-			this.removeComponentsRecursive(ctx, path_id);
-			this.manager.removeObjectRecursive(ctx, path_id);
-		}
-		
-		var arr = ctx.chain
-		(
-			ctx,
-			this.constructor.RENDER_CHAIN_CSS,
-			Runtime.Collection.from
-			([
-				Runtime.Collection.from([ this.component_class_name ]),
-				this.layout,
-				this.model
-			])
-		);
-		var components = arr[0];
-		
-		/* Get new css */
-		this.new_css = this.constructor.getCSSFromComponents
-		(
-			ctx,
-			components,
-			this.css_vars
-		);
-		
-		/* Add new css */
-		if (this.new_css != this.old_css)
-		{
-			var elem = document.querySelector(this.selector_style);
-			if (elem != null)
-			{
-				if (elem.textContent != this.new_css) elem.textContent = this.new_css;
-			}
-			else
-			{
-				var elem = RenderDriver.getPreviousElement(this.root_elem);
-				if (elem != null && elem.tagName == "STYLE" && elem._root_elem == this.root_elem)
-				{
-				}
-				else
-				{
-					elem = document.createElement("STYLE");
-					elem._root_elem = this.root_elem;
-					this.root_elem.parentElement.insertBefore(elem, this.root_elem);
-				}
-				if (elem.textContent != this.new_css) elem.textContent = this.new_css;
-			}
-		}
-		
-		/* Register listeners */
-		for (var i=0; i<this.register_listeners.count(); i++)
-		{
-			var listen = this.register_listeners[i];
-			this.manager.registerListener
-			(
-				ctx,
-				listen.from,
-				listen.event_class_name,
-				listen.object_name,
-				listen.method_name
-			);
-		}
-		
-		/* Save updated components */
-		for (var i=0; i<this.updated_components.count(); i++)
-		{
-			var obj = this.updated_components[i];
-			var component = obj.get(ctx, "component");
-			this.saveComponent(ctx, component);
-		}
-		
-		/* Call update components */
-		for (var i=0; i<this.updated_components.count(); i++)
-		{
-			var obj = this.updated_components[i];
-			var control = obj.get(ctx, "control");
-			var component = obj.get(ctx, "component");
-			var created = obj.get(ctx, "created");
-			component.updateComponent(ctx, control, created);
-		}
-		
-		#endif
-		
-		this.old_css = this.new_css;
-	}
-	
-	
-	
-	/**
-	 * Update elem params
-	 */
-	public void updateElemParams(Control control, var elem)
-	{
-		#ifcode JAVASCRIPT then
-		
-		var model = control.model;
-		var is_new_elem = control.is_new_elem;
-		var component = elem._component;
-		var attrs = elem._attrs;
-		var path_id = elem._path_id;
-		
-		/* Set attrs */
-		if (attrs != null)
-		{
-			/* Add attributes */
-			for (var key in attrs)
-			{
-				var value = attrs[key];
-				if (key == "@bind")
-				{
-					value = this.getBindModelValue(ctx, path_id, value);
-				}
-				if (key == "@ref")
-				{
-					this.setReference(ctx, path_id, value, elem);
-					continue;
-				}
-				if (key == "@name")
-				{
-					value = this.getBindModelValue(ctx, path_id, value);
-					this.setReference(ctx, path_id, value, elem);
-				}
-				if (key == "value" || key == "@bind" || key == "@name")
-				{
-					if (elem.tagName == "INPUT" || elem.tagName == "SELECT" || elem.tagName == "TEXTAREA")
-					{
-						if (value == null && elem.value != "" && value !== 0 && value !== "0") elem.value = "";
-						else if (elem.value != value) elem.value = value;
-						elem._old_value = value;
-						continue;
-					}
-				}
-				if (key[0] == "@") continue;
-				if (key == "style" && value instanceof Runtime.Dict)
-				{
-					value = value.transition(ctx, (ctx, v, k)=>{ return k + ": " + v; });
-					value = Runtime.rs.join(ctx, ";", value);
-				}
-				if (elem.getAttribute(key) != value)
-				{
-					elem.setAttribute(key, Runtime.rs.trim(ctx, value));
-				}
-			}
+			Controller controller = this.controllers[i];
 			
-			/* Remove old attributes */
-			for (var i=elem.attributes.length - 1; i>=0; i--)
-			{
-				var attr = elem.attributes[i];
-				if (attrs[attr.name] == undefined/* && attr.name != "data-path"*/)
-				{
-					elem.removeAttribute(attr.name);
-				}
-			}
-		}
-		
-		/* Bind element events */
-		this.bindEvents(ctx, control, elem, attrs, is_new_elem);
-		
-		/* Set data-path attribute */
-		/*elem.setAttribute("data-path", path_id);*/
-		
-		#endif
-	}
-	
-	
-	
-	/**
-	 * Component model changed
-	 */
-	public void onChangeComponent(Message<ChangeEvent> msg)
-	{
-		Component component = msg.sender;
-		Collection<string> model_path = component.getModelPath();
-		var new_value = msg.data.value;
-		this.updateModel(model_path, new_value);
-	}
-	
-	
-	
-	/**
-	 * Bind element events
-	 */
-	public void bindEvents(Control control, var elem, var attrs, bool is_new_elem = false)
-	{
-		string path_id = (elem instanceof Component) ? elem.getPath() : elem._path_id;
-		
-		#ifcode JAVASCRIPT then
-		
-		for (var key in attrs)
-		{
-			var value = attrs[key];
-			var is_event = key.substring(0, 7) == "@event:";
-			var is_event_async = key.substring(0, 12) == "@eventAsync:";
+			Element element = new Element();
+			element.controller = controller;
+			element.component = controller.driver;
+			element.driver = controller.driver;
+			element.parent_elem = controller.parent_elem;
+			element.model_path = controller.model_path;
+			element.path_id = [];
 			
-			if (key == "@bind" || key == "@name")
-			{
-				if (elem instanceof Runtime.Web.Component)
-				{
-					this.register_listeners.pushValue
-					(
-						ctx,
-						{
-							"from": elem.getObjectName(),
-							"event_class_name": "Runtime.Web.Events.ChangeEvent",
-							"object_name": this.getObjectName(),
-							"method_name": "onChangeComponent"
-						}
-					);
-				}
-				else
-				{
-					var f_event = function (ctx, controller, path_id, bind_value)
-					{
-						return function (e)
-						{
-							var model_path = controller.getBindModelPath(ctx, path_id, bind_value);
-							controller.updateModel(ctx, model_path, e.value);
-						}
-					};
-					elem.addEventListener
-					(
-						"change",
-						f_event(ctx, this, path_id, value)
-					);
-				}
-			}
-			else if (is_event || is_event_async)
-			{
-				var event_class_name = "";
-				if (is_event) event_class_name = key.substring(7);
-				if (is_event_async) event_class_name = key.substring(12);
-				
-				var event_class = use(event_class_name);
-				if (event_class == undefined)
-				{
-					this.warning(ctx, "Event '" + event_class_name + "' not found in ", elem);
-					continue;
-				}
-				
-				/* Find component */
-				var class_name = value[0];
-				var callback = value[1];
-				var component = this.searchComponent(ctx, path_id, class_name);
-				if (component == null)
-				{
-					continue;
-				}
-				
-				if (elem instanceof Runtime.Web.Component)
-				{
-					this.register_listeners.pushValue
-					(
-						ctx,
-						{
-							"from": elem.getObjectName(),
-							"event_class_name": event_class_name,
-							"object_name": component.getObjectName(),
-							"method_name": callback
-						}
-					);
-				}
-				else
-				{
-					var es6_name = event_class.ES6_EVENT_NAME;
-					if (es6_name == undefined) continue;
-					
-					/* Find callback method */
-					if (!Runtime.rtl.method_exists(ctx, component, callback))
-					{
-						this.warning(ctx, "Method '" + callback + "' not found in ", component);
-						continue;
-					}
-					
-					/* Register listener */
-					this.register_listeners.pushValue
-					(
-						ctx,
-						{
-							"from": path_id,
-							"event_class_name": event_class_name,
-							"object_name": component.getObjectName(),
-							"method_name": callback
-						}
-					);
-					
-					/* Register event listener */
-					elem.addEventListener(es6_name, Runtime.Web.RenderDriver.js_event);
-				}
-			}
-		}
-		#endif
-	}
-	
-	
-	
-	/**
-	 * Patch DOM with new childs
-	 */
-	public void patchElemChilds(var parent_elem, var new_childs)
-	{
-		#ifcode JAVASCRIPT then
-		if (new_childs == null) new_childs = [];
-		
-		var findElementPos = function (elem, e)
-		{
-			var childs = elem.childNodes;
-			for (var i = 0; i < elem.childNodes.length; i++)
-			{
-				if (childs[i] == e)
-				{
-					return i;
-				}
-			}
-			return -1;
-		}
-		
-		var insertFirst = function (elem, e)
-		{
-			if (elem.childNodes.length == 0)
-			{
-				elem.appendChild(e);
-			}
-			else
-			{
-				elem.insertBefore(e, elem.firstChild);
-			}
-		}
-		
-		var insertAfter = function (elem, prev, e)
-		{
-			if (prev == null)
-			{
-				insertFirst(elem, e);
-				return;
-			}
-			var next = prev.nextSibling;
-			if (next == null)
-			{
-				elem.appendChild(e);
-			}
-			else
-			{
-				elem.insertBefore(e, next);
-			}
-		}
-		
-		
-		/* Remove elems */
-		var i = parent_elem.childNodes.length - 1;
-		while (i >= 0)
-		{
-			var e = parent_elem.childNodes[i];
-			if (new_childs.indexOf(e) == -1)
-			{
-				parent_elem.removeChild(e);
-				if (e._path_id != undefined)
-				{
-					this.remove_keys.pushValue(null, e._path_id);
-				}
-				/* console.log('Remove child ', i); */
-			}
-			i--;
-		}
-		
-		
-		var prevElem = null;
-		for (var i=0; i<new_childs.length; i++)
-		{
-			var new_e = new_childs[i];
-			if (typeof new_e == "string")
-			{
-				new_e = document.createTextNode(new_e);
-			}
-			
-			var pos = findElementPos(parent_elem, new_e);
-			var flag = false;
-			
-			/* If new element */
-			if (pos == -1)
-			{
-				if (prevElem == null)
-				{
-					insertFirst(parent_elem, new_e);
-					flag = true;
-					/* console.log('Insert first ', i); */
-				}
-				else
-				{
-					insertAfter(parent_elem, prevElem, new_e);
-					flag = true;
-					/* console.log('Insert after[1] ', i); */
-				}
-			}
-			
-			/* If existing element */
-			else
-			{
-				if (pos - 1 < 0)
-				{
-					if (i != 0)
-					{
-						insertAfter(parent_elem, prevElem, new_e);
-						flag = true;
-						/* console.log('Insert after[2] ', i); */
-					}
-				}
-				else
-				{
-					var prevSibling = parent_elem.childNodes[pos - 1];
-					if (prevElem != prevSibling)
-					{
-						insertAfter(parent_elem, prevElem, new_e);
-						flag = true;
-						/* console.log('Insert after[3] ', i); */
-					}
-				}
-			}
-			/*
-			if (flag)
-			{
-				var index = this.remove_keys.indexOf(null, new_e._path_id);
-				if (index != -1)
-					this.remove_keys.remove(null, index, 1);
-			}
-			*/
-			prevElem = new_e;
-		}
-		#endif
-	}
-	
-	
-	
-	/**
-	 * Returns css name
-	 */
-	pure memorize string getCssName(string class_name, string css_name)
-	{
-		Collection<string> arr = rs::split(" ", css_name);
-		Collection<string> class_names = RuntimeUtils::getParents(class_name);
-		
-		class_names = class_names.filter
-		(
-			bool (string class_name) =>
-				class_name != "Runtime.BaseObject" and
-				class_name != "Runtime.Core.CoreObject" and
-				class_name != "Runtime.Web.Component"
-		);
-		
-		arr = arr.map
-		(
-			string (string css_name) use (class_names)
-			{
-				Collection<string> s1 = class_names.map
+			var component = element
+				.e("component", controller.class_name)
+				.a
 				(
-					string (string class_name) use (css_name)
+					controller.params.concat
 					{
-						string hash = static::getCssHash(class_name);
-						return css_name ~ "-" ~ hash;
+						"@bind": [classof RenderDriver, controller.model_path]
 					}
-				);
-				
-				string s2 = rs::join(" ", s1);
-				return s2;
-			}
-		);
+				)
+				.c(controller.content)
+				.r()
+			;
+			element.p();
+		}
 		
-		string name = rs::join(" ", arr);
-		return name;
+		/* Render css */
+		if (this.css_elem != null)
+		{
+			this.new_css = this.getCSS();
+			if (this.new_css != this.old_css)
+			{
+				if (this.css_elem.textContent != this.new_css) this.css_elem.textContent = this.new_css;
+			}
+			this.old_css = this.new_css;
+		}
+		
+		this.animation_id = null;
 	}
-
+	
+	
+	
+	/**
+	 * Retuns css hash
+	 * @param string component class name
+	 * @return string hash
+	 */
+	static memorize string hash(string s)
+	{
+		string r = "";
+		string a = "1234567890abcdef";
+		int sz = rs::strlen(s);
+		int h = 0;
+		for (int i=0; i<sz; i++)
+		{
+			int c = rs::ord( rs::substr(s, i, 1) );
+			h = ((h << 2) + (h >> 14) + c) & 65535;
+		}
+		int p = 0;
+		while (h != 0 or p < 4)
+		{
+			int c = h & 15;
+			h = h >> 4;
+			r ~= rs::substr(a, c, 1);
+			p = p + 1;
+		}
+		return r;
+	}
+	
 	
 	
 	/**
 	 * Returns css hash
 	 */
-	pure memorize string getCssHashes(string class_name)
+	pure memorize string getCssHash(string class_name)
 	{
-		Collection<string> class_names = RuntimeUtils::getParents(class_name);
-		class_names = class_names.filter
+		Collection<string> names = rtl::getParents(class_name)
+			|> .filter
+			(
+				bool (string class_name) =>
+					class_name != "Runtime.BaseObject" and
+					class_name != "Runtime.Core.CoreObject" and
+					class_name != "Runtime.Web.Component"
+			)
+			|> .map
+			(
+				string (string class_name) => "h-" ~ static::hash(class_name)
+			)
+		;
+		return rs::join(" ", names);
+	}
+	
+	
+	
+	/**
+	 * Returns css from components
+	 */
+	pure memorize string getCSSFromComponents(Collection components, Dict css_vars)
+	{
+		if (components == null) return "";
+		
+		/* Extend component */
+		components = static::getRequiredComponents(components);
+		
+		/* Get css */
+		Collection arr = components.map
 		(
-			bool (string class_name) =>
-				class_name != "Runtime.BaseObject" and
-				class_name != "Runtime.Core.CoreObject" and
-				class_name != "Runtime.Web.Component"
+			string (string component_name) use (css_vars)
+			{
+				if (not rtl::method_exists(component_name, "css")) return "";
+				fn f = rtl::method(component_name, "css");
+				string css = f(css_vars);
+				return css;
+			}
 		);
-		class_names = class_names.map
-		(
-			string (string class_name) => "h-" ~ static::getCssHash(class_name)
-		);
-		return rs::join(" ", class_names);
+		
+		string css = rs::join("", arr);
+		return css;
 	}
 	
 	
@@ -1005,7 +325,7 @@ class RenderDriver extends BaseDriver
 			string class_name = components.item(i);
 			if (cache.get(class_name, false) == false)
 			{
-				cache.set(class_name, true);
+				cache.setValue(class_name, true);
 				if (rtl::method_exists(class_name, "components"))
 				{
 					fn f = rtl::method(class_name, "components");
@@ -1032,596 +352,7 @@ class RenderDriver extends BaseDriver
 		Vector<string> res = new Vector();
 		Map<string> cache = new Map();
 		static::_getRequiredComponents(res, cache, components);
-		res = res.removeDublicatesIm();
+		res = res.removeDuplicatesIm();
 		return res.toCollection();
 	}
-	
-	
-	
-	/**
-	 * Returns css string
-	 * @param Collection<string> components
-	 * @param Dict<string> css_vars
-	 * @return string
-	 */
-	pure memorize string getCSSFromComponents(Collection<string> components, Dict<string> css_vars)
-	{
-		Vector<string> res = new Vector();
-		if (components != null)
-		{
-			for (int i=0; i<components.count(); i++)
-			{
-				string component_name = components.item(i);
-				if (rtl::method_exists(component_name, "css"))
-				{
-					fn f = rtl::method(component_name, "css");
-					string css = f(css_vars);
-					if (not rtl::isEmpty(css)) res.pushValue(css);
-				}
-			}
-		}
-		string s = res.reduce( string (string res, string s) => res ~ s, "" );
-		return s;
-	}
-	
-}
-
-
-#ifcode JAVASCRIPT then
-window["RenderDriver"] = Runtime.Web.RenderDriver;
-
-
-Object.assign(Runtime.Web.RenderDriver.prototype,
-{
-	
-	/**
-	 * Find listeners
-	 */
-	findListeners: function (path_id)
-	{
-		var arr = [];
-		var ctx = globalContext;
-		for (var i=0; i<this.manager.listeners.count(); i++)
-		{
-			var listener = this.manager.listeners[i];
-			var from = listener.get(ctx, "from");
-			if (from.indexOf(path_id) == 0) arr.push(listener);
-		}
-		return Runtime.Collection.from(arr);
-	},
-	
-	
-	
-	/**
-	 * Find objects by path
-	 */
-	findObjects: function (path_id)
-	{
-		var arr = [];
-		var ctx = globalContext;
-		var keys = this.manager.objects.keys(ctx);
-		for (var i=0; i<keys.count(); i++)
-		{
-			var key = keys[i];
-			var object = this.manager.objects.get(ctx, key);
-			if (object.path_id != undefined && object.path_id.indexOf(path_id) == 0) arr.push(object);
-		}
-		return Runtime.Collection.from(arr);
-	},
-	
-	
-	
-	/**
-	 * Returns object
-	 */
-	getObject: function (path_id)
-	{
-		var ctx = globalContext;
-		return this.manager.objects.get(ctx, path_id);
-	},
-	
-});
-
-
-Object.assign(Runtime.Web.RenderDriver,
-{
-	
-	
-	/**
-	 * Returns true if is elem
-	 */
-	isElem(o)
-	{
-		if (o instanceof HTMLElement || o instanceof Node) return true;
-		return false;
-	},
-	
-	
-	
-	/**
-	 * Return HTML elems from string
-	 */
-	createElementFromHTML(s)
-	{
-		var res = [];
-		var e = document.createElement('div');
-		e.innerHTML = s.trim();
-		for (var i = 0; i < e.childNodes.length; i++) res.push( e.childNodes[i] );
-		return res;
-	},
-	
-	
-	
-	/**
-	 * Decode html entities
-	 */
-	decodeHtmlEntities(s)
-	{
-		var e = document.createElement('textarea');
-		e.innerHTML = s;
-		return e.value;
-	},
-	
-	
-	
-	/**
-	 * Returns elem by index
-	 */
-	getElemChild: function(parent_elem, index)
-	{
-		if (index < 0 || index >= parent_elem.childNodes.length) return null;
-		return parent_elem.childNodes[index];
-	},
-	
-	
-	
-	/**
-	 * Returns previous element
-	 */
-	getPreviousElement: function(elem)
-	{
-		var previous = null;
-		var parent_elem = elem.parentElement;
-		for (var i = 0; i < parent_elem.childNodes.length; i++)
-		{
-			var e = parent_elem.childNodes[i];
-			if (e == elem)
-			{
-				return previous;
-			}
-			previous = e;
-		}
-		return null;
-	},
-	
-	
-	
-	/**
-	 * Find elem pos by virtual path
-	 */
-	findElemPosByPath: function(parent_elem, path)
-	{
-		for (var i = 0; i < parent_elem.childNodes.length; i++)
-		{
-			var e = parent_elem.childNodes[i];
-			if (e._path_id == path)
-			{
-				return i;
-			}
-		}
-		return -1;
-	},
-	
-	
-	
-	/**
-	 * Find elem by virtual path
-	 */
-	findElemByPath: function(parent_elem, path_id, kind)
-	{
-		var pos = this.findElemPosByPath(parent_elem, path_id);
-		return this.getElemChild(parent_elem, pos);
-	},
-	
-	
-	
-	/**
-	 * Find elem by virtual path and check
-	 */
-	findElemByPathAndCheck: function(parent_elem, path_id, kind)
-	{
-		var pos = this.findElemPosByPath(parent_elem, path_id);
-		var elem_new = this.getElemChild(parent_elem, pos);
-		
-		/* Check element */
-		if (elem_new != null)
-		{
-			if (kind == "element")
-			{
-				if (elem_new.tagName == undefined)
-				{
-					elem_new = null;
-				}
-			}
-		}
-		
-		return elem_new;
-	},
-	
-	
-	
-	/**
-	 * Build Virtual Path
-	 */
-	buildPath: function(control, params, index)
-	{
-		var key = ""; var elem_name = "";
-		if (params != null)
-		{
-			if (params["@key"] != undefined) key = params["@key"];
-			if (params["@elem_name"] != undefined) elem_name = params["@elem_name"];
-		}
-		if (key == "")
-		{
-			key = (elem_name != "") ? (elem_name + "-" + index) : index;
-		}
-		var path_id = control.path_id;
-		return "" + path_id + ((path_id != "") ? "." : "") + key;
-	},
-	
-	
-	
-	/**
-	 * Normalize childs
-	 */
-	_normalizeChilds: function(res, childs)
-	{
-		for (var i=0; i<childs.length; i++)
-		{
-			var item = childs[i];
-			if (item instanceof Array)
-			{
-				res = this._normalizeChilds(res, item);
-			}
-			else
-			{
-				res.push(item);
-			}
-		}
-		return res;
-	},
-	
-	
-	
-	/**
-	 * Normalize content
-	 */
-	normalizeContent: function(content, control)
-	{
-		if (content == null) return null;
-		if (typeof content == "function" || content instanceof Function) content = content(control);
-		if (this.isElem(content)) return content;
-		if (content instanceof Array)
-		{
-			var new_content = [];
-			for (var i=0; i<content.length; i++)
-			{
-				var item = this.normalizeContent(content[i], control);
-				if (item != null) new_content.push(item);
-			}
-			
-			var res = [];
-			this._normalizeChilds(res, new_content);
-			
-			return Runtime.Collection.from(res);
-		}
-		
-		return content;
-	},
-	
-	
-	
-	/**
-	 * Element
-	 */
-	e: function (control, childs, type, obj)
-	{
-		var index = childs.length;
-		var new_control = null;
-		var parent_elem = control.parent_elem;
-		var name = (obj != null) ? obj.name : "";
-		var attrs = (obj != null && obj.attrs != null && obj.attrs != undefined) ? obj.attrs : null;
-		var content = (obj != null && obj.content != null && obj.content != undefined) ? obj.content : null;
-		var path_id = this.buildPath(control, attrs, index);
-		var driver = control.driver;
-		var ctx = control.ctx;
-		
-		/* Normalize content */
-		if (content != null && typeof content == "function")
-		{
-			content = this.normalizeContent(content, control);
-		}
-		
-		if (type == 'component')
-		{
-			var model = null;
-			var model_path = null;
-			var created = false;
-			
-			/* Find class */
-			var class_obj = use(name);
-			if (class_obj == undefined)
-			{
-				throw new Error("Component " + name + " not found");
-			}
-			
-			/* Find component */
-			var component = driver.getComponent(ctx, path_id, name);
-			if (component == null)
-			{
-				/* Create component */
-				component = new class_obj(ctx, path_id);
-				component.driver = control.driver;
-				driver.saveComponent(ctx, component);
-				created = true;
-			}
-			
-			/* Find model */
-			if (attrs != null && attrs["@bind"] != undefined)
-			{
-				model_path = driver.getBindModelPath(ctx, path_id, attrs["@bind"]);
-			}
-			if (attrs != null && attrs["@name"] != undefined)
-			{
-				model_path = driver.getBindModelPath(ctx, path_id, attrs["@name"]);
-			}
-			
-			/* Get model */
-			if (model_path != null)
-			{
-				model = Runtime.rtl.attr(ctx, driver.model, model_path, null);
-				attrs["model"] = model;
-			}
-			
-			/* Create new control */
-			new_control = control.copy(ctx, {
-				"type": type,
-				"index": index,
-				"path_id": path_id,
-				"component": component,
-				"model": model,
-			});
-			
-			/* Render optimization */
-			/*
-			if (!created)
-			{
-				if (this.equalAttrs(component.old_attrs, attrs) && component.old_model == model)
-				{
-					childs.push( component.elements.slice() );
-					return [new_control, childs];
-				}
-			}
-			*/
-			
-			/* Get dict attrs */
-			var dict_attrs = Runtime.Dict.from(attrs);
-			
-			/* Set new model */
-			component.setParams(ctx, dict_attrs);
-			component.setModelPath(ctx, model_path);
-			component.setParent(ctx, control.component);
-			component.old_attrs = attrs;
-			component.old_model = model;
-			
-			/* Set reference */
-			if (attrs != null && attrs["@ref"] != undefined)
-			{
-				driver.setReference(ctx, component.path_id, attrs["@ref"], component);
-			}
-			if (attrs != null && attrs["@name"] != undefined)
-			{
-				driver.setReference(ctx, component.path_id, attrs["@name"], component);
-			}
-			
-			if (!component.isRepaintOverridden(ctx, new_control))
-			{
-				/* Render component */
-				var render = class_obj.render.bind(class_obj);
-				var res = render
-				(
-					ctx, driver.layout, model, dict_attrs, content
-				);
-				
-				/* Call result */
-				if (res != null && typeof res == "function") res = res(new_control);
-				
-				/* Normalize content */
-				res = this.normalizeContent(res, new_control);
-				
-				/* Add childs */
-				childs = childs.slice();
-				if (res != null) childs.push(res);
-				
-				/* Set childs */
-				component.elements = childs;
-			}
-			else
-			{
-				/* Render component */
-				var res = component.repaint(ctx, driver.layout, model, dict_attrs, content, new_control, created);
-				
-				/* Call result */
-				if (res != null && typeof res == "function") res = res(new_control);
-				
-				/* Normalize content */
-				res = this.normalizeContent(res, new_control);
-				
-				/* Add childs */
-				childs = childs.slice();
-				if (res != null) childs.push(res);
-			}
-			
-			driver.updateComponent(ctx, new_control, component, created);
-			driver.bindEvents(ctx, new_control, component, attrs, created);
-		}
-		
-		else if (type == 'element')
-		{
-			var elem_new = this.findElemByPathAndCheck(parent_elem, path_id, type);
-			var is_new_elem = false;
-			
-			/* Create new element */
-			if (elem_new == null)
-			{
-				elem_new = document.createElement(name);
-				is_new_elem = true;
-				
-				var test_e = this.findElemByPathAndCheck(parent_elem, path_id, type);
-				/*console.log(elem_new);*/
-			}
-			
-			/* Create new control */
-			new_control = control.copy(ctx, {
-				"type": type,
-				"index": index,
-				"path_id": path_id,
-				"parent_elem": elem_new,
-				"is_new_elem": is_new_elem,
-			});
-			
-			/* Update element params */
-			elem_new._attrs = attrs;
-			elem_new._path_id = path_id;
-			elem_new._component = control.component;
-			elem_new.params = Runtime.Dict.from(attrs);
-			
-			/* Update element params */
-			driver.updateElemParams(ctx, new_control, elem_new);
-			
-			/* Add childs */
-			childs = childs.slice();
-			childs.push(elem_new);
-		}
-		
-		else if (this.isElem(content))
-		{
-			childs = childs.slice();
-			childs.push(content);
-		}
-		else if (content instanceof Array)
-		{
-			childs = childs.slice();
-			childs.push(content);
-		}
-		else if (typeof content == "function" || content instanceof Function)
-		{
-			childs = childs.slice();
-			
-			/* Create new control */
-			new_control = control.copy(ctx, {
-				"type": type,
-				"index": index,
-				"path": path_id,
-			});
-			content = this.normalizeContent(content, new_control);
-			childs.push(content);
-		}
-		
-		else if (type == 'raw')
-		{
-			/* To string */
-			content = Runtime.rtl.toStr(content);
-			
-			/* Create new element */
-			var elem_new = this.createElementFromHTML(content);
-			
-			/* Add childs */
-			childs = childs.slice();
-			childs.push(elem_new);
-		}
-		
-		else if (type == 'text')
-		{
-			/* To string */
-			content = Runtime.rtl.toStr(content);
-			content = this.decodeHtmlEntities(content);
-			
-			var elem_new = this.findElemByPathAndCheck(parent_elem, path_id, type);
-			
-			/* Create new element */
-			if (elem_new == null)
-			{
-				elem_new = document.createTextNode(content);
-			}
-			else
-			{
-				if (elem_new.nodeValue != content)
-				{
-					elem_new.nodeValue = content;
-				}
-			}
-			
-			/* Set elem path */
-			elem_new._path_id = path_id;
-			
-			/* Add childs */
-			childs = childs.slice();
-			childs.push(elem_new);
-		}
-		
-		else if (type == 'html')
-		{
-			
-		}
-		
-		else if (type == 'empty')
-		{
-			new_control = control;
-		}
-		
-		return [new_control, childs];
-	},
-	
-	
-	
-	/**
-	 * Patch childs of the control
-	 */
-	p: function (control, childs)
-	{
-		if (control.type == "empty")
-		{
-			return;
-		}
-		
-		var driver = control.driver;
-		var ctx = control.ctx;
-		
-		/* Normalize content */
-		var childs = this.normalizeContent(childs, control);
-		
-		/* Patch element */
-		driver.patchElemChilds(ctx, control.parent_elem, childs);
-		
-		/* Patch element params */
-		/* driver.updateElemParams(ctx, control, control.parent_elem); */
-	},
-	
-	
-	
-	/**
-	 * Nodes to Array
-	 */
-	nodesArray: function(nodes)
-	{
-		var arr = [];
-		for (var i=0; i<nodes.length; i++)
-		{
-			arr.push(nodes[i]);
-		}
-		return arr;
-	}
-
-});
-#endif
+} 

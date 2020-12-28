@@ -1,0 +1,230 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.BaseObject;
+use Runtime.Web.Component;
+use Runtime.Web.Controller;
+use Runtime.Web.Element;
+
+
+class Controller extends BaseObject
+{
+	var driver = null;
+	string class_name = "";
+	Collection model_path = null;
+	Dict params = null;
+	var content = null;
+	var parent_elem = null;
+	
+	/* Render state */
+	Vector remove_keys = null;
+	Map<Component> components = new Map<Component>();
+	Map<bool> listen_events = new Map();
+	
+	
+	
+	/**
+	 * Find element
+	 */
+	int findElementPos(var parent_elem, Collection path_id, string kind, string elem_name)
+	{
+		string path_id_str = rs::join(".", path_id);
+		for (var i = 0; i < parent_elem.childNodes.length; i++)
+		{
+			var e = parent_elem.childNodes[i];
+			if (e._path_id_str == path_id_str and e.tagName == rs::strtoupper(elem_name))
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	
+	
+	/**
+	 * Find element
+	 */
+	var findElement(var parent_elem, Collection path_id, string kind, string elem_name)
+	{
+		int pos = this.findElementPos(parent_elem, path_id, kind, elem_name);
+		return (pos != -1) ? parent_elem.childNodes[pos] : null;
+	}
+	
+	
+	
+	/**
+	 * Add component
+	 */
+	void addComponent(Component c)
+	{
+		string path_id = rs::join(".", c.path_id);
+		this.components.setValue(path_id, c);
+	}
+	
+	
+	
+	/**
+	 * Find component
+	 */
+	Component findComponent(Collection path_id, string elem_name)
+	{
+		Component c = this.components[path_id];
+		if (rtl::is_instanceof(c, elem_name)) return c;
+		return null;
+	}
+	
+	
+	
+	/**
+	 * Patch DOM with new childs
+	 */
+	public void patchElemChilds(var parent_elem, var new_childs)
+	{
+		#ifcode JAVASCRIPT then
+		if (new_childs == null) new_childs = [];
+		
+		var findElementPos = function (elem, e)
+		{
+			var childs = elem.childNodes;
+			for (var i = 0; i < elem.childNodes.length; i++)
+			{
+				if (childs[i] == e)
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+		
+		var insertFirst = function (elem, e)
+		{
+			if (elem.childNodes.length == 0)
+			{
+				elem.appendChild(e);
+			}
+			else
+			{
+				elem.insertBefore(e, elem.firstChild);
+			}
+		}
+		
+		var insertAfter = function (elem, prev, e)
+		{
+			if (prev == null)
+			{
+				insertFirst(elem, e);
+				return;
+			}
+			var next = prev.nextSibling;
+			if (next == null)
+			{
+				elem.appendChild(e);
+			}
+			else
+			{
+				elem.insertBefore(e, next);
+			}
+		}
+		
+		
+		/* Remove elems */
+		var i = parent_elem.childNodes.length - 1;
+		while (i >= 0)
+		{
+			var e = parent_elem.childNodes[i];
+			if (new_childs.indexOf(e) == -1)
+			{
+				parent_elem.removeChild(e);
+				if (e._path_id != undefined)
+				{
+					this.remove_keys.pushValue(null, e._path_id);
+				}
+				/* console.log('Remove child ', i); */
+			}
+			i--;
+		}
+		
+		
+		var prevElem = null;
+		for (var i=0; i<new_childs.length; i++)
+		{
+			var new_e = new_childs[i];
+			if (typeof new_e == "string")
+			{
+				new_e = document.createTextNode(new_e);
+			}
+			
+			var pos = findElementPos(parent_elem, new_e);
+			var flag = false;
+			
+			/* If new element */
+			if (pos == -1)
+			{
+				if (prevElem == null)
+				{
+					insertFirst(parent_elem, new_e);
+					flag = true;
+					/* console.log('Insert first ', i); */
+				}
+				else
+				{
+					insertAfter(parent_elem, prevElem, new_e);
+					flag = true;
+					/* console.log('Insert after[1] ', i); */
+				}
+			}
+			
+			/* If existing element */
+			else
+			{
+				if (pos - 1 < 0)
+				{
+					if (i != 0)
+					{
+						insertAfter(parent_elem, prevElem, new_e);
+						flag = true;
+						/* console.log('Insert after[2] ', i); */
+					}
+				}
+				else
+				{
+					var prevSibling = parent_elem.childNodes[pos - 1];
+					if (prevElem != prevSibling)
+					{
+						insertAfter(parent_elem, prevElem, new_e);
+						flag = true;
+						/* console.log('Insert after[3] ', i); */
+					}
+				}
+			}
+			/*
+			if (flag)
+			{
+				var index = this.remove_keys.indexOf(null, new_e._path_id);
+				if (index != -1)
+					this.remove_keys.remove(null, index, 1);
+			}
+			*/
+			prevElem = new_e;
+		}
+		#endif
+	}
+} 

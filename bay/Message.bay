@@ -19,28 +19,13 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
-use Runtime.BaseStruct;
 use Runtime.Web.Events.BaseEvent;
 
 
 class Message<BaseEvent> extends BaseObject
 {
-	protected var sender = null;
-	protected string from = "";
-	protected string message_id = "";
-	protected bool is_cancel = false;
-	protected BaseEvent data = null;
-	public Map tags = new Map();
-	
-	
-	/**
-	 * Read property
-	 */
-	string getMessageID() => this.message_id;
-	string getFrom() => this.from;
-	string isCancel() => this.is_cancel;
-	BaseEvent getData() => this.data;
-	
+	public BaseEvent data = null;
+	public bool is_cancel = false;
 	
 	
 	/**
@@ -62,15 +47,10 @@ class Message<BaseEvent> extends BaseObject
 	/** 
 	 * Constructor
 	 */
-	public void constructor(BaseEvent data, string from = "", string message_id = "")
+	public void constructor(BaseEvent data)
 	{
 		parent();
-		
-		/* Set property */
 		this.data = data;
-		this.from = from;
-		this.message_id = (message_id != "") ? message_id : rtl::unique();
-		this.tags = new Map();
 	}
 	
 }

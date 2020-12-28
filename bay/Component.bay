@@ -20,238 +20,31 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
-use Runtime.RuntimeUtils;
-use Runtime.Web.Control;
+use Runtime.Web.Events.BaseEvent;
+use Runtime.Web.Controller;
+use Runtime.Web.Element;
 use Runtime.Web.Message;
 use Runtime.Web.RenderDriver;
-use Runtime.Web.Events.BaseEvent;
 
 
 class Component extends BaseObject
 {
-	protected string path_id = "";
-	protected RenderDriver driver = null;
-	protected Dict params = null;
-	protected Collection<string> model_path = [];
-	protected var old_model = null;
-	protected var elements = null;
-	protected var manager = null;
-	protected Vector<var> childs = null;
-	protected var parent = null;
+	RenderDriver driver = null;
+	Map old_params = null;
+	Map params = null;
+	var old_model = null;
+	var new_model = null;
+	Collection child_nodes = null;
+	Collection model_path = null;
+	Collection path_id = null;
 	
 	
 	/**
-	 * Component returns object name
+	 * Returns true if need to repaint component
 	 */
-	string getPath() => this.path_id;
-	string getObjectName() => this.path_id;
-	
-	
-	
-	/**
-	 * Constructor
-	 */
-	void constructor(string path_id, RenderDriver driver)
+	bool isRepaint()
 	{
-		parent();
-		this.path_id = path_id;
-		this.driver = driver;
-		this.childs = new Vector<var>();
-	}
-	
-	
-	
-	/**
-	 * Set parent
-	 */
-	void setParent(Component parent_obj)
-	{
-		this.manager.changeParent(this, parent_obj);
-	}
-	
-	
-	
-	/**
-	 * Returns model path
-	 */
-	public Collection<string> getModelPath() => this.model_path;
-	
-	
-	
-	/**
-	 * Set new component's model
-	 */
-	public void setModelPath(Collection<string> model_path)
-	{
-		this.model_path = model_path;
-	}
-	
-	
-	
-	/**
-	 * Returns component params
-	 */
-	public Dict getParams() => this.params;
-	
-	
-	
-	/**
-	 * Set new params
-	 */
-	public void setParams(Dict params)
-	{
-		this.onChangeParams(this.params, params);
-		this.params = params;
-	}
-	
-	
-	
-	/**
-	 * Returns model
-	 */
-	var model(Collection<string> model_path = null, var def_val = null) =>
-		this.model_path == null ? null :
-			rtl::attr
-			(
-				this.driver.model,
-				this.model_path.concat
-				(
-					(rtl::isEmpty(model_path)) ? null :
-					(model_path instanceof Collection) ? model_path : [ model_path ]
-				),
-				def_val
-			)
-	;
-	
-	
-	
-	/**
-	 * Call model function
-	 */
-	void call(string method_name = "")
-	{
-		var args = new Vector();
-		#ifcode JAVASCRIPT then
-		for (var i=2; i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
-		#endif
-		
-		/* Result */
-		var res = null;
-		
-		/* Get current model */
-		BaseStruct model = this.model();
-		
-		/* Change model by function */
-		if (rtl::method_exists(model, method_name))
-		{
-			fn f = rtl::method(model, method_name);
-			res = rtl::apply(f, args);
-		}
-		
-		if (rtl::method_exists(model.getClassName(), method_name))
-		{
-			args.unshiftValue(model);
-			fn f = rtl::method(model.getClassName(), method_name);
-			res = rtl::apply(f, args);
-		}
-		
-		return res;
-	}
-	
-	
-	
-	/**
-	 * Update model
-	 */
-	void update(string method_name = "")
-	{
-		#ifcode JAVASCRIPT then
-		this.updateModel.apply(this, arguments);
-		#endif
-	}
-	
-	
-	
-	/**
-	 * Update model
-	 */
-	void updateModel(string method_name = "")
-	{
-		var args = new Vector();
-		#ifcode JAVASCRIPT then
-		for (var i=2; i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
-		#endif
-		
-		/* Get current model */
-		BaseStruct model = this.model();
-		
-		/* Change model by function */
-		if (rtl::method_exists(model, method_name))
-		{
-			fn f = rtl::method(model, method_name);
-			model = rtl::apply(f, args);
-		}
-		
-		if (rtl::method_exists(model.getClassName(), method_name))
-		{
-			args.unshiftValue(model);
-			fn f = rtl::method(model.getClassName(), method_name);
-			model = rtl::apply(f, args);
-		}
-		
-		/* Set new model */
-		this.driver.updateModel(this.model_path, model);
-	}
-	
-	
-	
-	/**
-	 * Set new model
-	 */
-	void setModel(var model)
-	{
-		this.driver.updateModel(this.model_path, model);
-	}
-	
-	
-	
-	/**
-	 * Handle message
-	 */
-	public async void handleMessage(Message msg)
-	{
-	}
-	
-	
-	
-	/**
-	 * Send event
-	 */
-	public async void sendEvent(BaseEvent event)
-	{
-		Message msg = new Message(event, this.getObjectName());
-		msg.sender = this;
-		await @.handleMessage(msg);
-	}
-	public async void signal(BaseEvent event) => this.sendEvent(event);
-	
-	
-	
-	/**
-	 * Change params
-	 */
-	public void onChangeParams(Dict old_params, Dict new_params)
-	{
-	}
-	
-	
-	
-	/**
-	 * Returns true if repaint overrided
-	 */
-	public bool isRepaintOverridden()
-	{
-		return false;
+		return this.new_model != this.old_model;
 	}
 	
 	
@@ -259,78 +52,32 @@ class Component extends BaseObject
 	/**
 	 * Repaint component
 	 */
-	public Collection<var> repaint
-	(
-		BaseStruct layout, BaseStruct model, Dict params, html content,
-		Control control, bool created
-	)
+	void repaint(Element element)
 	{
-		return [];
+		if (this.isRepaint())
+		{
+			int begin = element.childs.count();
+			fn f = static::render
+			(
+				element.driver.layout, this.new_model,
+				this.params, element.content
+			);
+			if (f != null) f(element);
+			int end = element.childs.count();
+			this.child_nodes = element.childs.slice(begin, end - begin).toCollection();
+		}
+		else
+		{
+			element.childs.appendVector(this.child_nodes);
+		}
 	}
 	
 	
 	
 	/**
-	 * Update component
+	 * Render function
 	 */
-	public void updateComponent(Control control, bool created)
-	{
-		if (created) this.onCreated();
-		else this.onUpdated();
-		this.onRender(created);
-	}
-	
-	
-	
-	/**
-	 * On component created
-	 */
-	public void onCreated()
-	{
-	}
-	
-	
-	
-	/**
-	 * On component updated
-	 */
-	public void onUpdated()
-	{
-	}
-	
-	
-	
-	/**
-	 * On render
-	 */
-	public void onRender(bool created)
-	{
-	}
-	
-	
-	
-	/**
-	 * Component css
-	 */
-	pure string css(Dict<string> vars) => "";
-	
-	
-	
-	/**
-	 * Component render
-	 */
-	pure html render(BaseStruct layout, BaseStruct model, Dict params, html content) => null;
-	
-	
-	
-	/**
-	 * Returns css name
-	 */
-	pure string getCssName(string css_name)
-	{
-		string class_name = static::getCurrentClassName();
-		return RenderDriver::getCssName(class_name, css_name);
-	}
+	pure void render(BaseStruct layout, BaseStruct model, Dict params, html content) => null;
 	
 	
 	
@@ -340,104 +87,6 @@ class Component extends BaseObject
 	pure string getCssHash()
 	{
 		string class_name = static::getCurrentClassName();
-		return RenderDriver::getCssHashes(class_name);
+		return RenderDriver::getCssHash(class_name);
 	}
-	
-	
-	
-	/**
-	 * Escape attr
-	 */
-	pure string escapeAttr(var s)
-	{
-		if (s instanceof Dict) s = s.reduce
-		(
-			string (string s, string val, string key) => s ~ key ~ ":" ~ val ~ ";",
-			""
-		);
-		return rs::escapeHtml(s);
-	}
-	
-	
-	
-	/**
-	 * Escape html
-	 */
-	pure string escapeHtml(var s)
-	{
-		#switch
-		#case ifcode PHP then
-		if (gettype($s) == "array") return $s;
-		if ($s instanceof \Runtime\RawString) return $s;
-		#endswitch
-		if (rtl::isString(s)) return rs::escapeHtml(s);
-		if (s instanceof Collection) return rs::join("", s);
-		return rs::escapeHtml( rtl::toString(s) );
-	}
-	
-	
-	
-	/**
-	 * Json encode
-	 */
-	pure string json_encode(var obj)
-	{
-		return RuntimeUtils::json_encode(obj);
-	}
-	
-	
-	
-	/**
-	 * To html
-	 */
-	pure string toHtml(var s)
-	{
-		if (rtl::isString(s)) return s;
-		if (s instanceof Collection) return rs::join("", s);
-		return rtl::toString(s);
-	}
-	
-	
-	
-	/**
-	 * Join attrs to string
-	 */
-	pure string joinAttrs(Dict attrs) =>
-		rtl::exists(attrs) ?
-			rs::join
-			(
-				" ",
-				attrs.map( string (string k, string v) => k ~ "= '" ~ static::escapeAttr(v) ~ "'" )
-			) : ""
-	;
-	
-	
-	
-	/**
-	 * Merge attrs
-	 */
-	pure Dict mergeAttrs(Dict res, Dict attr2)
-	{
-		if (not rtl::exists(attr2)) return res;
-		#ifcode JAVASCRIPT then
-		return Object.assign(res, attr2.toObject());
-		#endif
-		return res;
-	}
-	
-	
-	
-	#ifcode PHP then
-	static function p(&$arr1, $s)
-	{
-		if (gettype($s) == "string" || $s instanceof \Runtime\RawString)
-		{
-			$arr1[] = $s;
-		}
-		if (gettype($s) == "array")
-		{
-			foreach ($s as $v) $arr1[] = $v;
-		}
-	}
-	#endif
-}
+} 

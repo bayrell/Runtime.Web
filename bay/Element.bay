@@ -1,0 +1,410 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.BaseObject;
+use Runtime.BaseStruct;
+use Runtime.Web.Events.WebEvent;
+use Runtime.Web.Component;
+use Runtime.Web.Message;
+use Runtime.Web.RenderDriver;
+
+
+class Element extends BaseObject
+{
+	var component = null;
+	var controller = null;
+	var driver = null;
+	string kind = "";
+	Collection model_path = null;
+	Collection path_id = null;
+	var parent = null;
+	var parent_elem = null;
+	var childs = new Vector();
+	var attrs = new Map();
+	var content = null;
+	bool is_new_element = false;
+	var node = null;
+	string elem_name = "";
+	
+	
+	
+	/**
+	 * Build path id
+	 */
+	static Collection buildPath(Collection path_id, Dict attrs, int pos)
+	{
+		string key = attrs["@key"] |> default string "";
+		string elem_name = attrs["@elem_name"] |> default string "";
+		if (rtl::isEmpty(key)) key = (elem_name != "") ? (elem_name ~ "-" ~ pos) : pos;
+		return path_id.pushIm(key);
+	}
+	
+	
+	
+	/**
+	 * Create copy
+	 */
+	Element copy()
+	{
+		Element e = new Element();
+		e.component = this.component;
+		e.controller = this.controller;
+		e.driver = this.driver;
+		e.model_path = this.model_path;
+		e.path_id = this.path_id;
+		e.parent_elem = this.parent_elem;
+		return e;
+	}
+	
+	
+	
+	/**
+	 * Create new element
+	 */
+	Element e(string kind, string elem_name)
+	{
+		/* Create new element */
+		Element e = this.copy();
+		e.parent = this;
+		e.kind = kind;
+		e.elem_name = elem_name;
+		
+		/* Push element */
+		this.childs.pushValue(e);
+		
+		/* Return */
+		return e;
+	}
+	
+	
+	
+	/**
+	 * Set attribute
+	 */
+	Element a(var obj)
+	{
+		this.attrs = this.attrs.concat(obj);
+		return this;
+	}
+	
+	
+	
+	/**
+	 * Set content function
+	 */
+	Element c(var content)
+	{
+		this.content = content;
+		return this;
+	}
+	
+	
+	
+	/**
+	 * Render element
+	 */
+	Element r()
+	{
+		/* Node elem */
+		var node = null;
+		
+		/* Build path id */
+		this.path_id = static::buildPath(this.parent.path_id, this.attrs, this.parent.childs.count() - 1);
+		
+		if (this.kind == "element")
+		{
+			node = this.controller.findElement(this.parent_elem, this.path_id, "element", this.elem_name);
+			if (node == null)
+			{
+				if (this.elem_name == "svg")
+				{
+					node = document.@createElementNS("http://www.w3.org/2000/svg", "svg")
+				}
+				else
+				{
+					node = document.@createElement(this.elem_name);
+				}
+				this.is_new_element = true;
+			}
+			
+			/* Set node params */
+			node._path_id = this.path_id;
+			node._path_id_str = rs::join(".", this.path_id);
+			
+			/* Set parent element */
+			this.parent_elem = node;
+			
+			/* Svg */
+			if (this.elem_name == "svg")
+			{
+				var e = document.@createElement('div');
+				e.innerHTML = "<svg>" ~ this.content ~ "</svg>";
+				var item = e.childNodes[0];
+				while (item.childNodes.length > 0)
+				{
+					var e = item.childNodes[0];
+					node.appendChild(e);
+				}
+			}
+		}
+		else if (this.kind == "component")
+		{
+			node = this.controller.findComponent(this.path_id, this.elem_name);
+			if (node == null)
+			{
+				node = rtl::newInstance(this.elem_name);
+				this.is_new_element = true;
+			}
+			
+			/* Set parent component */
+			node.component = this.component;
+			
+			/* Set component */
+			this.component = node;
+			this.component.path_id = this.path_id;
+			
+			/* Set attrs */
+			this.component.old_params = this.component.attrs;
+			this.component.params = new Map();
+			
+			/* Set model */
+			this.component.old_model = this.component.model;
+			this.component.new_model = this.driver.model(this.model_path);
+			this.component.model_path = this.model_path;
+			
+			/* Add component */
+			this.controller.addComponent(this.component);
+		}
+		else if (this.kind == "text")
+		{
+			node = this.controller.findElement(this.parent_elem, this.path_id, "text", this.elem_name);
+			if (node == null)
+			{
+				node = document.@createTextNode(this.content);
+			}
+			else
+			{
+				if (node.nodeValue != this.content)
+				{
+					node.nodeValue = this.content;
+				}
+			}
+		}
+		else if (this.kind == "raw")
+		{
+			node = static::rawHtml(this.content);
+		}
+		
+		/* Set node */
+		this.node = node;
+		
+		/* Set attributes */
+		Collection keys = this.attrs.keys();
+		for (int i=0; i<keys.count(); i++)
+		{
+			string key = keys[i];
+			string value = this.attrs[key];
+			
+			/* Check if event */
+			bool is_event = false;
+			string event_class_name = "";
+			if (rs::substr(key, 0, 7) == "@event:")
+			{
+				is_event = true;
+				event_class_name = rs::substr(7);
+			}
+			if (rs::substr(0, 12) == "@eventAsync:")
+			{
+				is_event = true;
+				event_class_name = key.substr(12);
+			}
+			if (is_event and this.is_new_element)
+			{
+				if (this.kind == "element")
+				{
+					this.node.@addEventListener
+					(
+						event_class_name,
+						static::event(this.component, value)
+					);
+				}
+				else if (this.kind == "component")
+				{
+					this.component.addEventListener
+					(
+						event_class_name,
+						static::event(this.component, value)
+					);
+				}
+			}
+			
+			if (key == "@ref")
+			{
+				this.component[value] = node;
+			}
+			if (key == "@bind"){}
+			if (key == "@name"){}
+			if (key == "value"){}
+			
+			if (key[0] == "@") continue;
+			if (key == "style" and value instanceof Dict)
+			{
+				value = rs::join(";", value.transition(string (string v, string k) => k ~ ": " ~ v));
+			}
+				
+			if (this.kind == "element")
+			{
+				if (this.node.@getAttribute(key) != value)
+				{
+					this.node.@setAttribute(key, value);
+				}
+			}
+			else if (this.kind == "component")
+			{
+				this.component.params.setValue(key, value);
+			}
+		}
+		
+		/* Remove old attributes */
+		if (this.kind == "element")
+		{
+			Dict attr_keys = this.attrs.keys();
+			for (int i=this.node.attributes.length - 1; i>=0; i--)
+			{
+				var attr = this.node.attributes[i];
+				int pos = attr_keys.find
+				(
+					bool (string name) use (attr) => rs::strtolower(name) == rs::strtolower(attr.name)
+				);
+				if (pos == -1)
+				{
+					node.@removeAttribute(attr.name);
+				}
+			}
+		}
+		
+		/* Render */
+		if (this.kind == "component")
+		{
+			this.component.repaint(this);
+		}
+		
+		return this;
+	}
+	
+	
+	
+	/**
+	 * Return child nodes
+	 */
+	Collection getChildNodes()
+	{
+		Vector childs = new Vector();
+		for (int i=0; i<this.childs.count(); i++)
+		{
+			Element e = this.childs[i];
+			if (e.node instanceof Component or e.node == null)
+			{
+				var nodes = e.getChildNodes();
+				childs.appendVector(nodes);
+			}
+			else if (e.node instanceof Collection)
+			{
+				childs.appendVector(e.node);
+			}
+			else
+			{
+				childs.pushValue(e.node);
+			}
+		}
+		return childs.toCollection();
+	}
+	
+	
+	
+	/**
+	 * Patch element childs
+	 */
+	Element p()
+	{
+		Collection new_childs = this.getChildNodes();
+		this.controller.patchElemChilds(this.parent_elem, new_childs);
+		return this;
+	}
+	
+	
+	
+	/**
+	 * Returns true if is elem
+	 */
+	static bool isElem(var o)
+	{
+		if (o instanceof window.HTMLElement or o instanceof window.Node) return true;
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Create raw html
+	 */
+	static Collection rawHtml(string content)
+	{
+		var res = new Vector();
+		var e = document.@createElement('div');
+		e.innerHTML = rs::trim(content)
+		for (var i = 0; i < e.childNodes.length; i++) res.pushValue( e.childNodes[i] );
+		return res.toCollection();
+	}
+	
+	
+	
+	/**
+	 * JS Event
+	 */
+	static fn event(Component component, string method_name) =>
+		async void @(var e) use (component, method_name)
+		{
+			Message msg = null;
+			@ = rtl::getContext();
+			if (e instanceof Message)
+			{
+				msg = e;
+			}
+			else
+			{
+				msg = new Message( WebEvent::fromEvent(e) );
+				msg.sender = e.target;
+			}
+			fn f = rtl::method(component, method_name);
+			try
+			{
+				await f(msg);
+			}
+			catch (var e)
+			{
+				#ifcode JAVASCRIPT then
+				console.log(e.stack);
+				#endif
+			}
+		}
+	;
+	
+}
