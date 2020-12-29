@@ -23,5 +23,8 @@ use Runtime.Web.Events.MouseEvent;
 
 struct MouseContextMenuEvent extends MouseEvent
 {
-	static const string ES6_EVENT_NAME = "contextmenu";
+	/**
+	 * Returns es6 event name
+	 */
+	static string getES6EventName() => "contextmenu";
 }

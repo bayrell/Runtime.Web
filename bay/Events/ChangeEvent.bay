@@ -23,9 +23,13 @@ use Runtime.Web.Events.WebEvent;
 
 struct ChangeEvent extends WebEvent
 {
-	static const string ES6_EVENT_NAME = "change";
 	public string value = "";
 	public string old_value = "";
+	
+	/**
+	 * Returns es6 event name
+	 */
+	static string getES6EventName() => "change";
 	
 	
 	static void assignEventObject(var obj, var e)

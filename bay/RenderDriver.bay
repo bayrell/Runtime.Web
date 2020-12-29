@@ -33,6 +33,7 @@ class RenderDriver extends BaseDriver
 	var animation_id = null;
 	Vector<Map> controllers = new Vector();
 	Collection<Map> components = new Collection();
+	Collection path_id = [];
 	
 	/* CSS */
 	Dict css_vars = {};
@@ -73,6 +74,17 @@ class RenderDriver extends BaseDriver
 	
 	
 	/**
+	 * Update model
+	 */
+	void updateModel(Collection<string> model_path = null, var value = null)
+	{
+		this.layout = rtl::setAttr(this.layout, model_path, value);
+		this.repaint();
+	}
+	
+	
+	
+	/**
 	 * Find controller
 	 */
 	Controller findControllerByElem(var e)
@@ -106,6 +118,7 @@ class RenderDriver extends BaseDriver
 			controller = new Controller();
 			controller.driver = this;
 			controller.parent_elem = e;
+			controller.addComponent(this);
 			this.controllers.pushValue(controller);
 		}
 		
@@ -185,28 +198,7 @@ class RenderDriver extends BaseDriver
 		for (int i=0; i<this.controllers.count(); i++)
 		{
 			Controller controller = this.controllers[i];
-			
-			Element element = new Element();
-			element.controller = controller;
-			element.component = controller.driver;
-			element.driver = controller.driver;
-			element.parent_elem = controller.parent_elem;
-			element.model_path = controller.model_path;
-			element.path_id = [];
-			
-			var component = element
-				.e("component", controller.class_name)
-				.a
-				(
-					controller.params.concat
-					{
-						"@bind": [classof RenderDriver, controller.model_path]
-					}
-				)
-				.c(controller.content)
-				.r()
-			;
-			element.p();
+			controller.render();
 		}
 		
 		/* Render css */

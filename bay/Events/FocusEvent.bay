@@ -23,6 +23,9 @@ use Runtime.Web.Events.WebEvent;
 
 struct FocusEvent extends WebEvent
 {
-	static const string ES6_EVENT_NAME = "focus";
+	/**
+	 * Returns es6 event name
+	 */
+	static string getES6EventName() => "focus";
 }
 

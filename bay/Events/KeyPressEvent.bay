@@ -23,5 +23,8 @@ use Runtime.Web.Events.KeyboardEvent;
 
 struct KeyPressEvent extends KeyboardEvent
 {
-	static const string ES6_EVENT_NAME = "keypress";
+	/**
+	 * Returns es6 event name
+	 */
+	static string getES6EventName() => "keypress";
 }

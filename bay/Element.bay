@@ -145,6 +145,7 @@ class Element extends BaseObject
 			}
 			
 			/* Set node params */
+			node.params = new Map();
 			node._path_id = this.path_id;
 			node._path_id_str = rs::join(".", this.path_id);
 			
@@ -170,6 +171,9 @@ class Element extends BaseObject
 			if (node == null)
 			{
 				node = rtl::newInstance(this.elem_name);
+				node.driver = this.driver;
+				node.controller = this.controller;
+				node.onCreate();
 				this.is_new_element = true;
 			}
 			
@@ -191,6 +195,9 @@ class Element extends BaseObject
 			
 			/* Add component */
 			this.controller.addComponent(this.component);
+			
+			/* On update */
+			node.onUpdate();
 		}
 		else if (this.kind == "text")
 		{
@@ -209,7 +216,7 @@ class Element extends BaseObject
 		}
 		else if (this.kind == "raw")
 		{
-			node = static::rawHtml(this.content);
+			node = this.controller::rawHtml(this.content);
 		}
 		
 		/* Set node */
@@ -228,36 +235,51 @@ class Element extends BaseObject
 			if (rs::substr(key, 0, 7) == "@event:")
 			{
 				is_event = true;
-				event_class_name = rs::substr(7);
+				event_class_name = rs::substr(key, 7);
 			}
 			if (rs::substr(0, 12) == "@eventAsync:")
 			{
 				is_event = true;
-				event_class_name = key.substr(12);
+				event_class_name = rs::substr(key, 12);
 			}
 			if (is_event and this.is_new_element)
 			{
-				if (this.kind == "element")
+				string component_name = value[0] |> default string "";
+				string method_name = value[1] |> default string "";
+				Component component = this.controller.findParentComponent(this.path_id, component_name);
+				if (component)
 				{
-					this.node.@addEventListener
-					(
-						event_class_name,
-						static::event(this.component, value)
-					);
-				}
-				else if (this.kind == "component")
-				{
-					this.component.addEventListener
-					(
-						event_class_name,
-						static::event(this.component, value)
-					);
+					if (this.kind == "element")
+					{
+						string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
+							|> default string ""
+						;
+						if (es6_event_name != "")
+						{
+							this.node.@addEventListener
+							(
+								es6_event_name,
+								this.controller::event(component, method_name)
+							);
+						}
+					}
+					else if (this.kind == "component")
+					{
+						this.component.addEventListener
+						(
+							event_class_name,
+							this.controller::event(component, value)
+						);
+					}
 				}
 			}
 			
 			if (key == "@ref")
 			{
-				this.component[value] = node;
+				string component_name = value[0] |> default string "";
+				string value_name = value[1] |> default string "";
+				Component component = this.controller.findParentComponent(this.path_id, component_name);
+				if (component) component[value_name] = node;
 			}
 			if (key == "@bind"){}
 			if (key == "@name"){}
@@ -275,10 +297,11 @@ class Element extends BaseObject
 				{
 					this.node.@setAttribute(key, value);
 				}
+				node.params.setValue(key, value);
 			}
 			else if (this.kind == "component")
 			{
-				this.component.params.setValue(key, value);
+				node.params.setValue(key, value);
 			}
 		}
 		
@@ -348,63 +371,4 @@ class Element extends BaseObject
 		this.controller.patchElemChilds(this.parent_elem, new_childs);
 		return this;
 	}
-	
-	
-	
-	/**
-	 * Returns true if is elem
-	 */
-	static bool isElem(var o)
-	{
-		if (o instanceof window.HTMLElement or o instanceof window.Node) return true;
-		return false;
-	}
-	
-	
-	
-	/**
-	 * Create raw html
-	 */
-	static Collection rawHtml(string content)
-	{
-		var res = new Vector();
-		var e = document.@createElement('div');
-		e.innerHTML = rs::trim(content)
-		for (var i = 0; i < e.childNodes.length; i++) res.pushValue( e.childNodes[i] );
-		return res.toCollection();
-	}
-	
-	
-	
-	/**
-	 * JS Event
-	 */
-	static fn event(Component component, string method_name) =>
-		async void @(var e) use (component, method_name)
-		{
-			Message msg = null;
-			@ = rtl::getContext();
-			if (e instanceof Message)
-			{
-				msg = e;
-			}
-			else
-			{
-				msg = new Message( WebEvent::fromEvent(e) );
-				msg.sender = e.target;
-			}
-			fn f = rtl::method(component, method_name);
-			try
-			{
-				await f(msg);
-			}
-			catch (var e)
-			{
-				#ifcode JAVASCRIPT then
-				console.log(e.stack);
-				#endif
-			}
-		}
-	;
-	
 }

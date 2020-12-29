@@ -37,6 +37,12 @@ struct WebEvent extends BaseEvent
 	public var target = null;
 	
 	
+	/**
+	 * Returns es6 event name
+	 */
+	static string getES6EventName() => "";
+	
+	
 	static void assignEventObject(var obj, var e)
 	{
 		#switch

@@ -30,6 +30,7 @@ use Runtime.Web.RenderDriver;
 class Component extends BaseObject
 {
 	RenderDriver driver = null;
+	Controller controller = null;
 	Map old_params = null;
 	Map params = null;
 	var old_model = null;
@@ -37,6 +38,133 @@ class Component extends BaseObject
 	Collection child_nodes = null;
 	Collection model_path = null;
 	Collection path_id = null;
+	
+	
+	/**
+	 * Returns model
+	 */
+	var model(Collection<string> model_path = null, var def_val = null) =>
+		this.model_path == null ? null :
+			rtl::attr
+			(
+				this.driver.layout,
+				this.model_path.concat
+				(
+					(rtl::isEmpty(model_path)) ? null :
+					(model_path instanceof Collection) ? model_path : [ model_path ]
+				),
+				def_val
+			)
+	;
+	
+	
+	
+	/**
+	 * Call model function
+	 */
+	void call(string method_name = "")
+	{
+		var args = new Vector();
+		#ifcode JAVASCRIPT then
+		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
+		#endif
+		
+		/* Result */
+		var res = null;
+		
+		/* Get current model */
+		BaseStruct model = this.model();
+		
+		/* Change model by function */
+		if (rtl::method_exists(model, method_name))
+		{
+			fn f = rtl::method(model, method_name);
+			res = rtl::apply(f, args);
+		}
+		
+		/* Static function */
+		if (rtl::method_exists(model.getClassName(), method_name))
+		{
+			args.unshiftValue(model);
+			fn f = rtl::method(model.getClassName(), method_name);
+			res = rtl::apply(f, args);
+		}
+		
+		return res;
+	}
+	
+	
+	/**
+	 * Update model
+	 */
+	void update(string method_name = "")
+	{
+		#ifcode JAVASCRIPT then
+		this.updateModel.apply(this, arguments);
+		#endif
+	}
+	
+	
+	
+	/**
+	 * Update model
+	 */
+	void updateModel(string method_name = "")
+	{
+		var args = new Vector();
+		#ifcode JAVASCRIPT then
+		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
+		#endif
+		
+		/* Get current model */
+		BaseStruct model = this.model();
+		
+		/* Change model by function */
+		if (rtl::method_exists(model, method_name))
+		{
+			fn f = rtl::method(model, method_name);
+			model = rtl::apply(f, args);
+		}
+		
+		/* Static function */
+		if (rtl::method_exists(model.getClassName(), method_name))
+		{
+			args.unshiftValue(model);
+			fn f = rtl::method(model.getClassName(), method_name);
+			model = rtl::apply(f, args);
+		}
+		
+		/* Set new model */
+		this.driver.updateModel(this.model_path, model);
+	}
+	
+	
+	
+	/**
+	 * Set new model
+	 */
+	void setModel(var model)
+	{
+		this.driver.updateModel(this.model_path, model);
+	}
+	
+	
+	/**
+	 * On create
+	 */
+	void onCreate()
+	{
+	}
+	
+
+	
+	/**
+	 * On update
+	 */
+	void onUpdate()
+	{
+	}
+	
 	
 	
 	/**

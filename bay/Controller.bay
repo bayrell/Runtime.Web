@@ -19,9 +19,12 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
+use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
 use Runtime.Web.Controller;
 use Runtime.Web.Element;
+use Runtime.Web.Message;
+use Runtime.Web.RenderDriver;
 
 
 class Controller extends BaseObject
@@ -75,8 +78,8 @@ class Controller extends BaseObject
 	 */
 	void addComponent(Component c)
 	{
-		string path_id = rs::join(".", c.path_id);
-		this.components.setValue(path_id, c);
+		string path_id_str = rs::join(".", c.path_id);
+		this.components.setValue(path_id_str, c);
 	}
 	
 	
@@ -84,11 +87,137 @@ class Controller extends BaseObject
 	/**
 	 * Find component
 	 */
-	Component findComponent(Collection path_id, string elem_name)
+	Component findComponent(Collection path_id, string component_name)
 	{
-		Component c = this.components[path_id];
-		if (rtl::is_instanceof(c, elem_name)) return c;
+		string path_id_str = rs::join(".", path_id);
+		Component c = this.components[path_id_str];
+		if (rtl::is_instanceof(c, component_name)) return c;
 		return null;
+	}
+	
+	
+	
+	/**
+	 * Find parent component
+	 */
+	Component findParentComponent(Collection path_id, string component_name)
+	{
+		while (path_id.count() != 0)
+		{
+			string path_id_str = rs::join(".", path_id);
+			Component c = this.components[path_id_str];
+			if (rtl::is_instanceof(c, component_name)) return c;
+			path_id = path_id.removeLastIm();
+		}
+		return null;
+	}
+	
+	
+	
+	/**
+	 * Start listen global event
+	 */
+	public void registerGlobalEvent(string event_class_name, Component component, string method_name = "")
+	{
+		var body = document.getElementsByTagName("body")[0];
+		string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
+			|> default string ""
+		;
+		body.addEventListener(es6_event_name, static::event(component, method_name));
+	}
+	
+	
+	
+	/**
+	 * Returns true if is elem
+	 */
+	static bool isElem(var o)
+	{
+		if (o instanceof window.HTMLElement or o instanceof window.Node) return true;
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Create raw html
+	 */
+	static Collection rawHtml(string content)
+	{
+		var res = new Vector();
+		var e = document.@createElement('div');
+		e.innerHTML = rs::trim(content)
+		for (var i = 0; i < e.childNodes.length; i++) res.pushValue( e.childNodes[i] );
+		return res.toCollection();
+	}
+	
+	
+	
+	/**
+	 * JS Event
+	 */
+	static fn event(Component component, string method_name) =>
+		async void @(var e) use (component, method_name)
+		{
+			Message msg = null;
+			@ = rtl::getContext();
+			if (e instanceof Message)
+			{
+				msg = e;
+			}
+			else
+			{
+				msg = new Message( WebEvent::fromEvent(e) );
+				msg.sender = e.currentTarget;
+			}
+			fn f = rtl::method(component, method_name);
+			try
+			{
+				await f(msg);
+			}
+			catch (var e)
+			{
+				#ifcode JAVASCRIPT then
+				console.log(e.stack);
+				#endif
+			}
+		}
+	;
+	
+	
+	
+	/**
+	 * Render
+	 */
+	public void render()
+	{
+		this.remove_keys = new Vector();
+		
+		/* Create element */
+		Element element = new Element();
+		element.controller = this;
+		element.component = this.driver;
+		element.driver = this.driver;
+		element.parent_elem = this.parent_elem;
+		element.model_path = this.model_path;
+		element.path_id = [];
+		
+		/* Render component */
+		var component = element
+			.e("component", this.class_name)
+			.a
+			(
+				this.params.concat
+				{
+					"@bind": [classof RenderDriver, this.model_path]
+				}
+			)
+			.c(this.content)
+			.r()
+		;
+		
+		/* Patch childs */
+		element.p();
 	}
 	
 	
