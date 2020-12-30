@@ -173,7 +173,6 @@ class Element extends BaseObject
 				node = rtl::newInstance(this.elem_name);
 				node.driver = this.driver;
 				node.controller = this.controller;
-				node.onCreate();
 				this.is_new_element = true;
 			}
 			
@@ -195,16 +194,20 @@ class Element extends BaseObject
 			
 			/* Add component */
 			this.controller.addComponent(this.component);
-			
-			/* On update */
-			node.onUpdate();
+		}
+		else if (rtl::isFn(this.content))
+		{
+			fn f = this.content;
+			f(this);
 		}
 		else if (this.kind == "text")
 		{
-			node = this.controller.findElement(this.parent_elem, this.path_id, "text", this.elem_name);
+			node = this.controller.findElement(this.parent_elem, this.path_id, "text");
 			if (node == null)
 			{
 				node = document.@createTextNode(this.content);
+				node._path_id = this.path_id;
+				node._path_id_str = rs::join(".", this.path_id);
 			}
 			else
 			{
@@ -223,90 +226,93 @@ class Element extends BaseObject
 		this.node = node;
 		
 		/* Set attributes */
-		Collection keys = this.attrs.keys();
-		for (int i=0; i<keys.count(); i++)
+		if (this.node != null)
 		{
-			string key = keys[i];
-			string value = this.attrs[key];
-			
-			/* Check if event */
-			bool is_event = false;
-			string event_class_name = "";
-			if (rs::substr(key, 0, 7) == "@event:")
+			Collection keys = this.attrs.keys();
+			for (int i=0; i<keys.count(); i++)
 			{
-				is_event = true;
-				event_class_name = rs::substr(key, 7);
-			}
-			if (rs::substr(0, 12) == "@eventAsync:")
-			{
-				is_event = true;
-				event_class_name = rs::substr(key, 12);
-			}
-			if (is_event and this.is_new_element)
-			{
-				string component_name = value[0] |> default string "";
-				string method_name = value[1] |> default string "";
-				Component component = this.controller.findParentComponent(this.path_id, component_name);
-				if (component)
+				string key = keys[i];
+				string value = this.attrs[key];
+				
+				/* Check if event */
+				bool is_event = false;
+				string event_class_name = "";
+				if (rs::substr(key, 0, 7) == "@event:")
 				{
-					if (this.kind == "element")
+					is_event = true;
+					event_class_name = rs::substr(key, 7);
+				}
+				if (rs::substr(0, 12) == "@eventAsync:")
+				{
+					is_event = true;
+					event_class_name = rs::substr(key, 12);
+				}
+				if (is_event and this.is_new_element)
+				{
+					string component_name = value[0] |> default string "";
+					string method_name = value[1] |> default string "";
+					Component component = this.controller.findParentComponent(this.path_id, component_name);
+					if (component)
 					{
-						string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
-							|> default string ""
-						;
-						if (es6_event_name != "")
+						if (this.kind == "element")
 						{
-							this.node.@addEventListener
+							string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
+								|> default string ""
+							;
+							if (es6_event_name != "")
+							{
+								this.node.@addEventListener
+								(
+									es6_event_name,
+									this.controller::event(component, method_name)
+								);
+							}
+						}
+						else if (this.kind == "component")
+						{
+							this.component.addEventListener
 							(
-								es6_event_name,
-								this.controller::event(component, method_name)
+								event_class_name,
+								this.controller::event(component, value)
 							);
 						}
 					}
-					else if (this.kind == "component")
-					{
-						this.component.addEventListener
-						(
-							event_class_name,
-							this.controller::event(component, value)
-						);
-					}
 				}
-			}
-			
-			if (key == "@ref")
-			{
-				string component_name = value[0] |> default string "";
-				string value_name = value[1] |> default string "";
-				Component component = this.controller.findParentComponent(this.path_id, component_name);
-				if (component) component[value_name] = node;
-			}
-			if (key == "@bind"){}
-			if (key == "@name"){}
-			if (key == "value"){}
-			
-			if (key[0] == "@") continue;
-			if (key == "style" and value instanceof Dict)
-			{
-				value = rs::join(";", value.transition(string (string v, string k) => k ~ ": " ~ v));
-			}
 				
-			if (this.kind == "element")
-			{
-				if (this.node.@getAttribute(key) != value)
+				if (key == "@ref")
 				{
-					this.node.@setAttribute(key, value);
+					string component_name = value[0] |> default string "";
+					string value_name = value[1] |> default string "";
+					Component component = this.controller.findParentComponent(this.path_id, component_name);
+					if (component) component[value_name] = node;
 				}
-				node.params.setValue(key, value);
-			}
-			else if (this.kind == "component")
-			{
-				node.params.setValue(key, value);
+				if (key == "@bind"){}
+				if (key == "@name"){}
+				if (key == "value"){}
+				
+				if (key[0] == "@") continue;
+				if (key == "style" and value instanceof Dict)
+				{
+					value = rs::join(";", value.transition(string (string v, string k) => k ~ ": " ~ v));
+				}
+				
+				if (this.kind == "element")
+				{
+					if (this.node.@getAttribute(key) != value)
+					{
+						this.node.@setAttribute(key, value);
+					}
+					node.params.setValue(key, value);
+				}
+				else if (this.kind == "component")
+				{
+					node.params.setValue(key, value);
+				}
 			}
 		}
 		
 		/* Remove old attributes */
-		if (this.kind == "element")
+		if (this.node != null and this.kind == "element")
 		{
 			Dict attr_keys = this.attrs.keys();
 			for (int i=this.node.attributes.length - 1; i>=0; i--)
@@ -318,7 +324,7 @@ class Element extends BaseObject
 				);
 				if (pos == -1)
 				{
-					node.@removeAttribute(attr.name);
+					this.node.@removeAttribute(attr.name);
 				}
 			}
 		}
@@ -327,6 +333,12 @@ class Element extends BaseObject
 		if (this.kind == "component")
 		{
 			this.component.repaint(this);
+			
+			/* On create */
+			if (this.is_new_element) node.onCreate();
+			
+			/* On update */
+			node.onUpdate();
 		}
 		
 		return this;

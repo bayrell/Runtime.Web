@@ -35,6 +35,7 @@ class Controller extends BaseObject
 	Dict params = null;
 	var content = null;
 	var parent_elem = null;
+	string controller_name = "";
 	
 	/* Render state */
 	Vector remove_keys = null;
@@ -46,13 +47,17 @@ class Controller extends BaseObject
 	/**
 	 * Find element
 	 */
-	int findElementPos(var parent_elem, Collection path_id, string kind, string elem_name)
+	int findElementPos(var parent_elem, Collection path_id, string kind, string elem_name = "")
 	{
 		string path_id_str = rs::join(".", path_id);
 		for (var i = 0; i < parent_elem.childNodes.length; i++)
 		{
 			var e = parent_elem.childNodes[i];
-			if (e._path_id_str == path_id_str and e.tagName == rs::strtoupper(elem_name))
+			if (e._path_id_str == path_id_str and kind == "element" and e.tagName == rs::strtoupper(elem_name))
+			{
+				return i;
+			}
+			if (e._path_id_str == path_id_str and kind == "text" and e instanceof window.Text)
 			{
 				return i;
 			}
@@ -80,6 +85,18 @@ class Controller extends BaseObject
 	{
 		string path_id_str = rs::join(".", c.path_id);
 		this.components.setValue(path_id_str, c);
+	}
+	
+	
+	
+	/**
+	 * Returns component by path id
+	 */
+	Component getComponent(Collection path_id)
+	{
+		string path_id_str = rs::join(".", path_id);
+		Component c = this.components[path_id_str];
+		return null;
 	}
 	
 	

@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseDriver;
 use Runtime.BaseStruct;
+use Runtime.Entity;
 use Runtime.Web.Component;
 use Runtime.Web.Controller;
 use Runtime.Web.Element;
@@ -28,6 +29,7 @@ use Runtime.Web.Element;
 class RenderDriver extends BaseDriver
 {
 	static const string RENDER_CHAIN_CSS = "Runtime.Web.RenderDriver.CSS";
+	static const string RENDER_CHAIN_COMPONENTS = "Runtime.Web.RenderDriver.Components";
 	
 	public BaseStruct layout = null;
 	var animation_id = null;
@@ -40,6 +42,20 @@ class RenderDriver extends BaseDriver
 	var css_elem = null;
 	string new_css = "";
 	string old_css = "";
+	
+	
+	/**
+	 * Constructor
+	 */
+	void constructor(string object_name = "", Entity entity = null)
+	{
+		parent(object_name, entity);
+		
+		/* Chain components */
+		list res = @.chain(static::RENDER_CHAIN_COMPONENTS, [this.components, this]);
+		this.components = res[0];
+	}
+	
 	
 	
 	/**
@@ -103,11 +119,29 @@ class RenderDriver extends BaseDriver
 	
 	
 	/**
+	 * Find controller
+	 */
+	Controller findControllerByName(string controller_name)
+	{
+		for (int i=0; i<this.controllers.count(); i++)
+		{
+			Controller c = this.controllers[i];
+			if (c.controller_name == controller_name)
+			{
+				return c;
+			}
+		}
+		return null;
+	}
+	
+	
+	
+	/**
 	 * Setup controller
 	 */
 	Controller addController
 	(
-		var e,
+		string controller_name, var e,
 		string class_name = "", Collection model_path = [],
 		Dict params = {}, var content = null
 	)
@@ -126,6 +160,7 @@ class RenderDriver extends BaseDriver
 		controller.model_path = model_path;
 		controller.params = params;
 		controller.content = content;
+		controller.controller_name = controller_name;
 		
 		return controller;
 	}
@@ -137,12 +172,12 @@ class RenderDriver extends BaseDriver
 	 */
 	RenderDriver setupController
 	(
-		var e,
+		string controller_name, var e,
 		string class_name = "", Collection model_path = [],
 		Dict params = {}, var content = null
 	)
 	{
-		this.addController(e, class_name, model_path, params, content);
+		this.addController(controller_name, e, class_name, model_path, params, content);
 		return this;
 	}
 	
@@ -249,9 +284,8 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Returns css hash
 	 */
-	pure memorize string getCssHash(string class_name)
-	{
-		Collection<string> names = rtl::getParents(class_name)
+	pure memorize string getCssHash(string class_name) =>
+		rtl::getParents(class_name)
 			|> .filter
 			(
 				bool (string class_name) =>
@@ -264,8 +298,7 @@ class RenderDriver extends BaseDriver
 				string (string class_name) => "h-" ~ static::hash(class_name)
 			)
 		;
-		return rs::join(" ", names);
-	}
+	
 	
 	
 	

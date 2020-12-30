@@ -215,6 +215,21 @@ class Component extends BaseObject
 	pure string getCssHash()
 	{
 		string class_name = static::getCurrentClassName();
-		return RenderDriver::getCssHash(class_name);
+		Collection names = RenderDriver::getCssHash(class_name);
+		return rs::join(" ", names);
+	}
+	
+	
+	
+	/**
+	 * Merge attrs
+	 */
+	pure Dict mergeAttrs(Dict res, Dict attr2)
+	{
+		if (not rtl::exists(attr2)) return res;
+		#ifcode JAVASCRIPT then
+		return Object.assign(res, attr2.toObject());
+		#endif
+		return res;
 	}
 } 
