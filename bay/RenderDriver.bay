@@ -28,8 +28,8 @@ use Runtime.Web.Element;
 
 class RenderDriver extends BaseDriver
 {
-	static const string RENDER_CHAIN_CSS = "Runtime.Web.RenderDriver.CSS";
-	static const string RENDER_CHAIN_COMPONENTS = "Runtime.Web.RenderDriver.Components";
+	static const string CSS_CHAIN = "Runtime.Web.RenderDriver.CSS";
+	static const string COMPONENTS_CHAIN = "Runtime.Web.RenderDriver.Components";
 	
 	public BaseStruct layout = null;
 	var animation_id = null;
@@ -52,7 +52,7 @@ class RenderDriver extends BaseDriver
 		parent(object_name, entity);
 		
 		/* Chain components */
-		list res = @.chain(static::RENDER_CHAIN_COMPONENTS, [this.components, this]);
+		list res = @.chain(static::COMPONENTS_CHAIN, [ new Collection() ]);
 		this.components = res[0];
 	}
 	
@@ -142,10 +142,13 @@ class RenderDriver extends BaseDriver
 	Controller addController
 	(
 		string controller_name, var e,
-		string class_name = "", Collection model_path = [],
-		Dict params = {}, var content = null
+		string class_name = "", Collection model_path = null,
+		Dict params = null, var content = null
 	)
 	{
+		if (model_path == null) model_path = [];
+		if (params == null) model_path = {};
+		
 		Controller controller = this.findControllerByElem(e);
 		if (controller == null)
 		{
@@ -173,10 +176,13 @@ class RenderDriver extends BaseDriver
 	RenderDriver setupController
 	(
 		string controller_name, var e,
-		string class_name = "", Collection model_path = [],
-		Dict params = {}, var content = null
+		string class_name = "", Collection model_path = null,
+		Dict params = null, var content = null
 	)
 	{
+		if (model_path == null) model_path = [];
+		if (params == null) model_path = {};
+		
 		this.addController(controller_name, e, class_name, model_path, params, content);
 		return this;
 	}
@@ -203,7 +209,7 @@ class RenderDriver extends BaseDriver
 		string css = static::getCSSFromComponents( this.components );
 		
 		/* Chain css */
-		list res = @.chain(static::RENDER_CHAIN_CSS, [css, this]);
+		list res = @.chain(static::CSS_CHAIN, [css]);
 		css = res[0];
 		
 		return css;
@@ -317,6 +323,7 @@ class RenderDriver extends BaseDriver
 		(
 			string (string component_name) use (css_vars)
 			{
+				if (component_name == "") return "";
 				if (not rtl::method_exists(component_name, "css")) return "";
 				fn f = rtl::method(component_name, "css");
 				string css = f(css_vars);
