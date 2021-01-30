@@ -147,7 +147,7 @@ class RenderDriver extends BaseDriver
 	)
 	{
 		if (model_path == null) model_path = [];
-		if (params == null) model_path = {};
+		if (params == null) params = {};
 		
 		Controller controller = this.findControllerByElem(e);
 		if (controller == null)
@@ -181,7 +181,7 @@ class RenderDriver extends BaseDriver
 	)
 	{
 		if (model_path == null) model_path = [];
-		if (params == null) model_path = {};
+		if (params == null) params = {};
 		
 		this.addController(controller_name, e, class_name, model_path, params, content);
 		return this;
@@ -220,12 +220,14 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Repaint
 	 */
-	void repaint()
+	RenderDriver repaint()
 	{
 		if (this.animation_id == null)
 		{
-			this.animation_id = window.requestAnimationFrame( method this.render );
+			this.animation_id = window.@requestAnimationFrame( method this.render );
 		}
+		
+		return this;
 	}
 	
 	
@@ -235,6 +237,8 @@ class RenderDriver extends BaseDriver
 	 */
 	void render()
 	{
+		@ = rtl::@getContext();
+		
 		/* Render controllers */
 		for (int i=0; i<this.controllers.count(); i++)
 		{

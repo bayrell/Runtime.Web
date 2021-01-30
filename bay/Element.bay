@@ -130,39 +130,45 @@ class Element extends BaseObject
 		
 		if (this.kind == "element")
 		{
-			node = this.controller.findElement(this.parent_elem, this.path_id, "element", this.elem_name);
-			if (node == null)
+			if (this.elem_name != "")
 			{
+				node = this.controller.findElement(this.parent_elem, this.path_id, "element", this.elem_name);
+				if (node == null)
+				{
+					if (this.elem_name == "svg")
+					{
+						node = document.@createElementNS("http://www.w3.org/2000/svg", "svg")
+					}
+					else
+					{
+						node = document.@createElement(this.elem_name);
+					}
+					this.is_new_element = true;
+				}
+				
+				/* Set node params */
+				node.params = new Map();
+				node._path_id = this.path_id;
+				node._path_id_str = rs::join(".", this.path_id);
+				
+				/* Set parent element */
+				this.parent_elem = node;
+				
+				/* Svg */
 				if (this.elem_name == "svg")
 				{
-					node = document.@createElementNS("http://www.w3.org/2000/svg", "svg")
+					var e = document.@createElement('div');
+					e.innerHTML = "<svg>" ~ this.content ~ "</svg>";
+					var item = e.childNodes[0];
+					while (item.childNodes.length > 0)
+					{
+						var e = item.childNodes[0];
+						node.appendChild(e);
+					}
 				}
-				else
-				{
-					node = document.@createElement(this.elem_name);
-				}
-				this.is_new_element = true;
-			}
-			
-			/* Set node params */
-			node.params = new Map();
-			node._path_id = this.path_id;
-			node._path_id_str = rs::join(".", this.path_id);
-			
-			/* Set parent element */
-			this.parent_elem = node;
-			
-			/* Svg */
-			if (this.elem_name == "svg")
-			{
-				var e = document.@createElement('div');
-				e.innerHTML = "<svg>" ~ this.content ~ "</svg>";
-				var item = e.childNodes[0];
-				while (item.childNodes.length > 0)
-				{
-					var e = item.childNodes[0];
-					node.appendChild(e);
-				}
+				
+				/* Set parent component */
+				node.component = this.component;
 			}
 		}
 		else if (this.kind == "component")
@@ -171,29 +177,56 @@ class Element extends BaseObject
 			if (node == null)
 			{
 				node = rtl::newInstance(this.elem_name);
-				node.driver = this.driver;
-				node.controller = this.controller;
-				this.is_new_element = true;
+				if (node != null)
+				{
+					node.driver = this.driver;
+					node.controller = this.controller;
+					this.is_new_element = true;
+				}
 			}
 			
-			/* Set parent component */
-			node.component = this.component;
+			/* Model path */
+			Collection model_path = [];
 			
-			/* Set component */
-			this.component = node;
-			this.component.path_id = this.path_id;
+			/* Find model */
+			if (this.attrs != null and this.attrs.has("@bind"))
+			{
+				Component c = this.controller.findParentComponent(this.path_id, this.attrs["@bind"][0]);
+				if (c != null)
+				{
+					model_path = c.model_path.concat( this.attrs["@bind"][1] );
+				}
+			}
+			if (this.attrs != null and this.attrs.has("@name"))
+			{
+				Component c = this.controller.findParentComponent(this.path_id, this.attrs["@name"][0]);
+				if (c != null)
+				{
+					model_path = c.model_path.concat( this.attrs["@name"][1] );
+				}
+			}
 			
-			/* Set attrs */
-			this.component.old_params = this.component.attrs;
-			this.component.params = new Map();
-			
-			/* Set model */
-			this.component.old_model = this.component.model;
-			this.component.new_model = this.driver.model(this.model_path);
-			this.component.model_path = this.model_path;
-			
-			/* Add component */
-			this.controller.addComponent(this.component);
+			if (node != null)
+			{
+				/* Set parent component */
+				node.component = this.component;
+				
+				/* Set component */
+				this.component = node;
+				this.component.path_id = this.path_id;
+				
+				/* Set attrs */
+				this.component.old_params = this.component.attrs;
+				this.component.params = new Map();
+				
+				/* Set model */
+				this.component.old_model = this.component.model;
+				this.component.new_model = this.driver.model(model_path);
+				this.component.model_path = model_path;
+				
+				/* Add component */
+				this.controller.addComponent(this.component);
+			}
 		}
 		else if (rtl::isFn(this.content))
 		{
@@ -330,15 +363,15 @@ class Element extends BaseObject
 		}
 		
 		/* Render */
-		if (this.kind == "component")
+		if (this.kind == "component" and this.node != null)
 		{
 			this.component.repaint(this);
 			
 			/* On create */
-			if (this.is_new_element) node.onCreate();
+			if (this.is_new_element) this.node.onCreate();
 			
 			/* On update */
-			node.onUpdate();
+			this.node.onUpdate();
 		}
 		
 		return this;
