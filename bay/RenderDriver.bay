@@ -21,6 +21,8 @@ namespace Runtime.Web;
 use Runtime.BaseDriver;
 use Runtime.BaseStruct;
 use Runtime.Entity;
+use Runtime.LambdaChain;
+use Runtime.LambdaChainClass;
 use Runtime.Web.Component;
 use Runtime.Web.Controller;
 use Runtime.Web.Element;
@@ -29,6 +31,7 @@ use Runtime.Web.Element;
 class RenderDriver extends BaseDriver
 {
 	static const string CSS_CHAIN = "Runtime.Web.RenderDriver.CSS";
+	static const string CSS_VARS_CHAIN = "Runtime.Web.RenderDriver.CSS_Vars";
 	static const string COMPONENTS_CHAIN = "Runtime.Web.RenderDriver.Components";
 	
 	public BaseStruct layout = null;
@@ -390,5 +393,120 @@ class RenderDriver extends BaseDriver
 		static::_getRequiredComponents(res, cache, components);
 		res = res.removeDuplicatesIm();
 		return res.toCollection();
+	}
+	
+	
+	
+	/**
+	 * Render chain
+	 * Create layout model
+	 */
+	@LambdaChain
+	{
+		"name": static::CSS_VARS_CHAIN,
+		"pos": 0,
+	}
+	static Dict cssVarsChain(Dict css_vars)
+	{
+		css_vars <= colors <= new Dict
+		{
+			"default":
+			{
+				"color": "#fff",
+				"background": "#fff",
+				"border": "#ccc",
+				"text": "#000",
+				"hover-background": "#eee",
+				"hover-text": "inherit",
+			},
+			
+			"active":
+			{
+				"color": "#337ab7",
+				"background": "#337ab7",
+				"border": "#22527b",
+				"text": "#fff",
+				"hover-background": "#337ab7",
+				"hover-text": "#fff",
+			},
+			
+			"primary":
+			{
+				"color": "#337ab7",
+				"background": "#337ab7",
+				"border": "#22527b",
+				"text": "#fff",
+				"hover-background": "#286090",
+				"hover-text": "#fff",
+				"active-background": "#286090",
+				"active-tet": "#fff",
+			},
+			
+			"danger":
+			{
+				"color": "#d14b42",
+				"background": "#d14b42",
+				"border": "#a02e27",
+				"text": "#fff",
+				"hover-background": "#e60000",
+				"hover-text": "#fff",
+				"active-background": "#e60000",
+				"active-tet": "#fff",
+			},
+			
+			"success":
+			{
+				"color": "green",
+				"background": "green",
+				"border": "green",
+				"text": "#fff",
+				"hover": "green",
+				"hover-text": "#fff",
+				"active": "green",
+				"active-tet": "#fff",
+			},
+			
+			"error":
+			{
+				"color": "#d14b42",
+				"background": "#d14b42",
+				"border": "#a02e27",
+				"text": "#fff",
+				"hover-background": "#e60000",
+				"hover-text": "#fff",
+				"active-background": "#e60000",
+				"active-tet": "#fff",
+			},
+			
+			"warning":
+			{
+				"color": "yellow",
+				"background": "yellow",
+				"border": "yellow",
+				"text": "#fff",
+				"hover": "yellow",
+				"hover-text": "#fff",
+				"active": "yellow",
+				"active-tet": "#fff",
+			},
+		};
+		
+		css_vars <= font <= new Dict
+		{
+			"size": "14px",
+		};
+		
+		return [ css_vars ];
+	}
+	
+	
+	
+	/**
+	 * CSS vars chain
+	 */
+	pure Dict callCssVarsChain(Dict css_vars)
+	{
+		css_vars = @.chain(static::CSS_VARS_CHAIN, [css_vars]) |> attr 0;
+		return css_vars;
 	}
 } 
