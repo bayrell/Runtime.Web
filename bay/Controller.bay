@@ -126,6 +126,8 @@ class Controller extends BaseObject
 			if (rtl::is_instanceof(c, component_name)) return c;
 			path_id = path_id.removeLastIm();
 		}
+		Component c = this.components[""];
+		if (rtl::is_instanceof(c, component_name)) return c;
 		return null;
 	}
 	
@@ -216,7 +218,6 @@ class Controller extends BaseObject
 		element.component = this.driver;
 		element.driver = this.driver;
 		element.parent_elem = this.parent_elem;
-		element.model_path = this.model_path;
 		element.path_id = [];
 		
 		/* Render component */

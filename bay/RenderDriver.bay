@@ -39,6 +39,7 @@ class RenderDriver extends BaseDriver
 	Vector<Map> controllers = new Vector();
 	Collection<Map> components = new Collection();
 	Collection path_id = [];
+	Collection model_path = [];
 	
 	/* CSS */
 	Dict css_vars = {};
@@ -53,10 +54,22 @@ class RenderDriver extends BaseDriver
 	void constructor(string object_name = "", Entity entity = null)
 	{
 		parent(object_name, entity);
+	}
+	
+	
+	
+	/**
+	 * Start Driver
+	 */
+	public async void startDriver()
+	{
+		await parent::startDriver();
 		
 		/* Chain components */
-		list res = @.chain(static::COMPONENTS_CHAIN, [ new Collection() ]);
-		this.components = res[0];
+		this.components = this.callChainComponents();
+		
+		/* Build css vars */
+		this.css_vars = this.callChainCssVars();
 	}
 	
 	
@@ -209,11 +222,10 @@ class RenderDriver extends BaseDriver
 	string getCSS()
 	{
 		/* Get css from components */
-		string css = static::getCSSFromComponents( this.components );
+		string css = static::getCSSFromComponents( this.components, this.css_vars );
 		
 		/* Chain css */
-		list res = @.chain(static::CSS_CHAIN, [css]);
-		css = res[0];
+		css = this.callChainCss(css);
 		
 		return css;
 	}
@@ -406,7 +418,7 @@ class RenderDriver extends BaseDriver
 		"name": static::CSS_VARS_CHAIN,
 		"pos": 0,
 	}
-	static Dict cssVarsChain(Dict css_vars)
+	static Dict cssVarsChain(Dict css_vars, RenderDriver render)
 	{
 		css_vars <= colors <= new Dict
 		{
@@ -504,9 +516,31 @@ class RenderDriver extends BaseDriver
 	/**
 	 * CSS vars chain
 	 */
-	pure Dict callCssVarsChain(Dict css_vars)
-	{
-		css_vars = @.chain(static::CSS_VARS_CHAIN, [css_vars]) |> attr 0;
-		return css_vars;
-	}
+	Dict callChainCssVars() =>
+		@.chain(static::CSS_VARS_CHAIN, [new Dict(), this])
+		|> attr 0
+		|> default Dict {}
+	;
+	
+	
+	
+	/**
+	 * CSS vars chain
+	 */
+	Collection callChainComponents() =>
+		@.chain(static::COMPONENTS_CHAIN, [new Collection(), this])
+		|> attr 0
+		|> default Collection []
+	;
+	
+	
+	
+	/**
+	 * CSS vars chain
+	 */
+	string callChainCss(string css) =>
+		@.chain(static::CSS_CHAIN, [css, this])
+		|> attr 0
+		|> default string ""
+	;
 } 

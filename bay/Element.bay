@@ -32,7 +32,6 @@ class Element extends BaseObject
 	var controller = null;
 	var driver = null;
 	string kind = "";
-	Collection model_path = null;
 	Collection path_id = null;
 	var parent = null;
 	var parent_elem = null;
@@ -67,7 +66,6 @@ class Element extends BaseObject
 		e.component = this.component;
 		e.controller = this.controller;
 		e.driver = this.driver;
-		e.model_path = this.model_path;
 		e.path_id = this.path_id;
 		e.parent_elem = this.parent_elem;
 		return e;
