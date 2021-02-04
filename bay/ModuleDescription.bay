@@ -58,6 +58,7 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
+		new Entity{ "name":"Runtime.Web.RenderDriver",  },
 		new Driver
 		{
 			"name": "RenderDriver",

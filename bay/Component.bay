@@ -25,6 +25,7 @@ use Runtime.Web.Controller;
 use Runtime.Web.Element;
 use Runtime.Web.Message;
 use Runtime.Web.RenderDriver;
+use Runtime.Web.WebApp;
 
 
 class Component extends BaseObject
@@ -38,6 +39,8 @@ class Component extends BaseObject
 	Collection child_nodes = null;
 	Collection model_path = null;
 	Collection path_id = null;
+	Map events = new Map();
+	bool is_new_element = false;
 	
 	
 	/**
@@ -149,6 +152,7 @@ class Component extends BaseObject
 	}
 	
 	
+	
 	/**
 	 * On create
 	 */
@@ -168,11 +172,79 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Open url
+	 */
+	void openUrl(string url)
+	{
+		WebApp app = @.getDriver("WebApp");
+		await app.openUrl(url);
+	}
+	
+	
+	
+	/**
+	 * Add event listener
+	 */
+	void addEventListener(string event_class_name, fn f)
+	{
+		this.events.setValue(event_class_name, f);
+	}
+	
+	
+	
+	/**
+	 * Send event
+	 */
+	public async void signal(BaseEvent event)
+	{
+		string event_class_name = event.getClassName();
+		if (this.events.has(event_class_name))
+		{
+			fn f = this.events[event_class_name];
+			Message msg = new Message(event);
+			msg.sender = this;
+			await f(msg);
+		}
+	}
+	
+	
+	
+	/**
 	 * Returns true if need to repaint component
 	 */
 	bool isRepaint()
 	{
-		return this.new_model != this.old_model;
+		if (this.is_new_element)
+		{
+			return true;
+		}
+		if (this.new_model != this.old_model)
+		{
+			return true;
+		}
+		if (not this.equalParams())
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Equal old and new params
+	 */
+	bool equalParams()
+	{
+		var arr = new Collection().concat(this.old_params.keys()).concat(this.params.keys()).removeDuplicatesIm();
+		for (int i=0; i<arr.count(); i++)
+		{
+			string field_name = arr[i];
+			if (not this.old_params.has(field_name)) return false;
+			if (not this.params.has(field_name)) return false;
+			if (this.params.get(field_name) != this.old_params.get(field_name)) return false;
+		}
+		return true;
 	}
 	
 	
@@ -232,6 +304,20 @@ class Component extends BaseObject
 		#endif
 		return res;
 	}
+	
+	
+	
+	/**
+	 * Join attrs to string
+	 */
+	pure string joinAttrs(Dict attrs) =>
+		rtl::exists(attrs) ?
+			rs::join
+			(
+				" ",
+				attrs.map( string (string k, string v) => k ~ "= '" ~ static::escapeAttr(v) ~ "'" )
+			) : ""
+	;
 	
 	
 	

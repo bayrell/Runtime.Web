@@ -109,7 +109,10 @@ class Element extends BaseObject
 	 */
 	Element c(var content)
 	{
-		this.content = content;
+		if (rtl::exists(content))
+		{
+			this.content = content;
+		}
 		return this;
 	}
 	
@@ -179,8 +182,19 @@ class Element extends BaseObject
 				{
 					node.driver = this.driver;
 					node.controller = this.controller;
+					node.is_new_element = true;
 					this.is_new_element = true;
 				}
+				else
+				{
+					#ifdef ES6 then
+					log("Component " ~ this.elem_name ~ " not found");
+					#endif
+				}
+			}
+			else
+			{
+				node.is_new_element = false;
 			}
 			
 			/* Model path */
@@ -189,19 +203,11 @@ class Element extends BaseObject
 			/* Find model */
 			if (this.attrs != null and this.attrs.has("@bind"))
 			{
-				Component c = this.controller.findParentComponent(this.path_id, this.attrs["@bind"][0]);
-				if (c != null)
-				{
-					model_path = c.model_path.concat( this.attrs["@bind"][1] );
-				}
+				model_path = this.controller.findModelPath(this.path_id, this.attrs["@bind"]);
 			}
 			if (this.attrs != null and this.attrs.has("@name"))
 			{
-				Component c = this.controller.findParentComponent(this.path_id, this.attrs["@name"][0]);
-				if (c != null)
-				{
-					model_path = c.model_path.concat( this.attrs["@name"][1] );
-				}
+				model_path = this.controller.findModelPath(this.path_id, this.attrs["@name"]);
 			}
 			
 			if (node != null)
@@ -214,11 +220,11 @@ class Element extends BaseObject
 				this.component.path_id = this.path_id;
 				
 				/* Set attrs */
-				this.component.old_params = this.component.attrs;
+				this.component.old_params = this.component.params;
 				this.component.params = new Map();
 				
 				/* Set model */
-				this.component.old_model = this.component.model;
+				this.component.old_model = this.component.new_model;
 				this.component.new_model = this.driver.model(model_path);
 				this.component.model_path = model_path;
 				
@@ -231,12 +237,20 @@ class Element extends BaseObject
 			fn f = this.content;
 			f(this);
 		}
+		else if (this.content instanceof Collection)
+		{
+			for (int i=0; i<this.content.count(); i++)
+			{
+				fn f = this.content[i];
+				if (rtl::isFn(f)) f(this);
+			}
+		}
 		else if (this.kind == "text")
 		{
 			node = this.controller.findElement(this.parent_elem, this.path_id, "text");
 			if (node == null)
 			{
-				node = document.@createTextNode(this.content);
+				node = document.@createTextNode( rtl::exists(this.content) ? this.content : "" );
 				node._path_id = this.path_id;
 				node._path_id_str = rs::join(".", this.path_id);
 			}
@@ -278,7 +292,7 @@ class Element extends BaseObject
 					is_event = true;
 					event_class_name = rs::substr(key, 12);
 				}
-				if (is_event and this.is_new_element)
+				if (is_event)
 				{
 					string component_name = value[0] |> default string "";
 					string method_name = value[1] |> default string "";
@@ -290,7 +304,7 @@ class Element extends BaseObject
 							string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
 								|> default string ""
 							;
-							if (es6_event_name != "")
+							if (es6_event_name != "" and this.is_new_element)
 							{
 								this.node.@addEventListener
 								(
@@ -304,29 +318,43 @@ class Element extends BaseObject
 							this.component.addEventListener
 							(
 								event_class_name,
-								this.controller::event(component, value)
+								this.controller::event(component, method_name)
 							);
 						}
 					}
+					continue;
 				}
 				
-				if (key == "@ref")
+				if (key == "@ref" or key == "@name")
 				{
 					string component_name = value[0] |> default string "";
 					string value_name = value[1] |> default string "";
 					Component component = this.controller.findParentComponent(this.path_id, component_name);
 					if (component) component[value_name] = node;
 				}
-				if (key == "@bind"){}
-				if (key == "@name"){}
-				if (key == "value"){}
+				
+				if (key == "value" or key == "@bind" or key == "@name")
+				{
+					if (this.node.tagName == "INPUT" or this.node.tagName == "SELECT" or this.node.tagName == "TEXTAREA")
+					{
+						if (value == null and this.node.value != "" and value !== 0 and value !== "0")
+						{
+							this.node.value = "";
+						}
+						else if (this.node.value != value)
+						{
+							this.node.value = value;
+						}
+						this.node._old_value = value;
+						continue;
+					}
+				}
 				
 				if (key[0] == "@") continue;
 				if (key == "style" and value instanceof Dict)
 				{
 					value = rs::join(";", value.transition(string (string v, string k) => k ~ ": " ~ v));
 				}
-				
 				if (this.kind == "element")
 				{
 					if (this.node.@getAttribute(key) != value)

@@ -28,6 +28,7 @@ use Runtime.Web.Controller;
 use Runtime.Web.Element;
 
 
+@LambdaChainClass{}
 class RenderDriver extends BaseDriver
 {
 	static const string CSS_CHAIN = "Runtime.Web.RenderDriver.CSS";
@@ -219,10 +220,12 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Get css
 	 */
-	string getCSS()
+	string getCSS(Collection components = null)
 	{
+		if (components == null) components = this.components;
+		
 		/* Get css from components */
-		string css = static::getCSSFromComponents( this.components, this.css_vars );
+		string css = static::getCSSFromComponents( components, this.css_vars );
 		
 		/* Chain css */
 		css = this.callChainCss(css);
@@ -508,7 +511,7 @@ class RenderDriver extends BaseDriver
 			"size": "14px",
 		};
 		
-		return [ css_vars ];
+		return [ css_vars, render ];
 	}
 	
 	

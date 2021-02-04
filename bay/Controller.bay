@@ -134,6 +134,30 @@ class Controller extends BaseObject
 	
 	
 	/**
+	 * Find model path
+	 */
+	Collection findModelPath(Collection path_id, Collection arr)
+	{
+		/* Model path */
+		Collection model_path = [];
+		var path = arr[1];
+		
+		/* Find component */
+		Component c = this.findParentComponent(path_id, arr[0]);
+		if (c != null)
+		{
+			model_path = c.model_path;
+		}
+		
+		if (rtl::isString(path)) model_path = c.model_path.pushIm(path);
+		else if (path instanceof Collection) model_path = c.model_path.concat(path);
+		
+		return model_path;
+	}
+	
+	
+	
+	/**
 	 * Start listen global event
 	 */
 	public void registerGlobalEvent(string event_class_name, Component component, string method_name = "")
