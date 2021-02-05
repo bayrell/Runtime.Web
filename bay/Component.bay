@@ -34,6 +34,8 @@ class Component extends BaseObject
 	Controller controller = null;
 	Map old_params = null;
 	Map params = null;
+	Dict old_watch_model = null;
+	Dict new_watch_model = null;
 	var old_model = null;
 	var new_model = null;
 	Collection child_nodes = null;
@@ -210,6 +212,28 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Watch model
+	 */
+	void watchModel(Collection path_id, var watch)
+	{
+		string class_name = watch |> attr 0 |> default string [];
+		var watch = watch[1];
+		if (not (watch instanceof Collection)) watch = [ watch ];
+		
+		this.new_watch_model = new Map();
+		for (int i=0; i<watch.count(); i++)
+		{
+			var item = watch[i];
+			Collection model_path = this.controller.findModelPath(path_id, [class_name, item]);
+			string key = rs::join(".", model_path);
+			this.new_watch_model.setValue(key, this.driver.model(model_path));
+		}
+		this.new_watch_model = this.new_watch_model.toDict();
+	}
+	
+	
+	
+	/**
 	 * Returns true if need to repaint component
 	 */
 	bool isRepaint()
@@ -218,13 +242,31 @@ class Component extends BaseObject
 		{
 			return true;
 		}
+		/* Check component model */
 		if (this.new_model != this.old_model)
 		{
 			return true;
 		}
+		/* Check component params */
 		if (not this.equalParams())
 		{
 			return true;
+		}
+		/* Check watch model */
+		if (this.old_watch_model != null)
+		{
+			Collection keys = this.old_watch_model.keys();
+			for (int i=0; i<keys.count(); i++)
+			{
+				string key = keys[i];
+				Collection model_path = rs::split("\\.", key);
+				var old_model = this.old_watch_model[key];
+				var new_model = this.driver.model(model_path);
+				if (new_model != old_model)
+				{
+					return true;
+				}
+			}
 		}
 		return false;
 	}

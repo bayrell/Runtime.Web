@@ -158,7 +158,7 @@ class Element extends BaseObject
 				/* Svg */
 				if (this.elem_name == "svg")
 				{
-					var e = document.@createElement('div');
+					var e = document.@createElement("div");
 					e.innerHTML = "<svg>" ~ this.content ~ "</svg>";
 					var item = e.childNodes[0];
 					while (item.childNodes.length > 0)
@@ -227,6 +227,7 @@ class Element extends BaseObject
 				this.component.old_model = this.component.new_model;
 				this.component.new_model = this.driver.model(model_path);
 				this.component.model_path = model_path;
+				this.component.old_watch_model = this.component.new_watch_model;
 				
 				/* Add component */
 				this.controller.addComponent(this.component);
@@ -348,6 +349,12 @@ class Element extends BaseObject
 						this.node._old_value = value;
 						continue;
 					}
+				}
+				
+				if (this.kind == "component" and key == "@watch")
+				{
+					node.watchModel(this.path_id, value);
+					continue;
 				}
 				
 				if (key[0] == "@") continue;
