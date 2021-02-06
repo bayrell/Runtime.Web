@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
+use Runtime.Web.Events.ChangeEvent;
 use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
 use Runtime.Web.Message;
@@ -324,6 +325,21 @@ class Element extends BaseObject
 						}
 					}
 					continue;
+				}
+				
+				if (key == "@bind" or key == "@name")
+				{
+					string component_name = value[0] |> default string "";
+					string value_name = value[1];
+					Component component = this.controller.findParentComponent(this.path_id, component_name);
+					if (this.kind == "component")
+					{
+						this.component.addEventListener
+						(
+							classof ChangeEvent,
+							this.controller::eventChangeComponent(component, value_name)
+						);
+					}
 				}
 				
 				if (key == "@ref" or key == "@name")

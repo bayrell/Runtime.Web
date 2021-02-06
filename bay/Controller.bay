@@ -230,6 +230,19 @@ class Controller extends BaseObject
 	
 	
 	/**
+	 * Component model change
+	 */
+	static fn eventChangeComponent(Component component, var model_path) =>
+		async void @(Message msg) use (component, model_path)
+		{
+			@ = rtl::getContext();
+			component.update("setAttr", model_path, msg.data.value);
+		}
+	;
+	
+	
+	
+	/**
 	 * Render
 	 */
 	public void render()
