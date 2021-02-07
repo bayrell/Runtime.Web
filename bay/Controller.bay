@@ -144,13 +144,13 @@ class Controller extends BaseObject
 		
 		/* Find component */
 		Component c = this.findParentComponent(path_id, arr[0]);
-		if (c != null)
+		if (c != null and c.model_path != null)
 		{
 			model_path = c.model_path;
 		}
 		
-		if (rtl::isString(path)) model_path = c.model_path.pushIm(path);
-		else if (path instanceof Collection) model_path = c.model_path.concat(path);
+		if (rtl::isString(path)) model_path = model_path.pushIm(path);
+		else if (path instanceof Collection) model_path = model_path.concat(path);
 		
 		return model_path;
 	}

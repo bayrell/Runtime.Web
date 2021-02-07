@@ -267,6 +267,7 @@ class RenderDriver extends BaseDriver
 		if (this.animation_id == null)
 		{
 			this.animation_id = window.@requestAnimationFrame( method this.render );
+			/* this.animation_id = window.@setTimeout( method this.render, 1 ); */
 		}
 		
 		return this;

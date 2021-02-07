@@ -202,13 +202,18 @@ class Element extends BaseObject
 			Collection model_path = [];
 			
 			/* Find model */
-			if (this.attrs != null and this.attrs.has("@bind"))
+			Collection attr_keys = ["@bind", "@name", "@model"];
+			if (this.attrs != null)
 			{
-				model_path = this.controller.findModelPath(this.path_id, this.attrs["@bind"]);
-			}
-			if (this.attrs != null and this.attrs.has("@name"))
-			{
-				model_path = this.controller.findModelPath(this.path_id, this.attrs["@name"]);
+				for (int attr_keys_i=0; attr_keys_i<attr_keys.count(); attr_keys_i++)
+				{
+					string key = attr_keys[attr_keys_i];
+					if (this.attrs.has(key))
+					{
+						model_path = this.controller.findModelPath(this.path_id, this.attrs[key]);
+						break;
+					}
+				}
 			}
 			
 			if (node != null)
