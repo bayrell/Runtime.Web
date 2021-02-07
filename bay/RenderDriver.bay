@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.lib;
 use Runtime.BaseDriver;
 use Runtime.BaseStruct;
 use Runtime.Entity;
@@ -39,6 +40,7 @@ class RenderDriver extends BaseDriver
 	var animation_id = null;
 	Vector<Map> controllers = new Vector();
 	Collection<Map> components = new Collection();
+	Collection<Map> default_components = new Collection();
 	Collection path_id = [];
 	Collection model_path = [];
 	
@@ -67,7 +69,7 @@ class RenderDriver extends BaseDriver
 		await parent::startDriver();
 		
 		/* Chain components */
-		this.components = this.callChainComponents();
+		this.default_components = this.callChainComponents();
 		
 		/* Build css vars */
 		this.css_vars = this.callChainCssVars();
@@ -81,6 +83,28 @@ class RenderDriver extends BaseDriver
 	RenderDriver addComponent(string component_name)
 	{
 		this.components = this.components.pushIm(component_name);
+		return this;
+	}
+	
+	
+	
+	/**
+	 * Add components
+	 */
+	RenderDriver addComponents(Collection<string> components)
+	{
+		this.components = this.components.concat(components);
+		return this;
+	}
+	
+	
+	
+	/**
+	 * Setup components
+	 */
+	RenderDriver setComponents(Collection<string> components)
+	{
+		this.components = components;
 		return this;
 	}
 	
@@ -222,7 +246,7 @@ class RenderDriver extends BaseDriver
 	 */
 	string getCSS(Collection components = null)
 	{
-		if (components == null) components = this.components;
+		if (components == null) components = this.default_components.concat(this.components);
 		
 		/* Get css from components */
 		string css = static::getCSSFromComponents( components, this.css_vars );
@@ -403,6 +427,7 @@ class RenderDriver extends BaseDriver
 	 */
 	pure Collection<string> getRequiredComponents(Collection<string> components)
 	{
+		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
 		Vector<string> res = new Vector();
 		Map<string> cache = new Map();
 		static::_getRequiredComponents(res, cache, components);
