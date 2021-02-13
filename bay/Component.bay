@@ -296,12 +296,18 @@ class Component extends BaseObject
 	 */
 	void repaint(Element element)
 	{
+		BaseStruct new_model = static::extendComponentModel(this.driver.layout, this.new_model, this.params);
+		if (new_model != this.new_model)
+		{
+			this.new_model = new_model;
+			this.setModel(new_model);
+		}
 		if (this.isRepaint())
 		{
 			int begin = element.childs.count();
 			fn f = static::render
 			(
-				element.driver.layout, this.new_model,
+				this.driver.layout, new_model,
 				this.params, element.content
 			);
 			if (f != null) f(element);
@@ -317,9 +323,27 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Extend component model
+	 */
+	pure void extendComponentModel(BaseStruct layout, BaseStruct model, Dict params) => model;
+	
+	
+	
+	/**
 	 * Render function
 	 */
 	pure void render(BaseStruct layout, BaseStruct model, Dict params, html content) => null;
+	
+	
+	
+	/**
+	 * Render function
+	 */
+	pure void renderComponent(BaseStruct layout, BaseStruct model, Dict params, html content)
+	{
+		model = static::extendComponentModel(layout, model, params);
+		return static::render(layout, model, params, content);
+	}
 	
 	
 	
