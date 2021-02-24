@@ -1,7 +1,7 @@
 /*!
  *  Bayrell Runtime Library
  *
- *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2016-2021 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -38,11 +38,26 @@ class Component extends BaseObject
 	Dict new_watch_model = null;
 	var old_model = null;
 	var new_model = null;
+	Vector childs = new Vector();
 	Collection child_nodes = null;
 	Collection model_path = null;
 	Collection path_id = null;
 	Map events = new Map();
 	bool is_new_element = false;
+	
+	
+	/**
+	 * Add component
+	 */
+	void addComponent(Component c)
+	{
+		int pos = this.childs.indexOf(c);
+		if (pos == -1)
+		{
+			this.childs.pushValue(c);
+		}
+	}
+	
 	
 	
 	/**
@@ -97,6 +112,7 @@ class Component extends BaseObject
 		
 		return res;
 	}
+	
 	
 	
 	/**

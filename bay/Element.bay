@@ -1,7 +1,7 @@
 /*!
  *  Bayrell Runtime Library
  *
- *  (c) Copyright 2016-2020 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2016-2021 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -219,7 +219,7 @@ class Element extends BaseObject
 			if (node != null)
 			{
 				/* Set parent component */
-				node.component = this.component;
+				node.parent = this.component;
 				
 				/* Set component */
 				this.component = node;
@@ -237,6 +237,7 @@ class Element extends BaseObject
 				
 				/* Add component */
 				this.controller.addComponent(this.component);
+				node.parent.addComponent(node);
 			}
 		}
 		else if (rtl::isFn(this.content))
