@@ -120,18 +120,6 @@ class Component extends BaseObject
 	 */
 	void update(string method_name = "")
 	{
-		#ifcode JAVASCRIPT then
-		this.updateModel.apply(this, arguments);
-		#endif
-	}
-	
-	
-	
-	/**
-	 * Update model
-	 */
-	void updateModel(string method_name = "")
-	{
 		var args = new Vector();
 		#ifcode JAVASCRIPT then
 		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
@@ -140,6 +128,20 @@ class Component extends BaseObject
 		/* Get current model */
 		BaseStruct model = this.model();
 		
+		/* Update model */
+		model = static::updateModel(model, method_name, args.toCollection());
+		
+		/* Set new model */
+		this.driver.updateModel(this.model_path, model);
+	}
+	
+	
+	
+	/**
+	 * Update model
+	 */
+	pure primitive updateModel(primitive model, string method_name = "", Collection args = null)
+	{
 		/* Change model by function */
 		if (rtl::method_exists(model, method_name))
 		{
@@ -150,13 +152,12 @@ class Component extends BaseObject
 		/* Static function */
 		if (rtl::method_exists(model.getClassName(), method_name))
 		{
-			args.unshiftValue(model);
+			args = args.unshiftIm(model);
 			fn f = rtl::method(model.getClassName(), method_name);
 			model = rtl::apply(f, args);
 		}
 		
-		/* Set new model */
-		this.driver.updateModel(this.model_path, model);
+		return model;
 	}
 	
 	
@@ -216,12 +217,18 @@ class Component extends BaseObject
 	public async void signal(BaseEvent event)
 	{
 		string event_class_name = event.getClassName();
-		if (this.events.has(event_class_name))
+		Collection keys = this.events.keys();
+		Collection parents = rtl::getParents(event.getClassName());
+		for (int i=0; i<keys.count(); i++)
 		{
-			fn f = this.events[event_class_name];
-			Message msg = new Message(event);
-			msg.sender = this;
-			await f(msg);
+			string event_class_name = keys[i];
+			if (parents.indexOf(event_class_name) != -1)
+			{
+				fn f = this.events[event_class_name];
+				Message msg = new Message(event);
+				msg.sender = this;
+				await f(msg);
+			}
 		}
 	}
 	
