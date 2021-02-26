@@ -108,7 +108,8 @@ class Controller extends BaseObject
 	{
 		string path_id_str = rs::join(".", path_id);
 		Component c = this.components[path_id_str];
-		if (rtl::is_instanceof(c, component_name)) return c;
+		if (c != null and c.getClassName() == component_name) return c;
+		/* if (rtl::is_instanceof(c, component_name)) return c; */
 		return null;
 	}
 	
@@ -123,7 +124,8 @@ class Controller extends BaseObject
 		{
 			string path_id_str = rs::join(".", path_id);
 			Component c = this.components[path_id_str];
-			if (rtl::is_instanceof(c, component_name)) return c;
+			if (c != null and c.getClassName() == component_name) return c;
+			/* if (rtl::is_instanceof(c, component_name)) return c; */
 			path_id = path_id.removeLastIm();
 		}
 		Component c = this.components[""];
