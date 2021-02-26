@@ -276,6 +276,20 @@ class Component extends BaseObject
 			return true;
 		}
 		/* Check watch model */
+		if (this.isRepaintWatch())
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Returns true if need to repaint component
+	 */
+	bool isRepaintWatch()
+	{
 		if (this.old_watch_model != null)
 		{
 			Collection keys = this.old_watch_model.keys();
