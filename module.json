@@ -4,9 +4,9 @@
 	[
 		"Component",
 		"Controller",
-		"Element",
 		"Message",
 		"RenderDriver",
+		"VirtualDom",
 		"Events/BaseEvent",
 		"Events/WebEvent",
 		"Events/BlurEvent",

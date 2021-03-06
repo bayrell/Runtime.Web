@@ -1,0 +1,175 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2021 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.BaseObject;
+use Runtime.BaseStruct;
+use Runtime.Web.Events.ChangeEvent;
+use Runtime.Web.Events.WebEvent;
+use Runtime.Web.Component;
+use Runtime.Web.Controller;
+use Runtime.Web.Message;
+use Runtime.Web.RenderDriver;
+
+
+class VirtualDom extends BaseObject
+{
+	static const string KIND_COMPONENT = "component";
+	static const string KIND_ELEMENT = "element";
+	static const string KIND_TEXT = "text";
+	static const string KIND_RAW = "raw";
+	
+	string key = "";
+	string kind = "";
+	string name = "";
+	Dict params = null;
+	var content = null;
+	Collection childs = [];
+	Vector new_childs = new Vector();
+	var instance = null;
+	bool is_change = false;
+	Controller controller = null;
+	VirtualDom parent_vdom = null;
+	VirtualDom parent_component = null;
+	
+	
+	
+	/** 
+	 * Constructor
+	 */
+	public void constructor(Dict obj = null)
+	{
+		parent();
+		static::_assign(this, null, obj);
+	}
+	
+	
+	
+	/**
+	 * Find element by key
+	 */
+	VirtualDom findChildElement(string key)
+	{
+		for (int i=0; i<this.childs.count(); i++)
+		{
+			VirtualDom item = this.childs[i];
+			if (item.key == key) return item;
+		}
+		return null;
+	}
+	
+	
+	
+	/**
+	 * Element
+	 */
+	VirtualDom e(string kind, string name, Dict params, var content = null, Dict opts = null)
+	{
+		VirtualDom vdom = null;
+		params = Dict.@from(params);
+		int pos = this.new_childs.count();
+		string key = (string) params.get("@key", "");
+		
+		if (kind == "c") kind = static::KIND_COMPONENT;
+		else if (kind == "e") kind = static::KIND_ELEMENT;
+		else if (kind == "t") kind = static::KIND_TEXT;
+		else if (kind == "r") kind = static::KIND_RAW;
+		else return null;
+		
+		/* Find element by key */
+		if (params.has("@key"))
+		{
+			vdom = this.findChildElement(key);
+		}
+		
+		/* Find element by position */
+		if (opts != null and opts.get("is_new", false) != true)
+		{
+			vdom = this.childs.get(pos, null);
+		}
+		
+		/* Check vdom kind */
+		if (vdom != null and vdom.kind != kind) vdom = null;
+		
+		/* Create new element */
+		if (vdom == null)
+		{
+			vdom = new VirtualDom
+			{
+				"key": key,
+				"kind": kind,
+				"name": name,
+				"controller": this.controller,
+				"params": params,
+				"content": content,
+				"parent_vdom": this,
+				"parent_component": this.controller::getVirtualDomComponent(this),
+			};
+			vdom.is_change = true;
+		}
+		
+		/* Push child */
+		this.new_childs.pushValue(vdom);
+		
+		/* Push component to render */
+		if (kind == static::KIND_COMPONENT)
+		{
+			this.controller.render_components.pushValue(vdom);
+		}
+		
+		/* Push changed value */
+		if (vdom.is_change)
+		{
+			this.controller.changed_items.pushValue(vdom);
+		}
+		
+		return vdom;
+	}
+	
+	
+	
+	/**
+	 * Patch childs
+	 */
+	void p()
+	{
+	}
+	
+	
+	
+	/**
+	 * Flush
+	 */
+	void flush()
+	{
+		this.new_childs = new Vector();
+	}
+	
+	
+	
+	/**
+	 * Send signal
+	 */
+	async void signal(var signal)
+	{
+	}
+	
+	
+	
+}

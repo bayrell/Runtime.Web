@@ -34,21 +34,23 @@ class RenderDriver extends BaseDriver
 {
 	static const string CSS_CHAIN = "Runtime.Web.RenderDriver.CSS";
 	static const string CSS_VARS_CHAIN = "Runtime.Web.RenderDriver.CSS_Vars";
-	static const string COMPONENTS_CHAIN = "Runtime.Web.RenderDriver.Components";
 	
 	public BaseStruct layout = null;
-	var animation_id = null;
-	Vector<Map> controllers = new Vector();
-	Collection<Map> components = new Collection();
-	Collection<Map> default_components = new Collection();
-	Collection path_id = [];
-	Collection model_path = [];
+	Map<Controller> controllers = new Map();
+	Collection<string> components = new Vector();
 	
 	/* CSS */
 	Dict css_vars = {};
 	var css_elem = null;
 	string new_css = "";
 	string old_css = "";
+	
+	/* Animation */
+	var animation_id = null;
+	
+	/* Components instances */
+	Map<Component> instances = new Map();
+	
 	
 	
 	/**
@@ -68,11 +70,9 @@ class RenderDriver extends BaseDriver
 	{
 		await parent::startDriver();
 		
-		/* Chain components */
-		this.default_components = this.callChainComponents();
-		
 		/* Build css vars */
 		this.css_vars = this.callChainCssVars();
+		this.components = new Collection();
 	}
 	
 	
@@ -142,70 +142,11 @@ class RenderDriver extends BaseDriver
 	
 	
 	/**
-	 * Find controller
+	 * Returns controller
 	 */
-	Controller findControllerByElem(var e)
+	Controller getController(string controller_name)
 	{
-		for (int i=0; i<this.controllers.count(); i++)
-		{
-			Controller c = this.controllers[i];
-			if (c.parent_elem == e)
-			{
-				return c;
-			}
-		}
-		return null;
-	}
-	
-	
-	
-	/**
-	 * Find controller
-	 */
-	Controller findControllerByName(string controller_name)
-	{
-		for (int i=0; i<this.controllers.count(); i++)
-		{
-			Controller c = this.controllers[i];
-			if (c.controller_name == controller_name)
-			{
-				return c;
-			}
-		}
-		return null;
-	}
-	
-	
-	
-	/**
-	 * Setup controller
-	 */
-	Controller addController
-	(
-		string controller_name, var e,
-		string class_name = "", Collection model_path = null,
-		Dict params = null, var content = null
-	)
-	{
-		if (model_path == null) model_path = [];
-		if (params == null) params = {};
-		
-		Controller controller = this.findControllerByElem(e);
-		if (controller == null)
-		{
-			controller = new Controller();
-			controller.driver = this;
-			controller.parent_elem = e;
-			controller.addComponent(this);
-			this.controllers.pushValue(controller);
-		}
-		
-		controller.class_name = class_name;
-		controller.model_path = model_path;
-		controller.params = params;
-		controller.content = content;
-		controller.controller_name = controller_name;
-		
+		Controller controller = this.controllers.get(controller_name, null);
 		return controller;
 	}
 	
@@ -224,7 +165,21 @@ class RenderDriver extends BaseDriver
 		if (model_path == null) model_path = [];
 		if (params == null) params = {};
 		
-		this.addController(controller_name, e, class_name, model_path, params, content);
+		Controller controller = this.controllers.get(controller_name, null);
+		if (controller == null)
+		{
+			controller = new Controller();
+			controller.driver = this;
+			this.controllers.setValue(controller_name, controller);
+		}
+		
+		controller.class_name = class_name;
+		controller.model_path = model_path;
+		controller.elem = e;
+		controller.params = params;
+		controller.content = content;
+		controller.controller_name = controller_name;
+		
 		return this;
 	}
 	
@@ -246,7 +201,9 @@ class RenderDriver extends BaseDriver
 	 */
 	string getCSS(Collection components = null)
 	{
-		if (components == null) components = this.default_components.concat(this.components);
+		if (components == null) components = this.components.toCollection();
+		
+		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
 		
 		/* Get css from components */
 		string css = static::getCSSFromComponents( components, this.css_vars );
@@ -282,10 +239,13 @@ class RenderDriver extends BaseDriver
 	{
 		@ = rtl::@getContext();
 		
+		Collection<string> keys = this.controllers.keys();
+		
 		/* Render controllers */
-		for (int i=0; i<this.controllers.count(); i++)
+		for (int i=0; i<keys.count(); i++)
 		{
-			Controller controller = this.controllers[i];
+			string controller_name = keys[i];
+			Controller controller = this.controllers[controller_name];
 			controller.render();
 		}
 		
@@ -549,17 +509,6 @@ class RenderDriver extends BaseDriver
 		@.chain(static::CSS_VARS_CHAIN, [new Dict(), this])
 		|> attr 0
 		|> default Dict {}
-	;
-	
-	
-	
-	/**
-	 * CSS vars chain
-	 */
-	Collection callChainComponents() =>
-		@.chain(static::COMPONENTS_CHAIN, [new Collection(), this])
-		|> attr 0
-		|> default Collection []
 	;
 	
 	

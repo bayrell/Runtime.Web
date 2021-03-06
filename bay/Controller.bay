@@ -25,6 +25,7 @@ use Runtime.Web.Controller;
 use Runtime.Web.Element;
 use Runtime.Web.Message;
 use Runtime.Web.RenderDriver;
+use Runtime.Web.VirtualDom;
 
 
 class Controller extends BaseObject
@@ -34,213 +35,16 @@ class Controller extends BaseObject
 	Collection model_path = null;
 	Dict params = null;
 	var content = null;
-	var parent_elem = null;
+	var elem = null;
 	string controller_name = "";
 	
-	/* Render state */
-	Vector remove_keys = null;
-	Map<Component> components = new Map<Component>();
-	Map<bool> listen_events = new Map();
+	/* Virtual DOM */
+	VirtualDom vdom = new VirtualDom{ "kind": "root", "controller": this };
 	
-	
-	
-	/**
-	 * Find element
-	 */
-	int findElementPos(var parent_elem, Collection path_id, string kind, string elem_name = "")
-	{
-		string path_id_str = rs::join(".", path_id);
-		for (var i = 0; i < parent_elem.childNodes.length; i++)
-		{
-			var e = parent_elem.childNodes[i];
-			if (e._path_id_str == path_id_str and kind == "element" and e.tagName == rs::strtoupper(elem_name))
-			{
-				return i;
-			}
-			if (e._path_id_str == path_id_str and kind == "text" and e instanceof window.Text)
-			{
-				return i;
-			}
-		}
-		return -1;
-	}
-	
-	
-	
-	/**
-	 * Find element
-	 */
-	var findElement(var parent_elem, Collection path_id, string kind, string elem_name)
-	{
-		int pos = this.findElementPos(parent_elem, path_id, kind, elem_name);
-		return (pos != -1) ? parent_elem.childNodes[pos] : null;
-	}
-	
-	
-	
-	/**
-	 * Add component
-	 */
-	void addComponent(Component c)
-	{
-		string path_id_str = rs::join(".", c.path_id);
-		this.components.setValue(path_id_str, c);
-	}
-	
-	
-	
-	/**
-	 * Returns component by path id
-	 */
-	Component getComponent(Collection path_id)
-	{
-		string path_id_str = rs::join(".", path_id);
-		Component c = this.components[path_id_str];
-		return null;
-	}
-	
-	
-	
-	/**
-	 * Find component
-	 */
-	Component findComponent(Collection path_id, string component_name)
-	{
-		string path_id_str = rs::join(".", path_id);
-		Component c = this.components[path_id_str];
-		if (c != null and c.getClassName() == component_name) return c;
-		/* if (rtl::is_instanceof(c, component_name)) return c; */
-		return null;
-	}
-	
-	
-	
-	/**
-	 * Find parent component
-	 */
-	Component findParentComponent(Collection path_id, string component_name)
-	{
-		while (path_id.count() != 0)
-		{
-			string path_id_str = rs::join(".", path_id);
-			Component c = this.components[path_id_str];
-			if (c != null and c.getClassName() == component_name) return c;
-			/* if (rtl::is_instanceof(c, component_name)) return c; */
-			path_id = path_id.removeLastIm();
-		}
-		Component c = this.components[""];
-		if (rtl::is_instanceof(c, component_name)) return c;
-		return null;
-	}
-	
-	
-	
-	/**
-	 * Find model path
-	 */
-	Collection findModelPath(Collection path_id, Collection arr)
-	{
-		/* Model path */
-		Collection model_path = [];
-		var path = arr[1];
-		
-		/* Find component */
-		Component c = this.findParentComponent(path_id, arr[0]);
-		if (c != null and c.model_path != null)
-		{
-			model_path = c.model_path;
-		}
-		
-		if (rtl::isString(path)) model_path = model_path.pushIm(path);
-		else if (path instanceof Collection) model_path = model_path.concat(path);
-		
-		return model_path;
-	}
-	
-	
-	
-	/**
-	 * Start listen global event
-	 */
-	public void registerGlobalEvent(string event_class_name, Component component, string method_name = "")
-	{
-		var body = document.getElementsByTagName("body")[0];
-		string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
-			|> default string ""
-		;
-		body.addEventListener(es6_event_name, static::event(component, method_name));
-	}
-	
-	
-	
-	/**
-	 * Returns true if is elem
-	 */
-	static bool isElem(var o)
-	{
-		if (o instanceof window.HTMLElement or o instanceof window.Node) return true;
-		return false;
-	}
-	
-	
-	
-	/**
-	 * Create raw html
-	 */
-	static Collection rawHtml(string content)
-	{
-		var res = new Vector();
-		var e = document.@createElement('div');
-		e.innerHTML = rs::trim(content)
-		for (var i = 0; i < e.childNodes.length; i++) res.pushValue( e.childNodes[i] );
-		return res.toCollection();
-	}
-	
-	
-	
-	/**
-	 * JS Event
-	 */
-	static fn event(Component component, string method_name) =>
-		async void @(var e) use (component, method_name)
-		{
-			Message msg = null;
-			@ = rtl::getContext();
-			if (e instanceof Message)
-			{
-				msg = e;
-			}
-			else
-			{
-				msg = new Message( WebEvent::fromEvent(e) );
-				msg.sender = e.currentTarget;
-			}
-			fn f = rtl::method(component, method_name);
-			try
-			{
-				await f(msg);
-			}
-			catch (var e)
-			{
-				#ifcode JAVASCRIPT then
-				console.log(e.stack);
-				#endif
-			}
-		}
-	;
-	
-	
-	
-	/**
-	 * Component model change
-	 */
-	static fn eventChangeComponent(Component component, var model_path) =>
-		async void @(Message msg) use (component, model_path)
-		{
-			@ = rtl::getContext();
-			component.update("setAttr", model_path, msg.data.value);
-		}
-	;
+	/* Pools */
+	Vector<VirtualDom> render_components = null;
+	Vector<VirtualDom> changed_items = null;
+	Map<Component> components = new Map();
 	
 	
 	
@@ -249,168 +53,149 @@ class Controller extends BaseObject
 	 */
 	public void render()
 	{
-		this.remove_keys = new Vector();
+		this.render_components = new Vector();
+		this.changed_items = new Vector();
+		this.vdom.flush();
+		this.vdom.instance = this.elem;
+		this.vdom.e("c", this.class_name, this.params.concat({ "@bind": ["", this.model_path] }));
+		this.vdom.p();
 		
-		/* Create element */
-		Element element = new Element();
-		element.controller = this;
-		element.component = this.driver;
-		element.driver = this.driver;
-		element.parent_elem = this.parent_elem;
-		element.path_id = [];
+		/* Loop render components */
+		while (this.render_components.count() != 0)
+		{
+			Collection render_components = this.render_components.toCollection();
+			this.render_components = new Vector();
+			
+			for (int i=0; i<render_components.count(); i++)
+			{
+				VirtualDom item = render_components[i];
+				this.renderComponent(item);
+			}
+			
+		}
 		
-		/* Render component */
-		var component = element
-			.e("component", this.class_name)
-			.a
-			(
-				this.params.concat
-				{
-					"@bind": [classof RenderDriver, this.model_path]
-				}
-			)
-			.c(this.content)
-			.r()
-		;
-		
-		/* Patch childs */
-		element.p();
 	}
 	
 	
 	
 	/**
-	 * Patch DOM with new childs
+	 * Render component
 	 */
-	public void patchElemChilds(var parent_elem, var new_childs)
+	public void renderComponent(VirtualDom vdom)
 	{
-		#ifcode JAVASCRIPT then
-		if (new_childs == null) new_childs = [];
+		Collection path = static::getComponentPath(vdom);
+		string path_str = path.join(":");
 		
-		var findElementPos = function (elem, e)
+		/* Get component by path */
+		Component item = this.components.get(path_str, null)
+		if (item != null and item.getClassName() != vdom.name) item = null;
+		
+		/* Create component if does not exists */
+		if (item == null)
 		{
-			var childs = elem.childNodes;
-			for (var i = 0; i < elem.childNodes.length; i++)
+			item = rtl::newInstance(vdom.name);
+			item.controller = this;
+			item.driver = this.driver;
+			item.path_id = path;
+			item.is_new_element = true;
+		}
+		else
+		{
+			item.is_new_element = false;
+		}
+		
+		/* Set instance */
+		vdom.instance = item;
+		item.vdom = vdom;
+		
+		/* Model path */
+		Collection model_path = [];
+		
+		/* Find model */
+		Collection params_keys = ["@bind", "@name", "@model"];
+		if (vdom.params != null)
+		{
+			for (int params_keys_i=0; params_keys_i<params_keys.count(); params_keys_i++)
 			{
-				if (childs[i] == e)
+				string key = params_keys[params_keys_i];
+				if (vdom.params.has(key))
 				{
-					return i;
+					model_path = static::findModelPath(vdom, vdom.params[key]);
+					break;
 				}
-			}
-			return -1;
-		}
-		
-		var insertFirst = function (elem, e)
-		{
-			if (elem.childNodes.length == 0)
-			{
-				elem.appendChild(e);
-			}
-			else
-			{
-				elem.insertBefore(e, elem.firstChild);
-			}
-		}
-		
-		var insertAfter = function (elem, prev, e)
-		{
-			if (prev == null)
-			{
-				insertFirst(elem, e);
-				return;
-			}
-			var next = prev.nextSibling;
-			if (next == null)
-			{
-				elem.appendChild(e);
-			}
-			else
-			{
-				elem.insertBefore(e, next);
 			}
 		}
 		
+		/* Set model */
+		item.old_model = item.new_model;
+		item.new_model = this.driver.model(model_path);
+		item.model_path = model_path;
 		
-		/* Remove elems */
-		var i = parent_elem.childNodes.length - 1;
-		while (i >= 0)
+		/* Save component */
+		this.components.setValue(path_str, item);
+		
+		/* Repaint */
+		item.repaint(vdom);
+		
+		/* On create */
+		if (item.is_new_element) item.onCreate();
+		
+		/* On update */
+		item.onUpdate();
+	}
+	
+	
+	
+	/**
+	 * Find model path
+	 */
+	static Collection findModelPath(VirtualDom vdom, Collection arr)
+	{
+		string component_name = arr[0];
+		Collection model_path = arr[1];
+		if (rtl::isString(model_path)) model_path = [ model_path ];
+		
+		if (component_name == "")
 		{
-			var e = parent_elem.childNodes[i];
-			if (new_childs.indexOf(e) == -1)
-			{
-				parent_elem.removeChild(e);
-				if (e._path_id != undefined)
-				{
-					this.remove_keys.pushValue(null, e._path_id);
-				}
-				/* console.log('Remove child ', i); */
-			}
-			i--;
+			return model_path;
 		}
 		
-		
-		var prevElem = null;
-		for (var i=0; i<new_childs.length; i++)
+		while (vdom != null)
 		{
-			var new_e = new_childs[i];
-			if (typeof new_e == "string")
+			if (vdom.name == component_name)
 			{
-				new_e = document.createTextNode(new_e);
+				return vdom.instance.model_path.concat(model_path);
 			}
-			
-			var pos = findElementPos(parent_elem, new_e);
-			var flag = false;
-			
-			/* If new element */
-			if (pos == -1)
-			{
-				if (prevElem == null)
-				{
-					insertFirst(parent_elem, new_e);
-					flag = true;
-					/* console.log('Insert first ', i); */
-				}
-				else
-				{
-					insertAfter(parent_elem, prevElem, new_e);
-					flag = true;
-					/* console.log('Insert after[1] ', i); */
-				}
-			}
-			
-			/* If existing element */
-			else
-			{
-				if (pos - 1 < 0)
-				{
-					if (i != 0)
-					{
-						insertAfter(parent_elem, prevElem, new_e);
-						flag = true;
-						/* console.log('Insert after[2] ', i); */
-					}
-				}
-				else
-				{
-					var prevSibling = parent_elem.childNodes[pos - 1];
-					if (prevElem != prevSibling)
-					{
-						insertAfter(parent_elem, prevElem, new_e);
-						flag = true;
-						/* console.log('Insert after[3] ', i); */
-					}
-				}
-			}
-			/*
-			if (flag)
-			{
-				var index = this.remove_keys.indexOf(null, new_e._path_id);
-				if (index != -1)
-					this.remove_keys.remove(null, index, 1);
-			}
-			*/
-			prevElem = new_e;
+			vdom = vdom.parent_component;
 		}
-		#endif
+		
+		return model_path;
+	}
+	
+	
+	
+	/**
+	 * Returns component path
+	 */
+	static Collection getComponentPath(VirtualDom vdom)
+	{
+		Vector res = new Vector();
+		while (vdom != null)
+		{
+			res.pushValue(vdom.name);
+			vdom = vdom.parent_component;
+		}
+		return res.toCollection().reverse();
+	}
+	
+	
+	
+	/**
+	 * Get component of the Virtual Dom
+	 */
+	static Component getVirtualDomComponent(VirtualDom vdom)
+	{
+		if (vdom.kind == VirtualDom::KIND_COMPONENT) return vdom;
+		return vdom.parent_component;
 	}
 } 

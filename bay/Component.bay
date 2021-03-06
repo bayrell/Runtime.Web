@@ -25,13 +25,19 @@ use Runtime.Web.Controller;
 use Runtime.Web.Element;
 use Runtime.Web.Message;
 use Runtime.Web.RenderDriver;
-use Runtime.Web.WebApp;
+use Runtime.Web.VirtualDom;
+use Runtime.Web.App.WebApp;
 
 
 class Component extends BaseObject
 {
 	RenderDriver driver = null;
 	Controller controller = null;
+	Collection path_id = null;
+	Collection model_path = null;
+	VirtualDom vdom = null;
+	
+	
 	Map old_params = null;
 	Map params = null;
 	Dict old_watch_model = null;
@@ -40,8 +46,6 @@ class Component extends BaseObject
 	var new_model = null;
 	Vector childs = new Vector();
 	Collection child_nodes = null;
-	Collection model_path = null;
-	Collection path_id = null;
 	Map events = new Map();
 	bool is_new_element = false;
 	
@@ -214,7 +218,7 @@ class Component extends BaseObject
 	/**
 	 * Send event
 	 */
-	public async void signal(BaseEvent event)
+	public async void signalOld(BaseEvent event)
 	{
 		string event_class_name = event.getClassName();
 		Collection keys = this.events.keys();
