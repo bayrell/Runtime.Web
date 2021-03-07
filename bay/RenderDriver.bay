@@ -25,8 +25,7 @@ use Runtime.Entity;
 use Runtime.LambdaChain;
 use Runtime.LambdaChainClass;
 use Runtime.Web.Component;
-use Runtime.Web.Controller;
-use Runtime.Web.Element;
+use Runtime.Web.RenderController;
 
 
 @LambdaChainClass{}
@@ -36,7 +35,7 @@ class RenderDriver extends BaseDriver
 	static const string CSS_VARS_CHAIN = "Runtime.Web.RenderDriver.CSS_Vars";
 	
 	public BaseStruct layout = null;
-	Map<Controller> controllers = new Map();
+	Map<RenderController> controllers = new Map();
 	Collection<string> components = new Vector();
 	
 	/* CSS */
@@ -144,9 +143,9 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Returns controller
 	 */
-	Controller getController(string controller_name)
+	RenderController getController(string controller_name)
 	{
-		Controller controller = this.controllers.get(controller_name, null);
+		RenderController controller = this.controllers.get(controller_name, null);
 		return controller;
 	}
 	
@@ -165,10 +164,10 @@ class RenderDriver extends BaseDriver
 		if (model_path == null) model_path = [];
 		if (params == null) params = {};
 		
-		Controller controller = this.controllers.get(controller_name, null);
+		RenderController controller = this.controllers.get(controller_name, null);
 		if (controller == null)
 		{
-			controller = new Controller();
+			controller = new RenderController();
 			controller.driver = this;
 			this.controllers.setValue(controller_name, controller);
 		}
@@ -217,14 +216,23 @@ class RenderDriver extends BaseDriver
 	
 	
 	/**
-	 * Repaint
+	 * Repaint All
 	 */
 	RenderDriver repaint()
 	{
+		Collection<string> keys = this.controllers.keys();
+		
+		/* Render controllers */
+		for (int i=0; i<keys.count(); i++)
+		{
+			string controller_name = keys[i];
+			RenderController controller = this.controllers[controller_name];
+			controller.render();
+		}
+		
 		if (this.animation_id == null)
 		{
-			this.animation_id = window.@requestAnimationFrame( method this.render );
-			/* this.animation_id = window.@setTimeout( method this.render, 1 ); */
+			this.animation_id = window.@requestAnimationFrame( method this.animationFrame );
 		}
 		
 		return this;
@@ -233,9 +241,34 @@ class RenderDriver extends BaseDriver
 	
 	
 	/**
-	 * Render function
+	 * Repaint partial
 	 */
-	void render()
+	RenderDriver repaintPartial()
+	{
+		Collection<string> keys = this.controllers.keys();
+		
+		/* Render controllers */
+		for (int i=0; i<keys.count(); i++)
+		{
+			string controller_name = keys[i];
+			RenderController controller = this.controllers[controller_name];
+			controller.renderPartial();
+		}
+		
+		if (this.animation_id == null)
+		{
+			this.animation_id = window.@requestAnimationFrame( method this.animationFrame );
+		}
+		
+		return this;
+	}
+	
+	
+	
+	/**
+	 * Animation frame function
+	 */
+	void animationFrame()
 	{
 		@ = rtl::@getContext();
 		
@@ -245,8 +278,8 @@ class RenderDriver extends BaseDriver
 		for (int i=0; i<keys.count(); i++)
 		{
 			string controller_name = keys[i];
-			Controller controller = this.controllers[controller_name];
-			controller.render();
+			RenderController controller = this.controllers[controller_name];
+			controller.animationFrame();
 		}
 		
 		/* Render css */

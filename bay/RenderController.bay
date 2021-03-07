@@ -1,0 +1,389 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2021 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.BaseObject;
+use Runtime.Web.Events.WebEvent;
+use Runtime.Web.Component;
+use Runtime.Web.Element;
+use Runtime.Web.Message;
+use Runtime.Web.RenderCommand;
+use Runtime.Web.RenderDriver;
+use Runtime.Web.VirtualDom;
+
+
+class RenderController extends BaseObject
+{
+	var driver = null;
+	string class_name = "";
+	Collection model_path = null;
+	Dict params = null;
+	var content = null;
+	var elem = null;
+	string controller_name = "";
+	
+	/* Virtual DOM */
+	VirtualDom vdom = new VirtualDom{ "kind": "root", "controller": this };
+	
+	/* Pools */
+	Vector<VirtualDom> render_partial = new Vector();
+	Vector<VirtualDom> render_vdom = new Vector();
+	Map<Component> components = new Map();
+	
+	
+	
+	/**
+	 * Add render virtual dom
+	 */
+	public void addRenderVirtualDom(VirtualDom vdom, bool append = true)
+	{
+		/* Find item */
+		int pos = this.render_vdom.indexOf(vdom);
+		if (pos != -1) return;
+		
+		/* Push value */
+		if (append)
+		{
+			this.render_vdom.pushValue(vdom);
+		}
+		else
+		{
+			this.render_vdom.prependValue(vdom);
+		}
+	}
+	
+	
+	
+	/**
+	 * Render init
+	 */
+	public void renderInit()
+	{
+		this.render_partial = new Vector();
+		this.render_commands = new Vector();
+	}
+	
+	
+	
+	/**
+	 * Render
+	 */
+	public void render()
+	{
+		/* Call render */
+		this.vdom.prepareRepaint();
+		this.vdom.instance = this.elem;
+		this.vdom.e("c", this.class_name, this.params.concat({ "@bind": ["", this.model_path] }));
+		this.vdom.p();
+		
+		/* Call partial */
+		this.renderPartial();
+	}
+	
+	
+	
+	/**
+	 * Render partial
+	 */
+	public void renderPartial()
+	{
+		while (this.render_partial.count() != 0)
+		{
+			Collection render_partial = this.render_partial.toCollection();
+			this.render_partial = new Vector();
+			
+			for (int i=0; i<render_partial.count(); i++)
+			{
+				VirtualDom item = render_partial[i];
+				this.renderVirtualDom(item);
+				item.p();
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * Render component
+	 */
+	public void renderVirtualDom(VirtualDom vdom)
+	{
+		/* Render component */
+		if (vdom.kind == VirtualDom::KIND_COMPONENT)
+		{
+			Collection path = this.getComponentPath(vdom);
+			string path_str = path.join(":");
+			
+			/* Get component by path */
+			Component item = this.components.get(path_str, null)
+			if (item != null and item.getClassName() != vdom.name) item = null;
+			
+			/* Create component if does not exists */
+			if (item == null)
+			{
+				item = rtl::newInstance(vdom.name);
+				item.controller = this;
+				item.driver = this.driver;
+				item.path_id = path;
+				item.is_new = true;
+			}
+			else
+			{
+				item.is_new = false;
+			}
+			
+			/* Set instance */
+			item.setVirtualDom(vdom);
+			
+			/* Save component */
+			this.components.setValue(path_str, item);
+			
+			/* Render component */
+			item.renderComponent();
+			
+			/* On create */
+			if (item.is_new) item.onCreate();
+			
+			/* On update */
+			item.onUpdate();
+		}
+		
+		/* Render function */
+		else if (vdom.kind == VirtualDom::KIND_FUNCTION)
+		{
+			fn f = vdom.content;
+			if (f != null and rtl.isFn(f)) f(this.vdom);
+		}
+	}
+	
+	
+	
+	/**
+	 * Animation frame function
+	 */
+	public void animationFrame()
+	{
+		int items_count = this.render_vdom.count();
+		
+		/* Change items */
+		for (int i=0; i<items_count; i++)
+		{
+			VirtualDom vdom = this.render_vdom[i];
+			if (vdom.is_change_item)
+			{
+				/*vdom.is_change_item = false;*/
+			}
+		}
+		
+		/* Update childs */
+		for (int i=items_count - 1; i>=0; i--)
+		{
+			VirtualDom vdom = this.render_vdom[i];
+			if (vdom.is_change_childs)
+			{
+				/*vdom.is_change_childs = false;*/
+			}
+		}
+		
+		/* Clear */
+		/* this.render_vdom.clear(); */
+	}
+	
+	
+	
+	/**
+	 * Returns component path
+	 */
+	Collection getComponentPath(VirtualDom vdom)
+	{
+		Vector res = new Vector();
+		res.pushValue(this.controller_name);
+		while (vdom != null)
+		{
+			res.pushValue(vdom.name);
+			vdom = vdom.parent_component;
+		}
+		return res.toCollection().reverse();
+	}
+	
+	
+	
+	/**
+	 * Find model path
+	 */
+	Collection findModelPath(VirtualDom vdom, Collection arr)
+	{
+		string component_name = arr[0];
+		Collection model_path = arr[1];
+		if (rtl::isString(model_path)) model_path = [ model_path ];
+		
+		if (component_name == "")
+		{
+			return model_path;
+		}
+		
+		while (vdom != null)
+		{
+			if (vdom.name == component_name)
+			{
+				return vdom.instance.model_path.concat(model_path);
+			}
+			vdom = vdom.parent_component;
+		}
+		
+		return model_path;
+	}
+	
+	
+	
+	/**
+	 * Patch DOM with new childs
+	 */
+	static void patchElemChilds(var parent_elem, var new_childs)
+	{
+		#ifcode JAVASCRIPT then
+		if (new_childs == null) new_childs = [];
+		
+		var findElementPos = function (elem, e)
+		{
+			var childs = elem.childNodes;
+			for (var i = 0; i < elem.childNodes.length; i++)
+			{
+				if (childs[i] == e)
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+		
+		var insertFirst = function (elem, e)
+		{
+			if (elem.childNodes.length == 0)
+			{
+				elem.appendChild(e);
+			}
+			else
+			{
+				elem.insertBefore(e, elem.firstChild);
+			}
+		}
+		
+		var insertAfter = function (elem, prev, e)
+		{
+			if (prev == null)
+			{
+				insertFirst(elem, e);
+				return;
+			}
+			var next = prev.nextSibling;
+			if (next == null)
+			{
+				elem.appendChild(e);
+			}
+			else
+			{
+				elem.insertBefore(e, next);
+			}
+		}
+		
+		
+		/* Remove elems */
+		var i = parent_elem.childNodes.length - 1;
+		while (i >= 0)
+		{
+			var e = parent_elem.childNodes[i];
+			if (new_childs.indexOf(e) == -1)
+			{
+				parent_elem.removeChild(e);
+				if (e._path_id != undefined)
+				{
+					this.remove_keys.pushValue(null, e._path_id);
+				}
+				/* console.log('Remove child ', i); */
+			}
+			i--;
+		}
+		
+		
+		var prevElem = null;
+		for (var i=0; i<new_childs.length; i++)
+		{
+			var new_e = new_childs[i];
+			if (typeof new_e == "string")
+			{
+				new_e = document.createTextNode(new_e);
+			}
+			
+			var pos = findElementPos(parent_elem, new_e);
+			var flag = false;
+			
+			/* If new element */
+			if (pos == -1)
+			{
+				if (prevElem == null)
+				{
+					insertFirst(parent_elem, new_e);
+					flag = true;
+					/* console.log('Insert first ', i); */
+				}
+				else
+				{
+					insertAfter(parent_elem, prevElem, new_e);
+					flag = true;
+					/* console.log('Insert after[1] ', i); */
+				}
+			}
+			
+			/* If existing element */
+			else
+			{
+				if (pos - 1 < 0)
+				{
+					if (i != 0)
+					{
+						insertAfter(parent_elem, prevElem, new_e);
+						flag = true;
+						/* console.log('Insert after[2] ', i); */
+					}
+				}
+				else
+				{
+					var prevSibling = parent_elem.childNodes[pos - 1];
+					if (prevElem != prevSibling)
+					{
+						insertAfter(parent_elem, prevElem, new_e);
+						flag = true;
+						/* console.log('Insert after[3] ', i); */
+					}
+				}
+			}
+			/*
+			if (flag)
+			{
+				var index = this.remove_keys.indexOf(null, new_e._path_id);
+				if (index != -1)
+					this.remove_keys.remove(null, index, 1);
+			}
+			*/
+			prevElem = new_e;
+		}
+		#endif
+	}
+}

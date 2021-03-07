@@ -3,8 +3,8 @@
 	"assets":
 	[
 		"Component",
-		"Controller",
 		"Message",
+		"RenderController",
 		"RenderDriver",
 		"VirtualDom",
 		"Events/BaseEvent",

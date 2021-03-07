@@ -23,28 +23,35 @@ use Runtime.BaseStruct;
 use Runtime.Web.Events.ChangeEvent;
 use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
-use Runtime.Web.Controller;
 use Runtime.Web.Message;
+use Runtime.Web.RenderCommand;
+use Runtime.Web.RenderController;
 use Runtime.Web.RenderDriver;
 
 
 class VirtualDom extends BaseObject
 {
+	static const string KIND_ROOT = "root";
+	static const string KIND_COLLECTION = "collection";
 	static const string KIND_COMPONENT = "component";
+	static const string KIND_FUNCTION = "function";
 	static const string KIND_ELEMENT = "element";
 	static const string KIND_TEXT = "text";
 	static const string KIND_RAW = "raw";
 	
+	int pos = -1;
 	string key = "";
 	string kind = "";
 	string name = "";
+	string class_name = "";
 	Dict params = null;
 	var content = null;
 	Collection childs = [];
 	Vector new_childs = new Vector();
 	var instance = null;
-	bool is_change = false;
-	Controller controller = null;
+	bool is_change_item = false;
+	bool is_change_childs = false;
+	RenderController controller = null;
 	VirtualDom parent_vdom = null;
 	VirtualDom parent_component = null;
 	
@@ -58,6 +65,17 @@ class VirtualDom extends BaseObject
 		parent();
 		static::_assign(this, null, obj);
 	}
+	
+	
+	
+	/**
+	 * Is element
+	 */
+	public bool isElement() =>
+		this.kind == static::KIND_ELEMENT or
+		this.kind == static::KIND_TEXT or
+		this.kind == static::KIND_RAW
+	;
 	
 	
 	
@@ -87,10 +105,17 @@ class VirtualDom extends BaseObject
 		string key = (string) params.get("@key", "");
 		
 		if (kind == "c") kind = static::KIND_COMPONENT;
+		else if (kind == "f") kind = static::KIND_FUNCTION;
 		else if (kind == "e") kind = static::KIND_ELEMENT;
 		else if (kind == "t") kind = static::KIND_TEXT;
 		else if (kind == "r") kind = static::KIND_RAW;
 		else return null;
+		
+		/* Check if function */
+		if (content != null and rtl::isFn(content))
+		{
+			kind = static::KIND_FUNCTION;
+		}
 		
 		/* Find element by key */
 		if (params.has("@key"))
@@ -110,33 +135,39 @@ class VirtualDom extends BaseObject
 		/* Create new element */
 		if (vdom == null)
 		{
+			Component current_component = this.getCurrentComponent();
 			vdom = new VirtualDom
 			{
+				"pos": pos,
 				"key": key,
 				"kind": kind,
 				"name": name,
+				"class_name": (params["class"] |> default string ""),
 				"controller": this.controller,
 				"params": params,
 				"content": content,
 				"parent_vdom": this,
-				"parent_component": this.controller::getVirtualDomComponent(this),
+				"parent_component": current_component,
 			};
-			vdom.is_change = true;
+			vdom.is_change_item = true;
 		}
+		
+		/* Prepare to repaint */
+		vdom.prepareRepaint();
 		
 		/* Push child */
 		this.new_childs.pushValue(vdom);
 		
 		/* Push component to render */
-		if (kind == static::KIND_COMPONENT)
+		if (kind == static::KIND_COMPONENT or kind == static::KIND_FUNCTION)
 		{
-			this.controller.render_components.pushValue(vdom);
+			this.controller.render_partial.pushValue(vdom);
 		}
 		
 		/* Push changed value */
-		if (vdom.is_change)
+		if (vdom.isElement() and vdom.is_change_item)
 		{
-			this.controller.changed_items.pushValue(vdom);
+			this.controller.addRenderVirtualDom(vdom);
 		}
 		
 		return vdom;
@@ -149,14 +180,17 @@ class VirtualDom extends BaseObject
 	 */
 	void p()
 	{
+		this.childs = this.new_childs.toCollection();
+		this.new_childs = null;
+		this.is_change_childs = true;
 	}
 	
 	
 	
 	/**
-	 * Flush
+	 * Prepare to repaint
 	 */
-	void flush()
+	void prepareRepaint()
 	{
 		this.new_childs = new Vector();
 	}
@@ -172,4 +206,35 @@ class VirtualDom extends BaseObject
 	
 	
 	
+	/**
+	 * Get parent element
+	 */
+	var getParentElementVirtualDom()
+	{
+		VirtualDom vdom = this.parent_vdom;
+		while (vdom != null and not vdom.isElement() and vdom.kind != static::KIND_ROOT) vdom = vdom.parent_vdom;
+		return vdom;
+	}
+	
+	
+	
+	/**
+	 * Get parent element
+	 */
+	var getParentElement()
+	{
+		VirtualDom vdom = this.getParentElementVirtualDom();
+		return (vdom != null) ? vdom.instance : null;
+	}
+	
+	
+	
+	/**
+	 * Get current component
+	 */
+	Component getCurrentComponent()
+	{
+		if (this.kind == VirtualDom::KIND_COMPONENT) return this;
+		return this.parent_component;
+	}
 }

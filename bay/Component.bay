@@ -35,17 +35,311 @@ class Component extends BaseObject
 	Controller controller = null;
 	Collection path_id = null;
 	Collection model_path = null;
+	primitive old_model = null;
+	primitive new_model = null;
 	VirtualDom vdom = null;
-	
-	
-	Map old_params = null;
-	Map params = null;
+	Vector<Component> childs = new Vector();
+	Dict params = null;
+	Dict old_params = null;
 	Dict old_watch_model = null;
 	Dict new_watch_model = null;
-	var old_model = null;
-	var new_model = null;
-	Vector childs = new Vector();
-	Collection child_nodes = null;
+	bool is_new = false;
+	
+	
+	/**
+	 * Set Virtual DOM
+	 */
+	void setVirtualDom(VirtualDom vdom)
+	{
+		/* Update model path */
+		this.updateModelPath(vdom);
+		
+		/* Update parent */
+		this.updateParent(vdom);
+		
+		/* Update parent */
+		this.updateParams(vdom);
+		
+		/* Set new vdom */
+		vdom.instance = this;
+		this.vdom = vdom;
+	}
+	
+	
+	
+	/**
+	 * Update model path
+	 */
+	protected void updateModelPath(VirtualDom vdom)
+	{
+		/* Model path */
+		Collection model_path = [];
+		
+		/* Find model */
+		Collection params_keys = ["@bind", "@name", "@model"];
+		if (vdom.params != null)
+		{
+			for (int params_keys_i=0; params_keys_i<params_keys.count(); params_keys_i++)
+			{
+				string key = params_keys[params_keys_i];
+				if (vdom.params.has(key))
+				{
+					model_path = this.controller.findModelPath(vdom, vdom.params[key]);
+					break;
+				}
+			}
+		}
+		
+		/* Set model */
+		this.old_model = this.new_model;
+		this.new_model = this.driver.model(model_path);
+		this.model_path = model_path;
+	}
+	
+	
+	
+	/**
+	 * Update component parent
+	 */
+	protected void updateParent(VirtualDom vdom)
+	{
+		VirtualDom old_vdom = vdom;
+		Component parent_component = null;
+		
+		/* If same then exit */
+		if (old_vdom == vdom)
+		{
+			return;
+		}
+		
+		/* Remove from old parent */
+		if (old_vdom.parent_component != null)
+		{
+			parent_component = old_vdom.parent_component.instance;
+			parent_component.childs.removeValue(this);
+		}
+		
+		/* Add to new parent */
+		if (vdom.parent_component != null)
+		{
+			parent_component = vdom.parent_component.instance;
+			int pos = parent_component.indexOf(this);
+			if (pos == -1)
+			{
+				parent_component.childs.pushValue(this);
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * Update component params
+	 */
+	protected void updateParams(VirtualDom vdom)
+	{
+		this.old_params = this.params;
+		this.params = vdom.params;
+	}
+	
+	
+	
+	/**
+	 * Extend component model
+	 */
+	pure void extendComponentModel(BaseStruct layout, BaseStruct model, Dict params) => model;
+	
+	
+	
+	/**
+	 * Render function
+	 */
+	pure void render(BaseStruct layout, BaseStruct model, Dict params, html content) => null;
+	
+	
+	
+	/**
+	 * Extended render function
+	 */
+	pure void render2(BaseStruct layout, BaseStruct model, Dict params, html content)
+	{
+		model = static::extendComponentModel(layout, model, params);
+		return static::render(layout, model, params, content);
+	}
+	
+	
+	
+	/**
+	 * Call render component
+	 */
+	void renderComponent()
+	{
+		BaseStruct new_model = static::extendComponentModel(this.driver.layout, this.new_model, this.params);
+		if (new_model != this.new_model)
+		{
+			this.new_model = new_model;
+			this.driver.updateModel(this.model_path, this.new_model);
+		}
+		if (this.isRender())
+		{
+			fn f = static::render
+			(
+				this.driver.layout, new_model,
+				this.params, this.vdom.content
+			);
+			if (f != null) f(this.vdom);
+		}
+	}
+	
+	
+	
+	/**
+	 * Returns true if need to render component
+	 */
+	bool isRender()
+	{
+		if (this.is_new)
+		{
+			return true;
+		}
+		/* Check component model */
+		if (this.new_model != this.old_model)
+		{
+			return true;
+		}
+		/* Check component params */
+		if (not this.equalParams())
+		{
+			return true;
+		}
+		/* Check watch model */
+		if (this.isRepaintWatch())
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Watch model
+	 */
+	void watchModel(Collection path_id, var watch)
+	{
+		string class_name = watch |> attr 0 |> default string [];
+		var watch = watch[1];
+		if (not (watch instanceof Collection)) watch = [ watch ];
+		
+		this.new_watch_model = new Map();
+		for (int i=0; i<watch.count(); i++)
+		{
+			var item = watch[i];
+			Collection model_path = this.controller.findModelPath(path_id, [class_name, item]);
+			string key = rs::join(".", model_path);
+			this.new_watch_model.setValue(key, this.driver.model(model_path));
+		}
+		this.new_watch_model = this.new_watch_model.toDict();
+	}
+	
+	
+	
+	/**
+	 * Returns true if need to repaint component
+	 */
+	bool isRepaintWatch()
+	{
+		if (this.old_watch_model != null)
+		{
+			Collection keys = this.old_watch_model.keys();
+			for (int i=0; i<keys.count(); i++)
+			{
+				string key = keys[i];
+				Collection model_path = rs::split("\\.", key);
+				var old_model = this.old_watch_model[key];
+				var new_model = this.driver.model(model_path);
+				if (new_model != old_model)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	
+	
+	/**
+	 * Equal old and new params
+	 */
+	bool equalParams()
+	{
+		var arr = new Collection().concat(this.old_params.keys()).concat(this.params.keys()).removeDuplicatesIm();
+		for (int i=0; i<arr.count(); i++)
+		{
+			string field_name = arr[i];
+			if (not this.old_params.has(field_name)) return false;
+			if (not this.params.has(field_name)) return false;
+			if (this.params.get(field_name) != this.old_params.get(field_name)) return false;
+		}
+		return true;
+	}
+	
+	
+	
+	/**
+	 * Call repaint all
+	 */
+	void repaint()
+	{
+		this.driver.repaint();
+	}
+	
+	
+	
+	/**
+	 * Call repaint component
+	 */
+	void repaintPartial()
+	{
+		this.controller.render_components.pushValue(this.vdom);
+		this.driver.repaintPartial();
+	}
+	
+	
+	
+	/**
+	 * On create
+	 */
+	void onCreate()
+	{
+	}
+	
+
+	
+	/**
+	 * On update
+	 */
+	void onUpdate()
+	{
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/* Old */
+	
+	
+	
+	
+	
 	Map events = new Map();
 	bool is_new_element = false;
 	
@@ -176,21 +470,7 @@ class Component extends BaseObject
 	
 	
 	
-	/**
-	 * On create
-	 */
-	void onCreate()
-	{
-	}
 	
-
-	
-	/**
-	 * On update
-	 */
-	void onUpdate()
-	{
-	}
 	
 	
 	
@@ -239,103 +519,9 @@ class Component extends BaseObject
 	
 	
 	/**
-	 * Watch model
-	 */
-	void watchModel(Collection path_id, var watch)
-	{
-		string class_name = watch |> attr 0 |> default string [];
-		var watch = watch[1];
-		if (not (watch instanceof Collection)) watch = [ watch ];
-		
-		this.new_watch_model = new Map();
-		for (int i=0; i<watch.count(); i++)
-		{
-			var item = watch[i];
-			Collection model_path = this.controller.findModelPath(path_id, [class_name, item]);
-			string key = rs::join(".", model_path);
-			this.new_watch_model.setValue(key, this.driver.model(model_path));
-		}
-		this.new_watch_model = this.new_watch_model.toDict();
-	}
-	
-	
-	
-	/**
-	 * Returns true if need to repaint component
-	 */
-	bool isRepaint()
-	{
-		if (this.is_new_element)
-		{
-			return true;
-		}
-		/* Check component model */
-		if (this.new_model != this.old_model)
-		{
-			return true;
-		}
-		/* Check component params */
-		if (not this.equalParams())
-		{
-			return true;
-		}
-		/* Check watch model */
-		if (this.isRepaintWatch())
-		{
-			return true;
-		}
-		return false;
-	}
-	
-	
-	
-	/**
-	 * Returns true if need to repaint component
-	 */
-	bool isRepaintWatch()
-	{
-		if (this.old_watch_model != null)
-		{
-			Collection keys = this.old_watch_model.keys();
-			for (int i=0; i<keys.count(); i++)
-			{
-				string key = keys[i];
-				Collection model_path = rs::split("\\.", key);
-				var old_model = this.old_watch_model[key];
-				var new_model = this.driver.model(model_path);
-				if (new_model != old_model)
-				{
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	
-	
-	
-	/**
-	 * Equal old and new params
-	 */
-	bool equalParams()
-	{
-		var arr = new Collection().concat(this.old_params.keys()).concat(this.params.keys()).removeDuplicatesIm();
-		for (int i=0; i<arr.count(); i++)
-		{
-			string field_name = arr[i];
-			if (not this.old_params.has(field_name)) return false;
-			if (not this.params.has(field_name)) return false;
-			if (this.params.get(field_name) != this.old_params.get(field_name)) return false;
-		}
-		return true;
-	}
-	
-	
-	
-	/**
 	 * Repaint component
 	 */
-	void repaint(Element element)
+	void repaintOld(Element element)
 	{
 		BaseStruct new_model = static::extendComponentModel(this.driver.layout, this.new_model, this.params);
 		if (new_model != this.new_model)
@@ -363,28 +549,7 @@ class Component extends BaseObject
 	
 	
 	
-	/**
-	 * Extend component model
-	 */
-	pure void extendComponentModel(BaseStruct layout, BaseStruct model, Dict params) => model;
 	
-	
-	
-	/**
-	 * Render function
-	 */
-	pure void render(BaseStruct layout, BaseStruct model, Dict params, html content) => null;
-	
-	
-	
-	/**
-	 * Render function
-	 */
-	pure void renderComponent(BaseStruct layout, BaseStruct model, Dict params, html content)
-	{
-		model = static::extendComponentModel(layout, model, params);
-		return static::render(layout, model, params, content);
-	}
 	
 	
 	
