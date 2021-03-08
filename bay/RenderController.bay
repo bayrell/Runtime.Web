@@ -94,7 +94,7 @@ class RenderController extends BaseObject
 		this.vdom.path_id = [ this.controller_name ];
 		this.vdom.instance = this.elem;
 		this.vdom.name = this.controller_name;
-		this.vdom.e("c", this.class_name, this.params.concat({ "@bind": ["", this.model_path] }));
+		this.vdom.e("c", this.class_name, this.params.concat({ "@key": this.class_name, "@bind": ["", this.model_path] }));
 		this.vdom.p();
 		
 		/* Call partial */

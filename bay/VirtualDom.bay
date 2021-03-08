@@ -39,7 +39,6 @@ class VirtualDom extends BaseObject
 	static const string KIND_TEXT = "text";
 	static const string KIND_RAW = "raw";
 	
-	int pos = -1;
 	string key = "";
 	string kind = "";
 	string name = "";
@@ -80,43 +79,16 @@ class VirtualDom extends BaseObject
 	
 	
 	/**
-	 * Returns path name
-	 */
-	static string buildPathName(string kind, string name, string key, int pos)
-	{
-		if (key != "") return key;
-		if (kind == static::KIND_ROOT) return name;
-		if (kind == static::KIND_COMPONENT) return name ~ "-" ~ pos;
-		return pos;
-	}
-	
-	
-	
-	/**
-	 * Returns path name
-	 */
-	string getPathName()
-	{
-		return static::buildPathName(this.kind, this.name, this.key, this.pos);
-	}
-	
-	
-	
-	/**
 	 * Find element by key
 	 */
-	VirtualDom findChildElement(string kind, string name, string key, int pos)
+	VirtualDom findChildElement(string key)
 	{
-		string path_name = static::buildPathName(kind, name, key, pos);
 		for (int i=0; i<this.childs.count(); i++)
 		{
 			VirtualDom item = this.childs[i];
-			string item_path_name = item.getPathName();
-			if (path_name == item_path_name and item.kind == kind and item.name == name) return item;
+			if (item.key == key) return item;
 		}
-		
-		/* Find element by position */
-		return this.childs.get(pos, null);
+		return null;
 	}
 	
 	
@@ -129,8 +101,13 @@ class VirtualDom extends BaseObject
 		VirtualDom vdom = null;
 		params = Dict.@from(params);
 		int pos = this.new_childs.count();
-		string key = (string) params.get("@key", "");
 		
+		/* Get key */
+		string key = (string) params.get("@key", "");
+		if (key == "" and name == "") key = pos;
+		else if (key == "") key = name ~ "-" ~ pos;
+		
+		/* Get kind */
 		if (kind == "c") kind = static::KIND_COMPONENT;
 		else if (kind == "f") kind = static::KIND_FUNCTION;
 		else if (kind == "e") kind = static::KIND_ELEMENT;
@@ -139,13 +116,13 @@ class VirtualDom extends BaseObject
 		else return null;
 		
 		/* Check if function */
-		if (content != null and rtl::isFn(content))
+		if (kind == static::KIND_TEXT and content != null and rtl::isFn(content))
 		{
 			kind = static::KIND_FUNCTION;
 		}
 		
 		/* Find child element */
-		vdom = this.findChildElement(kind, name, key, pos);
+		vdom = this.findChildElement(key);
 		
 		/* Check vdom kind */
 		if (vdom != null and (vdom.kind != kind or vdom.name != name)) vdom = null;
@@ -155,7 +132,6 @@ class VirtualDom extends BaseObject
 		{
 			vdom = new VirtualDom
 			{
-				"pos": pos,
 				"key": key,
 				"kind": kind,
 				"name": name,
@@ -165,7 +141,7 @@ class VirtualDom extends BaseObject
 				"content": content,
 				"parent_vdom": this,
 			};
-			vdom.path_id = this.path_id.pushIm( vdom.getPathName() );
+			vdom.path_id = this.path_id.pushIm( key );
 			vdom.is_change_item = true;
 			vdom.is_new_element = true;
 		}
@@ -188,7 +164,7 @@ class VirtualDom extends BaseObject
 		{
 			this.controller.render_partial.pushValue(vdom);
 		}
-		if (kind == static::KIND_FUNCTION)
+		else if (kind == static::KIND_FUNCTION)
 		{
 			this.controller.render_partial.pushValue(vdom);
 		}
