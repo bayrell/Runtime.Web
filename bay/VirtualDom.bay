@@ -51,6 +51,7 @@ class VirtualDom extends BaseObject
 	var instance = null;
 	bool is_change_item = false;
 	bool is_change_childs = false;
+	bool is_new_element = false;
 	RenderController controller = null;
 	Collection path_id = null;
 	VirtualDom parent_vdom = null;
@@ -81,12 +82,12 @@ class VirtualDom extends BaseObject
 	/**
 	 * Returns path name
 	 */
-	static string buildPathName(string kind, string name, Dict params, int pos)
+	static string buildPathName(string kind, string name, string key, int pos)
 	{
-		if (this.key != "") return this.key;
-		if (this.kind == static::KIND_ROOT) return this.name;
-		if (this.kind == static::KIND_COMPONENT) return this.name ~ "-" ~ this.pos;
-		return this.pos;
+		if (key != "") return key;
+		if (kind == static::KIND_ROOT) return name;
+		if (kind == static::KIND_COMPONENT) return name ~ "-" ~ pos;
+		return pos;
 	}
 	
 	
@@ -113,7 +114,9 @@ class VirtualDom extends BaseObject
 			string item_path_name = item.getPathName();
 			if (path_name == item_path_name and item.kind == kind and item.name == name) return item;
 		}
-		return null;
+		
+		/* Find element by position */
+		return this.childs.get(pos, null);
 	}
 	
 	
@@ -144,14 +147,8 @@ class VirtualDom extends BaseObject
 		/* Find child element */
 		vdom = this.findChildElement(kind, name, key, pos);
 		
-		/* Find element by position */
-		if (opts != null and opts.get("is_new", false) != true)
-		{
-			vdom = this.childs.get(pos, null);
-		}
-		
 		/* Check vdom kind */
-		if (vdom != null and vdom.kind != kind) vdom = null;
+		if (vdom != null and (vdom.kind != kind or vdom.name != name)) vdom = null;
 		
 		/* Create new element */
 		if (vdom == null)
@@ -170,12 +167,14 @@ class VirtualDom extends BaseObject
 			};
 			vdom.path_id = this.path_id.pushIm( vdom.getPathName() );
 			vdom.is_change_item = true;
+			vdom.is_new_element = true;
 		}
-		
-		/* Clear instance */
-		if (vdom.kind != kind or vdom.name != name)
+		else
 		{
-			vdom.instance = null;
+			vdom.is_change_item = true;
+			vdom.is_new_element = false;
+			vdom.params = params;
+			vdom.content = content;
 		}
 		
 		/* Prepare to repaint */
@@ -224,6 +223,70 @@ class VirtualDom extends BaseObject
 	{
 		this.new_childs = new Vector();
 	}
+	
+	
+	
+	/**
+	 * Add event listener
+	 */
+	void addEventListener(string event_class_name, VirtualDom component, string method_name)
+	{
+		if (component == null) return;
+		
+		if (this.isElement())
+		{
+			string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
+				|> default string ""
+			;
+			
+			if (es6_event_name != "" and this.is_new_element)
+			{
+				this.instance.@addEventListener
+				(
+					es6_event_name,
+					static::event(component, method_name)
+				);
+			}
+			
+		}
+		
+		else if (this.kind == static::KIND_COMPONENT)
+		{
+		}
+	}
+	
+	
+	
+	/**
+	 * JS Event
+	 */
+	static fn event(VirtualDom component, string method_name) =>
+		async void @(var e) use (component, method_name)
+		{
+			Message msg = null;
+			@ = rtl::getContext();
+			if (e instanceof Message)
+			{
+				msg = e;
+			}
+			else
+			{
+				msg = new Message( WebEvent::fromEvent(e) );
+				msg.sender = e.currentTarget;
+			}
+			fn f = rtl::method(component.instance, method_name);
+			try
+			{
+				await f(msg);
+			}
+			catch (var e)
+			{
+				#ifcode JAVASCRIPT then
+				console.log(e.stack);
+				#endif
+			}
+		}
+	;
 	
 	
 	
@@ -326,5 +389,30 @@ class VirtualDom extends BaseObject
 	{
 		if (this.kind == VirtualDom::KIND_COMPONENT) return this;
 		return this.getParentComponent();
+	}
+	
+	
+	
+	/**
+	 * Find model path
+	 */
+	Collection findParentComponent(string component_name)
+	{
+		if (component_name == "")
+		{
+			return null;
+		}
+		
+		VirtualDom vdom = this.parent_vdom;
+		while (vdom != null)
+		{
+			if (vdom.kind == VirtualDom::KIND_COMPONENT and vdom.name == component_name)
+			{
+				return vdom;
+			}
+			vdom = vdom.parent_vdom;
+		}
+		
+		return null;
 	}
 }

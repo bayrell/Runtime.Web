@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.BaseObject;
+use Runtime.Web.Events.ChangeEvent;
 use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
 use Runtime.Web.Element;
@@ -243,8 +244,6 @@ class RenderController extends BaseObject
 				/* Check if event */
 				bool is_event = false;
 				string event_class_name = "";
-				
-				/*
 				if (rs::substr(key, 0, 7) == "@event:")
 				{
 					is_event = true;
@@ -259,62 +258,41 @@ class RenderController extends BaseObject
 				{
 					string component_name = value[0] |> default string "";
 					string method_name = value[1] |> default string "";
-					Component component = this.controller.findParentComponent(this.path_id, component_name);
-					if (component)
-					{
-						if (this.kind == "element")
-						{
-							string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
-								|> default string ""
-							;
-							if (es6_event_name != "" and this.is_new_element)
-							{
-								this.node.@addEventListener
-								(
-									es6_event_name,
-									this.controller::event(component, method_name)
-								);
-							}
-						}
-						else if (this.kind == "component")
-						{
-							this.component.addEventListener
-							(
-								event_class_name,
-								this.controller::event(component, method_name)
-							);
-						}
-					}
+					
+					/* Add event listener */
+					VirtualDom component = vdom.findParentComponent(component_name);
+					vdom.addEventListener(event_class_name, component, method_name);
+					
 					continue;
 				}
-				*/
-				/*
+				
+				/* Bind change event */
 				if (key == "@bind" or key == "@name")
 				{
 					string component_name = value[0] |> default string "";
-					string value_name = value[1];
-					Component component = this.controller.findParentComponent(this.path_id, component_name);
-					if (this.kind == "component")
-					{
-						this.component.addEventListener
-						(
-							classof ChangeEvent,
-							this.controller::eventChangeComponent(component, value_name)
-						);
-					}
+					string method_name = value[1] |> default string "";
+					
+					/* Add event listener */
+					VirtualDom component = vdom.findParentComponent(component_name);
+					vdom.addEventListener(classof ChangeEvent, component, method_name);
 				}
-				*/
-				/*
+				
+				/* Set reference */
 				if (key == "@ref" or key == "@name")
 				{
 					string component_name = value[0] |> default string "";
 					string value_name = value[1] |> default string "";
-					Component component = this.controller.findParentComponent(this.path_id, component_name);
-					if (component) component[value_name] = node;
+					
+					/* Find parent component */
+					VirtualDom component = vdom.findParentComponent(component_name);
+					if (component)
+					{
+						component.instance[value_name] = vdom;
+					}
 				}
-				*/
 				
-				if (vdom.kind == VirtualDom::KIND_ELEMENT and (key == "value" or key == "@bind" or key == "@name"))
+				/* Set value */
+				if (key == "value" or key == "@bind" or key == "@name")
 				{
 					if (key == "@bind" or key == "@name")
 					{
@@ -322,18 +300,27 @@ class RenderController extends BaseObject
 						value = this.driver.model(model_path);
 					}
 					
-					if (node.tagName == "INPUT" or node.tagName == "SELECT" or node.tagName == "TEXTAREA")
+					/* Set value element */
+					if (vdom.kind == VirtualDom::KIND_ELEMENT)
 					{
-						if (value == null and node.value != "" and value !== 0 and value !== "0")
+						if (node.tagName == "INPUT" or node.tagName == "SELECT" or node.tagName == "TEXTAREA")
 						{
-							node.value = "";
+							if (value == null and node.value != "" and value !== 0 and value !== "0")
+							{
+								node.value = "";
+							}
+							else if (node.value != value)
+							{
+								node.value = value;
+							}
+							node._old_value = value;
+							continue;
 						}
-						else if (node.value != value)
-						{
-							node.value = value;
-						}
-						node._old_value = value;
-						continue;
+					}
+					
+					/* Set value component */
+					else if (vdom.kind == VirtualDom::KIND_COMPONENT)
+					{
 					}
 				}
 				
@@ -429,21 +416,13 @@ class RenderController extends BaseObject
 		Collection model_path = arr[1];
 		if (rtl::isString(model_path)) model_path = [ model_path ];
 		
-		if (component_name == "")
+		VirtualDom component = vdom.findParentComponent(component_name);
+		if (component == null)
 		{
 			return model_path;
 		}
 		
-		while (vdom != null)
-		{
-			if (vdom.kind == VirtualDom::KIND_COMPONENT and vdom.name == component_name)
-			{
-				return vdom.instance.model_path.concat(model_path);
-			}
-			vdom = vdom.parent_vdom;
-		}
-		
-		return model_path;
+		return component.instance.model_path.concat(model_path);
 	}
 	
 	
