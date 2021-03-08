@@ -33,7 +33,6 @@ class Component extends BaseObject
 {
 	RenderDriver driver = null;
 	Controller controller = null;
-	Collection path_id = null;
 	Collection model_path = null;
 	primitive old_model = null;
 	primitive new_model = null;
@@ -103,6 +102,8 @@ class Component extends BaseObject
 	 */
 	protected void updateParent(VirtualDom vdom)
 	{
+		return ;
+		
 		VirtualDom old_vdom = vdom;
 		Component parent_component = null;
 		

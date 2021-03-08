@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.lib;
 use Runtime.BaseObject;
 use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
@@ -39,7 +40,7 @@ class RenderController extends BaseObject
 	string controller_name = "";
 	
 	/* Virtual DOM */
-	VirtualDom vdom = new VirtualDom{ "kind": "root", "controller": this };
+	VirtualDom vdom = new VirtualDom{ "kind": "root", "controller": this, "pos": 0 };
 	
 	/* Pools */
 	Vector<VirtualDom> render_partial = new Vector();
@@ -88,7 +89,10 @@ class RenderController extends BaseObject
 	{
 		/* Call render */
 		this.vdom.prepareRepaint();
+		this.addRenderVirtualDom(this.vdom);
+		this.vdom.path_id = [ this.controller_name ];
 		this.vdom.instance = this.elem;
+		this.vdom.name = this.controller_name;
 		this.vdom.e("c", this.class_name, this.params.concat({ "@bind": ["", this.model_path] }));
 		this.vdom.p();
 		
@@ -111,8 +115,11 @@ class RenderController extends BaseObject
 			for (int i=0; i<render_partial.count(); i++)
 			{
 				VirtualDom item = render_partial[i];
-				this.renderVirtualDom(item);
-				item.p();
+				if (item.kind == VirtualDom::KIND_COMPONENT or item.kind == VirtualDom::KIND_FUNCTION)
+				{
+					this.renderVirtualDom(item);
+					item.p();
+				}
 			}
 		}
 	}
@@ -127,8 +134,7 @@ class RenderController extends BaseObject
 		/* Render component */
 		if (vdom.kind == VirtualDom::KIND_COMPONENT)
 		{
-			Collection path = this.getComponentPath(vdom);
-			string path_str = path.join(":");
+			string path_str = vdom.path_id.join(":");
 			
 			/* Get component by path */
 			Component item = this.components.get(path_str, null)
@@ -140,7 +146,6 @@ class RenderController extends BaseObject
 				item = rtl::newInstance(vdom.name);
 				item.controller = this;
 				item.driver = this.driver;
-				item.path_id = path;
 				item.is_new = true;
 			}
 			else
@@ -168,8 +173,214 @@ class RenderController extends BaseObject
 		else if (vdom.kind == VirtualDom::KIND_FUNCTION)
 		{
 			fn f = vdom.content;
-			if (f != null and rtl.isFn(f)) f(this.vdom);
+			if (f != null and rtl.isFn(f)) f(vdom);
 		}
+		
+		/* If element */
+		else if (vdom.kind == VirtualDom::KIND_ELEMENT)
+		{
+			/* Create instance */
+			if (vdom.instance == null)
+			{
+				if (vdom.name == "svg")
+				{
+					vdom.instance = document.@createElementNS("http://www.w3.org/2000/svg", "svg");
+					vdom.instance._vdom = vdom;
+					
+					/* Patch content */
+					var e = document.@createElement("div");
+					e.innerHTML = "<svg>" ~ vdom.content ~ "</svg>";
+					var item = e.childNodes[0];
+					while (item.childNodes.length > 0)
+					{
+						var e = item.childNodes[0];
+						vdom.instance.appendChild(e);
+					}
+				}
+				else
+				{
+					vdom.instance = document.@createElement(vdom.name);
+					vdom.instance._vdom = vdom;
+				}
+			}
+		}
+		
+		/* If text */
+		else if (vdom.kind == VirtualDom::KIND_TEXT)
+		{
+			/* Create instance */
+			if (vdom.instance == null)
+			{
+				vdom.instance = document.@createTextNode( rtl::exists(vdom.content) ? vdom.content : "" );
+				vdom.instance._vdom = vdom;
+			}
+			else
+			{
+				/* Set new text */
+				if (vdom.instance.nodeValue != vdom.content)
+				{
+					vdom.instance.nodeValue = vdom.content;
+				}
+			}
+		}
+		
+		/* If raw */
+		else if (vdom.kind == VirtualDom::KIND_RAW)
+		{
+			vdom.instance = static::rawHtml(vdom.content);
+		}
+		
+		/* Set attributes */
+		if (vdom.instance != null and vdom.params != null)
+		{
+			var node = vdom.instance;
+			Collection keys = vdom.params.keys();
+			for (int i=0; i<keys.count(); i++)
+			{
+				string key = keys[i];
+				string value = vdom.params[key];
+				
+				/* Check if event */
+				bool is_event = false;
+				string event_class_name = "";
+				
+				/*
+				if (rs::substr(key, 0, 7) == "@event:")
+				{
+					is_event = true;
+					event_class_name = rs::substr(key, 7);
+				}
+				if (rs::substr(0, 12) == "@eventAsync:")
+				{
+					is_event = true;
+					event_class_name = rs::substr(key, 12);
+				}
+				if (is_event)
+				{
+					string component_name = value[0] |> default string "";
+					string method_name = value[1] |> default string "";
+					Component component = this.controller.findParentComponent(this.path_id, component_name);
+					if (component)
+					{
+						if (this.kind == "element")
+						{
+							string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
+								|> default string ""
+							;
+							if (es6_event_name != "" and this.is_new_element)
+							{
+								this.node.@addEventListener
+								(
+									es6_event_name,
+									this.controller::event(component, method_name)
+								);
+							}
+						}
+						else if (this.kind == "component")
+						{
+							this.component.addEventListener
+							(
+								event_class_name,
+								this.controller::event(component, method_name)
+							);
+						}
+					}
+					continue;
+				}
+				*/
+				/*
+				if (key == "@bind" or key == "@name")
+				{
+					string component_name = value[0] |> default string "";
+					string value_name = value[1];
+					Component component = this.controller.findParentComponent(this.path_id, component_name);
+					if (this.kind == "component")
+					{
+						this.component.addEventListener
+						(
+							classof ChangeEvent,
+							this.controller::eventChangeComponent(component, value_name)
+						);
+					}
+				}
+				*/
+				/*
+				if (key == "@ref" or key == "@name")
+				{
+					string component_name = value[0] |> default string "";
+					string value_name = value[1] |> default string "";
+					Component component = this.controller.findParentComponent(this.path_id, component_name);
+					if (component) component[value_name] = node;
+				}
+				*/
+				
+				if (vdom.kind == VirtualDom::KIND_ELEMENT and (key == "value" or key == "@bind" or key == "@name"))
+				{
+					if (key == "@bind" or key == "@name")
+					{
+						Collection model_path = this.findModelPath(vdom, vdom.params[key]);
+						value = this.driver.model(model_path);
+					}
+					
+					if (node.tagName == "INPUT" or node.tagName == "SELECT" or node.tagName == "TEXTAREA")
+					{
+						if (value == null and node.value != "" and value !== 0 and value !== "0")
+						{
+							node.value = "";
+						}
+						else if (node.value != value)
+						{
+							node.value = value;
+						}
+						node._old_value = value;
+						continue;
+					}
+				}
+				
+				/*
+				if (this.kind == "component" and key == "@watch")
+				{
+					node.watchModel(this.path_id, value);
+					continue;
+				}
+				*/
+				
+				if (key[0] == "@") continue;
+				if (key == "style" and value instanceof Dict)
+				{
+					value = rs::join(";", value.transition(string (string v, string k) => k ~ ": " ~ v));
+				}
+				if (vdom.kind == VirtualDom::KIND_ELEMENT)
+				{
+					if (node.@getAttribute(key) != value)
+					{
+						node.@setAttribute(key, value);
+					}
+				}
+				
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * Update childs
+	 */
+	public void updateVirtualDomChilds(VirtualDom vdom)
+	{
+		if (vdom == null) return;
+		if (vdom.kind != VirtualDom::KIND_ROOT and vdom.kind != VirtualDom::KIND_ELEMENT) return;
+		
+		/* Get childs */
+		Collection new_childs = vdom.getChildElements();
+		new_childs = new_childs
+			.map( var (VirtualDom item) => item.instance )
+			.filter( lib::equalNot(null) )
+		;
+		
+		/* Patch childs */
+		static::patchElemChilds(vdom.instance, new_childs);
 	}
 	
 	
@@ -187,7 +398,8 @@ class RenderController extends BaseObject
 			VirtualDom vdom = this.render_vdom[i];
 			if (vdom.is_change_item)
 			{
-				/*vdom.is_change_item = false;*/
+				this.renderVirtualDom(vdom);
+				vdom.is_change_item = false;
 			}
 		}
 		
@@ -197,29 +409,13 @@ class RenderController extends BaseObject
 			VirtualDom vdom = this.render_vdom[i];
 			if (vdom.is_change_childs)
 			{
-				/*vdom.is_change_childs = false;*/
+				this.updateVirtualDomChilds(vdom);
+				vdom.is_change_childs = false;
 			}
 		}
 		
 		/* Clear */
-		/* this.render_vdom.clear(); */
-	}
-	
-	
-	
-	/**
-	 * Returns component path
-	 */
-	Collection getComponentPath(VirtualDom vdom)
-	{
-		Vector res = new Vector();
-		res.pushValue(this.controller_name);
-		while (vdom != null)
-		{
-			res.pushValue(vdom.name);
-			vdom = vdom.parent_component;
-		}
-		return res.toCollection().reverse();
+		this.render_vdom.clear();
 	}
 	
 	
@@ -240,14 +436,50 @@ class RenderController extends BaseObject
 		
 		while (vdom != null)
 		{
-			if (vdom.name == component_name)
+			if (vdom.kind == VirtualDom::KIND_COMPONENT and vdom.name == component_name)
 			{
 				return vdom.instance.model_path.concat(model_path);
 			}
-			vdom = vdom.parent_component;
+			vdom = vdom.parent_vdom;
 		}
 		
 		return model_path;
+	}
+	
+	
+	
+	/**
+	 * Find element
+	 */
+	static int findElementPos(var parent_elem, string path_name, string kind, string elem_name = "")
+	{
+		for (var i = 0; i < parent_elem.childNodes.length; i++)
+		{
+			var e = parent_elem.childNodes[i];
+			if (e._path_name == path_name and kind == "element" and e.tagName == rs::strtoupper(elem_name))
+			{
+				return i;
+			}
+			if (e._path_name == path_name and kind == "text" and e instanceof window.Text)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	
+	
+	/**
+	 * Create raw html
+	 */
+	static Collection rawHtml(string content)
+	{
+		var res = new Vector();
+		var e = document.@createElement('div');
+		e.innerHTML = rs::trim(content)
+		for (var i = 0; i < e.childNodes.length; i++) res.pushValue( e.childNodes[i] );
+		return res.toCollection();
 	}
 	
 	

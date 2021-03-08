@@ -52,9 +52,8 @@ class VirtualDom extends BaseObject
 	bool is_change_item = false;
 	bool is_change_childs = false;
 	RenderController controller = null;
+	Collection path_id = null;
 	VirtualDom parent_vdom = null;
-	VirtualDom parent_component = null;
-	
 	
 	
 	/** 
@@ -80,14 +79,39 @@ class VirtualDom extends BaseObject
 	
 	
 	/**
+	 * Returns path name
+	 */
+	static string buildPathName(string kind, string name, Dict params, int pos)
+	{
+		if (this.key != "") return this.key;
+		if (this.kind == static::KIND_ROOT) return this.name;
+		if (this.kind == static::KIND_COMPONENT) return this.name ~ "-" ~ this.pos;
+		return this.pos;
+	}
+	
+	
+	
+	/**
+	 * Returns path name
+	 */
+	string getPathName()
+	{
+		return static::buildPathName(this.kind, this.name, this.key, this.pos);
+	}
+	
+	
+	
+	/**
 	 * Find element by key
 	 */
-	VirtualDom findChildElement(string key)
+	VirtualDom findChildElement(string kind, string name, string key, int pos)
 	{
+		string path_name = static::buildPathName(kind, name, key, pos);
 		for (int i=0; i<this.childs.count(); i++)
 		{
 			VirtualDom item = this.childs[i];
-			if (item.key == key) return item;
+			string item_path_name = item.getPathName();
+			if (path_name == item_path_name and item.kind == kind and item.name == name) return item;
 		}
 		return null;
 	}
@@ -117,11 +141,8 @@ class VirtualDom extends BaseObject
 			kind = static::KIND_FUNCTION;
 		}
 		
-		/* Find element by key */
-		if (params.has("@key"))
-		{
-			vdom = this.findChildElement(key);
-		}
+		/* Find child element */
+		vdom = this.findChildElement(kind, name, key, pos);
 		
 		/* Find element by position */
 		if (opts != null and opts.get("is_new", false) != true)
@@ -135,7 +156,6 @@ class VirtualDom extends BaseObject
 		/* Create new element */
 		if (vdom == null)
 		{
-			Component current_component = this.getCurrentComponent();
 			vdom = new VirtualDom
 			{
 				"pos": pos,
@@ -147,9 +167,15 @@ class VirtualDom extends BaseObject
 				"params": params,
 				"content": content,
 				"parent_vdom": this,
-				"parent_component": current_component,
 			};
+			vdom.path_id = this.path_id.pushIm( vdom.getPathName() );
 			vdom.is_change_item = true;
+		}
+		
+		/* Clear instance */
+		if (vdom.kind != kind or vdom.name != name)
+		{
+			vdom.instance = null;
 		}
 		
 		/* Prepare to repaint */
@@ -159,7 +185,11 @@ class VirtualDom extends BaseObject
 		this.new_childs.pushValue(vdom);
 		
 		/* Push component to render */
-		if (kind == static::KIND_COMPONENT or kind == static::KIND_FUNCTION)
+		if (kind == static::KIND_COMPONENT)
+		{
+			this.controller.render_partial.pushValue(vdom);
+		}
+		if (kind == static::KIND_FUNCTION)
 		{
 			this.controller.render_partial.pushValue(vdom);
 		}
@@ -207,12 +237,61 @@ class VirtualDom extends BaseObject
 	
 	
 	/**
+	 * Returns childs elements
+	 */
+	static void _getChildElements(VirtualDom vdom, Vector res, bool new_childs = false)
+	{
+		Collection childs = null;
+		if (new_childs) childs = vdom.new_childs;
+		else childs = vdom.childs;
+		
+		if (childs == null) return;
+		
+		/* Foreach childs */
+		for (int i=0; i<childs.count(); i++)
+		{
+			VirtualDom item = childs[i];
+			if (item.isElement()) res.pushValue(item);
+			else if (item.kind == static::KIND_COMPONENT or item.kind == static::KIND_FUNCTION)
+			{
+				static::_getChildElements(item, res, new_childs);
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * Returns childs elements
+	 */
+	Collection getChildElements(bool new_childs = false)
+	{
+		Vector res = new Vector();
+		static::_getChildElements(this, res, new_childs);
+		return res.toCollection();
+	}
+	
+	
+	
+	/**
 	 * Get parent element
 	 */
 	var getParentElementVirtualDom()
 	{
 		VirtualDom vdom = this.parent_vdom;
 		while (vdom != null and not vdom.isElement() and vdom.kind != static::KIND_ROOT) vdom = vdom.parent_vdom;
+		return vdom;
+	}
+	
+	
+	
+	/**
+	 * Get parent component
+	 */
+	var getParentComponentVirtualDom()
+	{
+		VirtualDom vdom = this.parent_vdom;
+		while (vdom != null and vdom.kind != static::KIND_COMPONENT) vdom = vdom.parent_vdom;
 		return vdom;
 	}
 	
@@ -230,11 +309,22 @@ class VirtualDom extends BaseObject
 	
 	
 	/**
+	 * Get parent component
+	 */
+	var getParentComponent()
+	{
+		VirtualDom vdom = this.getParentComponentVirtualDom();
+		return (vdom != null) ? vdom.instance : null;
+	}
+	
+	
+	
+	/**
 	 * Get current component
 	 */
-	Component getCurrentComponent()
+	Component component()
 	{
 		if (this.kind == VirtualDom::KIND_COMPONENT) return this;
-		return this.parent_component;
+		return this.getParentComponent();
 	}
 }

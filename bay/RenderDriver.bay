@@ -135,7 +135,6 @@ class RenderDriver extends BaseDriver
 	void updateModel(Collection<string> model_path = null, var value = null)
 	{
 		this.layout = rtl::setAttr(this.layout, model_path, value);
-		this.repaint();
 	}
 	
 	
