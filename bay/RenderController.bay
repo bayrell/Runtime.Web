@@ -23,7 +23,6 @@ use Runtime.BaseObject;
 use Runtime.Web.Events.ChangeEvent;
 use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
-use Runtime.Web.Element;
 use Runtime.Web.Message;
 use Runtime.Web.RenderCommand;
 use Runtime.Web.RenderDriver;
@@ -32,7 +31,7 @@ use Runtime.Web.VirtualDom;
 
 class RenderController extends BaseObject
 {
-	var driver = null;
+	RenderDriver driver = null;
 	string class_name = "";
 	Collection model_path = null;
 	Dict params = null;
@@ -261,8 +260,10 @@ class RenderController extends BaseObject
 					
 					/* Add event listener */
 					VirtualDom component = vdom.findParentComponent(component_name);
-					vdom.addEventListener(event_class_name, component, method_name);
-					
+					if (component)
+					{
+						this.driver.addEventListener(event_class_name, vdom, null, component, method_name);
+					}
 					continue;
 				}
 				
@@ -270,11 +271,14 @@ class RenderController extends BaseObject
 				if (key == "@bind" or key == "@name")
 				{
 					string component_name = value[0] |> default string "";
-					string method_name = value[1] |> default string "";
+					string method_name = "onChangeItemModel";
 					
 					/* Add event listener */
 					VirtualDom component = vdom.findParentComponent(component_name);
-					vdom.addEventListener(classof ChangeEvent, component, method_name);
+					if (component)
+					{
+						this.driver.addEventListener(classof ChangeEvent, vdom, null, component, method_name);
+					}
 				}
 				
 				/* Set reference */

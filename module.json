@@ -3,6 +3,7 @@
 	"assets":
 	[
 		"Component",
+		"Listener",
 		"Message",
 		"RenderController",
 		"RenderDriver",

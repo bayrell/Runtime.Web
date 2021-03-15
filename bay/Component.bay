@@ -54,7 +54,7 @@ class Component extends BaseObject
 		this.updateModelPath(vdom);
 		
 		/* Update parent */
-		this.updateParent(vdom);
+		/*this.updateParent(vdom);*/
 		
 		/* Update parent */
 		this.updateParams(vdom);
@@ -93,43 +93,6 @@ class Component extends BaseObject
 		this.old_model = this.new_model;
 		this.new_model = this.driver.model(model_path);
 		this.model_path = model_path;
-	}
-	
-	
-	
-	/**
-	 * Update component parent
-	 */
-	protected void updateParent(VirtualDom vdom)
-	{
-		return ;
-		
-		VirtualDom old_vdom = vdom;
-		Component parent_component = null;
-		
-		/* If same then exit */
-		if (old_vdom == vdom)
-		{
-			return;
-		}
-		
-		/* Remove from old parent */
-		if (old_vdom.parent_component != null)
-		{
-			parent_component = old_vdom.parent_component.instance;
-			parent_component.childs.removeValue(this);
-		}
-		
-		/* Add to new parent */
-		if (vdom.parent_component != null)
-		{
-			parent_component = vdom.parent_component.instance;
-			int pos = parent_component.indexOf(this);
-			if (pos == -1)
-			{
-				parent_component.childs.pushValue(this);
-			}
-		}
 	}
 	
 	
@@ -327,9 +290,21 @@ class Component extends BaseObject
 	
 	
 	
+	/**
+	 * On change item model
+	 */
+	void onChangeItemModel()
+	{
+	}
 	
 	
 	
+	/**
+	 * On handle event
+	 */
+	void onHandleEvent()
+	{
+	}
 	
 	
 	

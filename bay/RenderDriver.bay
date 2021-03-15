@@ -24,8 +24,12 @@ use Runtime.BaseStruct;
 use Runtime.Entity;
 use Runtime.LambdaChain;
 use Runtime.LambdaChainClass;
+use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
+use Runtime.Web.Listener;
+use Runtime.Web.Message;
 use Runtime.Web.RenderController;
+use Runtime.Web.VirtualDom;
 
 
 @LambdaChainClass{}
@@ -36,7 +40,7 @@ class RenderDriver extends BaseDriver
 	
 	public BaseStruct layout = null;
 	Map<RenderController> controllers = new Map();
-	Collection<string> components = new Vector();
+	Collection<string> default_components = new Vector();
 	
 	/* CSS */
 	Dict css_vars = {};
@@ -47,8 +51,8 @@ class RenderDriver extends BaseDriver
 	/* Animation */
 	var animation_id = null;
 	
-	/* Components instances */
-	Map<Component> instances = new Map();
+	/* Listeners */
+	Vector<Listener> listeners = new Vector();
 	
 	
 	
@@ -71,7 +75,146 @@ class RenderDriver extends BaseDriver
 		
 		/* Build css vars */
 		this.css_vars = this.callChainCssVars();
-		this.components = new Collection();
+		this.default_components = new Collection();
+	}
+	
+	
+	
+	/**
+	 * Find component
+	 */
+	Component findComponent(string path_id)
+	{
+		Collection arr = rs::split(":", path_id);
+		string controller_name = arr[0];
+		
+		RenderController controller = this.controllers[controller_name];
+		if (controller == null) return null;
+		
+		return controller.components[path_id];
+	}
+	
+	
+	
+	/**
+	 * Add event listener
+	 */
+	public void addEventListener(string event_class_name, VirtualDom from, VirtualDom to,
+		VirtualDom component, string method_name)
+	{
+		string from_str = (from != null) ? from.path_id.join(":") : "";
+		string to_str = (to != null) ? to.path_id.join(":") : "";
+		Listener listener = this.listeners.findItem
+		(
+			fn (Dict item) use (from_str, to_str, event_class_name) =>
+				item["from"] == from_str and
+				item["to"] == to_str and
+				item["event_class_name"] == event_class_name
+		);
+		if (listener == null)
+		{
+			listener = new Listener
+			{
+				"from": from_str,
+				"to": to_str,
+				"event_class_name": event_class_name,
+			};
+			this.listeners.pushValue(listener);
+		}
+		listener.addCallback(component, method_name);
+		
+		/* If is new element */
+		if (from.isElement() and from.is_new_element)
+		{
+			string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
+				|> default string ""
+			;
+			if (es6_event_name != "")
+			{
+				from.instance.@addEventListener(es6_event_name, method this.js_event);
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * JS Event
+	 */
+	void @js_event(var e)
+	{
+		Message msg = null;
+		@ = rtl::getContext();
+		var ctx = @;
+		
+		msg = new Message( WebEvent::fromEvent(e) );
+		msg.sender = e.currentTarget._vdom;
+		
+		await this.processMessage(ctx, msg);
+	}
+	
+	
+	
+	/**
+	 * Find listeners
+	 */
+	static Collection addListenerCallback(Map res, Listener listener)
+	{
+		for (int i=0; i<listener.callbacks.count(); i++)
+		{
+			Dict item = listener.callbacks[i];
+			string ident = item["ident"];
+			res.setValue(ident, item);
+		}
+	}
+	
+	
+	
+	/**
+	 * Find listeners
+	 */
+	Collection findListenersByMessage(Message msg)
+	{
+		string from_path_id = msg.sender.path_id.join(":");
+		string to_path_id = msg.dest_path_id;
+		
+		Map res = new Map();
+		for (int i=0; i<this.listeners.count(); i++)
+		{
+			Listener listener = this.listeners[i];
+			if (listener.from == from_path_id and listener.to == "")
+			{
+				static::addListenerCallback(res, listener);
+			}
+			if (listener.from == from_path_id and listener.to == to_path_id)
+			{
+				static::addListenerCallback(res, listener);
+			}
+		}
+		
+		return res.values().toCollection();
+	}
+	
+	
+	
+	/**
+	 * Process message
+	 */
+	async void processMessage(Message msg)
+	{
+		Collection callbacks = this.findListenersByMessage(msg);
+		
+		for (int i=0; i<callbacks.count(); i++)
+		{
+			Dict item = callbacks[i];
+			string path_id = item["path_id"];
+			string method_name = item["method_name"];
+			Component component = this.findComponent(path_id);
+			if (component != null)
+			{
+				await rtl::methodApplyAsync(component, method_name, [msg]);
+			}
+		}
 	}
 	
 	
@@ -79,9 +222,9 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Add component
 	 */
-	RenderDriver addComponent(string component_name)
+	RenderDriver addDefaultComponent(string component_name)
 	{
-		this.components = this.components.pushIm(component_name);
+		this.default_components = this.default_components.pushIm(component_name);
 		return this;
 	}
 	
@@ -90,9 +233,9 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Add components
 	 */
-	RenderDriver addComponents(Collection<string> components)
+	RenderDriver addDefaultComponents(Collection<string> components)
 	{
-		this.components = this.components.concat(components);
+		this.default_components = this.default_components.concat(components);
 		return this;
 	}
 	
@@ -101,9 +244,9 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Setup components
 	 */
-	RenderDriver setComponents(Collection<string> components)
+	RenderDriver setDefaultComponents(Collection<string> components)
 	{
-		this.components = components;
+		this.default_components = components;
 		return this;
 	}
 	
@@ -199,7 +342,7 @@ class RenderDriver extends BaseDriver
 	 */
 	string getCSS(Collection components = null)
 	{
-		if (components == null) components = this.components.toCollection();
+		if (components == null) components = this.default_components.toCollection();
 		
 		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
 		

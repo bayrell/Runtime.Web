@@ -56,6 +56,7 @@ class VirtualDom extends BaseObject
 	VirtualDom parent_vdom = null;
 	
 	
+	
 	/** 
 	 * Constructor
 	 */
@@ -199,70 +200,6 @@ class VirtualDom extends BaseObject
 	{
 		this.new_childs = new Vector();
 	}
-	
-	
-	
-	/**
-	 * Add event listener
-	 */
-	void addEventListener(string event_class_name, VirtualDom component, string method_name)
-	{
-		if (component == null) return;
-		
-		if (this.isElement())
-		{
-			string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
-				|> default string ""
-			;
-			
-			if (es6_event_name != "" and this.is_new_element)
-			{
-				this.instance.@addEventListener
-				(
-					es6_event_name,
-					static::event(component, method_name)
-				);
-			}
-			
-		}
-		
-		else if (this.kind == static::KIND_COMPONENT)
-		{
-		}
-	}
-	
-	
-	
-	/**
-	 * JS Event
-	 */
-	static fn event(VirtualDom component, string method_name) =>
-		async void @(var e) use (component, method_name)
-		{
-			Message msg = null;
-			@ = rtl::getContext();
-			if (e instanceof Message)
-			{
-				msg = e;
-			}
-			else
-			{
-				msg = new Message( WebEvent::fromEvent(e) );
-				msg.sender = e.currentTarget;
-			}
-			fn f = rtl::method(component.instance, method_name);
-			try
-			{
-				await f(msg);
-			}
-			catch (var e)
-			{
-				#ifcode JAVASCRIPT then
-				console.log(e.stack);
-				#endif
-			}
-		}
-	;
 	
 	
 	

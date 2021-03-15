@@ -15,44 +15,46 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
- 
+
 namespace Runtime.Web;
 
-use Runtime.BaseObject;
-use Runtime.Web.Events.BaseEvent;
+use Runtime.BaseStruct;
+use Runtime.Web.VirtualDom;
 
 
-class Message<BaseEvent> extends BaseObject
+class Listener extends BaseStruct
 {
-	public BaseEvent data = null;
-	public bool is_cancel = false;
-	public var sender = null;
-	public string dest_path_id = "";
+	string from = "";
+	string to = "";
+	string event_class_name = "";
+	Vector<Dict> callbacks = new Vector();
 	
 	
 	/**
-	 * Cancel Message
+	 * Add event
 	 */
-	void cancel()
+	void addCallback(VirtualDom component, string method_name)
 	{
-		this.is_cancel = true;
+		string path_id = (component != null) ? component.path_id.join(":") : "";
 		
-		if (this.data instanceof BaseEvent)
+		Dict item = this.callbacks.findItem
+		(
+			fn (Dict item) use (path_id, method_name) =>
+				item["path_id"] == path_id and
+				item["method_name"] == method_name
+		);
+		if (item == null)
 		{
-			this.data = this.data::cancel(this.data);
+			this.callbacks.pushValue
+			(
+				new Dict
+				{
+					"path_id": path_id,
+					"method_name": method_name,
+					"ident": path_id ~ "->" ~ method_name
+				}
+			);
 		}
-		
-	}
-	
-	
-	
-	/** 
-	 * Constructor
-	 */
-	public void constructor(BaseEvent data)
-	{
-		parent();
-		this.data = data;
 	}
 	
 }
