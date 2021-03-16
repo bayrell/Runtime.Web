@@ -18,10 +18,10 @@
 
 namespace Runtime.Web.Events;
 
-use Runtime.Web.Events.WebEvent;
+use Runtime.Web.Events.BaseEvent;
 
 
-struct SignalEvent extends WebEvent
+struct SignalEvent extends BaseEvent
 {
 	public string command = "";
 	public Collection data = null;

@@ -19,44 +19,14 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
-use Runtime.Web.ListenerCallback;
 use Runtime.Web.VirtualDom;
 
 
-struct Listener extends BaseStruct
+struct ListenerCallback extends BaseStruct
 {
-	string from = "";
-	string to = "";
+	string path_id = "";
+	string method_name = "";
 	string event_class_name = "";
-	Vector<Dict> callbacks = new Vector();
-	
-	
-	/**
-	 * Add event
-	 */
-	void addCallback(VirtualDom component, string method_name, var event_tag)
-	{
-		string path_id = (component != null) ? component.path_id.join(":") : "";
-		
-		ListenerCallback item = this.callbacks.findItem
-		(
-			fn (Dict item) use (path_id, method_name) =>
-				item.path_id == path_id and
-				item.method_name == method_name
-		);
-		if (item == null)
-		{
-			this.callbacks.pushValue
-			(
-				new ListenerCallback
-				{
-					"path_id": path_id,
-					"method_name": method_name,
-					"event_class_name": this.event_class_name,
-					"event_tag": event_tag,
-				}
-			);
-		}
-	}
-	
+	primitive event_tag = null;
+	string ident() => this.path_id ~ "->" ~ this.method_name;
 }

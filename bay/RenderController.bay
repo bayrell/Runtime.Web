@@ -268,18 +268,27 @@ class RenderController extends BaseObject
 				}
 				
 				/* Bind change event */
+				/*
 				if (key == "@bind" or key == "@name")
 				{
 					string component_name = value[0] |> default string "";
-					string method_name = "onChangeItemModel";
+					string value_name = value[1];
+					string method_name = "onChangeModelEvent";
 					
-					/* Add event listener */
 					VirtualDom component = vdom.findParentComponent(component_name);
 					if (component)
 					{
-						this.driver.addEventListener(classof ChangeEvent, vdom, null, component, method_name);
+						this.driver.addEventListener
+						(
+							classof ChangeEvent, vdom, null, component, method_name,
+							{
+								"component_path_id": component.getPathId(),
+								"value_name": value_name,
+							}
+						);
 					}
 				}
+				*/
 				
 				/* Set reference */
 				if (key == "@ref" or key == "@name")

@@ -27,7 +27,7 @@ class Message<BaseEvent> extends BaseObject
 	public BaseEvent data = null;
 	public bool is_cancel = false;
 	public var sender = null;
-	public string dest_path_id = "";
+	public string dest = "";
 	
 	
 	/**

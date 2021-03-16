@@ -4,6 +4,7 @@
 	[
 		"Component",
 		"Listener",
+		"ListenerCallback",
 		"Message",
 		"RenderController",
 		"RenderDriver",
@@ -29,6 +30,7 @@
 		"Events/MouseOverEvent",
 		"Events/MouseUpEvent",
 		"Events/MouseWheelEvent",
+		"Events/SignalEvent",
 		"ModuleDescription"
 	]
 }

@@ -57,6 +57,13 @@ class VirtualDom extends BaseObject
 	
 	
 	
+	/**
+	 * Returns path id
+	 */
+	string getPathId() => rs::join(":", this.path_id);
+	
+	
+	
 	/** 
 	 * Constructor
 	 */

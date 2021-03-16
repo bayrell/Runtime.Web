@@ -21,18 +21,19 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.Web.Events.BaseEvent;
-use Runtime.Web.Controller;
-use Runtime.Web.Element;
+use Runtime.Web.Events.ChangeEvent;
+use Runtime.Web.Events.SignalEvent;
+use Runtime.Web.ListenerCallback;
 use Runtime.Web.Message;
+use Runtime.Web.RenderController;
 use Runtime.Web.RenderDriver;
 use Runtime.Web.VirtualDom;
-use Runtime.Web.App.WebApp;
 
 
 class Component extends BaseObject
 {
 	RenderDriver driver = null;
-	Controller controller = null;
+	RenderController controller = null;
 	Collection model_path = null;
 	primitive old_model = null;
 	primitive new_model = null;
@@ -43,6 +44,80 @@ class Component extends BaseObject
 	Dict old_watch_model = null;
 	Dict new_watch_model = null;
 	bool is_new = false;
+	
+	
+	
+	/**
+	 * Returns path id
+	 */
+	string getPathId() => rs::join(":", this.vdom.path_id);
+	
+	
+	
+	/**
+	 * Returns model
+	 */
+	var model(Collection<string> model_path = null, var def_val = null) =>
+		this.model_path == null ? null :
+			rtl::attr
+			(
+				this.driver.layout,
+				this.model_path.concat
+				(
+					(rtl::isEmpty(model_path)) ? null :
+					(model_path instanceof Collection) ? model_path : [ model_path ]
+				),
+				def_val
+			)
+	;
+	
+	
+	
+	/**
+	 * Update model
+	 */
+	void update(string method_name = "")
+	{
+		var args = new Vector();
+		#ifcode JAVASCRIPT then
+		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
+		#endif
+		
+		/* Get current model */
+		BaseStruct model = this.model();
+		
+		/* Update model */
+		model = static::updateModel(model, method_name, args.toCollection());
+		
+		/* Set new model */
+		this.driver.updateModel(this.model_path, model);
+	}
+	
+	
+	
+	/**
+	 * Update model
+	 */
+	pure primitive updateModel(primitive model, string method_name = "", Collection args = null)
+	{
+		/* Change model by function */
+		if (rtl::method_exists(model, method_name))
+		{
+			fn f = rtl::method(model, method_name);
+			model = rtl::apply(f, args);
+		}
+		
+		/* Static function */
+		if (rtl::method_exists(model.getClassName(), method_name))
+		{
+			args = args.unshiftIm(model);
+			fn f = rtl::method(model.getClassName(), method_name);
+			model = rtl::apply(f, args);
+		}
+		
+		return model;
+	}
+	
 	
 	
 	/**
@@ -291,19 +366,74 @@ class Component extends BaseObject
 	
 	
 	/**
-	 * On change item model
+	 * On handle event
 	 */
-	void onChangeItemModel()
+	async void onMessage(Message msg, ListenerCallback item)
+	{
+		BaseEvent event = msg.data;
+		
+		if (
+			item.method_name != "onMessage" and
+			item.method_name != "onCreate" and
+			item.method_name != "onUpdate" and
+			rs::substr(item.method_name, 0, 2) == "on"
+		)
+		{
+			if (rtl::method_exists(this, item.method_name))
+			{
+				await rtl::applyMethodAsync(this, item.method_name, [msg, item]);
+			}
+		}
+		
+		if (item.method_name != "onSignal" and event instanceof SignalEvent)
+		{
+			await this.onSignal(msg, item);
+		}
+	}
+	
+	
+	
+	/**
+	 * On change model event
+	 */
+	async void onChangeModelEvent(Message<ChangeEvent> msg, ListenerCallback item)
+	{
+		/* component.update("setAttr", model_path, msg.data.value); */
+	}
+	
+	
+	
+	/**
+	 * On signal
+	 */
+	async void onSignal(Message<SignalEvent> msg, ListenerCallback item)
 	{
 	}
 	
 	
 	
 	/**
-	 * On handle event
+	 * Send signal
 	 */
-	void onHandleEvent()
+	async void sendSignal(VirtualDom dest, string command, Collection data = null)
 	{
+		SignalEvent event = new SignalEvent{ "command": command, "data": data };
+		Message msg = new Message(event);
+		msg.sender = this.vdom;
+		msg.dest = (dest != null) ? dest.getPathId() : "";
+		await this.driver.processMessage(msg);
+	}
+	
+	
+	
+	/**
+	 * Emit message
+	 */
+	async void emitMessage(BaseEvent event)
+	{
+		Message msg = new Message(event);
+		msg.sender = this.vdom;
+		await this.driver.processMessage(msg);
 	}
 	
 	
@@ -312,10 +442,7 @@ class Component extends BaseObject
 	
 	/* Old */
 	
-	
-	
-	
-	
+
 	Map events = new Map();
 	bool is_new_element = false;
 	
@@ -323,7 +450,7 @@ class Component extends BaseObject
 	/**
 	 * Add component
 	 */
-	void addComponent(Component c)
+	void addComponentOld(Component c)
 	{
 		int pos = this.childs.indexOf(c);
 		if (pos == -1)
@@ -331,32 +458,12 @@ class Component extends BaseObject
 			this.childs.pushValue(c);
 		}
 	}
-	
-	
-	
-	/**
-	 * Returns model
-	 */
-	var model(Collection<string> model_path = null, var def_val = null) =>
-		this.model_path == null ? null :
-			rtl::attr
-			(
-				this.driver.layout,
-				this.model_path.concat
-				(
-					(rtl::isEmpty(model_path)) ? null :
-					(model_path instanceof Collection) ? model_path : [ model_path ]
-				),
-				def_val
-			)
-	;
-	
-	
+
 	
 	/**
 	 * Call model function
 	 */
-	void call(string method_name = "")
+	void callOld(string method_name = "")
 	{
 		var args = new Vector();
 		#ifcode JAVASCRIPT then
@@ -388,75 +495,12 @@ class Component extends BaseObject
 	}
 	
 	
-	
-	/**
-	 * Update model
-	 */
-	void update(string method_name = "")
-	{
-		var args = new Vector();
-		#ifcode JAVASCRIPT then
-		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
-		#endif
-		
-		/* Get current model */
-		BaseStruct model = this.model();
-		
-		/* Update model */
-		model = static::updateModel(model, method_name, args.toCollection());
-		
-		/* Set new model */
-		this.driver.updateModel(this.model_path, model);
-	}
-	
-	
-	
-	/**
-	 * Update model
-	 */
-	pure primitive updateModel(primitive model, string method_name = "", Collection args = null)
-	{
-		/* Change model by function */
-		if (rtl::method_exists(model, method_name))
-		{
-			fn f = rtl::method(model, method_name);
-			model = rtl::apply(f, args);
-		}
-		
-		/* Static function */
-		if (rtl::method_exists(model.getClassName(), method_name))
-		{
-			args = args.unshiftIm(model);
-			fn f = rtl::method(model.getClassName(), method_name);
-			model = rtl::apply(f, args);
-		}
-		
-		return model;
-	}
-	
-	
-	
 	/**
 	 * Set new model
 	 */
-	void setModel(var model)
+	void setModelOld(var model)
 	{
 		this.driver.updateModel(this.model_path, model);
-	}
-	
-	
-	
-	
-	
-	
-	
-	/**
-	 * Open url
-	 */
-	void openUrl(string url)
-	{
-		WebApp app = @.getDriver("WebApp");
-		await app.openUrl(url);
 	}
 	
 	
@@ -464,7 +508,7 @@ class Component extends BaseObject
 	/**
 	 * Add event listener
 	 */
-	void addEventListener(string event_class_name, fn f)
+	void addEventListenerOld(string event_class_name, fn f)
 	{
 		this.events.setValue(event_class_name, f);
 	}
@@ -497,7 +541,7 @@ class Component extends BaseObject
 	/**
 	 * Repaint component
 	 */
-	void repaintOld(Element element)
+	void repaintOld(var element)
 	{
 		BaseStruct new_model = static::extendComponentModel(this.driver.layout, this.new_model, this.params);
 		if (new_model != this.new_model)
@@ -526,7 +570,7 @@ class Component extends BaseObject
 	
 	
 	
-	
+	/* Functions for render */
 	
 	
 	/**
