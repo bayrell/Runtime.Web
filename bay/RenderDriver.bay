@@ -24,6 +24,7 @@ use Runtime.BaseStruct;
 use Runtime.Entity;
 use Runtime.LambdaChain;
 use Runtime.LambdaChainClass;
+use Runtime.Web.Events.BaseEvent;
 use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
 use Runtime.Web.Listener;
@@ -100,32 +101,32 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Add event listener
 	 */
-	public void addEventListener(string event_class_name, VirtualDom from, VirtualDom to,
-		VirtualDom component, string method_name, var event_tag = null)
+	public void addEventListener(string event_class_name, VirtualDom from, VirtualDom dest,
+		string callback_path_id, string callback_method_name, var event_tag = null)
 	{
-		string from_str = (from != null) ? from.path_id.join(":") : "";
-		string to_str = (to != null) ? to.path_id.join(":") : "";
+		string from_path = (from != null) ? from.getPathId() : "";
+		string dest_path = (dest != null) ? dest.getPathId() : "";
 		Listener listener = this.listeners.findItem
 		(
-			fn (Dict item) use (from_str, to_str, event_class_name) =>
-				item["from"] == from_str and
-				item["to"] == to_str and
+			fn (Dict item) use (from_path, dest_path, event_class_name) =>
+				item["from"] == from_path and
+				item["dest"] == dest_path and
 				item["event_class_name"] == event_class_name
 		);
 		if (listener == null)
 		{
 			listener = new Listener
 			{
-				"from": from_str,
-				"to": to_str,
+				"from": from_path,
+				"dest": dest_path,
 				"event_class_name": event_class_name,
 			};
 			this.listeners.pushValue(listener);
 		}
-		listener.addCallback(component, method_name, event_tag);
+		listener.addCallback(callback_path_id, callback_method_name, event_tag);
 		
 		/* If is new element */
-		if (from.isElement() and from.is_new_element)
+		if (from != null and from.isElement() and from.is_new_element)
 		{
 			string es6_event_name = rtl::applyMethod(event_class_name, "getES6EventName")
 				|> default string ""
@@ -176,13 +177,13 @@ class RenderDriver extends BaseDriver
 	 */
 	Collection findListenersByMessage(Message msg)
 	{
-		string from_path_id = (msg.sender != null) ? msg.sender.getPathId() : "";
-		string dest_path_id = msg.dest;
+		string from = (msg.sender != null) ? msg.sender.getPathId() : "";
+		string dest = msg.dest;
 		
 		Map res = new Map();
 		
 		/* Add listeners */
-		if (from_path_id != "")
+		if (from != "")
 		{
 			for (int i=0; i<this.listeners.count(); i++)
 			{
@@ -196,8 +197,9 @@ class RenderDriver extends BaseDriver
 				
 				/* Add listener */
 				if (
-					listener.from == from_path_id and listener.to == "" or
-					listener.from == from_path_id and listener.to == dest_path_id
+					(listener.from == from and listener.dest == dest) or
+					(listener.from == from and dest == "") or
+					(listener.dest == dest and dest != "")
 				)
 				{
 					static::addListenerCallback(res, listener);
@@ -206,13 +208,18 @@ class RenderDriver extends BaseDriver
 		}
 		
 		/* Add destination */
-		if (dest_path_id != "")
+		if (dest != "")
 		{
 			ListenerCallback item = new ListenerCallback
 			{
-				"path_id": dest_path_id,
+				"path_id": dest,
 				"method_name": "onMessage",
-				"event_class_name": msg.data.getClassName(),
+				/*
+				{
+					"from": from,
+					"dest": dest,
+					"event_class_name": msg.data.getClassName(),
+				},*/
 			};
 			res.setValue(item.ident(), item);
 		}
@@ -238,6 +245,19 @@ class RenderDriver extends BaseDriver
 				await rtl::methodApplyAsync(component, "onMessage", [msg, item]);
 			}
 		}
+	}
+	
+	
+	
+	/**
+	 * Send message
+	 */
+	async void sendEvent(BaseEvent event, VirtualDom sender, string dest_path = "")
+	{
+		Message msg = new Message(event);
+		msg.sender = sender;
+		msg.dest = dest_path;
+		await this.processMessage(msg);
 	}
 	
 	

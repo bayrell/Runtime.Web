@@ -26,7 +26,7 @@ use Runtime.Web.VirtualDom;
 struct Listener extends BaseStruct
 {
 	string from = "";
-	string to = "";
+	string dest = "";
 	string event_class_name = "";
 	Vector<Dict> callbacks = new Vector();
 	
@@ -34,10 +34,8 @@ struct Listener extends BaseStruct
 	/**
 	 * Add event
 	 */
-	void addCallback(VirtualDom component, string method_name, var event_tag)
+	void addCallback(string path_id, string method_name, var event_tag)
 	{
-		string path_id = (component != null) ? component.path_id.join(":") : "";
-		
 		ListenerCallback item = this.callbacks.findItem
 		(
 			fn (Dict item) use (path_id, method_name) =>
@@ -52,8 +50,10 @@ struct Listener extends BaseStruct
 				{
 					"path_id": path_id,
 					"method_name": method_name,
-					"event_class_name": this.event_class_name,
 					"event_tag": event_tag,
+					"from": this.from,
+					"dest": this.dest,
+					"event_class_name": this.event_class_name,
 				}
 			);
 		}

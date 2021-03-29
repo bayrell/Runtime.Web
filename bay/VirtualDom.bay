@@ -294,7 +294,7 @@ class VirtualDom extends BaseObject
 	/**
 	 * Get parent component
 	 */
-	var getParentComponent()
+	Component getParentComponent()
 	{
 		VirtualDom vdom = this.getParentComponentVirtualDom();
 		return (vdom != null) ? vdom.instance : null;

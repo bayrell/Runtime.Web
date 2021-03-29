@@ -262,7 +262,11 @@ class RenderController extends BaseObject
 					VirtualDom component = vdom.findParentComponent(component_name);
 					if (component)
 					{
-						this.driver.addEventListener(event_class_name, vdom, null, component, method_name);
+						this.driver.addEventListener
+						(
+							event_class_name, vdom, null,
+							component.getPathId(), method_name
+						);
 					}
 					continue;
 				}

@@ -394,16 +394,6 @@ class Component extends BaseObject
 	
 	
 	/**
-	 * On change model event
-	 */
-	async void onChangeModelEvent(Message<ChangeEvent> msg, ListenerCallback item)
-	{
-		/* component.update("setAttr", model_path, msg.data.value); */
-	}
-	
-	
-	
-	/**
 	 * On signal
 	 */
 	async void onSignal(Message<SignalEvent> msg, ListenerCallback item)
@@ -418,25 +408,27 @@ class Component extends BaseObject
 	async void sendSignal(VirtualDom dest, string command, Collection data = null)
 	{
 		SignalEvent event = new SignalEvent{ "command": command, "data": data };
-		Message msg = new Message(event);
-		msg.sender = this.vdom;
-		msg.dest = (dest != null) ? dest.getPathId() : "";
-		await this.driver.processMessage(msg);
+		string dest_path = (dest != null) ? dest.getPathId() : "";
+		await this.driver.sendEvent(event, this.vdom, dest_path);
 	}
 	
 	
 	
 	/**
-	 * Emit message
+	 * Send event
 	 */
-	async void emitMessage(BaseEvent event)
+	async void sendEvent(BaseEvent event, VirtualDom dest = null)
 	{
-		Message msg = new Message(event);
-		msg.sender = this.vdom;
-		await this.driver.processMessage(msg);
+		string dest_path = (dest != null) ? dest.getPathId() : "";
+		await this.driver.sendEvent(event, this.vdom, dest_path);
 	}
 	
 	
+	
+	/**
+	 * Get parent component
+	 */
+	Component getParentComponent() => this.vdom.getParentComponent();
 	
 	
 	

@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.Web.Listener;
 use Runtime.Web.VirtualDom;
 
 
@@ -26,7 +27,11 @@ struct ListenerCallback extends BaseStruct
 {
 	string path_id = "";
 	string method_name = "";
-	string event_class_name = "";
 	primitive event_tag = null;
 	string ident() => this.path_id ~ "->" ~ this.method_name;
+	
+	/* Listener */
+	string from = "";
+	string dest = "";
+	string event_class_name = "";
 }
