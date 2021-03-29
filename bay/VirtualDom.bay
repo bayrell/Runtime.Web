@@ -129,6 +129,12 @@ class VirtualDom extends BaseObject
 			kind = static::KIND_FUNCTION;
 		}
 		
+		/* Check if collection */
+		if (kind == static::KIND_TEXT and content != null and content instanceof Collection)
+		{
+			kind = static::KIND_COLLECTION;
+		}
+		
 		/* Find child element */
 		vdom = this.findChildElement(key);
 		
@@ -175,6 +181,15 @@ class VirtualDom extends BaseObject
 		else if (kind == static::KIND_FUNCTION)
 		{
 			this.controller.render_partial.pushValue(vdom);
+		}
+		else if (kind == static::KIND_COLLECTION)
+		{
+			for (int i=0; i<content.count(); i++)
+			{
+				fn f = content[i];
+				vdom.e("t", "", null, f);
+			}
+			vdom.p();
 		}
 		
 		/* Push changed value */
@@ -235,7 +250,11 @@ class VirtualDom extends BaseObject
 		{
 			VirtualDom item = childs[i];
 			if (item.isElement()) res.pushValue(item);
-			else if (item.kind == static::KIND_COMPONENT or item.kind == static::KIND_FUNCTION)
+			else if (
+				item.kind == static::KIND_COMPONENT or
+				item.kind == static::KIND_FUNCTION or
+				item.kind == static::KIND_COLLECTION
+			)
 			{
 				static::_getChildElements(item, res, new_childs);
 			}
