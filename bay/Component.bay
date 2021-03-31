@@ -178,7 +178,7 @@ class Component extends BaseObject
 	protected void updateParams(VirtualDom vdom)
 	{
 		this.old_params = this.params;
-		this.params = vdom.params;
+		this.params = vdom.params.setIm("@path_id", vdom.path_id);
 	}
 	
 	
@@ -186,24 +186,24 @@ class Component extends BaseObject
 	/**
 	 * Extend component model
 	 */
-	pure void extendComponentModel(BaseStruct layout, BaseStruct model, Dict params) => model;
+	pure BaseStruct extendComponentModel(BaseStruct layout, string model_path, Dict params) => layout;
 	
 	
 	
 	/**
 	 * Render function
 	 */
-	pure void render(BaseStruct layout, BaseStruct model, Dict params, html content) => null;
+	pure void render(BaseStruct layout, string model_path, Dict params, html content) => null;
 	
 	
 	
 	/**
 	 * Extended render function
 	 */
-	pure void render2(BaseStruct layout, BaseStruct model, Dict params, html content)
+	pure void render2(BaseStruct layout, string model_path, Dict params, html content)
 	{
-		model = static::extendComponentModel(layout, model, params);
-		return static::render(layout, model, params, content);
+		layout = static::extendComponentModel(layout, model_path, params);
+		return static::render(layout, new_model, params, content);
 	}
 	
 	
@@ -213,12 +213,7 @@ class Component extends BaseObject
 	 */
 	void renderComponent()
 	{
-		BaseStruct new_model = static::extendComponentModel(this.driver.layout, this.new_model, this.params);
-		if (new_model != this.new_model)
-		{
-			this.new_model = new_model;
-			this.driver.updateModel(this.model_path, this.new_model);
-		}
+		this.driver.layout = static::extendComponentModel(this.driver.layout, this.model_path, this.params);
 		if (this.isRender())
 		{
 			fn f = static::render
@@ -573,6 +568,32 @@ class Component extends BaseObject
 		string class_name = static::getCurrentClassName();
 		Collection names = RenderDriver::getCssHash(class_name);
 		return rs::join(" ", names);
+	}
+	
+	
+	
+	/**
+	 * Concat attr
+	 */
+	/*
+	pure Dict concatAttr(Dict arr1, string key, Collection arr2) =>
+		arr1
+		|> lib::set(key, arr1[key] |> .concat(arr2) )
+		|> default Dict arr1
+	;
+	*/
+	
+	
+	/**
+	 * Concat attr
+	 */
+	pure Dict concatAttr(Dict arr1, string key, Collection arr2)
+	{
+		Collection res = arr1[key];
+		if (rtl::isString(arr2)) arr2 = [ arr2 ];
+		if (res != null) res = res.toCollection().concat(arr2);
+		else res = arr2;
+		return res;
 	}
 	
 	
