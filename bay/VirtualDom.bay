@@ -226,15 +226,6 @@ class VirtualDom extends BaseObject
 	
 	
 	/**
-	 * Send signal
-	 */
-	async void signal(var signal)
-	{
-	}
-	
-	
-	
-	/**
 	 * Returns childs elements
 	 */
 	static void _getChildElements(VirtualDom vdom, Vector res, bool new_childs = false)

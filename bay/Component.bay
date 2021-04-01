@@ -186,24 +186,24 @@ class Component extends BaseObject
 	/**
 	 * Extend component model
 	 */
-	pure BaseStruct extendComponentModel(BaseStruct layout, string model_path, Dict params) => layout;
+	pure BaseStruct extendComponentModel(BaseStruct layout, Collection model_path, Dict params) => layout;
 	
 	
 	
 	/**
 	 * Render function
 	 */
-	pure void render(BaseStruct layout, string model_path, Dict params, html content) => null;
+	pure void render(BaseStruct layout, Collection model_path, Dict params, html content) => null;
 	
 	
 	
 	/**
 	 * Extended render function
 	 */
-	pure void render2(BaseStruct layout, string model_path, Dict params, html content)
+	pure void render2(BaseStruct layout, Collection model_path, Dict params, html content)
 	{
 		layout = static::extendComponentModel(layout, model_path, params);
-		return static::render(layout, new_model, params, content);
+		return static::render(layout, model_path, params, content);
 	}
 	
 	
@@ -218,7 +218,7 @@ class Component extends BaseObject
 		{
 			fn f = static::render
 			(
-				this.driver.layout, new_model,
+				this.driver.layout, this.model_path,
 				this.params, this.vdom.content
 			);
 			if (f != null) f(this.vdom);
@@ -398,21 +398,9 @@ class Component extends BaseObject
 	
 	
 	/**
-	 * Send signal
-	 */
-	async void sendSignal(VirtualDom dest, string command, Collection data = null)
-	{
-		SignalEvent event = new SignalEvent{ "command": command, "data": data };
-		string dest_path = (dest != null) ? dest.getPathId() : "";
-		await this.driver.sendEvent(event, this.vdom, dest_path);
-	}
-	
-	
-	
-	/**
 	 * Send event
 	 */
-	async void sendEvent(BaseEvent event, VirtualDom dest = null)
+	async void sendEvent(BaseEvent event, var dest = null)
 	{
 		string dest_path = (dest != null) ? dest.getPathId() : "";
 		await this.driver.sendEvent(event, this.vdom, dest_path);
