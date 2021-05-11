@@ -363,27 +363,28 @@ class Component extends BaseObject
 	/**
 	 * On handle event
 	 */
-	async void onMessage(Message msg, ListenerCallback item)
+	async void onMessage(Message msg, ListenerCallback listener)
 	{
 		BaseEvent event = msg.data;
 		
 		if (
-			item.method_name != "onMessage" and
-			item.method_name != "onCreate" and
-			item.method_name != "onUpdate" and
-			rs::substr(item.method_name, 0, 2) == "on"
+			listener.method_name != "onMessage" and
+			listener.method_name != "onCreate" and
+			listener.method_name != "onUpdate" and
+			rs::substr(listener.method_name, 0, 2) == "on"
 		)
 		{
-			if (rtl::method_exists(this, item.method_name))
+			if (rtl::method_exists(this, listener.method_name))
 			{
-				await rtl::applyMethodAsync(this, item.method_name, [msg, item]);
+				await rtl::applyMethodAsync(this, listener.method_name, [msg, listener]);
 			}
 		}
 		
-		if (item.method_name != "onSignal" and event instanceof SignalEvent)
+		if (msg.dest == this.getPathId() and listener.method_name != "onSignal" and event instanceof SignalEvent)
 		{
-			await this.onSignal(msg, item);
+			await this.onSignal(msg, listener);
 		}
+		
 	}
 	
 	
@@ -391,7 +392,7 @@ class Component extends BaseObject
 	/**
 	 * On signal
 	 */
-	async void onSignal(Message<SignalEvent> msg, ListenerCallback item)
+	async void onSignal(Message<SignalEvent> msg, ListenerCallback listener)
 	{
 	}
 	
@@ -402,7 +403,19 @@ class Component extends BaseObject
 	 */
 	async void sendEvent(BaseEvent event, var dest = null)
 	{
-		string dest_path = (dest != null) ? dest.getPathId() : "";
+		string dest_path = "";
+		
+		if (dest == null) dest = this.getParent();
+		if (
+			dest != null and (
+				dest instanceof Component or
+				dest instanceof VirtualDom
+			)
+		)
+		{
+			dest_path = dest.getPathId();
+		}
+		
 		await this.driver.sendEvent(event, this.vdom, dest_path);
 	}
 	
@@ -411,6 +424,7 @@ class Component extends BaseObject
 	/**
 	 * Get parent component
 	 */
+	Component getParent() => this.vdom.getParentComponent();
 	Component getParentComponent() => this.vdom.getParentComponent();
 	
 	

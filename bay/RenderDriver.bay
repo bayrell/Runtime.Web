@@ -53,6 +53,7 @@ class RenderDriver extends BaseDriver
 	/* Animation */
 	var animation_id = null;
 	var message_id = null;
+	bool debug_messages = false;
 	
 	/* Listeners */
 	Vector<Listener> listeners = new Vector();
@@ -103,11 +104,14 @@ class RenderDriver extends BaseDriver
 	/**
 	 * Add event listener
 	 */
-	public void addEventListener(string event_class_name, VirtualDom from, VirtualDom dest,
-		string callback_path_id, string callback_method_name, var event_tag = null)
+	public void addEventListener
+	(
+		string event_class_name, VirtualDom from, VirtualDom dest,
+		string callback_path_id, string callback_method_name, var event_tag = null
+	)
 	{
-		string from_path = (from != null) ? from.getPathId() : "";
-		string dest_path = (dest != null) ? dest.getPathId() : "";
+		string from_path = (from != null) ? from.getPathId() : "*";
+		string dest_path = (dest != null) ? dest.getPathId() : "*";
 		Listener listener = this.listeners.findItem
 		(
 			fn (Dict item) use (from_path, dest_path, event_class_name) =>
@@ -151,8 +155,12 @@ class RenderDriver extends BaseDriver
 		@ = rtl::getContext();
 		var ctx = @;
 		
+		var vdom = e.currentTarget._vdom;
+		var component = vdom.getParentComponent();
+		
 		msg = new Message( WebEvent::fromEvent(e) );
-		msg.sender = e.currentTarget._vdom;
+		msg.dest = (component != null) ? component.getPathId() : "none";
+		msg.sender = vdom;
 		
 		await this.processMessage(ctx, msg);
 	}
@@ -179,14 +187,16 @@ class RenderDriver extends BaseDriver
 	 */
 	Collection findListenersByMessage(Message msg)
 	{
-		string from = (msg.sender != null) ? msg.sender.getPathId() : "";
-		string dest = msg.dest;
-		
 		Map res = new Map();
 		
+		bool flag_dest_add = false;
+		
 		/* Add listeners */
-		if (from != "")
+		if (msg.sender != null)
 		{
+			string from = msg.sender.getPathId();
+			string dest = msg.dest;
+			
 			for (int i=0; i<this.listeners.count(); i++)
 			{
 				Listener listener = this.listeners[i];
@@ -200,30 +210,33 @@ class RenderDriver extends BaseDriver
 				/* Add listener */
 				if (
 					(listener.from == from and listener.dest == dest) or
-					(listener.from == from and dest == "") or
-					(listener.dest == dest and dest != "")
+					(listener.from == from and listener.dest == "*") or
+					(listener.from == "*" and listener.dest == dest)
 				)
 				{
 					static::addListenerCallback(res, listener);
+					if (listener.dest == dest)
+					{
+						flag_dest_add = true;
+					}
 				}
 			}
 		}
 		
 		/* Add destination */
-		if (dest != "")
+		if (not flag_dest_add)
 		{
-			ListenerCallback item = new ListenerCallback
+			ListenerCallback listener = new ListenerCallback
 			{
-				"path_id": dest,
+				"path_id": msg.dest,
 				"method_name": "onMessage",
 				/*
-				{
-					"from": from,
-					"dest": dest,
-					"event_class_name": msg.data.getClassName(),
-				},*/
+				"from": from,
+				"dest": dest,
+				"event_class_name": msg.data.getClassName(),
+				*/
 			};
-			res.setValue(item.ident(), item);
+			res.setValue(listener.ident(), listener);
 		}
 		
 		return res.values().toCollection();
@@ -236,15 +249,18 @@ class RenderDriver extends BaseDriver
 	 */
 	async void processMessage(Message msg)
 	{
+		/* Log message */
+		if (this.debug_messages) log("Process message ", msg);
+		
 		Collection callbacks = this.findListenersByMessage(msg);
 		for (int i=0; i<callbacks.count(); i++)
 		{
-			ListenerCallback item = callbacks[i];
-			string path_id = item.path_id;
+			ListenerCallback listener = callbacks[i];
+			string path_id = listener.path_id;
 			Component component = this.findComponent(path_id);
 			if (component != null)
 			{
-				await rtl::methodApplyAsync(component, "onMessage", [msg, item]);
+				await rtl::methodApplyAsync(component, "onMessage", [msg, listener]);
 			}
 		}
 	}
@@ -287,6 +303,7 @@ class RenderDriver extends BaseDriver
 	 */
 	async void sendEvent(BaseEvent event, VirtualDom sender, string dest_path = "")
 	{
+		/* Create message */
 		Message msg = new Message(event);
 		msg.sender = sender;
 		msg.dest = dest_path;
