@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.Web.Events.ChangeEvent;
+use Runtime.Web.Events.SignalEvent;
 use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
 use Runtime.Web.Message;
@@ -281,10 +282,21 @@ class VirtualDom extends BaseObject
 	/**
 	 * Get parent component
 	 */
-	var getParentComponentVirtualDom()
+	var getParentComponentVirtualDom(string class_name = "")
 	{
 		VirtualDom vdom = this.parent_vdom;
-		while (vdom != null and vdom.kind != static::KIND_COMPONENT) vdom = vdom.parent_vdom;
+		while
+		(
+			vdom != null and
+			vdom.kind != static::KIND_COMPONENT and
+			(
+				class_name == "" or
+				class_name != "" and vdom.class_name != class_name
+			)
+		)
+		{
+			vdom = vdom.parent_vdom;
+		}
 		return vdom;
 	}
 	
@@ -304,9 +316,9 @@ class VirtualDom extends BaseObject
 	/**
 	 * Get parent component
 	 */
-	Component getParentComponent()
+	Component getParentComponent(string class_name = "")
 	{
-		VirtualDom vdom = this.getParentComponentVirtualDom();
+		VirtualDom vdom = this.getParentComponentVirtualDom(class_name);
 		return (vdom != null) ? vdom.instance : null;
 	}
 	

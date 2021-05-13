@@ -74,7 +74,7 @@ class Component extends BaseObject
 	
 	
 	/**
-	 * Update model
+	 * Update model and repaint
 	 */
 	void update(string method_name = "")
 	{
@@ -83,23 +83,44 @@ class Component extends BaseObject
 		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
 		#endif
 		
-		/* Get current model */
-		BaseStruct model = this.model();
-		
 		/* Update model */
-		model = static::updateModel(model, method_name, args.toCollection());
+		this.updateModel(method_name, args);
 		
-		/* Set new model */
-		this.driver.updateModel(this.model_path, model);
+		/* Repaint */
+		this.repaint();
 	}
 	
 	
 	
 	/**
-	 * Update model
+	 * Update model and repaint current component
 	 */
-	pure primitive updateModel(primitive model, string method_name = "", Collection args = null)
+	void updatePartial(string method_name = "")
 	{
+		var args = new Vector();
+		#ifcode JAVASCRIPT then
+		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
+		#endif
+		
+		/* Update model */
+		this.updateModel(method_name, args);
+		
+		/* Repaint partial */
+		this.repaintPartial();
+	}
+	
+	
+	
+	/**
+	 * Update only model
+	 */
+	void updateModel(string method_name = "", Collection args = null)
+	{
+		if (args == null) args = [];
+		
+		/* Get current model */
+		BaseStruct model = this.model();
+		
 		/* Change model by function */
 		if (rtl::method_exists(model, method_name))
 		{
@@ -115,7 +136,8 @@ class Component extends BaseObject
 			model = rtl::apply(f, args);
 		}
 		
-		return model;
+		/* Set new model */
+		this.driver.updateModel(this.model_path, model);
 	}
 	
 	
@@ -336,7 +358,7 @@ class Component extends BaseObject
 	 */
 	void repaintPartial()
 	{
-		this.controller.render_components.pushValue(this.vdom);
+		this.controller.render_partial.pushValue(this.vdom);
 		this.driver.repaintPartial();
 	}
 	
@@ -380,7 +402,7 @@ class Component extends BaseObject
 			}
 		}
 		
-		if (msg.dest == this.getPathId() and listener.method_name != "onSignal" and event instanceof SignalEvent)
+		if (msg.dest == this.getPathId() and listener.method_name == "onMessage" and event instanceof SignalEvent)
 		{
 			await this.onSignal(msg, listener);
 		}
@@ -394,6 +416,48 @@ class Component extends BaseObject
 	 */
 	async void onSignal(Message<SignalEvent> msg, ListenerCallback listener)
 	{
+		SignalEvent signal = msg.data;
+		
+		if (signal.command == "update")
+		{
+			this.updateModel(signal.method_name, signal.args);
+			this.repaint();
+		}
+		
+		else if (signal.command == "updatePartial")
+		{
+			this.updateModel(signal.method_name, signal.args);
+			this.repaintPartial();
+		}
+		
+		else if (signal.command == "updateModel")
+		{
+			this.updateModel(signal.method_name, signal.args);
+		}
+	}
+	
+	
+	
+	/**
+	 * Catch signal
+	 */
+	async void onCatchSignal(Message<SignalEvent> msg, var listener)
+	{
+	}
+	
+	
+	
+	/**
+	 * On send signal
+	 */
+	async void onSendSignal(Message<BaseEvent> msg, ListenerCallback listener)
+	{
+		SignalEvent signal = listener["event_tag", "signal"];
+		if (signal)
+		{
+			signal <= event <= msg.data;
+			await this.sendEvent( signal, this );
+		}
 	}
 	
 	
@@ -405,7 +469,7 @@ class Component extends BaseObject
 	{
 		string dest_path = "";
 		
-		if (dest == null) dest = this.getParent();
+		/* if (dest == null) dest = this.getParent(); */
 		if (
 			dest != null and (
 				dest instanceof Component or
@@ -422,139 +486,37 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Send signal
+	 */
+	async void sendSignal(var dest = null, Dict items)
+	{
+		if (dest != null)
+		{
+			await this.sendEvent( new SignalEvent(items), dest );
+		}
+	}
+	
+	
+	
+	/**
+	 * Catch signal
+	 */
+	public void catchEvent(string event_class_name, Component dest, string method_name)
+	{
+		this.driver.addEventListener
+		(
+			event_class_name, null, dest.vdom,
+			this.getPathId(), method_name
+		);
+	}
+	
+	
+	
+	/**
 	 * Get parent component
 	 */
-	Component getParent() => this.vdom.getParentComponent();
-	Component getParentComponent() => this.vdom.getParentComponent();
-	
-	
-	
-	/* Old */
-	
-
-	Map events = new Map();
-	bool is_new_element = false;
-	
-	
-	/**
-	 * Add component
-	 */
-	void addComponentOld(Component c)
-	{
-		int pos = this.childs.indexOf(c);
-		if (pos == -1)
-		{
-			this.childs.pushValue(c);
-		}
-	}
-
-	
-	/**
-	 * Call model function
-	 */
-	void callOld(string method_name = "")
-	{
-		var args = new Vector();
-		#ifcode JAVASCRIPT then
-		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
-		#endif
-		
-		/* Result */
-		var res = null;
-		
-		/* Get current model */
-		BaseStruct model = this.model();
-		
-		/* Change model by function */
-		if (rtl::method_exists(model, method_name))
-		{
-			fn f = rtl::method(model, method_name);
-			res = rtl::apply(f, args);
-		}
-		
-		/* Static function */
-		if (rtl::method_exists(model.getClassName(), method_name))
-		{
-			args.unshiftValue(model);
-			fn f = rtl::method(model.getClassName(), method_name);
-			res = rtl::apply(f, args);
-		}
-		
-		return res;
-	}
-	
-	
-	/**
-	 * Set new model
-	 */
-	void setModelOld(var model)
-	{
-		this.driver.updateModel(this.model_path, model);
-	}
-	
-	
-	
-	/**
-	 * Add event listener
-	 */
-	void addEventListenerOld(string event_class_name, fn f)
-	{
-		this.events.setValue(event_class_name, f);
-	}
-	
-	
-	
-	/**
-	 * Send event
-	 */
-	public async void signalOld(BaseEvent event)
-	{
-		string event_class_name = event.getClassName();
-		Collection keys = this.events.keys();
-		Collection parents = rtl::getParents(event.getClassName());
-		for (int i=0; i<keys.count(); i++)
-		{
-			string event_class_name = keys[i];
-			if (parents.indexOf(event_class_name) != -1)
-			{
-				fn f = this.events[event_class_name];
-				Message msg = new Message(event);
-				msg.sender = this;
-				await f(msg);
-			}
-		}
-	}
-	
-	
-	
-	/**
-	 * Repaint component
-	 */
-	void repaintOld(var element)
-	{
-		BaseStruct new_model = static::extendComponentModel(this.driver.layout, this.new_model, this.params);
-		if (new_model != this.new_model)
-		{
-			this.new_model = new_model;
-			this.setModel(new_model);
-		}
-		if (this.isRepaint())
-		{
-			int begin = element.childs.count();
-			fn f = static::render
-			(
-				this.driver.layout, new_model,
-				this.params, element.content
-			);
-			if (f != null) f(element);
-			int end = element.childs.count();
-			this.child_nodes = element.childs.slice(begin, end - begin).toCollection();
-		}
-		else
-		{
-			element.childs.appendVector(this.child_nodes);
-		}
-	}
+	Component getParent(string class_name = "") => this.vdom.getParentComponent(class_name);
+	Component getParentComponent(string class_name = "") => this.vdom.getParentComponent(class_name);
 	
 	
 	

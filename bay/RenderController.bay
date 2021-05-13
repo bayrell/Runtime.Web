@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.lib;
 use Runtime.BaseObject;
 use Runtime.Web.Events.ChangeEvent;
+use Runtime.Web.Events.SignalEvent;
 use Runtime.Web.Events.WebEvent;
 use Runtime.Web.Component;
 use Runtime.Web.Message;
@@ -77,7 +78,6 @@ class RenderController extends BaseObject
 	public void renderInit()
 	{
 		this.render_partial = new Vector();
-		this.render_commands = new Vector();
 	}
 	
 	
@@ -245,6 +245,7 @@ class RenderController extends BaseObject
 				
 				/* Check if event */
 				bool is_event = false;
+				bool is_signal = false;
 				string event_class_name = "";
 				if (rs::substr(key, 0, 7) == "@event:")
 				{
@@ -256,23 +257,60 @@ class RenderController extends BaseObject
 					is_event = true;
 					event_class_name = rs::substr(key, 12);
 				}
-				if (is_event)
+				if (rs::substr(key, 0, 8) == "@signal:")
+				{
+					is_signal = true;
+					event_class_name = rs::substr(key, 8);
+				}
+				if (is_event or is_signal)
+				{
+					string component_name = value[0] |> default string "";
+					
+					/* Add event listener */
+					VirtualDom component = vdom.findParentComponent(component_name);
+					if (component)
+					{
+						if (is_event)
+						{
+							string method_name = value[1] |> default string "";
+							this.driver.addEventListener
+							(
+								event_class_name, vdom, null,
+								component.getPathId(), method_name
+							);
+						}
+						if (is_signal)
+						{
+							SignalEvent signal = value[1] |> default SignalEvent null;
+							this.driver.addEventListener
+							(
+								event_class_name, vdom, null,
+								component.getPathId(), "onSendSignal",
+								{ "signal": signal, "dest": component.getPathId() }
+							);
+						}
+					}
+					continue;
+				}
+				
+				/*
+				if (is_signal)
 				{
 					string component_name = value[0] |> default string "";
 					string method_name = value[1] |> default string "";
 					
-					/* Add event listener */
 					VirtualDom component = vdom.findParentComponent(component_name);
 					if (component)
 					{
 						this.driver.addEventListener
 						(
 							event_class_name, vdom, null,
-							component.getPathId(), method_name
+							component.getPathId(), "onSignal", 
 						);
 					}
 					continue;
 				}
+				*/
 				
 				/* Bind change event */
 				/*
@@ -312,9 +350,9 @@ class RenderController extends BaseObject
 				}
 				
 				/* Set value */
-				if (key == "value" or key == "@bind" or key == "@name")
+				if (key == "value" or key == "@bind" or key == "@name" or key == "@model")
 				{
-					if (key == "@bind" or key == "@name")
+					if (key == "@bind" or key == "@name" or key == "@model")
 					{
 						Collection model_path = this.findModelPath(vdom, vdom.params[key]);
 						value = this.driver.model(model_path);

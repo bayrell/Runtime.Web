@@ -53,12 +53,13 @@ class RenderDriver extends BaseDriver
 	/* Animation */
 	var animation_id = null;
 	var message_id = null;
+	var repaint_id = null;
+	var repaint_partial_id = null;
 	bool debug_messages = false;
 	
 	/* Listeners */
 	Vector<Listener> listeners = new Vector();
 	Vector<Message> messages = new Vector();
-	
 	
 	
 	/**
@@ -90,6 +91,8 @@ class RenderDriver extends BaseDriver
 	 */
 	Component findComponent(string path_id)
 	{
+		if (path_id == "") return null;
+
 		Collection arr = rs::split(":", path_id);
 		string controller_name = arr[0];
 		
@@ -159,7 +162,7 @@ class RenderDriver extends BaseDriver
 		var component = vdom.getParentComponent();
 		
 		msg = new Message( WebEvent::fromEvent(e) );
-		msg.dest = (component != null) ? component.getPathId() : "none";
+		msg.dest = "";
 		msg.sender = vdom;
 		
 		await this.processMessage(ctx, msg);
@@ -189,8 +192,6 @@ class RenderDriver extends BaseDriver
 	{
 		Map res = new Map();
 		
-		bool flag_dest_add = false;
-		
 		/* Add listeners */
 		if (msg.sender != null)
 		{
@@ -215,16 +216,12 @@ class RenderDriver extends BaseDriver
 				)
 				{
 					static::addListenerCallback(res, listener);
-					if (listener.dest == dest)
-					{
-						flag_dest_add = true;
-					}
 				}
 			}
 		}
 		
 		/* Add destination */
-		if (not flag_dest_add)
+		if (msg.dest != "*" and msg.dest != "")
 		{
 			ListenerCallback listener = new ListenerCallback
 			{
@@ -260,7 +257,7 @@ class RenderDriver extends BaseDriver
 			Component component = this.findComponent(path_id);
 			if (component != null)
 			{
-				await rtl::methodApplyAsync(component, "onMessage", [msg, listener]);
+				rtl::methodApplyAsync(component, "onMessage", [msg, listener]);
 			}
 		}
 	}
@@ -309,7 +306,7 @@ class RenderDriver extends BaseDriver
 		msg.dest = dest_path;
 		
 		/* Process message */
-		this.processMessage(msg);
+		await this.processMessage(msg);
 	}
 	
 	
@@ -457,6 +454,25 @@ class RenderDriver extends BaseDriver
 	 */
 	RenderDriver repaint()
 	{
+		if (this.repaint_id == null)
+		{
+			this.repaint_id = window.@setTimeout(method this.repaintDo, 1);
+		}
+		if (this.repaint_partial_id != null)
+		{
+			window.@clearTimeout(this.repaint_partial_id);
+		}
+	}
+	
+	
+	
+	/**
+	 * Repaint All
+	 */
+	RenderDriver repaintDo()
+	{
+		this.repaint_id = null;
+		
 		Collection<string> keys = this.controllers.keys();
 		
 		/* Render controllers */
@@ -471,8 +487,6 @@ class RenderDriver extends BaseDriver
 		{
 			this.animation_id = window.@requestAnimationFrame( method this.animationFrame );
 		}
-		
-		return this;
 	}
 	
 	
@@ -482,6 +496,21 @@ class RenderDriver extends BaseDriver
 	 */
 	RenderDriver repaintPartial()
 	{
+		if (this.repaint_partial_id == null)
+		{
+			this.repaint_partial_id = window.@setTimeout(method this.repaintPartialDo, 1);
+		}
+	}
+	
+	
+	
+	/**
+	 * Repaint partial
+	 */
+	RenderDriver repaintPartialDo()
+	{
+		this.repaint_partial_id = null;
+		
 		Collection<string> keys = this.controllers.keys();
 		
 		/* Render controllers */

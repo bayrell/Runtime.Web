@@ -24,6 +24,9 @@ use Runtime.Web.Events.BaseEvent;
 struct SignalEvent extends BaseEvent
 {
 	public string command = "";
-	public Collection data = null;
+	public string method_name = "";
+	public BaseEvent event = null;
+	public Collection args = null;
+	public Dict params = null;
 }
 
