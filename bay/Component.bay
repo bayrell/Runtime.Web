@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.lib;
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.Web.Events.BaseEvent;
@@ -74,6 +75,16 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Returns page model
+	 */
+	var getPageModel(Collection model_path = null) =>
+		this.driver.layout.model
+		|> lib::attr( [ this.driver.layout.page_class ].concat(model_path) )
+	;
+	
+	
+	
+	/**
 	 * Update model and repaint
 	 */
 	void update(string method_name = "")
@@ -84,7 +95,7 @@ class Component extends BaseObject
 		#endif
 		
 		/* Update model */
-		this.updateModel(method_name, args);
+		this.updateModelArgs(method_name, args);
 		
 		/* Repaint */
 		this.repaint();
@@ -103,7 +114,7 @@ class Component extends BaseObject
 		#endif
 		
 		/* Update model */
-		this.updateModel(method_name, args);
+		this.updateModelArgs(method_name, args);
 		
 		/* Repaint partial */
 		this.repaintPartial();
@@ -112,9 +123,25 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Update model
+	 */
+	void updateModel(string method_name = "")
+	{
+		var args = new Vector();
+		#ifcode JAVASCRIPT then
+		for (var i=((typeof ctx == "undefined") ? 1 : 2); i<arguments.length; i++) args.pushValue(ctx, arguments[i]);
+		#endif
+		
+		/* Update model */
+		this.updateModelArgs(method_name, args);
+	}
+	
+	
+	
+	/**
 	 * Update only model
 	 */
-	void updateModel(string method_name = "", Collection args = null)
+	void updateModelArgs(string method_name = "", Collection args = null)
 	{
 		if (args == null) args = [];
 		
@@ -417,7 +444,7 @@ class Component extends BaseObject
 	async void onSignal(Message<SignalEvent> msg, ListenerCallback listener)
 	{
 		SignalEvent signal = msg.data;
-		
+		/*
 		if (signal.command == "update")
 		{
 			this.updateModel(signal.method_name, signal.args);
@@ -434,6 +461,7 @@ class Component extends BaseObject
 		{
 			this.updateModel(signal.method_name, signal.args);
 		}
+		*/
 	}
 	
 	
