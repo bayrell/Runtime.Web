@@ -1,3 +1,5 @@
+<?php
+
 /*!
  *  Bayrell Runtime Library
  *
@@ -16,17 +18,12 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events;
+namespace Runtime\Web;
 
-use Runtime.Web.Events.BaseEvent;
+use \Runtime\BaseProvider;
 
 
-struct SignalEvent extends BaseEvent
+class RenderProvider extends BaseProvider
 {
-	public string command = "";
-	public string method_name = "";
-	public BaseEvent event = null;
-	public Collection args = null;
-	public Dict params = null;
+    
 }
-

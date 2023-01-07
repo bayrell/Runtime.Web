@@ -1,0 +1,215 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.Web.Layout;
+use Runtime.Web.RenderProvider;
+
+
+class App
+{
+	
+	/**
+	 * Resolve container
+	 */
+	async void resolve(RenderContainer container)
+	{
+		/* Create layout */
+		container <= layout <= new Layout();
+		await @.callAsyncHook(RenderHook::CREATE_LAYOUT, {
+			"container": container,
+		});
+		
+		/* Find route */
+		await @.callAsyncHook(RenderHook::FIND_ROUTE, {
+			"container": container,
+		});
+		
+		if (container.route == null)
+		{
+			RouteList routes = @.provider(classof RouteList);
+			container.route = routes.findRoute( container.request );
+		}
+		
+		/* Call route */
+		await @.callAsyncHook(RenderHook::CALL_ROUTE, {
+			"container": container,
+		});
+		
+		if (container.route and rtl::isFn(container.route.method) and container.response == null)
+		{
+			await container.route.before(container);
+			if (container.response == null)
+			{
+				await container.route.method(container);
+			}
+			await container.route.after(container);
+		}
+		
+		/* Response */
+		await @.callAsyncHook(RenderHook::RESPONSE, {
+			"container": container,
+		});
+	}
+	
+	
+	
+	#ifcode PHP then
+	
+	/**
+	 * Create render container
+	 */
+	function createRenderContainer($ctx)
+	{
+		$request = $this->createRequest($ctx);
+		$container = new \Runtime\Web\RenderContainer($ctx, [
+			"request" => $request,
+		]);
+		return $container;
+	}
+	
+	
+	/**
+	 * Create request
+	 */
+	function createRequest($ctx)
+	{
+		$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : "";
+		$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : "";
+		$method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : "";
+		$start_time = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : "";
+		$content_type = isset($_SERVER['Content-Type']) ? $_SERVER['Content-Type'] : "";
+		
+		$query = new \Runtime\Map($ctx);
+		$payload = new \Runtime\Map($ctx);
+		$cookies = new \Runtime\Map($ctx);
+		foreach ($_GET as $key => $val) $query->setValue($ctx, $key, $val);
+		
+		/* Read POST */
+		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
+		{
+			$json = file_get_contents("php://input");
+			$json = @json_decode($json, true);
+			if ($json)
+			{
+				foreach ($json as $key => $val)
+				{
+					$payload->setValue($ctx, $key, \Runtime\rtl::NativeToObject($ctx, $val));
+				}
+			}
+		}
+		else
+		{
+			foreach ($_POST as $key => $val)
+			{
+				$payload->setValue($ctx, $key, \Runtime\rtl::NativeToObject($ctx, $val));
+			}
+		}
+		
+		/* Read Cookie */
+		foreach ($_COOKIE as $key => $val)
+		{
+			$cookies->setValue
+			(
+				$ctx, 
+				$key,
+				new \Runtime\Web\Cookie
+				(
+					$ctx,
+					\Runtime\Dict::from([
+						'name' => $key,
+						'value' => $val,
+					])
+				)
+			);
+		}
+		$arr = parse_url($uri);
+		$uri = isset($arr['path']) ? $arr['path'] : "";
+		
+		/* Create request */
+		$r = new \Runtime\Web\Request
+		(
+			$ctx, 
+			\Runtime\Dict::from([
+				"host" => $host,
+				"uri" => $uri,
+				"method" => $method,
+				"query" => $query->toDict($ctx),
+				"payload" => $payload->toDict($ctx),
+				"cookies" => $cookies->toDict($ctx),
+				"start_time" => $start_time,
+				"route_prefix" => $ctx->enviroments->get($ctx, "X-ROUTE-PREFIX", ""),
+			])
+		);
+		return $r;
+	}
+	
+	
+	/**
+	 * Output result
+	 */
+	function response($ctx, $container)
+	{
+		if ($container != null && $container->response)
+		{
+			http_response_code($container->response->http_code);
+			if ($container->response->cookies != null)
+			{
+				$keys = $container->response->cookies->keys($ctx);
+				for ($i=0; $i<$keys->count($ctx); $i++)
+				{
+					$key = $keys->item($ctx, $i);
+					$cookie = $container->response->cookies->item($ctx, $key);
+					if ($cookie != null && $cookie->name)
+					{
+						$str = [];
+						$str[] = "Set-Cookie: " . urlencode($cookie->name) .
+							"=" . urlencode($cookie->value)
+						;
+						$str[] = "Expires=" . date(DATE_RFC822, $cookie->expire);
+						if ($cookie->domain) $str[] = "Domain=" . $cookie->domain;
+						if ($cookie->path) $str[] = "Path=" . $cookie->path;
+						if ($cookie->secure) $str[] = "Secure";
+						if ($cookie->httponly) $str[] = "HttpOnly";
+						
+						/* Set cookie */
+						header( implode(";", $str) );
+					}
+				}
+			}
+			if ($container->response->headers != null)
+			{
+				for ($i=0; $i<$container->response->headers->count($ctx); $i++)
+				{
+					$value = $container->response->headers->item($ctx, $i);
+					header($value);
+				}
+			}
+			$response = $container->response;
+			echo $response->getContent($ctx);
+		}
+		else
+		{
+			http_response_code(404);
+			echo "404 Response not found";
+		}
+	}
+	
+	#endif
+}

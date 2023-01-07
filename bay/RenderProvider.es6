@@ -1,3 +1,4 @@
+"use strict;"
 /*!
  *  Bayrell Runtime Library
  *
@@ -7,7 +8,7 @@
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.bayrell.org/licenses/APACHE-LICENSE-2.0.html
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +17,15 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events;
-
-use Runtime.Web.Events.BaseEvent;
-
-
-struct SignalEvent extends BaseEvent
+Runtime.Web.RenderProvider = function()
 {
-	public string command = "";
-	public string method_name = "";
-	public BaseEvent event = null;
-	public Collection args = null;
-	public Dict params = null;
-}
-
+	Runtime.BaseProvider.apply(this, arguments);
+};
+Runtime.Web.RenderProvider.prototype = Object.create(Runtime.BaseProvider.prototype);
+Runtime.Web.RenderProvider.prototype.constructor = Runtime.Web.RenderProvider;
+Object.assign(Runtime.Web.RenderProvider.prototype,
+{
+    
+    
+    
+});

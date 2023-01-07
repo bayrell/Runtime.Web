@@ -16,17 +16,17 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events;
+namespace Runtime.Web;
 
-use Runtime.Web.Events.BaseEvent;
+use Runtime.BaseStruct;
 
 
-struct SignalEvent extends BaseEvent
+struct Layout extends BaseStruct
 {
-	public string command = "";
-	public string method_name = "";
-	public BaseEvent event = null;
-	public Collection args = null;
-	public Dict params = null;
+    string title;
+    string page_class = "";
+    Dict<BaseStruct> pages = {};
+    
+    /* Increment assets */
+    string f_inc = "1";
 }
-

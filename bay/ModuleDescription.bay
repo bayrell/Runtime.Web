@@ -1,7 +1,7 @@
 /*!
  *  Bayrell Runtime Library
  *
- *  (c) Copyright 2016-2021 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 
 namespace Runtime.Web;
 
-use Runtime.Driver;
-use Runtime.Entity;
+use Runtime.Web.RenderProvider;
+use Runtime.Web.RouteList;
 
 
 static class ModuleDescription
@@ -48,7 +48,7 @@ static class ModuleDescription
 	 */
 	pure Dict<string> requiredModules() =>
 	{
-		'Runtime': '>=0.3',
+		'Runtime': '>=0.11',
 	};
 	
 	
@@ -58,16 +58,8 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		new Entity{ "name":"Runtime.Web.RenderDriver",  },
-		new Driver
-		{
-			"name": "RenderDriver",
-			"value": "Runtime.Web.RenderDriver",
-			"global": true,
-			"params":
-			{
-			},
-		},
+		Provider(classof RenderProvider, new RenderProvider),
+		Provider(classof RouteList, new RouteList),
 	];
 	
 }

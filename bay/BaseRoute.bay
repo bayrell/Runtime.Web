@@ -16,17 +16,49 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events;
+namespace Runtime.Web;
 
-use Runtime.Web.Events.BaseEvent;
+use Runtime.Web.RenderContainer;
 
 
-struct SignalEvent extends BaseEvent
+class BaseRoute extends BaseObject
 {
-	public string command = "";
-	public string method_name = "";
-	public BaseEvent event = null;
-	public Collection args = null;
-	public Dict params = null;
+	
+	/**
+	 * Returns routes
+	 */
+	void getRoutes(RouteList routes)
+	{
+	}
+	
+	
+	
+	/**
+	 * Start route
+	 */
+	void start()
+	{
+		
+	}
+	
+	
+	
+	/**
+	 * Before route
+	 */
+	void before(RenderContainer container)
+	{
+		
+	}
+	
+	
+	
+	/**
+	 * After route
+	 */
+	void after(RenderContainer container)
+	{
+		
+	}
+	
 }
-

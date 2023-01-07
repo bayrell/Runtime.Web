@@ -15,18 +15,20 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+ 
+namespace Runtime.Web;
 
-namespace Runtime.Web.Events;
-
-use Runtime.Web.Events.BaseEvent;
+use Runtime.BaseStruct;
 
 
-struct SignalEvent extends BaseEvent
+struct Cookie extends BaseStruct
 {
-	public string command = "";
-	public string method_name = "";
-	public BaseEvent event = null;
-	public Collection args = null;
-	public Dict params = null;
+	public string name = "";
+	public string value = "";
+	public int expire = null;
+	public string domain = "";
+	public string path = "";
+	public bool secure = false;
+	public bool httponly = false;
+	public bool changed = false;
 }
-

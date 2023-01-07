@@ -1,0 +1,119 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.lib;
+use Runtime.BaseProvider;
+use Runtime.Vector;
+use Runtime.Web.BaseRoute;
+use Runtime.Web.Route;
+use Runtime.Web.RouteInfo;
+
+
+class RouteList extends BaseProvider
+{
+	Vector<BaseRoute> base_routes = new Vector();
+	Map<RouteInfo> routes = new Vector();
+	
+	
+	/**
+	 * Start provider
+	 */
+	async void start()
+	{
+		Collection<Route> routes = @.entities.filter( lib::isInstance(classof Route) );
+		for (int i=0; i<routes.count(); i++)
+		{
+			Route info = routes[i];
+			if (info.name)
+			{
+				BaseRoute route = rtl::newInstance(info.name);
+				this.base_routes.pushValue(route);
+				route.getRoutes(this);
+			}
+		}
+	}
+	
+	
+	
+	/**
+	 * Add route
+	 */
+	void addRoute(Dict route_info)
+	{
+		if (not (route_info instanceof RouteInfo))
+		{
+			route_info = new RouteInfo(route_info);
+		}
+		this.routes.setValue(route_info.name, route_info);
+	}
+	
+	
+	/**
+	 * Find route
+	 */
+	RouteInfo findRoute(Request request)
+	{
+		Route route = null;
+		Dict<string> params = null;
+		
+		string request_uri = request.uri;
+		string route_prefix = request.route_prefix;
+		
+		request_uri = static::splitRoutePrefix(request_uri, route_prefix);
+		if (request_uri === null) return [route, params];
+		
+		/* Find route */
+		Collection<string> route_name = this.routes.keys();
+		for (int i=0; i<route_name.count(); i++)
+		{
+			RouteInfo info = this.routes[route_name];
+			Collection<string> matches = re::matchAll( info.uri_match, request_uri );
+			if (matches != null)
+			{
+				matches = matches.get(0, null);
+				if (matches) matches = matches.removeFirstIm();
+				info = info.addMatches(matches);
+				return info;
+			}
+		}
+		
+		return null;
+	}
+	
+	
+	/**
+	 * Split route prefix
+	 */
+	pure string splitRoutePrefix(string request_uri, string route_prefix)
+	{
+		int prefix_len = rs::strlen(route_prefix);
+		if (prefix_len > 0)
+		{
+			int pos = rs::search(request_uri, route_prefix);
+			if (pos == -1)
+			{
+				return null;
+			}
+			request_uri = rs::substr(request_uri, prefix_len);
+		}
+		if (request_uri == "") request_uri = "/";
+		return request_uri;
+	}
+}

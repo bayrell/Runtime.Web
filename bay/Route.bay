@@ -16,17 +16,17 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events;
+namespace Runtime.Web;
 
-use Runtime.Web.Events.BaseEvent;
+use Runtime.Entity;
 
 
-struct SignalEvent extends BaseEvent
+class Route extends Entity
 {
-	public string command = "";
-	public string method_name = "";
-	public BaseEvent event = null;
-	public Collection args = null;
-	public Dict params = null;
+	void constructor(string route_name)
+	{
+		parent({
+			"name": route_name,
+		});
+	}
 }
-

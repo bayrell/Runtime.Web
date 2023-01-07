@@ -15,18 +15,26 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+ 
+namespace Runtime.Web;
 
-namespace Runtime.Web.Events;
-
-use Runtime.Web.Events.BaseEvent;
+use Runtime.BaseStruct;
 
 
-struct SignalEvent extends BaseEvent
+struct Response extends BaseStruct
 {
-	public string command = "";
-	public string method_name = "";
-	public BaseEvent event = null;
-	public Collection args = null;
-	public Dict params = null;
+	public int http_code = 200;
+	public string content = "";
+	public Collection<Cookie> cookies = [];
+	public Collection<string> headers = [];
+	
+	
+	/**
+	 * Returns content
+	 */
+	string getContent()
+	{
+		return this.content;
+	}
+	
 }
-

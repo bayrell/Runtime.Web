@@ -1,0 +1,98 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.BaseStruct;
+
+
+struct RouteInfo extends BaseStruct
+{
+	string name = "";
+	string url = "";
+	string uri_match = "";
+	fn method = null;
+	Collection<string> params = [];
+	Dict<string> matches = {};
+	
+	
+	/**
+	 * Init struct data
+	 */
+	static Dict _init_data(Route old, Dict changed)
+	{
+		string uri = changed["uri"] |> default string old["uri"];
+		string uri_match = changed["uri_match"] |> default string old["uri_match"];
+		
+		if (rtl::isEmpty(uri_match))
+		{
+			uri_match = re::replace("\\/", "\\/", uri);
+			
+			Collection matches = re::matchAll("{(.*?)}", uri);
+			if (matches)
+			{
+				Vector<string> params = new Vector();
+				
+				for (int i=0; i<matches.count(); i++)
+				{
+					Collection arr = matches[i];
+					string name = arr[1];
+					uri_match = re::replace
+					(
+						"{" ~ name ~ "}", 
+						"([^\\/]*?)", 
+						uri_match
+					);
+					params.pushValue(name);
+				}
+				
+				changed <= params <= params.toCollection();
+			}
+			else
+			{
+				changed <= params <= [];
+			}
+			
+			changed <= uri_match <= "^" ~ uri_match ~ "$";
+		}
+		
+		return changed;
+	}
+	
+	
+	/**
+	 * Get params
+	 * @return Map<string>
+	 */
+	RounteInfo addMatches(Collection<string> matches)
+	{
+		RouteInfo info = this;
+		if (info.params == null or matches == null) return info;
+		
+		Map<string> res = new Map();
+		for (int i=0; i<info.params.count(); i++)
+		{
+			string param_name = info.params[i]
+			string match_value = matches[i];
+			res.setValue(param_name, match_value);
+		}
+		
+		info <= matches <= res.toDict();
+		return info;
+	}
+}
