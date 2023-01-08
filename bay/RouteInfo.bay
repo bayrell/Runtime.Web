@@ -26,7 +26,7 @@ use Runtime.Web.Route;
 struct RouteInfo extends BaseStruct
 {
 	string name = "";
-	string url = "";
+	string uri = "";
 	string uri_match = "";
 	fn method = null;
 	Collection<string> params = [];

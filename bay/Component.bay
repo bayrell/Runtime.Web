@@ -18,9 +18,89 @@
 
 namespace Runtime.Web;
 
+use Runtime.lib;
 use Runtime.BaseObject;
 
 
 class Component extends BaseObject
 {
+    
+	/**
+	 * Retuns css hash
+	 * @param string component class name
+	 * @return string hash
+	 */
+	static memorize string hash(string s)
+	{
+		string r = "";
+		string a = "1234567890abcdef";
+		int sz = rs::strlen(s);
+		int h = 0;
+		for (int i=0; i<sz; i++)
+		{
+			int c = rs::ord( rs::substr(s, i, 1) );
+			h = ((h << 2) + (h >> 14) + c) & 65535;
+		}
+		int p = 0;
+		while (h != 0 or p < 4)
+		{
+			int c = h & 15;
+			h = h >> 4;
+			r ~= rs::substr(a, c, 1);
+			p = p + 1;
+		}
+		return r;
+	}
+	
+	
+	/**
+	 * Returns css hash
+	 */
+	pure memorize string getCssHash() =>
+		rtl::getParents(static::getClassName())
+			|> .filter
+			(
+				bool (string class_name) =>
+					class_name != "Runtime.BaseObject" and
+					class_name != "Runtime.Web.Component"
+			)
+			|> .map
+			(
+				string (string class_name) => "h-" ~ static::hash(class_name)
+			)
+			|> lib::join(" ")
+		;
+	
+    
+    /**
+	 * Escape html
+	 */
+	pure string _escapeHtml(var s)
+	{
+		#switch
+		#case ifcode PHP then
+		if (gettype($s) == "array") return $s;
+		if ($s instanceof \Runtime\RawString) return $s;
+		#endswitch
+		if (rtl::isString(s)) return rs::escapeHtml(s);
+		if (s instanceof Collection) return rs::join("", s);
+		return rs::escapeHtml( rtl::toString(s) );
+	}
+	
+	
+	
+	#ifcode PHP then
+	static function _p(&$arr1, $s)
+	{
+		if (gettype($s) == "string" || $s instanceof \Runtime\RawString)
+		{
+			$arr1[] = $s;
+		}
+		if (gettype($s) == "array")
+		{
+			foreach ($s as $v) $arr1[] = $v;
+		}
+	}
+	#endif
+    
 }

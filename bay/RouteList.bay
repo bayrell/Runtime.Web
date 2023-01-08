@@ -31,7 +31,7 @@ use Runtime.Web.RouteInfo;
 
 class RouteList extends BaseProvider
 {
-	Vector<BaseRoute> base_routes = new Vector();
+	Map<BaseRoute> base_routes = new Map();
 	Map<RouteInfo> routes_list = new Map();
 	
 	
@@ -47,7 +47,7 @@ class RouteList extends BaseProvider
 			if (info.name)
 			{
 				BaseRoute route = rtl::newInstance(info.name);
-				this.base_routes.pushValue(route);
+				this.base_routes.setValue(info.name, route);
 				route.getRoutes(this);
 			}
 		}

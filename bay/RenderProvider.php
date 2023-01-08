@@ -20,10 +20,48 @@
 
 namespace Runtime\Web;
 
+use \Runtime\rtl;
 use \Runtime\BaseProvider;
+use \Runtime\Web\AppHook;
+use \Runtime\Web\RenderResponse;
 
 
 class RenderProvider extends BaseProvider
 {
-    
+	
+	/**
+	 * Start provider
+	 */
+	function start()
+	{
+		$ctx = rtl::getContext();
+		$hook = $ctx->provider("hook");
+		$hook->register(AppHook::RESPONSE, rtl::method($this, "response"));
+	}
+	
+	
+	/**
+	 * Response
+	 **/
+	function response($d)
+	{
+		$container = $d->get("container");
+		$response = $container->response;
+		
+		/* Render tempate */
+		if ($response instanceof RenderResponse && $response->get("content") == null)
+		{
+			$layout = $response->get("layout");
+			$class_name = $response->get("class_name");
+			$page_class = $layout->get("page_class");
+			$page_model = rtl::attr($layout, ["pages", $page_class]);
+			
+			$render = rtl::method($class_name, "render");
+			
+			$content = $render($layout, ["pages", $page_class], null, null);
+			
+			$container->response = rtl::setAttr($container->response, ["content"], $content);
+		}
+	}
+	
 }

@@ -20,22 +20,12 @@ namespace Runtime.Web;
 
 use Runtime.BaseStruct;
 use Runtime.Web.Cookie;
+use Runtime.Web.Layout;
+use Runtime.Web.Response;
 
 
-struct Response extends BaseStruct
+struct RenderResponse extends Response
 {
-	public int http_code = 200;
-	public string content = "";
-	public Dict<Cookie> cookies = {};
-	public Dict<string> headers = {};
-	
-	
-	/**
-	 * Returns content
-	 */
-	string getContent()
-	{
-		return this.content;
-	}
-	
+	string class_name = "";
+    Layout layout = null;
 }

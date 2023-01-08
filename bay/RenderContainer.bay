@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.Web.Layout;
+use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.RouteInfo;
@@ -79,7 +80,10 @@ class RenderContainer extends BaseObject
 	 */
 	void render(string class_name)
 	{
-		this.response = new Response();
+		this.response = new RenderResponse{
+			"class_name": class_name,
+			"layout": this.layout,
+		};
 	}
 	
 	
