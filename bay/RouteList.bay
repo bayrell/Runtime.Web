@@ -18,10 +18,13 @@
 
 namespace Runtime.Web;
 
+use Runtime.re;
 use Runtime.lib;
 use Runtime.BaseProvider;
 use Runtime.Vector;
+use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
+use Runtime.Web.Request;
 use Runtime.Web.Route;
 use Runtime.Web.RouteInfo;
 
@@ -29,7 +32,7 @@ use Runtime.Web.RouteInfo;
 class RouteList extends BaseProvider
 {
 	Vector<BaseRoute> base_routes = new Vector();
-	Map<RouteInfo> routes = new Vector();
+	Map<RouteInfo> routes_list = new Map();
 	
 	
 	/**
@@ -48,8 +51,11 @@ class RouteList extends BaseProvider
 				route.getRoutes(this);
 			}
 		}
+		
+		await @.callAsyncHook(AppHook::ROUTES_INIT, {
+			"routes": this,
+		});
 	}
-	
 	
 	
 	/**
@@ -61,7 +67,7 @@ class RouteList extends BaseProvider
 		{
 			route_info = new RouteInfo(route_info);
 		}
-		this.routes.setValue(route_info.name, route_info);
+		this.routes_list.setValue(route_info.name, route_info);
 	}
 	
 	
@@ -80,10 +86,10 @@ class RouteList extends BaseProvider
 		if (request_uri === null) return [route, params];
 		
 		/* Find route */
-		Collection<string> route_name = this.routes.keys();
+		Collection<string> route_name = this.routes_list.keys();
 		for (int i=0; i<route_name.count(); i++)
 		{
-			RouteInfo info = this.routes[route_name];
+			RouteInfo info = this.routes_list[route_name];
 			Collection<string> matches = re::matchAll( info.uri_match, request_uri );
 			if (matches != null)
 			{

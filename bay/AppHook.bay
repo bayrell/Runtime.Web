@@ -19,10 +19,13 @@
 namespace Runtime.Web;
 
 
-class RenderHook
+class AppHook
 {
     
-    static const string FIND_ROUTE = "runtime.web.render::find_route";
-    static const string RESPONSE = "runtime.web.render::response";
+    static const string ROUTES_INIT = "runtime.web.app::routes_init";
+    static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
+    static const string FIND_ROUTE = "runtime.web.app::find_route";
+    static const string MIDDLEWARE = "runtime.web.app::middleware";
+    static const string RESPONSE = "runtime.web.app::response";
     
 }

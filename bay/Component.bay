@@ -18,6 +18,8 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseObject;
+
 
 class Component extends BaseObject
 {

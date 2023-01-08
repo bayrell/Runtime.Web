@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.Provider;
 use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
@@ -58,8 +59,8 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		Provider(classof RenderProvider, new RenderProvider),
-		Provider(classof RouteList, new RouteList),
+		new Provider(classof RenderProvider, new RenderProvider),
+		new Provider(classof RouteList, new RouteList),
 	];
 	
 }

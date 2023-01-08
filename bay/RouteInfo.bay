@@ -18,7 +18,9 @@
 
 namespace Runtime.Web;
 
+use Runtime.re;
 use Runtime.BaseStruct;
+use Runtime.Web.Route;
 
 
 struct RouteInfo extends BaseStruct
@@ -79,7 +81,7 @@ struct RouteInfo extends BaseStruct
 	 * Get params
 	 * @return Map<string>
 	 */
-	RounteInfo addMatches(Collection<string> matches)
+	RouteInfo addMatches(Collection<string> matches)
 	{
 		RouteInfo info = this;
 		if (info.params == null or matches == null) return info;

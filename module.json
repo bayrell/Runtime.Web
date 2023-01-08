@@ -2,15 +2,21 @@
 	"name": "Runtime.Web",
 	"assets":
 	[
+		"App.bay",
+		"AppHook.bay",
 		"BaseRoute.bay",
 		"Component.bay",
+		"Cookie.bay",
+		"Layout.bay",
 		"Message.bay",
 		"RenderContainer.bay",
 		"RenderProvider.es6",
 		"RenderProvider.php",
+		"Request.bay",
+		"Response.bay",
 		"Route.bay",
+		"RouteInfo.bay",
 		"RouteList.bay",
-		"RouteProvider.bay",
 		"VirtualDom.bay",
 		"Events/BaseEvent.bay",
 		"Events/WebEvent.bay",
@@ -45,6 +51,7 @@
 	"whitelist":
 	[
 		"\\.bay$",
+		"\\.php$",
 		"\\.js$"
 	]
 }

@@ -18,13 +18,15 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseObject;
+use Runtime.BaseStruct;
 use Runtime.Web.Layout;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.RouteInfo;
 
 
-class RenderContainer
+class RenderContainer extends BaseObject
 {
     Request request = null;
     Response response = null;
@@ -37,7 +39,7 @@ class RenderContainer
 	 */
 	void setPageTitle(string title)
 	{
-		this.layout <= title <= title;
+		this.layout = rtl::setAttr(this.layout, ["title"], title);
 	}
 	
 	
@@ -49,8 +51,8 @@ class RenderContainer
 	{
 		string class_name = model::getClassName();
 		
-		this.layout <= page_class <= class_name;
-		this.layout <= pages <= class_name <= model;
+		this.layout = rtl::setAttr(this.layout, ["page_class"], class_name);
+		this.layout = rtl::setAttr(this.layout, ["pages", class_name], model);
 	}
 	
 	

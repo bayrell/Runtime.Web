@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.Web.Cookie;
 
 
 struct Response extends BaseStruct

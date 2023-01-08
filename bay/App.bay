@@ -18,8 +18,11 @@
 
 namespace Runtime.Web;
 
+use Runtime.Web.AppHook;
 use Runtime.Web.Layout;
+use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderProvider;
+use Runtime.Web.RouteList;
 
 
 class App
@@ -32,12 +35,12 @@ class App
 	{
 		/* Create layout */
 		container <= layout <= new Layout();
-		await @.callAsyncHook(RenderHook::CREATE_LAYOUT, {
+		await @.callAsyncHook(AppHook::CREATE_LAYOUT, {
 			"container": container,
 		});
 		
 		/* Find route */
-		await @.callAsyncHook(RenderHook::FIND_ROUTE, {
+		await @.callAsyncHook(AppHook::FIND_ROUTE, {
 			"container": container,
 		});
 		
@@ -48,7 +51,7 @@ class App
 		}
 		
 		/* Call route */
-		await @.callAsyncHook(RenderHook::CALL_ROUTE, {
+		await @.callAsyncHook(AppHook::MIDDLEWARE, {
 			"container": container,
 		});
 		
@@ -63,7 +66,7 @@ class App
 		}
 		
 		/* Response */
-		await @.callAsyncHook(RenderHook::RESPONSE, {
+		await @.callAsyncHook(AppHook::RESPONSE, {
 			"container": container,
 		});
 	}
@@ -154,7 +157,6 @@ class App
 				"payload" => $payload->toDict($ctx),
 				"cookies" => $cookies->toDict($ctx),
 				"start_time" => $start_time,
-				"route_prefix" => $ctx->enviroments->get($ctx, "X-ROUTE-PREFIX", ""),
 			])
 		);
 		return $r;
