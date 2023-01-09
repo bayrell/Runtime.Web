@@ -53,12 +53,12 @@ class RenderProvider extends BaseProvider
 		{
 			$layout = $response->get("layout");
 			$class_name = $response->get("class_name");
-			$page_class = $layout->get("page_class");
-			$page_model = rtl::attr($layout, ["pages", $page_class]);
+			$page_model_class_name = $layout->get("page_model_class_name");
+			$model_path = ["pages", $page_model_class_name];
 			
 			$render = rtl::method($class_name, "render");
 			
-			$content = $render($layout, ["pages", $page_class], null, null);
+			$content = $render($layout, $model_path, null, null);
 			
 			$container->response = rtl::setAttr($container->response, ["content"], $content);
 		}

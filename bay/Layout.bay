@@ -24,7 +24,8 @@ use Runtime.BaseStruct;
 struct Layout extends BaseStruct
 {
     string title;
-    string page_class = "";
+    string page_model_class_name = "";
+    string page_class_name = "";
     Dict<BaseStruct> pages = {};
     
     /* Increment assets */

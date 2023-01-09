@@ -52,7 +52,7 @@ class RenderContainer extends BaseObject
 	{
 		string class_name = model::getClassName();
 		
-		this.layout = rtl::setAttr(this.layout, ["page_class"], class_name);
+		this.layout = rtl::setAttr(this.layout, ["page_model_class_name"], class_name);
 		this.layout = rtl::setAttr(this.layout, ["pages", class_name], model);
 	}
 	
@@ -80,6 +80,7 @@ class RenderContainer extends BaseObject
 	 */
 	void render(string class_name)
 	{
+		this.layout = rtl::setAttr(this.layout, ["page_class_name"], class_name);
 		this.response = new RenderResponse{
 			"class_name": class_name,
 			"layout": this.layout,

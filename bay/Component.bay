@@ -26,6 +26,86 @@ class Component extends BaseObject
 {
     
 	/**
+	 * Returns css
+	 */
+	static string getCss(Collection<string> class_names, Dict css_vars = null)
+	{
+		if (css_vars == null) css_vars = {};
+		
+		/* Get required components */
+		Collection<string> components = static::getRequiredComponents(class_names);
+		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
+		
+		/* Get css */
+		Collection<string> css = components.map
+		(
+			string (string component_name) use (css_vars)
+			{
+				if (component_name == "") return "";
+				if (not rtl::method_exists(component_name, "css")) return "";
+				fn f = rtl::method(component_name, "css");
+				string css = f(css_vars);
+				return css;
+			}
+		);
+		
+		return rs::join("\n", css);
+	}
+	
+	
+	/**
+	 * Returns required modules
+	 * @param string class_name
+	 * @return Collection<string>
+	 */
+	static void _getRequiredComponents
+	(
+		Vector<string> res,
+		Map<string> cache,
+		Collection<string> components
+	)
+	{
+		if (components == null)
+			return;
+		
+		for (int i=0; i<components.count(); i++)
+		{
+			string class_name = components.item(i);
+			if (cache.get(class_name, false) == false)
+			{
+				cache.setValue(class_name, true);
+				if (rtl::method_exists(class_name, "components"))
+				{
+					fn f = rtl::method(class_name, "components");
+					Dict<string> sub_components = f();
+					if (sub_components != null)
+					{
+						static::_getRequiredComponents(res, cache, sub_components);
+					}
+				}
+				res.pushValue(class_name);
+			}
+		}
+	}
+	
+	
+	/**
+	 * Returns all components
+	 * @param Collection<string> components
+	 * @return Collection<string>
+	 */
+	pure Collection<string> getRequiredComponents(Collection<string> components)
+	{
+		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
+		Vector<string> res = new Vector();
+		Map<string> cache = new Map();
+		static::_getRequiredComponents(res, cache, components);
+		res = res.removeDuplicatesIm();
+		return res.toCollection();
+	}
+	
+	
+	/**
 	 * Retuns css hash
 	 * @param string component class name
 	 * @return string hash
@@ -75,7 +155,7 @@ class Component extends BaseObject
     /**
 	 * Escape html
 	 */
-	pure string _escapeHtml(var s)
+	pure string _escape_html(var s)
 	{
 		#switch
 		#case ifcode PHP then
@@ -87,6 +167,69 @@ class Component extends BaseObject
 		return rs::escapeHtml( rtl::toString(s) );
 	}
 	
+	
+	/**
+	 * To html
+	 */
+	pure string _to_html(var s)
+	{
+		return s;
+	}
+	
+	
+	/**
+	 * Concat attr
+	 */
+	pure Dict _concat_attrs(Dict arr1, var arr2)
+	{
+		if (rtl::isString(arr2)) arr2 = [ arr2 ];
+		return arr1.concat(arr2);
+	}
+	
+	
+	/**
+	 * Merge attrs
+	 */
+	pure Dict _merge_attrs(Dict res, Dict attr2)
+	{
+		if (not rtl::exists(attr2)) return res;
+		#ifcode JAVASCRIPT then
+		return Object.assign(res, attr2.toObject());
+		#endif
+		return res;
+	}
+	
+	
+	/**
+	 * Join attrs to string
+	 */
+	pure string _join_attrs(Dict attrs) =>
+		rtl::exists(attrs) ?
+			rs::join
+			(
+				" ",
+				attrs.map(
+					string (string k, string v) => k ~ "= '" ~ static::_escape_attr(v) ~ "'"
+				)
+			) : ""
+	;
+	
+	
+	/**
+	 * Escape attr
+	 */
+	pure string _escape_attr(var s)
+	{
+		if (s instanceof Dict)
+		{
+			s = s.reduce
+			(
+				string (string s, string val, string key) => s ~ key ~ ":" ~ val ~ ";",
+				""
+			);
+		}
+		return rs::escapeHtml(s);
+	}
 	
 	
 	#ifcode PHP then
