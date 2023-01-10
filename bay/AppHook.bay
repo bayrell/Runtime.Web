@@ -18,14 +18,131 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseHook;
 
-class AppHook
+
+class AppHook extends BaseHook
 {
-    
-    static const string ROUTES_INIT = "runtime.web.app::routes_init";
-    static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
-    static const string FIND_ROUTE = "runtime.web.app::find_route";
-    static const string MIDDLEWARE = "runtime.web.app::middleware";
-    static const string RESPONSE = "runtime.web.app::response";
-    
+	
+	static const string LAYOUT_CLASS_NAME = "runtime.web.app::layout_class_name";
+	static const string CSS_CLASS_NAMES = "runtime.web.app::css_class_names";
+	static const string CSS_SAVE = "runtime.web.app::css_save";
+	static const string CORE_UI = "runtime.web.app::core_ui";
+	static const string ROUTES_INIT = "runtime.web.app::routes_init";
+	static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
+	static const string FIND_ROUTE = "runtime.web.app::find_route";
+	static const string MIDDLEWARE = "runtime.web.app::middleware";
+	static const string RESPONSE = "runtime.web.app::response";
+	static const string RENDER_HEAD = "runtime.web.app::render_head";
+	static const string RENDER_BODY = "runtime.web.app::render_body";
+	
+	
+	/**
+	 * Returns method name by hook name
+	 */
+	string getMethodName(string hook_name)
+	{
+		if (hook_name == static::LAYOUT_CLASS_NAME) return "layout_class_name";
+		if (hook_name == static::CSS_CLASS_NAMES) return "css_class_names";
+		if (hook_name == static::CSS_SAVE) return "css_save";
+		if (hook_name == static::CORE_UI) return "core_ui";
+		if (hook_name == static::ROUTES_INIT) return "routes_init";
+		if (hook_name == static::CREATE_LAYOUT) return "create_layout";
+		if (hook_name == static::FIND_ROUTE) return "find_route";
+		if (hook_name == static::MIDDLEWARE) return "middleware";
+		if (hook_name == static::RESPONSE) return "response";
+		if (hook_name == static::RENDER_HEAD) return "render_head";
+		if (hook_name == static::RENDER_BODY) return "render_body";
+		return "";
+	}
+	
+	
+	/**
+	 * Returns layout class name
+	 */
+	Dict layout_class_name(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Get css class names
+	 */
+	Dict css_class_names(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Get css save
+	 */
+	Dict css_save(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Routes init
+	 */
+	async Dict routes_init(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Create layout
+	 */
+	async Dict create_layout(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Find route
+	 */
+	async Dict find_route(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Middleware
+	 */
+	async Dict middleware(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Response
+	 */
+	async Dict response(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Returns render head classes
+	 */
+	Dict render_head(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Returns render body classes
+	 */
+	Dict render_body(Dict d)
+	{
+		return d;
+	}
 }

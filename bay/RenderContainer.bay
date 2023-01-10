@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
+use Runtime.Web.CoreUI;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
@@ -33,7 +34,7 @@ class RenderContainer extends BaseObject
     Response response = null;
 	RouteInfo route = null;
     Layout layout = null;
-    
+	
     
     /**
 	 * Page title

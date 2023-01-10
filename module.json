@@ -11,7 +11,6 @@
 		"Message.bay",
 		"RenderContainer.bay",
 		"RenderProvider.es6",
-		"RenderProvider.php",
 		"Request.bay",
 		"Response.bay",
 		"Route.bay",

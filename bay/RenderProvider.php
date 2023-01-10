@@ -22,6 +22,8 @@ namespace Runtime\Web;
 
 use \Runtime\rtl;
 use \Runtime\BaseProvider;
+use \Runtime\Collection;
+use \Runtime\Dict;
 use \Runtime\Web\AppHook;
 use \Runtime\Web\RenderResponse;
 
@@ -36,7 +38,7 @@ class RenderProvider extends BaseProvider
 	{
 		$ctx = rtl::getContext();
 		$hook = $ctx->provider("hook");
-		$hook->register(AppHook::RESPONSE, rtl::method($this, "response"));
+		$hook->register(AppHook::RESPONSE, $this, "response", 9999);
 	}
 	
 	
@@ -45,23 +47,42 @@ class RenderProvider extends BaseProvider
 	 **/
 	function response($d)
 	{
+		$context = rtl::getContext();
 		$container = $d->get("container");
 		$response = $container->response;
+		
+		/* Get css names */
+		$css_class_names = new Collection();
+		$d = $context->callHook(AppHook::CSS_CLASS_NAMES, Dict::from([
+			"container" => $container,
+			"css_class_names" => $css_class_names,
+		]));
+		$css_class_names = $d->get("css_class_names");
+		
+		/* Save css */
+		$context->callHook(AppHook::CSS_SAVE, Dict::from([
+			"container" => $container,
+			"css_class_names" => $css_class_names,
+		]));
 		
 		/* Render tempate */
 		if ($response instanceof RenderResponse && $response->get("content") == null)
 		{
-			$layout = $response->get("layout");
-			$class_name = $response->get("class_name");
-			$page_model_class_name = $layout->get("page_model_class_name");
-			$model_path = ["pages", $page_model_class_name];
+			$layout = $response->layout;
 			
-			$render = rtl::method($class_name, "render");
+			$d = $context->callHook(AppHook::CORE_UI, Dict::from([
+				"container" => $container,
+				"core_ui" => "Runtime.Web.CoreUI",
+			]));
+			$core_ui = $d->get("core_ui");
 			
-			$content = $render($layout, $model_path, null, null);
+			$render = rtl::method($core_ui, "render");
+			$content = $render($layout, \Runtime\Collection::from([]), null, null);
 			
 			$container->response = rtl::setAttr($container->response, ["content"], $content);
 		}
+		
+		return $d;
 	}
 	
 }

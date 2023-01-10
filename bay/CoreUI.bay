@@ -1,0 +1,92 @@
+<!--
+ *  Index Page
+-->
+
+<class name="Runtime.Web.CoreUI">
+
+<use name="Runtime.rtl" />
+<use name="Runtime.Exceptions.RuntimeException" />
+<use name="Runtime.Web.AppHook" />
+<use name="Runtime.Web.Component" />
+
+
+<template name="renderHead">
+	%var Dict d = @.callHook(AppHook::RENDER_HEAD, { "classes": [] });
+	%var Collection<string> classes = d["classes"];
+	%for (int i=0; i<classes.count(); i++)
+	{
+		%var string class_name = classes[i];
+		<{class_name} />
+	}
+</template>
+
+
+<template name="renderBody">
+
+	%var string class_name = static::getLayoutClass(layout.layout_name);
+	<div id="root">
+		<{class_name} @model=[] />
+	</div>
+
+	%var Dict d = @.callHook(AppHook::RENDER_BODY, { "classes": [] });
+	%var Collection<string> classes = d["classes"];
+	%for (int i=0; i<classes.count(); i++)
+	{
+		%var string class_name = classes[i];
+		<{class_name} />
+	}
+</template>
+
+
+<template name="renderApp">
+	<script>
+		async function main()
+		{
+			let context = await Runtime.rtl.createContext({
+				"modules": [ "App" ],
+			});
+			await context.start();
+		}
+		main();
+	</script>
+</template>
+
+
+<template>
+	<html>
+		<head>
+			%render static::renderHead();
+		</head>
+		<body>
+			%render static::renderBody();
+			%render static::renderApp();
+		</body>
+	</html>
+</template>
+
+
+<script>
+
+/**
+ * Returns layout class name
+ */
+static string getLayoutClass(string layout_name)
+{
+	Dict d = @.callHook(AppHook::LAYOUT_CLASS_NAME, {
+		"layout_name": layout_name,
+		"layout_class_name": "",
+	});
+	
+	string layout_class_name = d["layout_class_name"];
+	if (layout_class_name == "")
+	{
+		throw new RuntimeException("Layout class name is empty for '" ~ layout_name ~ "'");
+	}
+	
+	return d["layout_class_name"];
+}
+
+</script>
+
+
+</class>
