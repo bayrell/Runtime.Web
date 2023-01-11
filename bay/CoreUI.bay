@@ -40,14 +40,7 @@
 
 <template name="renderApp">
 	<script>
-		async function main()
-		{
-			let context = await Runtime.rtl.createContext({
-				"modules": [ "App" ],
-			});
-			await context.start();
-		}
-		main();
+		Runtime.rtl.runApp("App", "App.Main");
 	</script>
 </template>
 

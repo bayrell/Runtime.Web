@@ -32,4 +32,11 @@ struct Layout extends BaseStruct
     
     /* Increment assets */
     string f_inc = "1";
+    
+    
+    /**
+     * Returns page model
+     */
+    BaseStruct getPageModel() => this.pages[ this.page_model_class_name ];
+    
 }

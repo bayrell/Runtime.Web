@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.Context;
 use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
@@ -28,6 +29,38 @@ use Runtime.Web.RouteList;
 
 class App
 {
+	
+	/**
+	 * Init app
+	 */
+	async Context init(Context c)
+	{
+		return c;
+	}
+	
+	
+	
+	/**
+	 * Start app
+	 */
+	async void start()
+	{
+	}
+	
+	
+	
+	/**
+	 * Main entry point
+	 */
+	async void main()
+	{
+		#ifcode PHP then
+		$container = $this->createRenderContainer();
+		$this->resolve($container);
+		$this->response($container);
+		#endif
+	}
+	
 	
 	/**
 	 * Resolve container
