@@ -39,14 +39,12 @@ class App
 	}
 	
 	
-	
 	/**
 	 * Start app
 	 */
 	async void start()
 	{
 	}
-	
 	
 	
 	/**

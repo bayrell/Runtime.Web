@@ -18,8 +18,249 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseObject;
+use Runtime.Web.Component;
+use Runtime.Web.RenderProvider;
 
-class VirtualDom
+
+class VirtualDom extends BaseObject
 {
-    
+	static const string KIND_ROOT = "root";
+	static const string KIND_COLLECTION = "collection";
+	static const string KIND_COMPONENT = "component";
+	static const string KIND_FUNCTION = "function";
+	static const string KIND_ELEMENT = "element";
+	static const string KIND_TEXT = "text";
+	static const string KIND_RAW = "raw";
+	
+	string key = "";
+	string kind = "";
+	string name = "";
+	Dict params = null;
+	Collection childs = [];
+	Vector new_childs = new Vector();
+	Collection<string> path_id = null;
+	VirtualDom parent_vdom = null;
+	Component component = null;
+	bool is_changed_item = false;
+	bool is_new_element = false;
+	var instance = null;
+	var render = null;
+	
+	
+	/**
+	 * Returns path id
+	 */
+	string getPathId() => rs::join(":", this.path_id);
+	
+	
+	/**
+	 * Is element
+	 */
+	public bool isElement() =>
+		this.kind == static::KIND_ELEMENT or
+		this.kind == static::KIND_TEXT or
+		this.kind == static::KIND_RAW
+	;
+	
+	
+	/**
+	 * Find element by key
+	 */
+	VirtualDom findChildElement(string key)
+	{
+		for (int i=0; i<this.childs.count(); i++)
+		{
+			VirtualDom item = this.childs[i];
+			if (item.key == key) return item;
+		}
+		return null;
+	}
+	
+	
+	/**
+	 * Return true if vdom is changed
+	 */
+	bool isChanged(Dict params, var content)
+	{
+		if (this.instance == null) return true;
+		
+		if (this.kind == static::KIND_COMPONENT and this.instance instanceof Component)
+		{
+			RenderProvider provider = @.provider(classof RenderProvider);
+			
+			Collection model_path = this.findModelPath(params);
+			var model = provider.model(model_path);
+			
+			return this.instance.isChanged(model, params, content);
+		}
+		if (this.isElement())
+		{
+			return this.params.equal(params);
+		}
+		
+		return true;
+	}
+	
+	
+	/**
+	 * Element
+	 */
+	VirtualDom e(string kind, string name, Dict params, var content = null, Dict opts = null)
+	{
+		VirtualDom vdom = null;
+		int pos = this.new_childs.count();
+		
+		/* Get key */
+		string key = (string) params.get("@key", "");
+		if (key == "" and name == "") key = pos;
+		else if (key == "") key = name ~ "-" ~ pos;
+		
+		/* Get kind */
+		if (kind == "c") kind = static::KIND_COMPONENT;
+		else if (kind == "f") kind = static::KIND_FUNCTION;
+		else if (kind == "e") kind = static::KIND_ELEMENT;
+		else if (kind == "t") kind = static::KIND_TEXT;
+		else if (kind == "r") kind = static::KIND_RAW;
+		else return null;
+		
+		/* Check if function */
+		if (kind == static::KIND_TEXT and content != null and rtl::isFn(content))
+		{
+			kind = static::KIND_FUNCTION;
+		}
+		
+		/* Check if collection */
+		else if (kind == static::KIND_TEXT and content != null and content instanceof Collection)
+		{
+			kind = static::KIND_COLLECTION;
+		}
+		
+		/* Find child element */
+		vdom = this.findChildElement(key);
+		
+		/* Check vdom kind */
+		if (vdom != null and (vdom.kind != kind or vdom.name != name)) vdom = null;
+		
+		/* Create new element */
+		if (vdom == null)
+		{
+			vdom = new VirtualDom
+			{
+				"key": key,
+				"kind": kind,
+				"name": name,
+				"component": this.component,
+				"params": params,
+				"content": content,
+				"parent_vdom": this,
+				"path_id": this.path_id.pushIm( key ),
+			};
+			vdom.is_changed_item = true;
+			vdom.is_new_element = true;
+		}
+		else
+		{
+			vdom.is_changed_item = vdom.isChanged(params, content);
+			vdom.is_new_element = false;
+			vdom.params = params;
+			vdom.content = content;
+		}
+		
+		/* Clear vdom childs */
+		vdom.new_childs = new Vector();
+		
+		/* Push child */
+		this.new_childs.pushValue(vdom);
+		
+		/* Get render provider */
+		RenderProvider provider = @.provider(classof RenderProvider);
+		
+		/* Add to render_dom_list if vdom is changed */
+		if (vdom.is_changed_item)
+		{
+			if (this.isElement())
+			{
+				provider.addChangedElem(vdom);
+			}
+			else if (kind == static::KIND_FUNCTION)
+			{
+				content(vdom);
+			}
+			else if (kind == static::KIND_COMPONENT)
+			{
+				string class_name = name;
+				Collection model_path = this.findModelPath(params);
+				bool is_new = true;
+				
+				if (vdom.instance == null)
+				{
+					vdom.instance = rtl::newInstance(class_name);
+					vdom.instance.vdom = vdom;
+					vdom.component = vdom.instance;
+					is_new = false;
+				}
+				
+				Component component = vdom.instance;
+				
+				fn render = rtl::method(class_name, "render");
+				render(provider.layout, model_path, params, content);
+				
+				/* On create */
+				if (is_new) component.onCreate(model_path, params, content);
+				
+				/* On update */
+				else component.onUpdate(model_path, params, content);
+				
+				/* Setup params */
+				component.updateParams(model_path, params, content);
+			}
+		}
+		
+		return vdom;
+	}
+	
+	
+	/**
+	 * Patch childs
+	 */
+	void p()
+	{
+		this.childs = this.new_childs.toCollection();
+		this.new_childs = null;
+		this.is_change_childs = true;
+	}
+	
+	
+	/**
+	 * Get parent component
+	 */
+	var getParentComponentVirtualDom(string class_name = "")
+	{
+		VirtualDom vdom = this.parent_vdom;
+		while
+		(
+			vdom != null and
+			vdom.kind != static::KIND_COMPONENT and
+			(
+				class_name == "" or
+				class_name != "" and vdom.name != class_name
+			)
+		)
+		{
+			vdom = vdom.parent_vdom;
+		}
+		return vdom;
+	}
+	
+	
+	/**
+	 * Get parent component
+	 */
+	Component getParentComponent(string class_name = "")
+	{
+		VirtualDom vdom = this.getParentComponentVirtualDom(class_name);
+		return (vdom != null) ? vdom.instance : null;
+	}
+	
 }

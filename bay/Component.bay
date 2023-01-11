@@ -20,11 +20,47 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.BaseObject;
+use Runtime.Web.RenderProvider;
 
 
 class Component extends BaseObject
 {
-    
+	#ifdef FRONTEND then
+	
+	Collection model_path = [];
+	var old_model = null;
+	var params = null;
+	var vdom = null;
+	var content = null;
+	
+	
+	/**
+	 * Returns true if component is changed adn need to repaint
+	 */
+	bool isChanged(var model, Dict params, var content)
+	{
+		if (this.old_model != model) return true;
+		if (not this.params.equal(params)) return true;
+		return false;
+	}
+	
+	
+	/**
+	 * Update params
+	 */
+	void updateParams(Collection model_path, Dict params, var content)
+	{
+		this.model_path = model_path;
+		this.params = params;
+		this.content = content;
+		
+		RenderProvider provider = @.provider(classof RenderProvider);
+		this.old_model = provider.model(model_path);
+	}
+	
+	#endif
+	
+	
 	/**
 	 * Returns css
 	 */
@@ -151,8 +187,8 @@ class Component extends BaseObject
 			|> lib::join(" ")
 		;
 	
-    
-    /**
+	
+	/**
 	 * Escape html
 	 */
 	pure string _escape_html(var s)
@@ -245,5 +281,5 @@ class Component extends BaseObject
 		}
 	}
 	#endif
-    
+	
 }
