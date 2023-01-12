@@ -43,9 +43,9 @@ class VirtualDom extends BaseObject
 	VirtualDom parent_vdom = null;
 	Component component = null;
 	bool is_changed_item = false;
-	bool is_new_element = false;
-	var instance = null;
+	bool is_change_childs = false;
 	var render = null;
+	var elem = null;
 	
 	
 	/**
@@ -109,6 +109,7 @@ class VirtualDom extends BaseObject
 	VirtualDom e(string kind, string name, Dict params, var content = null, Dict opts = null)
 	{
 		VirtualDom vdom = null;
+		params = Dict.@from(params);
 		int pos = this.new_childs.count();
 		
 		/* Get key */
@@ -145,26 +146,31 @@ class VirtualDom extends BaseObject
 		/* Create new element */
 		if (vdom == null)
 		{
-			vdom = new VirtualDom
-			{
-				"key": key,
-				"kind": kind,
-				"name": name,
-				"component": this.component,
-				"params": params,
-				"content": content,
-				"parent_vdom": this,
-				"path_id": this.path_id.pushIm( key ),
-			};
+			vdom = new VirtualDom();
+			vdom.key = key;
+			vdom.kind = kind;
+			vdom.name = name;
+			vdom.params = params;
+			vdom.content = content;
+			vdom.parent_vdom = this;
+			vdom.path_id = this.path_id.pushIm( key );
 			vdom.is_changed_item = true;
-			vdom.is_new_element = true;
 		}
 		else
 		{
 			vdom.is_changed_item = vdom.isChanged(params, content);
-			vdom.is_new_element = false;
 			vdom.params = params;
 			vdom.content = content;
+		}
+		
+		/* Set element */
+		if (not vdom.isElement())
+		{
+			vdom.elem = this.elem;
+		}
+		else
+		{
+			vdom.component = this.component;
 		}
 		
 		/* Clear vdom childs */
@@ -179,13 +185,14 @@ class VirtualDom extends BaseObject
 		/* Add to render_dom_list if vdom is changed */
 		if (vdom.is_changed_item)
 		{
-			if (this.isElement())
+			if (vdom.isElement())
 			{
 				provider.addChangedElem(vdom);
 			}
 			else if (kind == static::KIND_FUNCTION)
 			{
 				content(vdom);
+				vdom.p();
 			}
 			else if (kind == static::KIND_COMPONENT)
 			{
@@ -193,25 +200,22 @@ class VirtualDom extends BaseObject
 				Collection model_path = this.findModelPath(params);
 				bool is_new = false;
 				
-				if (vdom.instance == null)
+				if (vdom.component == null)
 				{
-					vdom.instance = rtl::newInstance(class_name);
-					vdom.instance.vdom = vdom;
-					vdom.component = vdom.instance;
+					vdom.component = rtl::newInstance(class_name);
+					vdom.component.vdom = vdom;
 					is_new = true;
 				}
 				
-				Component component = vdom.instance;
+				Component component = vdom.component;
 				
 				/* Get render */
 				fn render = rtl::method(class_name, "render");
 				
-				#ifcode JAVASCRIPT then
-				render = render.bind(component);
-				#endif
-				
 				/* Render component */
-				render(provider.layout, model_path, params, content);
+				fn f = render(component, provider.layout, model_path, params, content);
+				f(vdom);
+				vdom.p();
 				
 				/* On create */
 				if (is_new) component.onCreate(model_path, params, content);
@@ -276,7 +280,50 @@ class VirtualDom extends BaseObject
 	 */
 	Collection<string> findModelPath(Dict params)
 	{
-		return [];
+		var attr = params["@model"];
+		if (not attr) return null;
+		
+		var component = attr[0];
+		var model_path = attr[1];
+		return component.model_path.concat(model_path);
 	}
 	
+	
+	/**
+	 * Returns childs elements
+	 */
+	static void _getChildElements(VirtualDom vdom, Vector res, bool new_childs = false)
+	{
+		Collection childs = null;
+		if (new_childs) childs = vdom.new_childs;
+		else childs = vdom.childs;
+		
+		if (childs == null) return;
+		
+		/* Foreach childs */
+		for (int i=0; i<childs.count(); i++)
+		{
+			VirtualDom item = childs[i];
+			if (item.isElement()) res.pushValue(item);
+			else if (
+				item.kind == static::KIND_COMPONENT or
+				item.kind == static::KIND_FUNCTION or
+				item.kind == static::KIND_COLLECTION
+			)
+			{
+				static::_getChildElements(item, res, new_childs);
+			}
+		}
+	}
+	
+	
+	/**
+	 * Returns childs elements
+	 */
+	Collection getChildElements(bool new_childs = false)
+	{
+		Vector res = new Vector();
+		static::_getChildElements(this, res, new_childs);
+		return res.toCollection();
+	}
 }

@@ -25,13 +25,14 @@ use Runtime.Web.RenderProvider;
 
 class Component extends BaseObject
 {
-	#ifdef FRONTEND then
-	
 	Collection model_path = [];
 	var old_model = null;
 	var params = null;
-	var vdom = null;
 	var content = null;
+	var vdom = null;
+	
+	
+	#ifdef FRONTEND then
 	
 	
 	/**

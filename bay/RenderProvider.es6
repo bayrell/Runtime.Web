@@ -22,6 +22,7 @@ Runtime.Web.RenderProvider = function()
 {
 	Runtime.BaseProvider.apply(this, arguments);
 	if (window) window["render_provider"] = this;
+	this.vdom = null;
 	this.layout = null;
 	this.render_vdom_list = new Runtime.Collection();
 	this.render_elem_list = new Runtime.Collection();
@@ -54,16 +55,10 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	addChangedElem: function(vdom)
 	{
-		this.render_elem_list = this.render_elem_list.pushIm(vdom);
-	},
-	
-	
-	/**
-	 * Repaint virtual DOM
-	 */
-	repaintVirtualDom: function(vdom)
-	{
-		this.render_vdom_list = this.render_vdom_list.pushIm(vdom);
+		if (vdom.isElement())
+		{
+			this.render_elem_list = this.render_elem_list.pushIm(vdom);
+		}
 	},
 	
 	
@@ -77,20 +72,44 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	
 	
 	/**
-	 * Call render virtual dom
+	 * Call render
 	 */
 	render: function()
 	{
+		/* Render virtual dom */
 		let render_vdom_list = this.render_vdom_list;
-		let sz = render_vdom_list.count();
-		for (let i=0; i<sz; i++)
+		let render_vdom_list_sz = render_vdom_list.count();
+		
+		for (let i=0; i<render_vdom_list_sz; i++)
 		{
 			let vdom = render_vdom_list[i];
 			if (vdom.render)
 			{
+				if (vdom.isElement()) this.addChangedElem(vdom);
 				vdom.render(vdom);
 			}
 		}
+		this.render_vdom_list = new Runtime.Collection();
+		
+		/* Render changed elements */
+		let render_elem_list = this.render_elem_list;
+		let render_elem_list_sz = render_elem_list.count();
+		
+		/* Update elements */
+		for (let i=0; i<render_elem_list_sz; i++)
+		{
+			let vdom = render_elem_list[i];
+			this.updateElem(vdom);
+		}
+		
+		/* Update elements childs */
+		for (let i=render_elem_list_sz-1; i>=0; i--)
+		{
+			let vdom = render_elem_list[i];
+			this.updateElemChilds(vdom);
+		}
+		
+		this.render_elem_list = new Runtime.Collection();
 	},
 	
 	
@@ -102,26 +121,41 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		/* Setup layout */
 		this.layout = layout;
 		
-		/* Render virtual dom */
-		let vdom = new Runtime.Web.VirtualDom();
-		vdom.path_id = Runtime.Collection.from([]);
-		vdom.instance = elem_root;
-		vdom.e("c", layout_class_name, Runtime.Dict.from({}), null);
+		/* Create virtual dom */
+		this.vdom = new Runtime.Web.VirtualDom();
+		this.vdom.kind = Runtime.Web.VirtualDom.KIND_ELEMENT;
+		this.vdom.path_id = Runtime.Collection.from([]);
+		this.vdom.elem = elem_root;
+		this.vdom.render = (vdom) => {
+			vdom.e("c", layout_class_name, Runtime.Dict.from({}), null);
+			vdom.p();
+		};
+		this.repaintRef(this.vdom);
+		
+		/* Call render */
+		this.render();
 	},
 	
 	
 	/**
-	 * Animation frame
+	 * Update element childs
 	 */
-	animationFrame: function()
+	updateElemChilds: function(vdom)
 	{
-		let render_elem_list = this.render_elem_list;
-		let sz = render_elem_list.count();
-		for (let i=0; i<sz; i++)
-		{
-			let vdom = render_elem_list[i];
-			this.updateElem(vdom);
-		}
+		if (!vdom.is_change_childs) return;
+		vdom.is_change_childs = false;
+		
+		if (!vdom.isElement()) return;
+		
+		/* Get vdom HTML childs */
+		let new_childs = vdom.getChildElements();
+		new_childs = new_childs
+			.map( (item) => item.elem )
+			.filter( Runtime.lib.equalNot(null) )
+		;
+		
+		/* Patch HTML element childs */
+		this.constructor.patchElemChilds(vdom.elem, new_childs);
 	},
 	
 	
@@ -132,10 +166,10 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	{
 		if (vdom.kind == Runtime.Web.VirtualDom.KIND_ELEMENT)
 		{
-			if (vdom.instance == null)
+			if (vdom.elem == null)
 			{
-				vdom.instance = this.constructor.createElem(vdom.name, vdom.content);
-				vdom.instance._vdom = vdom;
+				vdom.elem = this.constructor.createElem(vdom.name, vdom.content);
+				vdom.elem._vdom = vdom;
 			}
 			
 			this.updateElemParams(vdom);
@@ -143,27 +177,27 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		
 		else if (vdom.kind == Runtime.Web.VirtualDom.KIND_TEXT)
 		{
-			/* Create instance */
-			if (vdom.instance == null)
+			/* Create elem */
+			if (vdom.elem == null)
 			{
-				vdom.instance = document.createTextNode(
+				vdom.elem = document.createTextNode(
 					Runtime.rtl.exists(vdom.content) ? vdom.content : ""
 				);
-				vdom.instance._vdom = vdom;
+				vdom.elem._vdom = vdom;
 			}
 			else
 			{
 				/* Set new text */
-				if (vdom.instance.nodeValue != vdom.content)
+				if (vdom.elem.nodeValue != vdom.content)
 				{
-					vdom.instance.nodeValue = vdom.content;
+					vdom.elem.nodeValue = vdom.content;
 				}
 			}
 		}
 		
 		else if (vdom.kind == Runtime.Web.VirtualDom.KIND_RAW)
 		{
-			vdom.instance = this.constructor.rawHtml(vdom.content);
+			vdom.elem = this.constructor.rawHtml(vdom.content);
 		}
 	},
 	
@@ -173,12 +207,14 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	updateElemParams: function(vdom)
 	{
-		let elem = vdom.instance;
+		if (!vdom.params) return;
+		
+		let elem = vdom.elem;
 		let keys = vdom.params.keys();
 		for (let i=0; i<keys.count(); i++)
 		{
 			let key = keys[i];
-			let value = vdom.params[key];
+			let value = vdom.params.get(key);
 			
 			let is_event = false;
 			let event_class_name = "";
