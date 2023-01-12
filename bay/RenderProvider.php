@@ -71,7 +71,6 @@ class RenderProvider extends BaseProvider
 			$layout = $response->layout;
 			
 			$d = $context->callHook(AppHook::CORE_UI, Dict::from([
-				"container" => $container,
 				"core_ui" => "Runtime.Web.CoreUI",
 			]));
 			$core_ui = $d->get("core_ui");

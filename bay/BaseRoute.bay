@@ -19,7 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
-use Runtime.RouteList;
+use Runtime.RouteInfo;
 use Runtime.Web.RenderContainer;
 
 
@@ -29,9 +29,7 @@ class BaseRoute extends BaseObject
 	/**
 	 * Returns routes
 	 */
-	void getRoutes(RouteList routes)
-	{
-	}
+	pure Collection<RouteInfo> getRoutes() => [];
 	
 	
 	

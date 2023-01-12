@@ -191,19 +191,26 @@ class VirtualDom extends BaseObject
 			{
 				string class_name = name;
 				Collection model_path = this.findModelPath(params);
-				bool is_new = true;
+				bool is_new = false;
 				
 				if (vdom.instance == null)
 				{
 					vdom.instance = rtl::newInstance(class_name);
 					vdom.instance.vdom = vdom;
 					vdom.component = vdom.instance;
-					is_new = false;
+					is_new = true;
 				}
 				
 				Component component = vdom.instance;
 				
+				/* Get render */
 				fn render = rtl::method(class_name, "render");
+				
+				#ifcode JAVASCRIPT then
+				render = render.bind(component);
+				#endif
+				
+				/* Render component */
 				render(provider.layout, model_path, params, content);
 				
 				/* On create */
@@ -261,6 +268,15 @@ class VirtualDom extends BaseObject
 	{
 		VirtualDom vdom = this.getParentComponentVirtualDom(class_name);
 		return (vdom != null) ? vdom.instance : null;
+	}
+	
+	
+	/**
+	 * Returns model path
+	 */
+	Collection<string> findModelPath(Dict params)
+	{
+		return [];
 	}
 	
 }

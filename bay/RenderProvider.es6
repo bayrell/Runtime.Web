@@ -41,11 +41,20 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	
 	
 	/**
+	 * Returns model by model path
+	 */
+	model: function(model_path)
+	{
+		return Runtime.rtl.attr(this.layout, model_path);
+	},
+	
+	
+	/**
 	 * Add changed virtual dom
 	 */
 	addChangedElem: function(vdom)
 	{
-		this.render_elem_list.pushValue(vdom);
+		this.render_elem_list = this.render_elem_list.pushIm(vdom);
 	},
 	
 	
@@ -54,7 +63,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	repaintVirtualDom: function(vdom)
 	{
-		this.render_vdom_list.pushValue(vdom);
+		this.render_vdom_list = this.render_vdom_list.pushIm(vdom);
 	},
 	
 	
@@ -63,7 +72,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	repaintRef: function(vdom)
 	{
-		this.render_vdom_list.pushValue(vdom);
+		this.render_vdom_list = this.render_vdom_list.pushIm(vdom);
 	},
 	
 	
@@ -72,10 +81,11 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	render: function()
 	{
-		let sz = this.render_vdom_list.count();
+		let render_vdom_list = this.render_vdom_list;
+		let sz = render_vdom_list.count();
 		for (let i=0; i<sz; i++)
 		{
-			let vdom = this.render_vdom_list[i];
+			let vdom = render_vdom_list[i];
 			if (vdom.render)
 			{
 				vdom.render(vdom);
@@ -85,14 +95,31 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	
 	
 	/**
+	 * Render root
+	 */
+	renderRoot: function(elem_root, layout_class_name, layout)
+	{
+		/* Setup layout */
+		this.layout = layout;
+		
+		/* Render virtual dom */
+		let vdom = new Runtime.Web.VirtualDom();
+		vdom.path_id = Runtime.Collection.from([]);
+		vdom.instance = elem_root;
+		vdom.e("c", layout_class_name, Runtime.Dict.from({}), null);
+	},
+	
+	
+	/**
 	 * Animation frame
 	 */
 	animationFrame: function()
 	{
-		let sz = this.render_elem_list.count();
+		let render_elem_list = this.render_elem_list;
+		let sz = render_elem_list.count();
 		for (let i=0; i<sz; i++)
 		{
-			let vdom = this.render_elem_list[i];
+			let vdom = render_elem_list[i];
 			this.updateElem(vdom);
 		}
 	},

@@ -23,11 +23,13 @@
 
 <template name="renderBody">
 
-	%var string class_name = static::getLayoutClass(layout.layout_name);
-	<div id="root">
+	%var string class_name = layout::getLayoutClass(layout.layout_name);
+	<div id="core_ui_root">
 		<{class_name} @model=[] />
 	</div>
-
+	
+	<textarea id="core_ui_layout" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( layout )) }}</textarea>
+	
 	%var Dict d = @.callHook(AppHook::RENDER_BODY, { "classes": [] });
 	%var Collection<string> classes = d["classes"];
 	%for (int i=0; i<classes.count(); i++)
@@ -56,30 +58,6 @@
 		</body>
 	</html>
 </template>
-
-
-<script>
-
-/**
- * Returns layout class name
- */
-static string getLayoutClass(string layout_name)
-{
-	Dict d = @.callHook(AppHook::LAYOUT_CLASS_NAME, {
-		"layout_name": layout_name,
-		"layout_class_name": "",
-	});
-	
-	string layout_class_name = d["layout_class_name"];
-	if (layout_class_name == "")
-	{
-		throw new RuntimeException("Layout class name is empty for '" ~ layout_name ~ "'");
-	}
-	
-	return d["layout_class_name"];
-}
-
-</script>
 
 
 </class>

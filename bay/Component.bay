@@ -58,6 +58,24 @@ class Component extends BaseObject
 		this.old_model = provider.model(model_path);
 	}
 	
+	
+	/**
+	 * Create component
+	 */
+	void onCreate(Collection<string> model_path, Dict params, var content)
+	{
+		
+	}
+	
+	
+	/**
+	 * Update component
+	 */
+	void onUpdate(Collection<string> model_path, Dict params, var content)
+	{
+		
+	}
+	
 	#endif
 	
 	

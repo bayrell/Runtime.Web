@@ -31,8 +31,7 @@ use Runtime.Web.RouteInfo;
 
 class RouteList extends BaseProvider
 {
-	Map<BaseRoute> base_routes = new Map();
-	Map<RouteInfo> routes_list = new Map();
+	Dict<RouteInfo> routes_list = {};
 	
 	
 	/**
@@ -40,35 +39,35 @@ class RouteList extends BaseProvider
 	 */
 	async void start()
 	{
+		Map routes_list = new Map();
+		
 		Collection<Route> routes = @.entities.filter( lib::isInstance(classof Route) );
 		for (int i=0; i<routes.count(); i++)
 		{
 			Route info = routes[i];
 			if (info.name)
 			{
-				BaseRoute route = rtl::newInstance(info.name);
-				this.base_routes.setValue(info.name, route);
-				route.getRoutes(this);
+				/* Get method getRoutes */
+				fn getRoutes = rtl::method(info.name, "getRoutes");
+				
+				/* Create routes */
+				Collection<RouteInfo> routes = getRoutes();
+				for (int j=0; j<routes.count(); j++)
+				{
+					RouteInfo route = routes[j];
+					routes_list.setValue( route.name, route );
+				}
 			}
 		}
 		
 		await @.callAsyncHook(AppHook::ROUTES_INIT, {
 			"routes": this,
+			"routes_list": routes_list,
 		});
+		
+		this.routes_list = routes_list.toDict();
 	}
 	
-	
-	/**
-	 * Add route
-	 */
-	void addRoute(Dict route_info)
-	{
-		if (not (route_info instanceof RouteInfo))
-		{
-			route_info = new RouteInfo(route_info);
-		}
-		this.routes_list.setValue(route_info.name, route_info);
-	}
 	
 	
 	/**

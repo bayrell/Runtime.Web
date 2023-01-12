@@ -19,24 +19,46 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.Exceptions.RuntimeException;
+use Runtime.Web.AppHook;
 
 
 struct Layout extends BaseStruct
 {
-    string title;
-    string page_model_class_name = "";
-    string layout_name = "default";
-    string page_class_name = "";
-    Dict<BaseStruct> pages = {};
-    Dict<BaseStruct> params = {};
-    
-    /* Increment assets */
-    string f_inc = "1";
-    
-    
-    /**
-     * Returns page model
-     */
-    BaseStruct getPageModel() => this.pages[ this.page_model_class_name ];
-    
+	string title;
+	string page_model_class_name = "";
+	string layout_name = "default";
+	string page_class_name = "";
+	Dict<BaseStruct> pages = {};
+	Dict<BaseStruct> params = {};
+	
+	/* Increment assets */
+	string f_inc = "1";
+	
+	
+	/**
+	 * Returns page model
+	 */
+	BaseStruct getPageModel() => this.pages[ this.page_model_class_name ];
+	
+	
+	/**
+	 * Returns layout class name
+	 */
+	static string getLayoutClass(string layout_name)
+	{
+		Dict d = @.callHook(AppHook::LAYOUT_CLASS_NAME, {
+			"layout_name": layout_name,
+			"layout_class_name": "",
+		});
+		
+		string layout_class_name = d["layout_class_name"];
+		if (layout_class_name == "")
+		{
+			throw new RuntimeException("Layout class name is empty for '" ~ layout_name ~ "'");
+		}
+		
+		return d["layout_class_name"];
+	}
+	
 }

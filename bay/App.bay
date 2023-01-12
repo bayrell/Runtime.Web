@@ -57,6 +57,16 @@ class App
 		$this->resolve($container);
 		$this->response($container);
 		#endif
+		
+		#ifcode ES6 then
+		let context = Runtime.rtl.getContext();
+		let core_ui_root = document.getElementById("core_ui_root");
+		let core_ui_layout = document.getElementById("core_ui_layout");
+		let layout = Runtime.rtl.json_decode(atob( core_ui_layout.value ));
+		let layout_class_name = layout.constructor.getLayoutClass( layout.layout_name );
+		let provider = context.provider("Runtime.Web.RenderProvider");
+		provider.renderRoot(core_ui_root, layout_class_name, layout);
+		#endif
 	}
 	
 	
@@ -91,7 +101,8 @@ class App
 		{
 			if (container.route.method instanceof Collection)
 			{
-				BaseRoute base_route = container.route.method[0];
+				string base_route_class_name = container.route.method[0];
+				BaseRoute base_route = rtl::newInstance(base_route_class_name);
 				string method_name = container.route.method[1];
 				fn route_method = rtl::method(base_route, method_name);
 				
@@ -115,8 +126,7 @@ class App
 		});
 	}
 	
-	
-	
+		
 	#ifcode PHP then
 	
 	/**
