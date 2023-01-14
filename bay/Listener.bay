@@ -1,0 +1,112 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+ 
+namespace Runtime.Web;
+
+use Runtime.BaseProvider;
+use Runtime.BaseStruct;
+use Runtime.Web.Component;
+use Runtime.Web.Message;
+use Runtime.Web.Events.BaseEvent;
+
+
+class Listener extends BaseProvider
+{
+	Vector<Dict> callbacks = new Vector();
+	
+	
+	/**
+	 * Add event
+	 */
+	void addCallback(string match_path_id, Component component, string method_name)
+	{
+		var item = this.callbacks.findItem
+		(
+			fn (Dict item) use (component, method_name) =>
+				item["component"] == component and
+				item["method_name"] == method_name
+		);
+		
+		if (not item)
+		{
+			this.callbacks.pushValue
+			{
+				"path_id": match_path_id,
+				"component": component,
+				"method_name": method_name,
+			};
+		}
+	}
+	
+	
+	/**
+	 * Remove component
+	 */
+	void removeComponent(Component component)
+	{
+		for (int i=this.callbacks.count() - 1; i>=0; i--)
+		{
+			Dict item = this.callbacks[i];
+			if (item["component"] == component)
+			{
+				this.callbacks.removePosition(i);
+			}
+		}
+	}
+	
+	
+	/**
+	 * Dispatch
+	 */
+	void dispatch(string path_id, Message<BaseEvent> message)
+	{
+		for (int i=0; i<this.callbacks.count(); i++)
+		{
+			Dict item = this.callbacks[i];
+			bool is_match = static::match(item["path_id"], path_id);
+			if (is_match)
+			{
+				Component component = item["component"];
+				string method_name = item["method_name"];
+				
+				if (rtl::isFn(method_name))
+				{
+					#ifcode ES6 then
+					let f = method_name.bind(component);
+					f(message);
+					#endif
+				}
+				else if (rtl::isString(method_name))
+				{
+					fn callback = rtl::method(component, method_name);
+					callback(message);
+				}
+			}
+		}
+	}
+	
+	
+	/**
+	 * Match
+	 */
+	pure bool match(string match_path_id, string path_id)
+	{
+		if (match_path_id == path_id) return true;
+		return false;
+	}
+}

@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.Entity.Provider;
+use Runtime.Web.Listener;
 use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
@@ -61,6 +62,10 @@ static class ModuleDescription
 	[
 		new Provider(classof RenderProvider, new RenderProvider),
 		new Provider(classof RouteList, new RouteList),
+		
+		#ifdef FRONTEND then
+		new Provider(classof Listener, new Listener),
+		#endif
 	];
 	
 }

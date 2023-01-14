@@ -76,7 +76,7 @@ class RenderProvider extends BaseProvider
 			$core_ui = $d->get("core_ui");
 			
 			$render = rtl::method($core_ui, "render");
-			$content = $render(null, $layout, \Runtime\Collection::from([]), null, null);
+			$content = $render($layout, \Runtime\Collection::from([]), null, null);
 			
 			$container->response = rtl::setAttr($container->response, ["content"], $content);
 		}

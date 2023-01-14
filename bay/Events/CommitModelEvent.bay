@@ -15,44 +15,16 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
- 
-namespace Runtime.Web;
 
-use Runtime.BaseObject;
+namespace Runtime.Web.Events;
+
 use Runtime.Web.Events.BaseEvent;
 
 
-class Message<BaseEvent> extends BaseObject
+struct CommitModelEvent extends BaseEvent
 {
-	public BaseEvent event = null;
-	public bool is_cancel = false;
-	public var sender = null;
-	public string dest = "";
-	
-	
-	/**
-	 * Cancel Message
-	 */
-	void cancel()
-	{
-		this.is_cancel = true;
-		
-		if (this.event instanceof BaseEvent)
-		{
-			this.event = this.event::cancel(this.event);
-		}
-		
-	}
-	
-	
-	
-	/** 
-	 * Constructor
-	 */
-	public void constructor(BaseEvent event)
-	{
-		parent();
-		this.event = event;
-	}
-	
+	public string name = "";
+    public var old_model = null;
+    public var new_model = null;
 }
+

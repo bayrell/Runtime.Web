@@ -37,7 +37,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	start: function()
 	{
-		
+		window.requestAnimationFrame( this.animationFrame.bind(this) );
 	},
 	
 	
@@ -51,14 +51,11 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	
 	
 	/**
-	 * Add changed virtual dom
+	 * Commit layout
 	 */
-	addChangedElem: function(vdom)
+	commit: function(model_path, model)
 	{
-		if (vdom.isElement())
-		{
-			this.render_elem_list = this.render_elem_list.pushIm(vdom);
-		}
+		this.layout = Runtime.rtl.setAttr(this.layout, model_path, model);
 	},
 	
 	
@@ -67,7 +64,22 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	repaintRef: function(vdom)
 	{
-		this.render_vdom_list = this.render_vdom_list.pushIm(vdom);
+		if (vdom)
+		{
+			this.render_vdom_list = this.render_vdom_list.pushIm(vdom);
+		}
+	},
+	
+	
+	/**
+	 * Add changed virtual dom
+	 */
+	addChangedElem: function(vdom)
+	{
+		if (vdom && vdom.isElement())
+		{
+			this.render_elem_list = this.render_elem_list.pushIm(vdom);
+		}
 	},
 	
 	
@@ -87,6 +99,23 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			{
 				if (vdom.isElement()) this.addChangedElem(vdom);
 				vdom.render(vdom);
+				vdom.p();
+			}
+			else if (vdom.isComponent())
+			{
+				/* Get render function */
+				let component = vdom.component;
+				let params = component.params;
+				let content = component.content;
+				let render = Runtime.rtl.method(
+					vdom.component.constructor.getClassName(),
+					"render"
+				);
+				
+				/* Render component */
+				let f = render(component, params, content);
+				f(vdom);
+				vdom.p();
 			}
 		}
 		this.render_vdom_list = new Runtime.Collection();
@@ -114,6 +143,20 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	
 	
 	/**
+	 * Animation frame
+	 */
+	animationFrame: function(time)
+	{
+		let render_vdom_list = this.render_vdom_list;
+		if (render_vdom_list.count() > 0)
+		{
+			this.render();
+		}
+		window.requestAnimationFrame( this.animationFrame.bind(this) );
+	},
+	
+	
+	/**
 	 * Render root
 	 */
 	renderRoot: function(elem_root, layout_class_name, layout)
@@ -128,7 +171,6 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		this.vdom.elem = elem_root;
 		this.vdom.render = (vdom) => {
 			vdom.e("c", layout_class_name, Runtime.Dict.from({}), null);
-			vdom.p();
 		};
 		this.repaintRef(this.vdom);
 		
@@ -145,7 +187,9 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		if (!vdom.is_change_childs) return;
 		vdom.is_change_childs = false;
 		
-		if (!vdom.isElement()) return;
+		/* Get parent element */
+		while (!vdom.isElement()) vdom = vdom.parent_vdom;
+		if (!vdom) return;
 		
 		/* Get vdom HTML childs */
 		let new_childs = vdom.getChildElements();
@@ -218,20 +262,46 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			
 			let is_event = false;
 			let event_class_name = "";
+			let es6_event_name = "";
 			if (key.substr(0, 7) == "@event:")
 			{
 				is_event = true;
-				event_class_name = key.substr(key, 7);
+				event_class_name = key.substr(7);
+				let getES6EventName = Runtime.rtl.method(event_class_name, "getES6EventName");
+				es6_event_name = getES6EventName();
 			}
 			
 			/* Set event */
 			if (is_event)
 			{
+				let context = Runtime.rtl.getContext();
+				let listener = context.provider("Runtime.Web.Listener");
+				let component = value[0];
+				let method_name = value[1];
+				
+				listener.addCallback(
+					vdom.path_id.join(":"),
+					component,
+					method_name,
+				);
+				
+				if (vdom.is_new_element && es6_event_name != "")
+				{
+					vdom.elem.addEventListener(es6_event_name, this.js_event);
+				}
+				
+				continue;
 			}
 			
 			/* Set reference */
-			if (key == "@ref" || key == "@name")
+			if (key == "@ref")
 			{
+				let component = value[0];
+				let ref_name = value[1];
+				
+				component[ref_name] = vdom;
+				
+				continue;
 			}
 			
 			/* Set value */
@@ -258,6 +328,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 					}
 					elem._old_value = value;
 				}
+				continue;
 			}
 			
 			/* Element style */
@@ -278,6 +349,21 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				}
 			}
 		}
+	},
+	
+	js_event: function(e)
+	{
+		let msg = null;
+		let context = Runtime.rtl.getContext();
+		let listener = context.provider("Runtime.Web.Listener");
+		
+		let vdom = e.currentTarget._vdom;
+		
+		msg = new Runtime.Web.Message( Runtime.Web.Events.WebEvent.fromEvent(e) );
+		msg.dest = "";
+		msg.sender = vdom;
+		
+		listener.dispatch(vdom.path_id.join(":"), msg);
 	},
 	
 });

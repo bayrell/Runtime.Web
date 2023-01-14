@@ -20,7 +20,10 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.BaseObject;
+use Runtime.BaseStruct;
+use Runtime.Web.Message;
 use Runtime.Web.RenderProvider;
+use Runtime.Web.Events.CommitModelEvent;
 
 
 class Component extends BaseObject
@@ -30,6 +33,28 @@ class Component extends BaseObject
 	var params = null;
 	var content = null;
 	var vdom = null;
+	
+	
+	/**
+	 * Returns layout
+	 */
+	var layout(Collection<string> model_path = null)
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		if (model_path == null) return provider.layout;
+		return rtl::attr(provider.layout, this.model_path.concat(model_path));
+	}
+	
+	
+	/**
+	 * Returns model by model path
+	 */
+	var model(Collection<string> model_path = null)
+	{
+		if (model_path == null) model_path = [];
+		var layout = this.layout();
+		return rtl::attr(layout, this.model_path.concat(model_path));
+	}
 	
 	
 	#ifdef FRONTEND then
@@ -63,7 +88,7 @@ class Component extends BaseObject
 	/**
 	 * Create component
 	 */
-	void onCreate(Collection<string> model_path, Dict params, var content)
+	void onCreate()
 	{
 		
 	}
@@ -72,9 +97,82 @@ class Component extends BaseObject
 	/**
 	 * Update component
 	 */
-	void onUpdate(Collection<string> model_path, Dict params, var content)
+	void onUpdate()
 	{
 		
+	}
+	
+	
+	/**
+	 * Render component
+	 */
+	void onRender()
+	{
+		
+	}
+	
+	
+	/**
+	 * Commit
+	 */
+	void commit(string method_name)
+	{
+		Collection<string> args = null;
+		
+		#ifcode ES6 then
+		args = Runtime.Collection.from( [ ...arguments ].slice(1) );
+		#endif
+		
+		BaseStruct old_model = this.model();
+		BaseStruct new_model = null;
+		string class_name = old_model::getClassName();
+		
+		if ( rtl::method_exists(old_model, method_name) )
+		{
+			fn f = rtl::method(old_model, method_name);
+			new_model = rtl::apply(f, args);
+		}
+		elseif ( rtl::method_exists(class_name, method_name) )
+		{
+			fn f = rtl::method(class_name, method_name);
+			args = args.prependIm(old_model);
+			new_model = rtl::apply(f, args);
+		}
+		
+		RenderProvider provider = @.provider(classof RenderProvider);
+		provider.commit( this.model_path, new_model );
+		
+		/* Send commit message */
+		Message msg = new Message();
+		msg.event = new CommitModelEvent
+		{
+			"name": method_name,
+			"old_model": old_model,
+			"new_model": new_model,
+		};
+		
+		/* TODO: must be listener dispatch */
+		this.onCommitModel(msg);
+	}
+	
+	
+	/**
+	 * Repaint Virtual Dom
+	 */
+	void repaintRef(var ref)
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		provider.repaintRef(ref);
+	}
+	
+	
+	/**
+	 * Repaint component
+	 */
+	void repaint()
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		provider.repaintRef(this.vdom);
 	}
 	
 	#endif
