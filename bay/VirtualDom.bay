@@ -209,6 +209,9 @@ class VirtualDom extends BaseObject
 			}
 			else if (kind == static::KIND_FUNCTION)
 			{
+				provider.addChangedElem(vdom);
+				
+				vdom.render = content;
 				content(vdom);
 				vdom.p();
 			}

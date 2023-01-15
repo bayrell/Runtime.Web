@@ -76,10 +76,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	addChangedElem: function(vdom)
 	{
-		if (vdom && vdom.isElement())
-		{
-			this.render_elem_list = this.render_elem_list.pushIm(vdom);
-		}
+		this.render_elem_list = this.render_elem_list.pushIm(vdom);
 	},
 	
 	
@@ -168,6 +165,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		this.vdom = new Runtime.Web.VirtualDom();
 		this.vdom.kind = Runtime.Web.VirtualDom.KIND_ELEMENT;
 		this.vdom.path_id = Runtime.Collection.from([]);
+		this.vdom.params = Runtime.Dict();
 		this.vdom.elem = elem_root;
 		this.vdom.render = (vdom) => {
 			vdom.e("c", layout_class_name, Runtime.Dict.from({}), null);
@@ -215,8 +213,6 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				vdom.elem = this.constructor.createElem(vdom.name, vdom.content);
 				vdom.elem._vdom = vdom;
 			}
-			
-			this.updateElemParams(vdom);
 		}
 		
 		else if (vdom.kind == Runtime.Web.VirtualDom.KIND_TEXT)
@@ -243,6 +239,8 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		{
 			vdom.elem = this.constructor.rawHtml(vdom.content);
 		}
+		
+		this.updateElemParams(vdom);
 	},
 	
 	
@@ -259,6 +257,22 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		{
 			let key = keys[i];
 			let value = vdom.params.get(key);
+			
+			/* Set reference */
+			if (key == "@ref")
+			{
+				let component = value[0];
+				let ref_name = value[1];
+				
+				component[ref_name] = vdom;
+				continue;
+			}
+			
+			/* Update element params */
+			if (vdom.kind != Runtime.Web.VirtualDom.KIND_ELEMENT)
+			{
+				continue;
+			}
 			
 			let is_event = false;
 			let event_class_name = "";
@@ -289,17 +303,6 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				{
 					vdom.elem.addEventListener(es6_event_name, this.js_event);
 				}
-				
-				continue;
-			}
-			
-			/* Set reference */
-			if (key == "@ref")
-			{
-				let component = value[0];
-				let ref_name = value[1];
-				
-				component[ref_name] = vdom;
 				
 				continue;
 			}
