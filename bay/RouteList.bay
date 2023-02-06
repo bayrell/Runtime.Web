@@ -24,6 +24,7 @@ use Runtime.BaseProvider;
 use Runtime.Vector;
 use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
+use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.Route;
 use Runtime.Web.RouteInfo;
@@ -51,10 +52,14 @@ class RouteList extends BaseProvider
 				fn getRoutes = rtl::method(info.name, "getRoutes");
 				
 				/* Create routes */
-				Collection<RouteInfo> routes = getRoutes();
-				for (int j=0; j<routes.count(); j++)
+				Collection<RouteInfo> routes_info = getRoutes();
+				for (int j=0; j<routes_info.count(); j++)
 				{
-					RouteInfo route = routes[j];
+					RouteInfo route = routes_info[j];
+					if (rtl::isString(route.method))
+					{
+						route <= method <= [info.name, route.method];
+					}
 					routes_list.setValue( route.name, route );
 				}
 			}
@@ -73,9 +78,10 @@ class RouteList extends BaseProvider
 	/**
 	 * Find route
 	 */
-	RouteInfo findRoute(Request request)
+	RouteInfo findRoute(RenderContainer container)
 	{
 		Route route = null;
+		Request request = container.request;
 		Dict<string> params = null;
 		
 		string request_uri = request.uri;
@@ -83,19 +89,30 @@ class RouteList extends BaseProvider
 		
 		request_uri = static::splitRoutePrefix(request_uri, route_prefix);
 		if (request_uri === null) return [route, params];
+		if (request_uri == "") request_uri = "/";
 		
 		/* Find route */
-		Collection<string> route_name = this.routes_list.keys();
-		for (int i=0; i<route_name.count(); i++)
+		Collection<string> route_names = this.routes_list.keys();
+		for (int i=0; i<route_names.count(); i++)
 		{
-			RouteInfo info = this.routes_list[route_name];
-			Collection<string> matches = re::matchAll( info.uri_match, request_uri );
+			string route_name = route_names[i];
+			RouteInfo route = this.routes_list[route_name];
+			Collection<string> matches = re::matchAll( route.uri_match, request_uri );
+			
+			Dict d = @.callAsyncHook(AppHook::MATCH_ROUTE, {
+				"route": route,
+				"request_uri": request_uri,
+				"container": container,
+				"matches": matches,
+			});
+			matches = d["matches"];
+			
 			if (matches != null)
 			{
 				matches = matches.get(0, null);
 				if (matches) matches = matches.removeFirstIm();
-				info = info.addMatches(matches);
-				return info;
+				route = route.addMatches(matches);
+				return route;
 			}
 		}
 		

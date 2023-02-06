@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseObject;
 use Runtime.Context;
 use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
@@ -27,7 +28,7 @@ use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
 
-class App
+class App extends BaseObject
 {
 	
 	/**
@@ -52,6 +53,8 @@ class App
 	 */
 	async void main()
 	{
+		await @.callAsyncHook(AppHook::MAIN, {});
+		
 		#ifcode PHP then
 		$container = $this->createRenderContainer();
 		$this->resolve($container);
@@ -81,22 +84,40 @@ class App
 			"container": container,
 		});
 		
-		/* Find route */
+		/* Call hook find route */
 		await @.callAsyncHook(AppHook::FIND_ROUTE, {
 			"container": container,
 		});
 		
+		/* Find route */
 		if (container.route == null)
 		{
 			RouteList routes = @.provider(classof RouteList);
-			container.route = routes.findRoute( container.request );
+			container.route = routes.findRoute( container );
 		}
 		
-		/* Call route */
+		/* Call hook found route */
+		await @.callAsyncHook(AppHook::FOUND_ROUTE, {
+			"container": container,
+		});
+		
+		/* Call middleware */
+		if (container.route and container.route.middleware)
+		{
+			for (int i=0; i<container.route.middleware.count(); i++)
+			{
+				string class_name_middleware = container.route.middleware[i];
+				fn middleware_method = rtl::method(class_name_middleware, "actionMiddleware");
+				await middleware_method(container);
+			}
+		}
+		
+		/* Call hook middleware */
 		await @.callAsyncHook(AppHook::MIDDLEWARE, {
 			"container": container,
 		});
 		
+		/* Call route */
 		if (container.route and container.response == null)
 		{
 			if (container.route.method instanceof Collection)
@@ -120,7 +141,7 @@ class App
 			}
 		}
 		
-		/* Response */
+		/* Call hook response */
 		await @.callAsyncHook(AppHook::RESPONSE, {
 			"container": container,
 		});
@@ -180,13 +201,9 @@ class App
 		/* Read Cookie */
 		foreach ($_COOKIE as $key => $val)
 		{
-			$cookies->setValue
-			(
-				$ctx, 
+			$cookies->setValue($ctx,
 				$key,
-				new \Runtime\Web\Cookie
-				(
-					$ctx,
+				new \Runtime\Web\Cookie($ctx,
 					\Runtime\Dict::from([
 						'name' => $key,
 						'value' => $val,

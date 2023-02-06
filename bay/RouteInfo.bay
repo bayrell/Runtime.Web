@@ -29,8 +29,10 @@ struct RouteInfo extends BaseStruct
 	string uri = "";
 	string uri_match = "";
 	fn method = null;
+	Collection<string> middleware = [];
 	Collection<string> params = [];
 	Dict<string> matches = {};
+	bool enable_locale = true;
 	
 	
 	/**

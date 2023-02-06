@@ -34,6 +34,7 @@ class RenderContainer extends BaseObject
     Response response = null;
 	RouteInfo route = null;
     Layout layout = null;
+	Dict frontend_env = {};
 	Dict params = {};
 	
     

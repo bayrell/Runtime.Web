@@ -21,16 +21,21 @@ namespace Runtime.Web;
 use Runtime.BaseStruct;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.AppHook;
+use Runtime.Web.SeoModel;
 
 
 struct Layout extends BaseStruct
 {
-	string title;
+	string title = "";
 	string page_model_class_name = "";
 	string layout_name = "default";
 	string page_class_name = "";
 	Dict<BaseStruct> pages = {};
-	Dict<BaseStruct> params = {};
+	Dict<BaseStruct> models = {
+		"seo": new SeoModel,
+		"current_locale": null,
+		"locales": [],
+	};
 	
 	/* Increment assets */
 	string f_inc = "1";

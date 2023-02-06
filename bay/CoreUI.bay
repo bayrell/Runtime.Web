@@ -29,8 +29,24 @@
 	</div>
 	
 	<textarea id="core_ui_layout" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( layout )) }}</textarea>
-	
-	%var Dict d = @.callHook(AppHook::RENDER_BODY, { "classes": [] });
+	<textarea id="frontend_env" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( render_params["container", "frontend_env"] )) }}</textarea>
+</template>
+
+
+<template name="renderApp">
+	%var Dict d = @.callHook(AppHook::ENTRY_POINT, { "module_name": "", "entry_point": "" });
+	<script>
+		onReady(function(){
+			let env = document.getElementById("frontend_env");
+			env = Runtime.rtl.json_decode(atob( env.value ));
+			Runtime.rtl.runApp(@json{ d["module_name"] }, @json{ d["entry_point"] }, {"env": env});
+		});
+	</script>
+</template>
+
+
+<template name="renderFooter">
+	%var Dict d = @.callHook(AppHook::RENDER_FOOTER, { "classes": [] });
 	%var Collection<string> classes = d["classes"];
 	%for (int i=0; i<classes.count(); i++)
 	{
@@ -40,21 +56,22 @@
 </template>
 
 
-<template name="renderApp">
-	<script>
-		Runtime.rtl.runApp("App", "App.Main");
-	</script>
-</template>
-
-
 <template>
 	<html>
 		<head>
+			<script>
+			window.$onReady=[];
+			function onReady(f){ window.$onReady.push(f) };
+			</script>
 			%render static::renderHead();
 		</head>
 		<body>
 			%render static::renderBody();
 			%render static::renderApp();
+			%render static::renderFooter();
+			<script>
+			window.$onReady.forEach( function(f){ f(); } );
+			</script>
 		</body>
 	</html>
 </template>
