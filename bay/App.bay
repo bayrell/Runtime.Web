@@ -65,7 +65,8 @@ class App extends BaseObject
 		let context = Runtime.rtl.getContext();
 		let core_ui_root = document.getElementById("core_ui_root");
 		let core_ui_layout = document.getElementById("core_ui_layout");
-		let layout = Runtime.rtl.json_decode(atob( core_ui_layout.value ));
+		let layout = Runtime.rs.base64_decode_url(core_ui_layout.value);
+		layout = Runtime.rtl.json_decode(layout);
 		let layout_class_name = layout.constructor.getLayoutClass( layout.layout_name );
 		let provider = context.provider("Runtime.Web.RenderProvider");
 		provider.renderRoot(core_ui_root, layout_class_name, layout);

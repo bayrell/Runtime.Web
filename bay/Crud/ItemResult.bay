@@ -21,11 +21,9 @@ namespace Runtime.Web.Crud;
 use Runtime.BaseStruct;
 
 
-struct SearchResult<T> extends BaseStruct
+struct ItemResult<T> extends BaseStruct
 {
-    int page = 0;
-    int pages = 0;
-    Collection<T> items = null;
-    Dict dictionary = null;
+	T item = null;
+	Dict dictionary = null;
     Dict params = null;
 }

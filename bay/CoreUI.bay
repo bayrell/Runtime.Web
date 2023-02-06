@@ -22,12 +22,10 @@
 
 
 <template name="renderBody">
-
 	%var string class_name = layout::getLayoutClass(layout.layout_name);
 	<div id="core_ui_root">
 		<{class_name} @model=[] />
 	</div>
-	
 	<textarea id="core_ui_layout" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( layout )) }}</textarea>
 	<textarea id="frontend_env" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( render_params["container", "frontend_env"] )) }}</textarea>
 </template>
@@ -39,7 +37,11 @@
 		onReady(function(){
 			let env = document.getElementById("frontend_env");
 			env = Runtime.rtl.json_decode(atob( env.value ));
-			Runtime.rtl.runApp(@json{ d["module_name"] }, @json{ d["entry_point"] }, {"env": env});
+			Runtime.rtl.runApp(
+				@json{ d["module_name"] },
+				@json{ d["entry_point"] },
+				Runtime.Dict.from({"env": env})
+			);
 		});
 	</script>
 </template>

@@ -1,0 +1,200 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web.Crud;
+
+use Runtime.BaseStruct;
+use Runtime.Web.ApiResult;
+use Runtime.Web.Bus;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.Crud.ItemResult;
+use Runtime.Web.Crud.SearchResult;
+
+
+struct CrudModel<T> extends BaseStruct
+{
+	string action = "";
+	SearchResult<T> search = null;
+	ItemResult item = null;
+	int error_code = 0;
+	string error_message = "";
+	
+	
+	/**
+	 * Get api url
+	 */
+	static string getApiUrl(string action, Dict data)
+	{
+		return "";
+	}
+	
+	
+	/**
+	 * Before action
+	 */
+	async CrudModel before(string action, Dict data)
+	{
+		return this;
+	}
+	
+	
+	/**
+	 * After action
+	 */
+	async CrudModel after(string action, Dict data)
+	{
+		return this;
+	}
+	
+	
+	/**
+	 * Process data
+	 */
+	async Dict processApiData(string action, Dict api_data)
+	{
+		return api_data;
+	}
+	
+	
+	/**
+	 * Process data
+	 */
+	Dict getActionSearchData(RenderContainer container)
+	{
+		int page = (int)container.request.query.get("page", 1);
+		
+		return {
+			"page": page,
+		};
+	}
+	
+	
+	/**
+	 * Search action
+	 */
+	CrudModel actionSearch(RenderContainer container)
+	{
+		CrudModel model = this;
+		
+		model <= action <= "actionSearch";
+		
+		/* Before action */
+		model = await model.before( "actionSearch", {} );
+		
+		/* Send api */
+		Dict api_data = model.getActionSearchData(container);
+		api_data = await model.processApiData("actionSearch", api_data);
+		ApiResult res = await static::searchApi(api_data);
+		
+		if (res.isSuccess())
+		{
+			model <= posts <= res["data"];
+		}
+		
+		model <= error_message <= res.getErrorMessage();
+		model <= error_code <= res.getErrorCode();
+		
+		/* After action */
+		model = await model.after("actionSearch", {
+			"res": res,
+		});
+		
+		return model;
+	}
+	
+	
+	/**
+	 * Search api
+	 */
+	static async ApiResult searchApi(Dict api_data)
+	{
+		string url = static::getApiUrl("search", {"api_data": api_data});
+		
+		ApiResult res = await Bus::callApi({
+			"uri": url,
+			"data": api_data,
+		});
+		
+		return res;
+	}
+	
+	
+	/**
+	 * Process data
+	 */
+	Dict getActionItemData(RenderContainer container)
+	{
+		int id = (int)container.route.matches.get("id", 0);
+		return {
+			"id": id,
+		};
+	}
+	
+	
+	/**
+	 * Item action
+	 */
+	CrudModel actionItem(RenderContainer container)
+	{
+		CrudModel model = this;
+		
+		model <= action <= "actionItem";
+		
+		/* Before action */
+		model = await model.before( "actionItem", {} );
+		
+		/* Send api */
+		Dict api_data = model.getActionItemData(container);
+		api_data = await model.processApiData("actionItem", api_data);
+		ApiResult res = await static::getByIdApi(api_data);
+		
+		if (res.isSuccess())
+		{
+			model <= item <= res["data"];
+		}
+		
+		model <= error_message <= res.getErrorMessage();
+		model <= error_code <= res.getErrorCode();
+		
+		/* After action */
+		model = await model.after("actionItem", {
+			"res": res,
+		});
+		
+		return model;
+	}
+	
+	
+	/**
+	 * Get by id Api
+	 */
+	static async ApiResult getByIdApi(Dict api_data)
+	{
+		if (not api_data.has("post_type")) api_data <= post_type <= "page";
+		
+		string url = static::getApiUrl("getById", {"api_data": api_data});
+		
+		ApiResult res = await Bus::callApi({
+			"uri": url,
+			"data": api_data,
+		});
+		
+		return res;
+	}
+		
+}
