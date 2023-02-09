@@ -5,6 +5,7 @@
 		"App.bay",
 		"AppHook.bay",
 		"BaseRoute.bay",
+		"Bus.bay",
 		"Component.bay",
 		"Cookie.bay",
 		"Layout.bay",
@@ -46,6 +47,7 @@
 		"Events/MouseUpEvent.bay",
 		"Events/MouseWheelEvent.bay",
 		"Events/SignalEvent.bay",
+		"ApiResult.bay",
 		"ModuleDescription.bay"
 	],
 	"src": "./bay",

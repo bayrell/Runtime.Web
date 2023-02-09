@@ -103,7 +103,7 @@ struct CrudModel<T> extends BaseStruct
 		
 		if (res.isSuccess())
 		{
-			model <= posts <= res["data"];
+			model <= search <= res["data"];
 		}
 		
 		model <= error_message <= res.getErrorMessage();
@@ -125,10 +125,7 @@ struct CrudModel<T> extends BaseStruct
 	{
 		string url = static::getApiUrl("search", {"api_data": api_data});
 		
-		ApiResult res = await Bus::callApi({
-			"uri": url,
-			"data": api_data,
-		});
+		ApiResult res = await Bus::callApi(url, api_data);
 		
 		return res;
 	}

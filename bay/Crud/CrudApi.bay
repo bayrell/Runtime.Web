@@ -15,28 +15,36 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
- 
-namespace Runtime.Web;
+
+namespace Runtime.Web.Crud;
 
 use Runtime.BaseStruct;
-use Runtime.Web.Cookie;
+use Runtime.Web.ApiResult;
+use Runtime.Web.Bus;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.Crud.ItemResult;
+use Runtime.Web.Crud.SearchResult;
 
 
-struct Response extends BaseStruct
+struct CrudApi extends BaseRoute
 {
-	public int http_code = 200;
-	public string ob_content = "";
-	public string content = "";
-	public Dict<Cookie> cookies = {};
-	public Dict<string> headers = {};
+	
+	/**
+	 * Before route
+	 */
+	async void onActionBefore(RenderContainer container)
+	{
+		await parent::onActionBefore(container);
+	}
+	
 	
 	
 	/**
-	 * Returns content
+	 * After route
 	 */
-	string getContent()
+	async void onActionAfter(RenderContainer container)
 	{
-		return this.content;
+		await parent::onActionAfter(container);
 	}
 	
 }

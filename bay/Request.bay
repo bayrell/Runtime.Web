@@ -43,6 +43,5 @@ struct Request extends BaseStruct
 	public Dict<var> payload = null;
 	public Dict<Cookie> cookies = null;
 	public Dict<string> headers = null;
-	public Dict<string> params = null;
 	public float start_time = 0;
 }

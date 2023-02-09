@@ -34,21 +34,10 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
-	 * Start route
-	 */
-	void start()
-	{
-		
-	}
-	
-	
-	
-	/**
 	 * Before route
 	 */
-	void before(RenderContainer container)
+	async void onActionBefore(RenderContainer container)
 	{
-		
 	}
 	
 	
@@ -56,9 +45,8 @@ class BaseRoute extends BaseObject
 	/**
 	 * After route
 	 */
-	void after(RenderContainer container)
+	async void onActionAfter(RenderContainer container)
 	{
-		
 	}
 	
 }

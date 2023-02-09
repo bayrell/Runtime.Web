@@ -18,7 +18,7 @@
 
 namespace Runtime.Web;
 
-use Runtime.BaseObject;
+use Runtime.BaseProvider;
 use Runtime.Context;
 use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
@@ -28,7 +28,7 @@ use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
 
-class App extends BaseObject
+class App extends BaseProvider
 {
 	
 	/**
@@ -79,12 +79,34 @@ class App extends BaseObject
 	 */
 	async void resolve(RenderContainer container)
 	{
+		Context context = @;
+		context <= settings <= render_container <= container;
+		@ = context;
+		
 		/* Create layout */
 		container <= layout <= new Layout();
 		await @.callAsyncHook(AppHook::CREATE_LAYOUT, {
 			"container": container,
 		});
 		
+		/* Find route */
+		await this.findRoute(container);
+		
+		/* Call route */
+		await this.callRoute(container);
+		
+		/* Call hook response */
+		await @.callAsyncHook(AppHook::RESPONSE, {
+			"container": container,
+		});
+	}
+	
+	
+	/**
+	 * Find route
+	 */
+	async void findRoute(RenderContainer container)
+	{
 		/* Call hook find route */
 		await @.callAsyncHook(AppHook::FIND_ROUTE, {
 			"container": container,
@@ -101,7 +123,14 @@ class App extends BaseObject
 		await @.callAsyncHook(AppHook::FOUND_ROUTE, {
 			"container": container,
 		});
-		
+	}
+	
+	
+	/**
+	 * Call route
+	 */
+	async void callRoute(RenderContainer container)
+	{
 		/* Call middleware */
 		if (container.route and container.route.middleware)
 		{
@@ -128,12 +157,12 @@ class App extends BaseObject
 				string method_name = container.route.method[1];
 				fn route_method = rtl::method(base_route, method_name);
 				
-				await base_route.before(container);
+				await base_route.onActionBefore(container);
 				if (container.response == null)
 				{
 					await route_method(container);
 				}
-				await base_route.after(container);
+				await base_route.onActionAfter(container);
 			}
 			
 			else if (rtl::isFn(container.route.method))
@@ -141,11 +170,6 @@ class App extends BaseObject
 				await container.route.method(container);
 			}
 		}
-		
-		/* Call hook response */
-		await @.callAsyncHook(AppHook::RESPONSE, {
-			"container": container,
-		});
 	}
 	
 		
@@ -159,6 +183,23 @@ class App extends BaseObject
 		$container = new \Runtime\Web\RenderContainer($ctx);
 		$container->request = $this->createRequest($ctx);
 		return $container;
+	}
+	
+	
+	/**
+	 * Returns POST
+	 */
+	function getPost($ctx)
+	{
+		$content_type = isset($_SERVER['Content-Type']) ? $_SERVER['Content-Type'] : "";
+		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
+		{
+			$json = file_get_contents("php://input");
+			$json = @json_decode($json, true);
+			return $json;
+		}
+		
+		return $_POST;
 	}
 	
 	
@@ -179,21 +220,10 @@ class App extends BaseObject
 		foreach ($_GET as $key => $val) $query->setValue($ctx, $key, $val);
 		
 		/* Read POST */
-		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
+		$post = $this->getPost($ctx);
+		if ($post && gettype($post) == "array")
 		{
-			$json = file_get_contents("php://input");
-			$json = @json_decode($json, true);
-			if ($json)
-			{
-				foreach ($json as $key => $val)
-				{
-					$payload->setValue($ctx, $key, \Runtime\rtl::NativeToObject($ctx, $val));
-				}
-			}
-		}
-		else
-		{
-			foreach ($_POST as $key => $val)
+			foreach ($post as $key => $val)
 			{
 				$payload->setValue($ctx, $key, \Runtime\rtl::NativeToObject($ctx, $val));
 			}

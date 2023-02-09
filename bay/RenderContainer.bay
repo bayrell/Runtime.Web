@@ -34,8 +34,14 @@ class RenderContainer extends BaseObject
     Response response = null;
 	RouteInfo route = null;
     Layout layout = null;
-	Dict frontend_env = {};
-	Dict params = {};
+	Dict frontend_env = {
+		"locales": [],
+		"current_locale": {
+			"code": "en",
+			"locale": "en_US",
+		},
+	};
+	Dict backend_storage = {};
 	
     
     /**
@@ -45,7 +51,6 @@ class RenderContainer extends BaseObject
 	{
 		this.layout = rtl::setAttr(this.layout, ["title"], title);
 	}
-	
 	
 	
 	/**
@@ -58,7 +63,6 @@ class RenderContainer extends BaseObject
 		this.layout = rtl::setAttr(this.layout, ["page_model_class_name"], class_name);
 		this.layout = rtl::setAttr(this.layout, ["pages", class_name], model);
 	}
-	
 	
 	
 	/**
@@ -77,7 +81,6 @@ class RenderContainer extends BaseObject
 	}
 	
 	
-	
 	/**
 	 * Render page and setup response
 	 */
@@ -90,6 +93,14 @@ class RenderContainer extends BaseObject
 		};
 	}
 	
+	
+	/**
+	 * Set response
+	 */
+	void setResponse(Response response)
+	{
+		this.response = response;
+	}
 	
 	
 	/**

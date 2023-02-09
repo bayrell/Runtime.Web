@@ -121,7 +121,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		let render_elem_list = this.render_elem_list;
 		let render_elem_list_sz = render_elem_list.count();
 		
-		/* Update elements */
+		/* Create elements or update params */
 		for (let i=0; i<render_elem_list_sz; i++)
 		{
 			let vdom = render_elem_list[i];
@@ -132,7 +132,10 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		for (let i=render_elem_list_sz-1; i>=0; i--)
 		{
 			let vdom = render_elem_list[i];
-			this.updateElemChilds(vdom);
+			if (vdom.isElement() && !vdom.isText())
+			{
+				this.updateElemChilds(vdom);
+			}
 		}
 		
 		this.render_elem_list = new Runtime.Collection();
@@ -185,14 +188,17 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		if (!vdom.is_change_childs) return;
 		vdom.is_change_childs = false;
 		
+		let parent_vdom = vdom;
+		
 		/* Get parent element */
-		while (!vdom.isElement()) vdom = vdom.parent_vdom;
-		if (!vdom) return;
+		while (!parent_vdom.isElement()) parent_vdom = parent_vdom.parent_vdom;
+		if (!parent_vdom) return;
 		
 		/* Get vdom HTML childs */
-		let new_childs = vdom.getChildElements();
+		let new_childs = parent_vdom.getChildElements();
 		new_childs = new_childs
 			.map( (item) => item.elem )
+			.flatten()
 			.filter( Runtime.lib.equalNot(null) )
 		;
 		
@@ -407,11 +413,11 @@ Object.assign(Runtime.Web.RenderProvider,
 	 */
 	rawHtml(content)
 	{
-		var res = new Vector();
+		var res = [];
 		var e = document.createElement('div');
-		e.innerHTML = Runtime.rtl.trim(content)
-		for (var i = 0; i < e.childNodes.length; i++) res.pushValue( e.childNodes[i] );
-		return res.toCollection();
+		e.innerHTML = Runtime.rs.trim(content)
+		for (var i = 0; i < e.childNodes.length; i++) res.push( e.childNodes[i] );
+		return Runtime.Collection.from(res);
 	},
 	
 	

@@ -66,6 +66,15 @@ class VirtualDom extends BaseObject
 	
 	
 	/**
+	 * Is text
+	 */
+	public bool isText() =>
+		this.kind == static::KIND_TEXT or
+		this.kind == static::KIND_RAW
+	;
+	
+	
+	/**
 	 * Is component
 	 */
 	public bool isComponent() => this.kind == static::KIND_COMPONENT;
@@ -209,8 +218,6 @@ class VirtualDom extends BaseObject
 			}
 			else if (kind == static::KIND_FUNCTION)
 			{
-				provider.addChangedElem(vdom);
-				
 				vdom.render = content;
 				content(vdom);
 				vdom.p();
