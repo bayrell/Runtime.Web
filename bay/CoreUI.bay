@@ -36,11 +36,11 @@
 	<script>
 		onReady(function(){
 			let env = document.getElementById("frontend_env");
-			env = Runtime.rtl.json_decode(atob( env.value ));
+			env = Runtime.rtl.json_decode(Runtime.rs.base64_decode_url( env.value ));
 			Runtime.rtl.runApp(
 				@json{ d["module_name"] },
 				@json{ d["entry_point"] },
-				Runtime.Dict.from({"env": env})
+				Runtime.Dict.from({"environments": env,"tz":@json{ @.tz }})
 			);
 		});
 	</script>
