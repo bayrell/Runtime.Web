@@ -202,6 +202,11 @@ class Component extends BaseObject
 			}
 		);
 		
+		css = css
+			.map( string (string s) => rs::trim(s) )
+			.filter( bool (string s) => s != "" )
+		;
+		
 		return rs::join("\n", css);
 	}
 	
@@ -230,7 +235,7 @@ class Component extends BaseObject
 				if (rtl::method_exists(class_name, "components"))
 				{
 					fn f = rtl::method(class_name, "components");
-					Dict<string> sub_components = f();
+					Collection<string> sub_components = f();
 					if (sub_components != null)
 					{
 						static::_getRequiredComponents(res, cache, sub_components);

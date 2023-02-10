@@ -33,8 +33,7 @@ struct Layout extends BaseStruct
 	Dict<BaseStruct> pages = {};
 	Dict<BaseStruct> models = {
 		"seo": new SeoModel,
-		"current_locale": null,
-		"locales": [],
+		"current_user": null,
 	};
 	
 	/* Increment assets */

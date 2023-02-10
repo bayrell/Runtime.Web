@@ -24,6 +24,7 @@ use \Runtime\rtl;
 use \Runtime\BaseProvider;
 use \Runtime\Collection;
 use \Runtime\Dict;
+use \Runtime\Vector;
 use \Runtime\Web\AppHook;
 use \Runtime\Web\RenderResponse;
 
@@ -52,7 +53,15 @@ class RenderProvider extends BaseProvider
 		$response = $container->response;
 		
 		/* Get css names */
-		$css_class_names = new Collection();
+		$css_class_names = new Vector();
+		
+		/* Add layout class name */
+		$layout = $container->layout;
+		$layout_name = $layout->layout_name;
+		$layout_class_name = $layout::getLayoutClass($layout_name);
+		$css_class_names->pushValue($layout_class_name);
+		
+		/* Extends css class names */
 		$d = $context->callHook(AppHook::CSS_CLASS_NAMES, Dict::from([
 			"container" => $container,
 			"css_class_names" => $css_class_names,

@@ -80,7 +80,7 @@ class App extends BaseProvider
 	async void resolve(RenderContainer container)
 	{
 		Context context = @;
-		context <= settings <= render_container <= container;
+		context <= environments <= render_container <= container;
 		@ = context;
 		
 		/* Create layout */
@@ -310,6 +310,28 @@ class App extends BaseProvider
 		{
 			http_response_code(404);
 			echo "404 Response not found";
+		}
+	}
+	
+	
+	/**
+	 * Css save
+	 */
+	static function css_save($css_class_names, $file_path)
+	{
+		$css_class_names = \Runtime\Web\Component::getRequiredComponents( $css_class_names );
+		$css_content = trim( \Runtime\Web\Component::getCss( $css_class_names ) );
+		
+		$file_size = 0;
+		if ($file_path)
+		{
+			if (file_exists($file_path)) $file_size = filesize($file_path);
+			if (strlen($css_content) != $file_size)
+			{
+				$dir_name = dirname($file_path);
+				if (!file_exists($dir_name)) mkdir($dir_name, 0775, true);
+				file_put_contents($file_path, $css_content);
+			}
 		}
 	}
 	

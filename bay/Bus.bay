@@ -99,8 +99,8 @@ class Bus
 	{
 		ApiResult res = new ApiResult();
 		
-		RenderContainer render_container = @.settings["render_container"];
-		string current_locale_code = @.settings["current_locale", "code"];
+		RenderContainer render_container = @.env("render_container");
+		string current_locale_code = @.env("LOCALE_CODE");
 		string api_url = "/" ~ current_locale_code ~ "/api" ~ url;
 		
 		#switch
@@ -124,9 +124,6 @@ class Bus
 			$routes = $context->provider("Runtime.Web.RouteList");
 			$context->app->findRoute($api_container);
 			$context->app->callRoute($api_container);
-			
-			//var_dump($api_container->request);
-			//var_dump($api_container->route);
 			
 			if (
 				$api_container->response != null and
