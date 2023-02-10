@@ -18,12 +18,17 @@
 
 namespace Runtime.Web.Crud;
 
+use Runtime.lib;
 use Runtime.BaseStruct;
 use Runtime.Web.ApiResult;
+use Runtime.Web.BaseRoute;
 use Runtime.Web.Bus;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Crud.ItemResult;
 use Runtime.Web.Crud.SearchResult;
+use Runtime.ORM.Cursor;
+use Runtime.ORM.Database;
+use Runtime.ORM.Query;
 
 
 struct CrudApi extends BaseRoute
@@ -46,5 +51,117 @@ struct CrudApi extends BaseRoute
 	{
 		await parent::onActionAfter(container);
 	}
+	
+	
+	/**
+	 * Returns relation name
+	 */
+	string getRelationName() => "";
+	
+	
+	/**
+	 * Returns model name
+	 */
+	string getModelName() => "";
+	
+	
+	/**
+	 * Returns fields
+	 */
+	Collection<string> allowFields() =>
+	[
+		"term_id",
+		"name",
+		"slug",
+		"term_group",
+	];
+	
+	
+	/**
+	 * Build search query
+	 */
+	Query buildSearchQuery(RenderContainer container, Query q)
+	{
+		string taxonomy = container.request.payload["taxonomy"];
+		
+		q = q
+			|> .where("post_type", "=", taxonomy)
+			|> .where("post_status", "=", "publish")
+			|> .orderBy("post_modified_gmt", "desc")
+		;
+		
+		return q;
+	}
+	
+	
+	/**
+	 * Before search event
+	 */
+	async void onSearchBefore()
+	{
+	}
+	
+	
+	/**
+	 * After search event
+	 */
+	async void onSearchAfter()
+	{
+	}
+	
+	
+	/**
+	 * Action search
+	 */
+	async void actionSearch(RenderContainer container)
+	{
+		this.action = "actionSearch";
+		this.api_result = new ApiResult();
+		
+		int page = 0;
+		int pages = 0;
+		
+		/* Search before event */
+		await this.onSearchBefore();
+		
+		/* Query to database */
+		string relation_name = static::getRelationName();
+		Query q = rtl::method(relation_name, "selectQuery")()
+			|> curry this.buildSearchQuery(container, ?)
+		;
+		
+		/* Execute query */
+		Cursor c = await Database::execute(q);
+		Collection items = await c.fetchAll();
+		/* pages = await c.getPages();*/
+		await c.close();
+		
+		/* Transform items */
+		string model_name = static::getModelName();
+		items = items
+			|> lib::map(
+				Dict (var item) use (model_name) => item
+					|> .toModel( model_name )
+					|> .intersect( this.allowFields() )
+			)
+		;
+		
+		/* Set api result */
+		this.api_result = this.api_result.success({
+			"data": new SearchResult
+			{
+				"page": page,
+				"pages": pages,
+				"items": items,
+			}
+		});
+		
+		/* Search aftert event */
+		await this.onSearchAfter();
+		
+		/* Set response */
+		container.setResponse( this.api_result );
+	}
+	
 	
 }

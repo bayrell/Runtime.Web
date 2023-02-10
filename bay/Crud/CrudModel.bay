@@ -63,9 +63,9 @@ struct CrudModel<T> extends BaseStruct
 	
 	
 	/**
-	 * Process data
+	 * Process api data
 	 */
-	async Dict processApiData(string action, Dict api_data)
+	static Dict processApiData(string action, Dict api_data)
 	{
 		return api_data;
 	}
@@ -98,7 +98,6 @@ struct CrudModel<T> extends BaseStruct
 		
 		/* Send api */
 		Dict api_data = model.getActionSearchData(container);
-		api_data = await model.processApiData("actionSearch", api_data);
 		ApiResult res = await static::searchApi(api_data);
 		
 		if (res.isSuccess())
@@ -125,6 +124,7 @@ struct CrudModel<T> extends BaseStruct
 	{
 		string url = static::getApiUrl("search", {"api_data": api_data});
 		
+		api_data = static::processApiData("searchApi", api_data);
 		ApiResult res = await Bus::callApi(url, api_data);
 		
 		return res;
@@ -157,7 +157,6 @@ struct CrudModel<T> extends BaseStruct
 		
 		/* Send api */
 		Dict api_data = model.getActionItemData(container);
-		api_data = await model.processApiData("actionItem", api_data);
 		ApiResult res = await static::getByIdApi(api_data);
 		
 		if (res.isSuccess())
@@ -184,6 +183,7 @@ struct CrudModel<T> extends BaseStruct
 	{
 		if (not api_data.has("post_type")) api_data <= post_type <= "page";
 		
+		api_data = static::processApiData("getByIdApi", api_data);
 		string url = static::getApiUrl("getById", {"api_data": api_data});
 		
 		ApiResult res = await Bus::callApi({

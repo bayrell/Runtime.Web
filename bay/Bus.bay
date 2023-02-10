@@ -117,6 +117,7 @@ class Bus
 			"cookies" => $render_container->request->cookies,
 			"start_time" => time(),
 		]));
+		$api_container->layout = $render_container->layout;
 		
 		try
 		{
@@ -134,7 +135,7 @@ class Bus
 			}
 			else
 			{
-				throw new \Runtime\Exceptions\RuntimeException("Api not found");
+				throw new \Runtime\Exceptions\FileNotFound($api_url, "Api");
 			}
 		}
 		catch (\Exception $e)
