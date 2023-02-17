@@ -103,6 +103,8 @@ class Bus
 		string current_locale_code = @.env("LOCALE_CODE");
 		string api_url = "/" ~ current_locale_code ~ "/api" ~ url;
 		
+		if (data == null) data = {};
+		
 		#switch
 		
 		#case ifcode PHP then

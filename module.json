@@ -56,7 +56,7 @@
 		"php": "./php",
 		"es6": "./es6"
 	},
-	"whitelist":
+	"allow":
 	[
 		"\\.bay$",
 		"\\.php$",
