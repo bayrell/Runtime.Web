@@ -22,11 +22,11 @@
 
 
 <template name="renderBody">
-	%var string class_name = layout::getLayoutClass(layout.layout_name);
+	%var string class_name = layout::getLayoutPageClass(layout.layout_name);
 	<div id="core_ui_root">
 		<{class_name} @model=[] />
 	</div>
-	<textarea id="core_ui_layout" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( layout )) }}</textarea>
+	<textarea id="core_ui_layout" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( layout::getClearLayout(layout) )) }}</textarea>
 	<textarea id="frontend_env" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( render_params["container", "frontend_env"] )) }}</textarea>
 </template>
 

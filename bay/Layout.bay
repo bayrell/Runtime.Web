@@ -49,20 +49,44 @@ struct Layout extends BaseStruct
 	/**
 	 * Returns layout class name
 	 */
-	static string getLayoutClass(string layout_name)
+	static string getLayoutPageClass(string layout_name)
 	{
-		Dict d = @.callHook(AppHook::LAYOUT_CLASS_NAME, {
+		Dict d = @.callHook(AppHook::LAYOUT_PAGE_CLASS_NAME, {
 			"layout_name": layout_name,
-			"layout_class_name": "",
+			"layout_page_class_name": "",
 		});
 		
-		string layout_class_name = d["layout_class_name"];
-		if (layout_class_name == "")
+		string layout_page_class_name = d["layout_page_class_name"];
+		if (layout_page_class_name == "")
 		{
-			throw new RuntimeException("Layout class name is empty for '" ~ layout_name ~ "'");
+			throw new RuntimeException("Layout page class name is empty for '" ~ layout_name ~ "'");
 		}
 		
-		return d["layout_class_name"];
+		return d["layout_page_class_name"];
 	}
 	
+	
+	/**
+	 * Init layout
+	 */
+	async Layout init_layout() => this;
+	
+	
+	/**
+	 * Clear layout
+	 */
+	Layout clear_layout() => this;
+	
+	
+	/**
+	 * Returns clear layout
+	 **/
+	static Layout getClearLayout(Layout layout)
+	{
+		Dict d = @.callHook(AppHook::CLEAR_LAYOUT, {
+			"layout": layout,
+		});
+		layout = d["layout"];
+		return layout.clear_layout();
+	}
 }

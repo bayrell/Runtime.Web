@@ -58,7 +58,7 @@ class RenderProvider extends BaseProvider
 		/* Add layout class name */
 		$layout = $container->layout;
 		$layout_name = $layout->layout_name;
-		$layout_class_name = $layout::getLayoutClass($layout_name);
+		$layout_class_name = $layout::getLayoutPageClass($layout_name);
 		$css_class_names->pushValue($layout_class_name);
 		
 		/* Extends css class names */

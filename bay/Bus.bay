@@ -119,7 +119,6 @@ class Bus
 			"cookies" => $render_container->request->cookies,
 			"start_time" => time(),
 		]));
-		$api_container->layout = $render_container->layout;
 		
 		try
 		{

@@ -37,9 +37,9 @@ struct CrudApi extends BaseRoute
 	/**
 	 * Before route
 	 */
-	async void onActionBefore(RenderContainer container)
+	async void onActionBefore()
 	{
-		await parent::onActionBefore(container);
+		await parent::onActionBefore();
 	}
 	
 	
@@ -47,9 +47,9 @@ struct CrudApi extends BaseRoute
 	/**
 	 * After route
 	 */
-	async void onActionAfter(RenderContainer container)
+	async void onActionAfter()
 	{
-		await parent::onActionAfter(container);
+		await parent::onActionAfter();
 	}
 	
 	
@@ -80,9 +80,9 @@ struct CrudApi extends BaseRoute
 	/**
 	 * Build search query
 	 */
-	Query buildSearchQuery(RenderContainer container, Query q)
+	Query buildSearchQuery(Query q)
 	{
-		string taxonomy = container.request.payload["taxonomy"];
+		string taxonomy = this.container.request.payload["taxonomy"];
 		
 		q = q
 			|> .where("post_type", "=", taxonomy)
@@ -113,7 +113,7 @@ struct CrudApi extends BaseRoute
 	/**
 	 * Action search
 	 */
-	async void actionSearch(RenderContainer container)
+	async void actionSearch()
 	{
 		this.action = "actionSearch";
 		this.api_result = new ApiResult();
@@ -127,7 +127,7 @@ struct CrudApi extends BaseRoute
 		/* Query to database */
 		string relation_name = static::getRelationName();
 		Query q = rtl::method(relation_name, "selectQuery")()
-			|> curry this.buildSearchQuery(container, ?)
+			|> this.buildSearchQuery
 		;
 		
 		/* Execute query */
@@ -160,8 +160,7 @@ struct CrudApi extends BaseRoute
 		await this.onSearchAfter();
 		
 		/* Set response */
-		container.setResponse( this.api_result );
+		this.container.setResponse( this.api_result );
 	}
-	
 	
 }

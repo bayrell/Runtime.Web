@@ -26,6 +26,9 @@ use Runtime.Web.RenderContainer;
 class BaseRoute extends BaseObject
 {
 	
+	RenderContainer container = null;
+	
+	
 	/**
 	 * Returns routes
 	 */
@@ -36,7 +39,7 @@ class BaseRoute extends BaseObject
 	/**
 	 * Before route
 	 */
-	async void onActionBefore(RenderContainer container)
+	async void onActionBefore()
 	{
 	}
 	
@@ -45,7 +48,7 @@ class BaseRoute extends BaseObject
 	/**
 	 * After route
 	 */
-	async void onActionAfter(RenderContainer container)
+	async void onActionAfter()
 	{
 	}
 	

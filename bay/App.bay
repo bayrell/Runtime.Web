@@ -67,9 +67,9 @@ class App extends BaseProvider
 		let core_ui_layout = document.getElementById("core_ui_layout");
 		let layout = Runtime.rs.base64_decode_url(core_ui_layout.value);
 		layout = Runtime.rtl.json_decode(layout);
-		let layout_class_name = layout.constructor.getLayoutClass( layout.layout_name );
+		let layout_page_class_name = layout.constructor.getLayoutPageClass( layout.layout_name );
 		let provider = context.provider("Runtime.Web.RenderProvider");
-		provider.renderRoot(core_ui_root, layout_class_name, layout);
+		provider.renderRoot(core_ui_root, layout_page_class_name, layout);
 		#endif
 	}
 	
@@ -83,9 +83,8 @@ class App extends BaseProvider
 		context <= environments <= render_container <= container;
 		@ = context;
 		
-		/* Create layout */
-		container <= layout <= new Layout();
-		await @.callAsyncHook(AppHook::CREATE_LAYOUT, {
+		/* Init container */
+		@.callAsyncHook(AppHook::INIT_CONTAINER, {
 			"container": container,
 		});
 		
@@ -99,6 +98,28 @@ class App extends BaseProvider
 		await @.callAsyncHook(AppHook::RESPONSE, {
 			"container": container,
 		});
+	}
+	
+	
+	/**
+	 * Create layout
+	 */
+	async void createLayout(RenderContainer container)
+	{
+		@.callAsyncHook(AppHook::CREATE_LAYOUT, {
+			"container": container,
+		});
+		
+		if (container.layout == null)
+		{
+			container <= layout <= new Layout();
+		}
+		
+		@.callAsyncHook(AppHook::INIT_LAYOUT, {
+			"container": container,
+		});
+		
+		container <= layout <= await container.layout.init_layout();
 	}
 	
 	
@@ -147,6 +168,9 @@ class App extends BaseProvider
 			"container": container,
 		});
 		
+		/* Create layout */
+		await this.createLayout(container);
+		
 		/* Call route */
 		if (container.route and container.response == null)
 		{
@@ -157,12 +181,14 @@ class App extends BaseProvider
 				string method_name = container.route.method[1];
 				fn route_method = rtl::method(base_route, method_name);
 				
-				await base_route.onActionBefore(container);
+				base_route.container = container;
+				
+				await base_route.onActionBefore();
 				if (container.response == null)
 				{
-					await route_method(container);
+					await route_method();
 				}
-				await base_route.onActionAfter(container);
+				await base_route.onActionAfter();
 			}
 			
 			else if (rtl::isFn(container.route.method))
