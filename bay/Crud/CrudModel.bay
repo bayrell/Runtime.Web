@@ -127,6 +127,7 @@ struct CrudModel<T> extends BaseStruct
 		
 		api_data = static::processApiData("searchApi", api_data);
 		ApiResult res = await Bus::callApi(url, api_data);
+		/*res.throwIfException();*/
 		
 		return res;
 	}
@@ -147,7 +148,7 @@ struct CrudModel<T> extends BaseStruct
 		model = await model.processBefore( "findItem", {} );
 		
 		/* Send api */
-		ApiResult res = await static::getByIdApi(model.api_data);
+		ApiResult res = await static::findItemApi(model.api_data);
 		
 		if (res.isSuccess())
 		{
@@ -177,6 +178,7 @@ struct CrudModel<T> extends BaseStruct
 		string url = static::getApiUrl("crud_item", {"api_data": api_data});
 		
 		ApiResult res = await Bus::callApi(url, api_data);
+		/*res.throwIfException();*/
 		
 		return res;
 	}

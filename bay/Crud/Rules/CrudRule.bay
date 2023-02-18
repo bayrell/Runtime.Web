@@ -16,14 +16,27 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Crud;
+namespace Runtime.Web.Crud.Rules;
 
 use Runtime.BaseStruct;
 
 
-struct ItemResult<T> extends BaseStruct
+struct CrudRule extends BaseStruct
 {
-	T data = null;
-	Dict dictionary = null;
-    Dict params = null;
+    
+    /**
+	 * Before search event
+	 */
+	async void onSearchBefore(CrudRule api)
+	{
+	}
+    
+    
+    /**
+	 * Search after
+	 */
+	void onSearchAfter(CrudRule api)
+	{
+    }
+    
 }

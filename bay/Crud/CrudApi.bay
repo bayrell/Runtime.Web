@@ -26,9 +26,11 @@ use Runtime.Web.Bus;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Crud.ItemResult;
 use Runtime.Web.Crud.SearchResult;
+use Runtime.Web.Crud.Rules.CrudRule;
 use Runtime.ORM.Cursor;
 use Runtime.ORM.Database;
 use Runtime.ORM.Query;
+use Runtime.ORM.Relation;
 
 
 struct CrudApi extends BaseRoute
@@ -66,14 +68,10 @@ struct CrudApi extends BaseRoute
 	
 	
 	/**
-	 * Returns fields
+	 * Returns rules
 	 */
-	Collection<string> allowFields() =>
+	Collection<CrudRule> getRules() =>
 	[
-		"term_id",
-		"name",
-		"slug",
-		"term_group",
 	];
 	
 	
@@ -99,6 +97,12 @@ struct CrudApi extends BaseRoute
 	 */
 	async void onSearchBefore()
 	{
+		Collection<CrudRule> rules = this.getRules();
+		for (int i=0; i<rules.count(); i++)
+		{
+			CrudRule rule = rules[i];
+			await rule.onSearchBefore(this);
+		}
 	}
 	
 	
@@ -107,6 +111,12 @@ struct CrudApi extends BaseRoute
 	 */
 	async void onSearchAfter()
 	{
+		Collection<CrudRule> rules = this.getRules();
+		for (int i=0; i<rules.count(); i++)
+		{
+			CrudRule rule = rules[i];
+			await rule.onSearchAfter(this);
+		}
 	}
 	
 	
@@ -142,7 +152,6 @@ struct CrudApi extends BaseRoute
 			|> lib::map(
 				Dict (var item) use (model_name) => item
 					|> .toModel( model_name )
-					|> .intersect( this.allowFields() )
 			)
 		;
 		
@@ -163,4 +172,51 @@ struct CrudApi extends BaseRoute
 		this.container.setResponse( this.api_result );
 	}
 	
+	
+	/**
+	 * Action item
+	 */
+	async void actionItem()
+	{
+		this.action = "actionItem";
+		this.api_result = new ApiResult();
+		
+		/* Search before event */
+		await this.onSearchBefore();
+		
+		/* Query to database */
+		string relation_name = static::getRelationName();
+		
+		Dict pk = this.container.request.payload["pk"];
+		Collection filter = rtl::method(relation_name, "getPrimaryFilter")(pk);
+		
+		/* Build query */
+		Query q = rtl::method(relation_name, "selectQuery")()
+			|> .filter(filter)
+			|> this.buildSearchQuery
+		;
+		
+		/* Execute query */
+		Cursor c = await Database::execute(q);
+		Relation item = await c.fetch();
+		await c.close();
+		
+		/* Transform items */
+		string model_name = static::getModelName();
+		item = item.toModel( model_name );
+		
+		/* Set api result */
+		this.api_result = this.api_result.success({
+			"data": new ItemResult
+			{
+				"data": item,
+			}
+		});
+		
+		/* Search aftert event */
+		await this.onSearchAfter();
+		
+		/* Set response */
+		this.container.setResponse( this.api_result );
+	}
 }

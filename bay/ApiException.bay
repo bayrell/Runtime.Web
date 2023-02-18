@@ -16,14 +16,20 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Crud;
+namespace Runtime.Web;
 
-use Runtime.BaseStruct;
+use Runtime.Exceptions.RuntimeException;
+use Runtime.Web.ApiResult;
 
 
-struct ItemResult<T> extends BaseStruct
+class ApiException extends RuntimeException
 {
-	T data = null;
-	Dict dictionary = null;
-    Dict params = null;
+	ApiResult api_result = null;
+	
+	void constructor(string message = "", ApiResult api_result, Object prev = null)
+	{
+		parent(message, rtl::ERROR_API_ERROR, prev);
+		this.api_result = api_result;
+	}
+
 }

@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.io;
 use Runtime.BaseStruct;
 use Runtime.Exceptions.RuntimeException;
+use Runtime.Web.ApiException;
 use Runtime.Web.Response;
 
 
@@ -166,6 +167,7 @@ struct ApiResult extends Response
 				"error_line": e.getErrorLine(),
 				"error_trace": e.getTraceStr(),
 				"data": null,
+				"err": e,
 			});
 		}
 		else
@@ -185,6 +187,26 @@ struct ApiResult extends Response
 		}
 		
 		return res;
+	}
+	
+	
+	/**
+	 * Throw if exception
+	 */
+	void throwIfException()
+	{
+		if (this.error_name != "")
+		{
+			this.debug();
+			
+			string s = "[" ~ this.code ~ "] " ~ this.message;
+			if (this.error_file and this.error_line)
+			{
+				s ~= " in " ~ this.error_file ~ ": " ~ this.error_line;
+			}
+			
+			throw new ApiException("Api error: " ~ s, this);
+		}
 	}
 	
 }
