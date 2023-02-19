@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseStruct;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.AppHook;
+use Runtime.Web.Breadcrumb;
 use Runtime.Web.SeoModel;
 
 
@@ -30,11 +31,13 @@ struct Layout extends BaseStruct
 	string page_model_class_name = "";
 	string layout_name = "default";
 	string page_class_name = "";
+	Collection<Breadcrumb> breadcrumbs = [];
 	Dict<BaseStruct> pages = {};
 	Dict<BaseStruct> models = {
 		"seo": new SeoModel,
 		"current_user": null,
 	};
+	
 	
 	/* Increment assets */
 	string f_inc = "1";
@@ -88,5 +91,23 @@ struct Layout extends BaseStruct
 		});
 		layout = d["layout"];
 		return layout.clear_layout();
+	}
+	
+	
+	/**
+	 * Add breadcrumbs
+	 */
+	Layout addBreadcrumb(Dict d)
+	{
+		Layout layout = this;
+		if (d instanceof Dict)
+		{
+			d = new Breadcrumb(d);
+		}
+		if (d instanceof Breadcrumb)
+		{
+			layout <= breadcrumbs <=  layout.breadcrumbs.pushIm(d);
+		}
+		return layout;
 	}
 }

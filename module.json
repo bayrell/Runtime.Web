@@ -5,6 +5,7 @@
 		"App.bay",
 		"AppHook.bay",
 		"BaseRoute.bay",
+		"Breadcrumb.bay",
 		"Bus.bay",
 		"Component.bay",
 		"Cookie.bay",

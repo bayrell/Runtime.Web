@@ -22,16 +22,16 @@ use Runtime.BaseStruct;
 use Runtime.Web.ApiResult;
 use Runtime.Web.Bus;
 use Runtime.Web.RenderContainer;
-use Runtime.Web.Crud.ItemResult;
-use Runtime.Web.Crud.SearchResult;
 
 
 struct CrudModel<T> extends BaseStruct
 {
-	string action = "";
+	int page = 0;
+    int pages = 0;
+	T item = null;
+    Collection<T> items = null;
+    Dict dictionary = null;
 	Dict api_data = null;
-	SearchResult<T> search = null;
-	ItemResult item = null;
 	int error_code = 0;
 	string error_message = "";
 	
@@ -103,7 +103,7 @@ struct CrudModel<T> extends BaseStruct
 		
 		if (res.isSuccess())
 		{
-			model <= search <= res["data"];
+			model <= items <= res["data"]["items"];
 		}
 		
 		model <= error_message <= res.getErrorMessage();
@@ -152,7 +152,7 @@ struct CrudModel<T> extends BaseStruct
 		
 		if (res.isSuccess())
 		{
-			model <= item <= res["data"];
+			model <= item <= res["data", "item"];
 		}
 		
 		model <= error_message <= res.getErrorMessage();

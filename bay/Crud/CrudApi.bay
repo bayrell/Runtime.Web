@@ -157,11 +157,12 @@ struct CrudApi extends BaseRoute
 		
 		/* Set api result */
 		this.api_result = this.api_result.success({
-			"data": new SearchResult
+			"data":
 			{
 				"page": page,
 				"pages": pages,
 				"items": items,
+				"dictionary": [],
 			}
 		});
 		
@@ -207,9 +208,10 @@ struct CrudApi extends BaseRoute
 		
 		/* Set api result */
 		this.api_result = this.api_result.success({
-			"data": new ItemResult
+			"data":
 			{
-				"data": item,
+				"item": item,
+				"dictionary": [],
 			}
 		});
 		

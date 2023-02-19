@@ -50,6 +50,11 @@ struct ForeignKey extends CrudRule
 		
 		rule <= api <= api;
 		
+		/* Check action */
+		if (api.action != "actionSearch" and api.action != "actionItem")
+		{
+			return;
+		}
 		if (api.action == "actionSearch") items = api_result.data["items"];
 		if (api.action == "actionItem")
 		{
