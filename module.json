@@ -2,6 +2,7 @@
 	"name": "Runtime.Web",
 	"assets":
 	[
+		"Api.bay",
 		"App.bay",
 		"AppHook.bay",
 		"BaseRoute.bay",

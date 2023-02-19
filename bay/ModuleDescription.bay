@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.Entity.Provider;
 use Runtime.Web.Listener;
 use Runtime.Web.RenderProvider;
+use Runtime.Web.Route;
 use Runtime.Web.RouteList;
 
 
@@ -65,6 +66,10 @@ static class ModuleDescription
 		
 		#ifdef FRONTEND then
 		new Provider(classof Listener, new Listener),
+		#endif
+		
+		#ifdef BACKEND then
+		new Route("Runtime.Web.RouteApi"),
 		#endif
 	];
 	

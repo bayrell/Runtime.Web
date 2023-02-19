@@ -16,38 +16,20 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Runtime.Web.Crud.Rules;
 
-use Runtime.BaseObject;
-use Runtime.RouteInfo;
-use Runtime.Web.RenderContainer;
+use Runtime.lib;
+use Runtime.BaseStruct;
+use Runtime.ORM.Cursor;
+use Runtime.ORM.Database;
+use Runtime.ORM.Query;
+use Runtime.Web.ApiResult;
+use Runtime.Web.Crud.Rules.CrudRule;
+use Runtime.Web.Crud.CrudApi;
 
 
-class BaseRoute extends BaseObject
+struct Filter extends CrudRule
 {
-	
-	RenderContainer container = null;
-	
-	
-	/**
-	 * Returns routes
-	 */
-	pure Collection<RouteInfo> getRoutes() => [];
-	
-	
-	/**
-	 * Before route
-	 */
-	async void onActionBefore()
-	{
-	}
-	
-	
-	/**
-	 * After route
-	 */
-	async void onActionAfter()
-	{
-	}
-	
+	string api_name = "";
+	string field_name = "";	
 }

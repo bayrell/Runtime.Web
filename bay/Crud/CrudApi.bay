@@ -27,6 +27,7 @@ use Runtime.Web.RenderContainer;
 use Runtime.Web.Crud.ItemResult;
 use Runtime.Web.Crud.SearchResult;
 use Runtime.Web.Crud.Rules.CrudRule;
+use Runtime.Web.Crud.Rules.Filter;
 use Runtime.ORM.Cursor;
 use Runtime.ORM.Database;
 use Runtime.ORM.Query;
@@ -35,6 +36,19 @@ use Runtime.ORM.Relation;
 
 struct CrudApi extends BaseRoute
 {
+	ApiResult api_result = null;
+	
+	
+	/**
+	 * Returns api methods
+	 */
+	pure string getApiMethod(string api_name)
+	{
+		if (api_name == "crud_search") return "actionSearch";
+		if (api_name == "crud_item") return "actionItem";
+		return "";
+	}
+	
 	
 	/**
 	 * Before route
@@ -43,7 +57,6 @@ struct CrudApi extends BaseRoute
 	{
 		await parent::onActionBefore();
 	}
-	
 	
 	
 	/**
@@ -80,15 +93,51 @@ struct CrudApi extends BaseRoute
 	 */
 	Query buildSearchQuery(Query q)
 	{
-		string taxonomy = this.container.request.payload["taxonomy"];
-		
-		q = q
-			|> .where("post_type", "=", taxonomy)
-			|> .where("post_status", "=", "publish")
-			|> .orderBy("post_modified_gmt", "desc")
+		return q;
+	}
+	
+	
+	/**
+	 * Build filter
+	 */
+	Query buildFilter(Query q)
+	{
+		Collection<string> filter_fields = this.getRules()
+			|> .filter( lib::isInstance(classof Filter) )
 		;
 		
-		return q;
+		Vector query_filter = new Vector();
+		Collection request_filter = this.container.request.payload["filter"];
+		if (request_filter instanceof Collection)
+		{
+			for (int i=0; i<request_filter.count(); i++)
+			{
+				Collection filter = request_filter[i];
+				if (filter instanceof Collection and filter.count() == 3)
+				{
+					string field_name = filter[0];
+					string field_op = filter[1];
+					string field_value = filter[2];
+					if (
+						rtl::isString(field_name) and
+						rtl::isString(field_op) and
+						rtl::isString(field_value)
+					)
+					{
+						Filter rule = filter_fields.findItem(
+							lib::equalAttr("api_name", field_name)
+						);
+						
+						if (rule)
+						{
+							query_filter.pushValue([rule.field_name, field_op, field_value]);
+						}
+					}
+				}
+			}
+		}
+		
+		return q.filter( query_filter.toCollection() );
 	}
 	
 	
@@ -137,6 +186,7 @@ struct CrudApi extends BaseRoute
 		/* Query to database */
 		string relation_name = static::getRelationName();
 		Query q = rtl::method(relation_name, "selectQuery")()
+			|> this.buildFilter
 			|> this.buildSearchQuery
 		;
 		

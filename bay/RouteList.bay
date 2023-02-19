@@ -88,7 +88,7 @@ class RouteList extends BaseProvider
 		string route_prefix = request.route_prefix;
 		
 		request_uri = static::splitRoutePrefix(request_uri, route_prefix);
-		if (request_uri === null) return [route, params];
+		if (request_uri === null) return null;
 		if (request_uri == "") request_uri = "/";
 		
 		/* Find route */
@@ -98,6 +98,7 @@ class RouteList extends BaseProvider
 			string route_name = route_names[i];
 			RouteInfo route = this.routes_list[route_name];
 			Collection<string> matches = re::matchAll( route.uri_match, request_uri );
+			if (matches) matches = matches.get(0, null).removeFirstIm();
 			
 			Dict d = @.callAsyncHook(AppHook::MATCH_ROUTE, {
 				"route": route,
@@ -105,12 +106,11 @@ class RouteList extends BaseProvider
 				"container": container,
 				"matches": matches,
 			});
+			route = d["route"];
 			matches = d["matches"];
 			
 			if (matches != null)
 			{
-				matches = matches.get(0, null);
-				if (matches) matches = matches.removeFirstIm();
 				route = route.addMatches(matches);
 				return route;
 			}

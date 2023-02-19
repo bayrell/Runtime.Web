@@ -20,8 +20,8 @@ namespace Runtime.Web;
 
 use Runtime.io;
 use Runtime.BaseStruct;
+use Runtime.Exceptions.ApiException;
 use Runtime.Exceptions.RuntimeException;
-use Runtime.Web.ApiException;
 use Runtime.Web.Response;
 
 
@@ -205,7 +205,7 @@ struct ApiResult extends Response
 				s ~= " in " ~ this.error_file ~ ": " ~ this.error_line;
 			}
 			
-			throw new ApiException("Api error: " ~ s, this);
+			throw new ApiException("Api error: " ~ s);
 		}
 	}
 	

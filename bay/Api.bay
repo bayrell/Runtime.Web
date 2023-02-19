@@ -18,18 +18,15 @@
 
 namespace Runtime.Web;
 
-use Runtime.Exceptions.RuntimeException;
-use Runtime.Web.ApiResult;
+use Runtime.Entity;
 
 
-class ApiException extends RuntimeException
+class Api extends Entity
 {
-	ApiResult api_result = null;
-	
-	void constructor(string message = "", ApiResult api_result, Object prev = null)
+	void constructor(string api_name)
 	{
-		parent(message, rtl::ERROR_API_ERROR, prev);
-		this.api_result = api_result;
+		parent({
+			"name": api_name,
+		});
 	}
-
 }

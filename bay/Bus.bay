@@ -95,24 +95,43 @@ class Bus
 	/**
 	 * Call api
 	 */
-	static async ApiResult callApi(string url, Dict data = null)
+	static async ApiResult callApi(string api_name, Dict data = null)
 	{
-		ApiResult res = new ApiResult();
-		
-		RenderContainer render_container = @.env("render_container");
-		string current_locale_code = @.env("LOCALE_CODE");
-		string api_url = "/" ~ current_locale_code ~ "/api" ~ url;
-		
-		if (data == null) data = {};
+		ApiResult res = null;
 		
 		#switch
 		
 		#case ifcode PHP then
 		
+		$context = \Runtime\rtl::getContext();
+		$render_container = $context->environments->get("render_container");
+		
+		$arr = explode(".", $api_name);
+		$api_route_name = implode(".", array_slice($arr, 0, count($arr) - 1));
+		$method_name = $arr[ count($arr) - 1 ];
+		
+		/* Find api */
+		$api = $context->entities
+			->filter( \Runtime\lib::isInstance("Runtime.Web.Api") )
+			->findItem( function ($item) use ($api_route_name) {
+				$route_name = \Runtime\rtl::find_class($item->name);
+				return call_user_func([$route_name, "apiName"]) == $api_route_name;
+			} )
+		;
+		
+		if (!$api)
+		{
+			return (new \Runtime\Web\ApiResult())
+				->exception(
+					new \Runtime\Exceptions\FileNotFound($api_name, "Api")
+				)
+			;
+		}
+		
 		$api_container = new \Runtime\Web\RenderContainer();
 		$api_container->backend_storage = $render_container->request->backend_storage;
 		$api_container->request = new \Runtime\Web\Request($ctx, \Runtime\Dict::from([
-			"uri" => $api_url,
+			"uri" => $api_name,
 			"host" => $render_container->request->host,
 			"method" => "POST",
 			"payload" => $data,
@@ -120,12 +139,19 @@ class Bus
 			"start_time" => time(),
 		]));
 		
+		$res = null;
+		$route = \Runtime\rtl::newInstance($api->name);
+		$route->container = $api_container;
+		
 		try
 		{
-			$context = \Runtime\rtl::getContext();
-			$routes = $context->provider("Runtime.Web.RouteList");
-			$context->app->findRoute($api_container);
-			$context->app->callRoute($api_container);
+			$route->onActionBefore();
+			if ($route->container->response == null)
+			{
+				$route_method = $route::getApiMethod($method_name);
+				call_user_func([ $route, $route_method ]);
+			}
+			$route->onActionAfter();
 			
 			if (
 				$api_container->response != null and
@@ -136,14 +162,16 @@ class Bus
 			}
 			else
 			{
-				throw new \Runtime\Exceptions\FileNotFound($api_url, "Api");
+				throw new \Runtime\Exceptions\FileNotFound($api_name, "Api");
 			}
 		}
 		catch (\Exception $e)
 		{
 			if ($e instanceof \Runtime\Exceptions\RuntimeException)
 			{
-				$res = $res->exception($e);
+				$res = (new \Runtime\Web\ApiResult())
+					->exception($e)
+				;
 			}
 			else
 			{
