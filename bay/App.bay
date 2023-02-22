@@ -115,6 +115,11 @@ class App extends BaseProvider
 			container <= layout <= new Layout();
 		}
 		
+		/* Setup request params */
+		container <= layout <= route <= container.route;
+		container <= layout <= request_uri <= container.request.uri;
+		container <= layout <= request_params <= container.request.query;
+		
 		@.callAsyncHook(AppHook::INIT_LAYOUT, {
 			"container": container,
 		});
@@ -269,13 +274,14 @@ class App extends BaseProvider
 			);
 		}
 		$arr = parse_url($uri);
-		$uri = isset($arr['path']) ? $arr['path'] : "";
+		$path = isset($arr['path']) ? $arr['path'] : "";
 		
 		/* Create request */
 		$r = new \Runtime\Web\Request($ctx,
 			\Runtime\Dict::from([
 				"host" => $host,
-				"uri" => $uri,
+				"full_uri" => $uri,
+				"uri" => $path,
 				"method" => $method,
 				"query" => $query->toDict($ctx),
 				"payload" => $payload->toDict($ctx),

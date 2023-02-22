@@ -34,6 +34,7 @@ struct CrudModel<T> extends BaseStruct
 	Dict api_data = null;
 	int error_code = 0;
 	string error_message = "";
+	string search = "";
 	
 	
 	/**
@@ -103,7 +104,17 @@ struct CrudModel<T> extends BaseStruct
 		
 		if (res.isSuccess())
 		{
-			model <= items <= res["data"]["items"];
+			model = model.copy({
+				"items": res["data"]["items"],
+				"pages": res["data"]["pages"],
+				"page": res["data"]["page"],
+			});
+		}
+		
+		/* Search */
+		if (api_data.has("search"))
+		{
+			model <= search <= api_data["search"];
 		}
 		
 		model <= error_message <= res.getErrorMessage();

@@ -23,6 +23,7 @@ use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.AppHook;
 use Runtime.Web.Breadcrumb;
 use Runtime.Web.SeoModel;
+use Runtime.Web.RouteInfo;
 
 
 struct Layout extends BaseStruct
@@ -37,6 +38,11 @@ struct Layout extends BaseStruct
 		"seo": new SeoModel,
 		"current_user": null,
 	};
+	
+	/* Current route */
+	RouteInfo route = null;
+	string request_uri = "";
+	Dict<string> request_params = null;
 	
 	
 	/* Increment assets */

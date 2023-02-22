@@ -324,8 +324,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				{
 					if (
 						value == null ||
-						value !== 0 ||
-						value !== "0" ||
+						value == "" ||
 						elem.value != ""
 					)
 					{

@@ -177,7 +177,8 @@ struct CrudApi extends BaseRoute
 		this.action = "actionSearch";
 		this.api_result = new ApiResult();
 		
-		int page = 0;
+		int page = (int)(this.container.request.payload["page"] |> default string 0);
+		int limit = (int)(this.container.request.payload["limit"] |> default string -1);
 		int pages = 0;
 		
 		/* Search before event */
@@ -186,6 +187,7 @@ struct CrudApi extends BaseRoute
 		/* Query to database */
 		string relation_name = static::getRelationName();
 		Query q = rtl::method(relation_name, "selectQuery")()
+			|> .page(page - 1, limit)
 			|> this.buildFilter
 			|> this.buildSearchQuery
 		;
@@ -193,7 +195,11 @@ struct CrudApi extends BaseRoute
 		/* Execute query */
 		Cursor c = await Database::execute(q);
 		Collection items = await c.fetchAll();
-		/* pages = await c.getPages();*/
+		if (q._limit > 0)
+		{
+			page = await c.getPage() + 1;
+			pages = await c.getPages();
+		}
 		await c.close();
 		
 		/* Transform items */

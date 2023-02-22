@@ -35,6 +35,7 @@ struct Request extends BaseStruct
 	static const string METHOD_PATCH = "PATCH";
 	
 	public string uri = "";
+	public string full_uri = "";
 	public string host = "";
 	public string method = "GET";
 	public string protocol = "";

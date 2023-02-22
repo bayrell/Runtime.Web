@@ -106,7 +106,7 @@ class VirtualDom extends BaseObject
 			Collection model_path = this.findModelPath(params);
 			var model = provider.model(model_path);
 			
-			return this.elem.isChanged(model, params, content);
+			return this.component.isChanged(model, params, content);
 		}
 		
 		if (this.isElement())
@@ -195,7 +195,9 @@ class VirtualDom extends BaseObject
 		{
 			vdom.elem = this.elem;
 		}
-		else
+		
+		/* Set component */
+		if (vdom.isElement() or kind == static::KIND_FUNCTION)
 		{
 			vdom.component = this.component;
 		}
