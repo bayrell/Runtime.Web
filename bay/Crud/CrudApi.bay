@@ -170,6 +170,22 @@ struct CrudApi extends BaseRoute
 	
 	
 	/**
+	 * Returns page limit
+	 */
+	list getPageLimit()
+	{
+		int page = (int)(this.container.request.payload["page"] |> default string 1);
+		int limit = (int)(this.container.request.payload["limit"] |> default string -1);
+		
+		if (page <= 1) page = 1;
+		if (limit <= 0) limit = 10;
+		if (limit > 100) limit = 100;
+		
+		return [page, limit];
+	}
+	
+	
+	/**
 	 * Action search
 	 */
 	async void actionSearch()
@@ -177,8 +193,9 @@ struct CrudApi extends BaseRoute
 		this.action = "actionSearch";
 		this.api_result = new ApiResult();
 		
-		int page = (int)(this.container.request.payload["page"] |> default string 0);
-		int limit = (int)(this.container.request.payload["limit"] |> default string -1);
+		list res = this.getPageLimit();
+		int page = res[0];
+		int limit = res[1];
 		int pages = 0;
 		
 		/* Search before event */

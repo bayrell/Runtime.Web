@@ -118,6 +118,7 @@ class App extends BaseProvider
 		/* Setup request params */
 		container <= layout <= route <= container.route;
 		container <= layout <= request_uri <= container.request.uri;
+		container <= layout <= request_full_uri <= container.request.full_uri;
 		container <= layout <= request_params <= container.request.query;
 		
 		@.callAsyncHook(AppHook::INIT_LAYOUT, {
