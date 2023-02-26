@@ -27,6 +27,7 @@ class AppHook extends BaseHook
 	static const string LAYOUT_PAGE_CLASS_NAME = "runtime.web.app::layout_page_class_name";
 	static const string CSS_CLASS_NAMES = "runtime.web.app::css_class_names";
 	static const string CSS_SAVE = "runtime.web.app::css_save";
+	static const string CSS_VARS = "runtime.web.app::css_vars";
 	static const string CORE_UI = "runtime.web.app::core_ui";
 	static const string ROUTES_INIT = "runtime.web.app::routes_init";
 	static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
@@ -52,6 +53,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::LAYOUT_PAGE_CLASS_NAME) return "layout_page_class_name";
 		if (hook_name == static::CSS_CLASS_NAMES) return "css_class_names";
 		if (hook_name == static::CSS_SAVE) return "css_save";
+		if (hook_name == static::CSS_VARS) return "css_vars";
 		if (hook_name == static::CORE_UI) return "core_ui";
 		if (hook_name == static::ROUTES_INIT) return "routes_init";
 		if (hook_name == static::CREATE_LAYOUT) return "create_layout";
@@ -93,6 +95,15 @@ class AppHook extends BaseHook
 	 * Get css save
 	 */
 	async Dict css_save(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Get css vars
+	 */
+	Dict css_vars(Dict d)
 	{
 		return d;
 	}

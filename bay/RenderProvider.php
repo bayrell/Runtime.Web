@@ -55,12 +55,6 @@ class RenderProvider extends BaseProvider
 		/* Get css names */
 		$css_class_names = new Vector();
 		
-		/* Add layout class name */
-		$layout = $container->layout;
-		$layout_name = $layout->layout_name;
-		$layout_class_name = $layout::getLayoutPageClass($layout_name);
-		$css_class_names->pushValue($layout_class_name);
-		
 		/* Extends css class names */
 		$d = $context->callHook(AppHook::CSS_CLASS_NAMES, Dict::from([
 			"container" => $container,
