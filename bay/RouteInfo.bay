@@ -38,10 +38,11 @@ struct RouteInfo extends BaseStruct
 	/**
 	 * Init struct data
 	 */
-	static Dict _init_data(Route old, Dict changed)
+	static protected Dict _init_data(BaseStruct old_item, BaseStruct new_item)
 	{
-		string uri = changed["uri"] |> default string old["uri"];
-		string uri_match = changed["uri_match"] |> default string old["uri_match"];
+		Dict changed = {};
+		string uri = new_item.uri;
+		string uri_match = new_item.uri_match;
 		
 		if (rtl::isEmpty(uri_match))
 		{

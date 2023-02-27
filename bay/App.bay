@@ -333,7 +333,7 @@ class App extends BaseProvider
 				{
 					$key = $keys->item($ctx, $i);
 					$value = $container->response->headers->item($ctx, $key);
-					header($value);
+					header($key . ":" . $value);
 				}
 			}
 			$response = $container->response;

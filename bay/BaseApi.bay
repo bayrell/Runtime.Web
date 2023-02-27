@@ -18,41 +18,50 @@
 
 namespace Runtime.Web;
 
-use Runtime.lib;
+use Runtime.BaseObject;
 use Runtime.Web.ApiResult;
-use Runtime.Web.BaseRoute;
-use Runtime.Web.Bus;
-use Runtime.Web.RouteInfo;
+use Runtime.Web.RenderContainer;
 
 
-class RouteApi extends BaseRoute
+class BaseApi extends BaseObject
 {
+	RenderContainer container = null;
+	ApiResult api_result = new ApiResult{
+		"code": -1,
+		"message": "Empty response",
+	};
+    
 	
-	/**
-	 * Returns routes
+    /**
+	 * Returns api name
 	 */
-	pure Collection<RouteInfo> getRoutes() => [
-		
-		new RouteInfo
-		{
-			"uri_match": "^\\/api\\/(.*?)\\/$",
-			"params": ["api_name"],
-			"name": "site:api",
-			"method": "actionIndex",
-		},
-		
-	];
+	pure string apiName() => "";
 	
 	
 	/**
-	 * Action index
+	 * Returns api methods
 	 */
-	void actionIndex()
+	pure string getApiMethod(string api_name)
 	{
-		/* Call method */
-		string api_name = this.container.route.matches["api_name"];
-		ApiResult api_result = Bus::callApi(api_name, this.container.request.payload);		
-		return api_result;
+		return "";
+	}
+	
+    
+	/**
+	 * Before route
+	 */
+	async void onActionBefore()
+	{
+	}
+	
+	
+	/**
+	 * After route
+	 */
+	async void onActionAfter()
+	{
+        /* Set response */
+		this.container.setResponse( this.api_result );
 	}
 	
 }

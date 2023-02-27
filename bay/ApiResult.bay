@@ -38,6 +38,26 @@ struct ApiResult extends Response
 	
 	
 	/**
+	 * Init struct data
+	 */
+	static protected Dict _init_data(BaseStruct old_item, BaseStruct new_item)
+	{
+		Dict changed = parent::_init_data(old_item, new_item);
+		if (changed == null) changed = {};
+		
+		if (not new_item.headers.has("Content-Type"))
+		{
+			changed <= headers <= new_item.headers.setIm(
+				"Content-Type",
+				"application/json"
+			);
+		}
+		
+		return changed;
+	}
+	
+	
+	/**
 	 * Returns true if false
 	 */
 	bool isSuccess()
@@ -96,7 +116,7 @@ struct ApiResult extends Response
 	 */
 	string getContent()
 	{
-		return rs::json_encode({
+		return rtl::json_encode({
 			"code": this.code,
 			"message": this.message,
 			"ob_content": this.ob_content,

@@ -26,6 +26,7 @@ Runtime.Web.RenderProvider = function()
 	this.layout = null;
 	this.render_vdom_list = new Runtime.Collection();
 	this.render_elem_list = new Runtime.Collection();
+	this.model_path = new Runtime.Collection();
 };
 Runtime.Web.RenderProvider.prototype = Object.create(Runtime.BaseProvider.prototype);
 Runtime.Web.RenderProvider.prototype.constructor = Runtime.Web.RenderProvider;
@@ -46,6 +47,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	model: function(model_path)
 	{
+		if (model_path == null) return null;
 		return Runtime.rtl.attr(this.layout, model_path);
 	},
 	
@@ -53,9 +55,37 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	/**
 	 * Commit layout
 	 */
-	commit: function(model_path, model)
+	commitComponent: function(component, new_model)
 	{
-		this.layout = Runtime.rtl.setAttr(this.layout, model_path, model);
+		/* Get changes */
+		let old_model = Runtime.rtl.attr(this.layout, component.model_path);
+		let changes = {};
+		
+		/* Set new layout */
+		this.layout = Runtime.rtl.setAttr(this.layout, component.model_path, new_model);
+		
+		/* Send commit message */
+		let msg = new Runtime.Web.Message();
+		msg.sender = component.vdom;
+		msg.event = new Runtime.Web.Events.CommitModelEvent({
+			"model_path": component.model_path,
+			"old_model": old_model,
+			"new_model": new_model,
+			"changes": changes,
+		});
+		
+		let context = Runtime.rtl.getContext();
+		let listener = context.provider("Runtime.Web.Listener");
+		listener.dispatch(msg);
+		
+		/* Call onCommitModel directly */
+		component.onCommitModel(msg);
+		
+		/* If not cancel repaint all */
+		if (!msg.is_cancel)
+		{
+			this.repaintRef(this.vdom);
+		}
 	},
 	
 	
@@ -94,7 +124,11 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			let vdom = render_vdom_list[i];
 			if (vdom.render)
 			{
-				if (vdom.isElement()) this.addChangedElem(vdom);
+				/*
+				if (vdom.isElement())
+				{
+					this.addChangedElem(vdom);
+				}*/
 				vdom.render(vdom);
 				vdom.p();
 			}
@@ -120,22 +154,33 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		/* Render changed elements */
 		let render_elem_list = this.render_elem_list;
 		let render_elem_list_sz = render_elem_list.count();
+		let render_elem_childs = [];
+		let render_elem_childs_obj = {};
 		
 		/* Create elements or update params */
 		for (let i=0; i<render_elem_list_sz; i++)
 		{
 			let vdom = render_elem_list[i];
 			this.updateElem(vdom);
+			
+			let parent_vdom = vdom.getParentElement();
+			let parent_vdom_path_id = parent_vdom.path_id.join(":");
+			if (render_elem_childs_obj[parent_vdom_path_id] == undefined)
+			{
+				render_elem_childs.push({
+					"path_id": parent_vdom_path_id,
+					"vdom": parent_vdom,
+				});
+				render_elem_childs_obj[parent_vdom_path_id] = 1;
+			}
 		}
 		
 		/* Update elements childs */
-		for (let i=render_elem_list_sz-1; i>=0; i--)
+		let render_elem_childs_sz = render_elem_childs.length;
+		for (let i=render_elem_childs_sz-1; i>=0; i--)
 		{
-			let vdom = render_elem_list[i];
-			if (vdom.isElement() && !vdom.isText())
-			{
-				this.updateElemChilds(vdom);
-			}
+			let item = render_elem_childs[i];
+			this.updateElemChilds(item.vdom);
 		}
 		
 		this.render_elem_list = new Runtime.Collection();
@@ -171,9 +216,12 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		this.vdom.params = Runtime.Dict();
 		this.vdom.elem = elem_root;
 		this.vdom.render = (vdom) => {
-			vdom.e("c", layout_class_name, Runtime.Dict.from({}), null);
+			vdom.e("c", layout_class_name, Runtime.Dict.from({
+				"@model":[this, Runtime.Collection.from("")],
+			}), null);
 		};
 		this.repaintRef(this.vdom);
+		/* this.addChangedElem(this.vdom); */
 		
 		/* Call render */
 		this.render();
@@ -186,16 +234,13 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	updateElemChilds: function(vdom)
 	{
 		if (!vdom.is_change_childs) return;
+		if (!vdom.isElement()) return;
+		if (vdom.isText()) return;
+		
 		vdom.is_change_childs = false;
 		
-		let parent_vdom = vdom;
-		
-		/* Get parent element */
-		while (!parent_vdom.isElement()) parent_vdom = parent_vdom.parent_vdom;
-		if (!parent_vdom) return;
-		
 		/* Get vdom HTML childs */
-		let new_childs = parent_vdom.getChildElements();
+		let new_childs = vdom.getChildElements();
 		new_childs = new_childs
 			.map( (item) => item.elem )
 			.flatten()
@@ -246,6 +291,11 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			vdom.elem = this.constructor.rawHtml(vdom.content);
 		}
 		
+		else if (vdom.kind == Runtime.Web.VirtualDom.KIND_COMPONENT)
+		{
+			vdom.component.onUpdateElem();
+		}
+		
 		this.updateElemParams(vdom);
 	},
 	
@@ -274,12 +324,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				continue;
 			}
 			
-			/* Update element params */
-			if (vdom.kind != Runtime.Web.VirtualDom.KIND_ELEMENT)
-			{
-				continue;
-			}
-			
+			/* Set event */
 			let is_event = false;
 			let event_class_name = "";
 			let es6_event_name = "";
@@ -290,8 +335,6 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				let getES6EventName = Runtime.rtl.method(event_class_name, "getES6EventName");
 				es6_event_name = getES6EventName();
 			}
-			
-			/* Set event */
 			if (is_event)
 			{
 				let context = Runtime.rtl.getContext();
@@ -301,11 +344,12 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				
 				listener.addCallback(
 					vdom.path_id.join(":"),
+					event_class_name, 
 					component,
 					method_name,
 				);
 				
-				if (vdom.is_new_element && es6_event_name != "")
+				if (vdom.is_new_element && es6_event_name != "" && vdom.isElement())
 				{
 					vdom.elem.addEventListener(es6_event_name, this.js_event);
 				}
@@ -319,16 +363,16 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				if (
 					elem.tagName == "INPUT" ||
 					elem.tagName == "SELECT" ||
-					elem.tagName == "TEXTAREA"
+					elem.tagName == "TEXTAREA" ||
+					elem.tagName == "OPTION"
 				)
 				{
-					if (
-						value == null ||
-						value == "" ||
-						elem.value != ""
-					)
+					if (value == null || value == "")
 					{
-						elem.value = "";
+						if (elem.value != "")
+						{
+							elem.value = "";
+						}
 					}
 					else if (elem.value != value)
 					{
@@ -371,7 +415,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		msg.dest = "";
 		msg.sender = vdom;
 		
-		listener.dispatch(vdom.path_id.join(":"), msg);
+		listener.dispatch(msg);
 	},
 	
 });

@@ -69,7 +69,7 @@ static class ModuleDescription
 		#endif
 		
 		#ifdef BACKEND then
-		new Route("Runtime.Web.RouteApi"),
+		new Route("Runtime.Web.ApiRoute"),
 		#endif
 	];
 	

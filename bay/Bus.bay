@@ -114,8 +114,10 @@ class Bus
 		$api = $context->entities
 			->filter( \Runtime\lib::isInstance("Runtime.Web.Api") )
 			->findItem( function ($item) use ($api_route_name) {
+				if (!\Runtime\rtl::class_exists($item->name)) return false;
 				$route_name = \Runtime\rtl::find_class($item->name);
-				return call_user_func([$route_name, "apiName"]) == $api_route_name;
+				$api_name = call_user_func([$route_name, "apiName"]);
+				return $api_name == $api_route_name;
 			} )
 		;
 		
@@ -182,13 +184,30 @@ class Bus
 		#case ifcode ES6 then
 		
 		/* Build pos data */
-		data = this.buildPostData(ctx, data);
+		data = this.buildPostData(ctx, data.toDict());
 		
 		/* Send post */
-		var xhr = await this.sendPost(ctx, api_url, data);
+		let context = Runtime.rtl.getContext();
+		let api_url = "/" + context.env("LOCALE_CODE") + "/api/" + api_name + "/";
 		
-		res = Runtime.rtl.json_decode(xhr.responseText);
-		res = new ApiResult(res);
+		try
+		{
+			let xhr = await this.sendPost(ctx, api_url, data);
+		
+			res = Runtime.rtl.json_decode(xhr.responseText);
+			res = new Runtime.Web.ApiResult(res);
+		}
+		catch (e)
+		{
+			if (e instanceof Runtime.Exceptions.RuntimeException)
+			{
+				res = (new Runtime.Web.ApiResult()).exception(e);
+			}
+			else
+			{
+				throw e;
+			}
+		}
 		
 		#endswitch
 		
@@ -208,15 +227,10 @@ Object.assign(Runtime.Web.Bus,
 	/**
 	 * Send post. Returns json object or null if error
 	 */
-	post: async function(ctx, url, data)
+	post: async function(ctx, url, data, post_data)
 	{
-		var url = obj.get(ctx, "url");
-		var data = obj.get(ctx, "data");
-		var storage = obj.get(ctx, "storage");
-		
 		/* Build pos data */
-		var build_data = this.buildData(ctx, data, storage);
-		var post_data = this.buildPostData(ctx, build_data);
+		post_data = this.buildPostData(ctx, data, post_data);
 		
 		/* Send post */
 		var xhr = await this.sendPost(ctx, url, post_data);
@@ -229,21 +243,24 @@ Object.assign(Runtime.Web.Bus,
 	 * @params data - json object
 	 * @return FormData
 	 */
-	buildPostData: function(ctx, data)
+	buildPostData: function(ctx, data, post_data)
 	{
-		var post_data = new FormData();
+		if (post_data == undefined)
+		{
+			post_data = new FormData();
+		}
+		let keys = data.keys();
 		
 		/* Add data to post data */
-		for (var i=0; i<data.length; i++)
+		for (let i=0; i<keys.length; i++)
 		{
-			var obj = data[i];
-			var key = obj.key;
-			var val = obj.value;
+			let key = keys[i];
+			let val = data.get(key);
 			if (val instanceof FileList)
 			{
-				for (var i=0; i<val.length; i++)
+				for (let j=0; i<val.length; j++)
 				{
-					post_data.append(key + "[]", val.item(i), val.item(i).name);
+					post_data.append(key + "[]", val.item(j), val.item(j).name);
 				}
 			}
 			else if (val instanceof File)
@@ -288,7 +305,7 @@ Object.assign(Runtime.Web.Bus,
 							reject
 							(
 								new Runtime.Exceptions.RuntimeException
-								(ctx, xhr.status + " " + xhr.statusText, xhr.status) 
+								(ctx, xhr.status + " " + xhr.statusText) 
 							);
 						}
 					}

@@ -33,11 +33,16 @@ class Listener extends BaseProvider
 	/**
 	 * Add event
 	 */
-	void addCallback(string match_path_id, Component component, string method_name)
+	void addCallback(
+		string sender_path_id, string event_class_name,
+		Component component, string method_name
+	)
 	{
 		var item = this.callbacks.findItem
 		(
-			fn (Dict item) use (component, method_name) =>
+			fn (Dict item) use (sender_path_id, event_class_name, component, method_name) =>
+				item["sender_path_id"] == sender_path_id and
+				item["event_class_name"] == event_class_name and
 				item["component"] == component and
 				item["method_name"] == method_name
 		);
@@ -46,7 +51,8 @@ class Listener extends BaseProvider
 		{
 			this.callbacks.pushValue
 			{
-				"path_id": match_path_id,
+				"sender_path_id": sender_path_id,
+				"event_class_name": event_class_name,
 				"component": component,
 				"method_name": method_name,
 			};
@@ -73,12 +79,18 @@ class Listener extends BaseProvider
 	/**
 	 * Dispatch
 	 */
-	void dispatch(string path_id, Message<BaseEvent> message)
+	void dispatch(Message<BaseEvent> message)
 	{
+		string event_class_name = message.event != null ? message.event::getClassName() : "";
+		string sender_path_id = message.sender.path_id.join(":");
+		
 		for (int i=0; i<this.callbacks.count(); i++)
 		{
 			Dict item = this.callbacks[i];
-			bool is_match = static::match(item["path_id"], path_id);
+			bool is_match =
+				static::match_path(item["sender_path_id"], sender_path_id) and
+				event_class_name == item["event_class_name"]
+			;
 			if (is_match)
 			{
 				Component component = item["component"];
@@ -104,9 +116,9 @@ class Listener extends BaseProvider
 	/**
 	 * Match
 	 */
-	pure bool match(string match_path_id, string path_id)
+	pure bool match_path(string match_path_id, string sender_path_id)
 	{
-		if (match_path_id == path_id) return true;
+		if (match_path_id == sender_path_id) return true;
 		return false;
 	}
 }

@@ -16,33 +16,43 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events;
+namespace Runtime.Web;
 
-use Runtime.Web.Events.WebEvent;
+use Runtime.lib;
+use Runtime.Web.ApiResult;
+use Runtime.Web.BaseRoute;
+use Runtime.Web.Bus;
+use Runtime.Web.RouteInfo;
 
 
-struct ChangeEvent extends WebEvent
+class ApiRoute extends BaseRoute
 {
-	public string field_name = "";
-	public string value = "";
-	public string old_value = "";
 	
 	/**
-	 * Returns es6 event name
+	 * Returns routes
 	 */
-	static string getES6EventName() => "change";
-	
-	
-	static void assignEventObject(var obj, var e)
-	{
-		parent(obj, e);
+	pure Collection<RouteInfo> getRoutes() => [
 		
-		#switch
-		#case ifcode ES6 then
-		obj.setValue(ctx, "value", e.currentTarget.value);
-		obj.setValue(ctx, "old_value", e.currentTarget._old_value);
-		#endswitch
+		new RouteInfo
+		{
+			"uri_match": "^\\/api\\/(.*?)\\/$",
+			"params": ["api_name"],
+			"name": "site:api",
+			"method": "actionIndex",
+		},
+		
+	];
+	
+	
+	/**
+	 * Action index
+	 */
+	void actionIndex()
+	{
+		/* Call method */
+		string api_name = this.container.route.matches["api_name"];
+		ApiResult api_result = Bus::callApi(api_name, this.container.request.payload);		
+		this.container.setResponse(api_result);
 	}
 	
 }
-

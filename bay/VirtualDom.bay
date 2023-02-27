@@ -95,6 +95,25 @@ class VirtualDom extends BaseObject
 	
 	
 	/**
+	 * Returns true if params is changed
+	 */
+	pure bool isChangedParams(Dict old_params, Dict new_params)
+	{
+		fn f = bool (var value, string key)
+		{
+			if (rs::indexOf(key, "@") == 0) return false;
+			return true;
+		};
+		old_params = old_params.filter(f);
+		new_params = new_params.filter(f);
+		
+		if (not old_params.equal(new_params)) return true;
+		
+		return false;
+	}
+	
+	
+	/**
 	 * Return true if vdom is changed
 	 */
 	bool isChanged(Dict params, var content)
@@ -111,15 +130,7 @@ class VirtualDom extends BaseObject
 		
 		if (this.isElement())
 		{
-			fn f = bool (var value, string key)
-			{
-				if (rs::indexOf(key, "@event") == 0) return false;
-				return true;
-			};
-			Dict old_params = this.params.filter(f);
-			params = params.filter(f);
-			
-			return not old_params.equal(params) or this.content != content;
+			return static::isChangedParams(this.params, params) or this.content != content;
 		}
 		
 		return true;
@@ -188,6 +199,7 @@ class VirtualDom extends BaseObject
 			vdom.is_changed_item = vdom.isChanged(params, content);
 			vdom.params = params;
 			vdom.content = content;
+			vdom.isChanged(params, content);
 		}
 		
 		/* Set element */
@@ -228,13 +240,13 @@ class VirtualDom extends BaseObject
 			{
 				string class_name = name;
 				Collection model_path = this.findModelPath(params);
-				bool is_new = false;
+				vdom.is_new_element = false;
 				
 				if (vdom.component == null)
 				{
 					vdom.component = rtl::newInstance(class_name);
 					vdom.component.vdom = vdom;
-					is_new = true;
+					vdom.is_new_element = true;
 				}
 				
 				Component component = vdom.component;
@@ -243,7 +255,7 @@ class VirtualDom extends BaseObject
 				component.updateParams(model_path, params, content);
 				
 				/* On create */
-				if (is_new) component.onCreate();
+				if (vdom.is_new_element) component.onCreate();
 				
 				/* On update */
 				else component.onUpdate();
@@ -258,6 +270,12 @@ class VirtualDom extends BaseObject
 				
 				/* Render event */
 				component.onRender();
+				
+				/* Change element */
+				if (vdom.is_new_element)
+				{
+					provider.addChangedElem(vdom);
+				}
 			}
 		}
 		
@@ -309,15 +327,28 @@ class VirtualDom extends BaseObject
 	
 	
 	/**
+	 * Get parent element
+	 */
+	VirtualDom getParentElement()
+	{
+		VirtualDom parent_vdom = this.parent_vdom;
+		while (not parent_vdom.isElement()) parent_vdom = parent_vdom.parent_vdom;
+		return parent_vdom;
+	}
+	
+	
+	/**
 	 * Returns model path
 	 */
 	Collection<string> findModelPath(Dict params)
 	{
 		var attr = params["@model"];
-		if (not attr) return [];
+		if (not attr) return null;
 		
 		var component = attr[0];
 		var model_path = attr[1];
+		if (component.model_path == null) return null;
+		
 		return component.model_path.concat(model_path);
 	}
 	
