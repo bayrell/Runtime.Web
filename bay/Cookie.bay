@@ -25,7 +25,7 @@ struct Cookie extends BaseStruct
 {
 	public string name = "";
 	public string value = "";
-	public int expire = null;
+	public int expires = null;
 	public string domain = "";
 	public string path = "";
 	public bool secure = false;

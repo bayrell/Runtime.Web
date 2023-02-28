@@ -315,7 +315,7 @@ class App extends BaseProvider
 						$str[] = "Set-Cookie: " . urlencode($cookie->name) .
 							"=" . urlencode($cookie->value)
 						;
-						$str[] = "Expires=" . date(DATE_RFC822, $cookie->expire);
+						$str[] = "Expires=" . date(DATE_RFC822, $cookie->expires);
 						if ($cookie->domain) $str[] = "Domain=" . $cookie->domain;
 						if ($cookie->path) $str[] = "Path=" . $cookie->path;
 						if ($cookie->secure) $str[] = "Secure";

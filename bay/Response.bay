@@ -39,4 +39,14 @@ struct Response extends BaseStruct
 		return this.content;
 	}
 	
+	
+	/**
+	 * Add cookie
+	 */
+	Response addCookie(Cookie cookie)
+	{
+		Response res = this;
+		res <= cookies <= res.cookies.setIm(cookie.name, cookie);
+		return res
+	}
 }
