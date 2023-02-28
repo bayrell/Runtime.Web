@@ -288,6 +288,11 @@ class VirtualDom extends BaseObject
 	 */
 	void p()
 	{
+		if (this.childs.count() != this.new_childs.count())
+		{
+			RenderProvider provider = @.provider(classof RenderProvider);
+			provider.addChangedElemChilds(this);
+		}
 		this.childs = this.new_childs.toCollection();
 		this.new_childs = new Vector();
 		this.is_change_childs = true;
@@ -332,7 +337,10 @@ class VirtualDom extends BaseObject
 	VirtualDom getParentElement()
 	{
 		VirtualDom parent_vdom = this.parent_vdom;
-		while (not parent_vdom.isElement()) parent_vdom = parent_vdom.parent_vdom;
+		while (parent_vdom != null and not parent_vdom.isElement())
+		{
+			parent_vdom = parent_vdom.parent_vdom;
+		}
 		return parent_vdom;
 	}
 	

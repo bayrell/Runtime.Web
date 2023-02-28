@@ -130,6 +130,26 @@ struct ApiResult extends Response
 	
 	
 	/**
+	 * Set data
+	 */
+	ApiResult setData(Dict data)
+	{
+		ApiResult res = this;
+		
+		if (data == null) return res;
+		
+		Collection<string> keys = data.keys();
+		for (int i=0; i<keys.count(); i++)
+		{
+			string key = keys[i];
+			res <= data <= { key } <= data[key];
+		}
+		
+		return res;
+	}
+	
+	
+	/**
 	 * Setup success
 	 */
 	ApiResult success(Dict data)
@@ -173,22 +193,25 @@ struct ApiResult extends Response
 	/**
 	 * Setup exception
 	 */
-	ApiResult exception(var e)
+	ApiResult exception(var e, Dict data = null)
 	{
 		ApiResult res = this;
 		
 		if (e instanceof RuntimeException)
 		{
-			return res.clone({
+			res = res.clone({
 				"code": e.getErrorCode(),
 				"message": e.getErrorMessage(),
 				"error_name": e::getClassName(),
 				"error_file": e.getFileName(),
 				"error_line": e.getErrorLine(),
 				"error_trace": e.getTraceStr(),
-				"data": null,
 				"err": e,
 			});
+			
+			res = res.setData(data);
+			
+			return res;
 		}
 		else
 		{

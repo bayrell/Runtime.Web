@@ -24,9 +24,13 @@ Runtime.Web.RenderProvider = function()
 	if (window) window["render_provider"] = this;
 	this.vdom = null;
 	this.layout = null;
-	this.render_vdom_list = new Runtime.Collection();
-	this.render_elem_list = new Runtime.Collection();
+	this.render_vdom_list = [];
+	this.render_elem_list = [];
+	this.render_elem_obj = {};
+	this.render_elem_childs_list = [];
+	this.render_elem_childs_obj = {};
 	this.model_path = new Runtime.Collection();
+	this.animation_frame = null;
 };
 Runtime.Web.RenderProvider.prototype = Object.create(Runtime.BaseProvider.prototype);
 Runtime.Web.RenderProvider.prototype.constructor = Runtime.Web.RenderProvider;
@@ -38,7 +42,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	start: function()
 	{
-		window.requestAnimationFrame( this.animationFrame.bind(this) );
+		/* window.requestAnimationFrame( this.animationFrame.bind(this) ); */
 	},
 	
 	
@@ -94,10 +98,10 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	repaintRef: function(vdom)
 	{
-		if (vdom)
-		{
-			this.render_vdom_list = this.render_vdom_list.pushIm(vdom);
-		}
+		if (vdom == null) return;
+		
+		this.render_vdom_list.push(vdom);
+		this.requestAnimationFrame();
 	},
 	
 	
@@ -106,7 +110,28 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	addChangedElem: function(vdom)
 	{
-		this.render_elem_list = this.render_elem_list.pushIm(vdom);
+		if (vdom == null) return;
+		
+		let vdom_path_id = vdom.path_id.join(":");
+		if (this.render_elem_obj[vdom_path_id] != undefined) return;
+		
+		this.render_elem_obj[vdom_path_id] = 1;
+		this.render_elem_list.push(vdom);
+	},
+	
+	
+	/**
+	 * Add changed childs virtual dom
+	 */
+	addChangedElemChilds: function(vdom)
+	{
+		if (vdom == null) return;
+		
+		let vdom_path_id = vdom.path_id.join(":");
+		if (this.render_elem_childs_obj[vdom_path_id] != undefined) return;
+		
+		this.render_elem_childs_list.push(vdom);
+		this.render_elem_childs_obj[vdom_path_id] = 1;
 	},
 	
 	
@@ -115,20 +140,14 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	render: function()
 	{
-		/* Render virtual dom */
 		let render_vdom_list = this.render_vdom_list;
-		let render_vdom_list_sz = render_vdom_list.count();
 		
-		for (let i=0; i<render_vdom_list_sz; i++)
+		/* Render virtual dom */
+		for (let i=0; i<this.render_vdom_list.length; i++)
 		{
 			let vdom = render_vdom_list[i];
 			if (vdom.render)
 			{
-				/*
-				if (vdom.isElement())
-				{
-					this.addChangedElem(vdom);
-				}*/
 				vdom.render(vdom);
 				vdom.p();
 			}
@@ -149,41 +168,44 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				vdom.p();
 			}
 		}
-		this.render_vdom_list = new Runtime.Collection();
 		
+		this.render_vdom_list = [];
+		
+		/* Repaint */
+		this.repaint();
+	},
+	
+	
+	/**
+	 * Repaint
+	 */
+	repaint: function()
+	{
 		/* Render changed elements */
 		let render_elem_list = this.render_elem_list;
-		let render_elem_list_sz = render_elem_list.count();
-		let render_elem_childs = [];
-		let render_elem_childs_obj = {};
 		
 		/* Create elements or update params */
-		for (let i=0; i<render_elem_list_sz; i++)
+		for (let i=0; i<this.render_elem_list.length; i++)
 		{
 			let vdom = render_elem_list[i];
 			this.updateElem(vdom);
 			
 			let parent_vdom = vdom.getParentElement();
-			let parent_vdom_path_id = parent_vdom.path_id.join(":");
-			if (render_elem_childs_obj[parent_vdom_path_id] == undefined)
-			{
-				render_elem_childs.push({
-					"path_id": parent_vdom_path_id,
-					"vdom": parent_vdom,
-				});
-				render_elem_childs_obj[parent_vdom_path_id] = 1;
-			}
+			this.addChangedElemChilds(parent_vdom);
 		}
 		
 		/* Update elements childs */
-		let render_elem_childs_sz = render_elem_childs.length;
-		for (let i=render_elem_childs_sz-1; i>=0; i--)
+		let render_elem_childs_list_sz = this.render_elem_childs_list.length;
+		for (let i=render_elem_childs_list_sz-1; i>=0; i--)
 		{
-			let item = render_elem_childs[i];
-			this.updateElemChilds(item.vdom);
+			let vdom = this.render_elem_childs_list[i];
+			this.updateElemChilds(vdom);
 		}
 		
-		this.render_elem_list = new Runtime.Collection();
+		this.render_elem_list = [];
+		this.render_elem_obj = {};
+		this.render_elem_childs_list = [];
+		this.render_elem_childs_obj = {};
 	},
 	
 	
@@ -192,12 +214,24 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	animationFrame: function(time)
 	{
+		this.animation_frame = null;
+		
 		let render_vdom_list = this.render_vdom_list;
-		if (render_vdom_list.count() > 0)
+		if (render_vdom_list.length == 0) return;
+		
+		this.render();
+	},
+	
+	
+	/**
+	 * Request animation frame
+	 */
+	requestAnimationFrame: function()
+	{
+		if (this.animation_frame == null)
 		{
-			this.render();
+			this.animation_frame = window.requestAnimationFrame( this.animationFrame.bind(this) );
 		}
-		window.requestAnimationFrame( this.animationFrame.bind(this) );
 	},
 	
 	
@@ -221,10 +255,9 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			}), null);
 		};
 		this.repaintRef(this.vdom);
-		/* this.addChangedElem(this.vdom); */
 		
-		/* Call render */
-		this.render();
+		/* Call next frame */
+		this.requestAnimationFrame();
 	},
 	
 	
