@@ -20,6 +20,8 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
+use Runtime.Vector;
+use Runtime.Web.AppHook;
 use Runtime.Web.CoreUI;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderResponse;
@@ -102,5 +104,22 @@ class RenderContainer extends BaseObject
 	 */
 	void redirect(string class_name)
 	{
+	}
+	
+	
+	/**
+	 * Returns css class names
+	 */
+	Collection<string> getCssClasses()
+	{
+		Vector res = new Vector();
+		
+		/* Extends css class names */
+		Dict d = @.callHook(AppHook::CSS_CLASS_NAMES, {
+			"container": this,
+			"css_class_names": res,
+		});
+		
+		return d["css_class_names"].toCollection();
 	}
 }

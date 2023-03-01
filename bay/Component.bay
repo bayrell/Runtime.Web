@@ -22,6 +22,7 @@ use Runtime.lib;
 use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.Exceptions.FileNotFound;
+use Runtime.Web.AppHook;
 use Runtime.Web.Listener;
 use Runtime.Web.Message;
 use Runtime.Web.RenderProvider;
@@ -238,7 +239,10 @@ class Component extends BaseObject
 	 */
 	static string getCss(Collection<string> class_names, Dict css_vars = null)
 	{
-		if (css_vars == null) css_vars = {};
+		if (css_vars == null)
+		{
+			css_vars = @.callHook(AppHook::CSS_VARS, css_vars);
+		}
 		
 		/* Get required components */
 		Collection<string> components = static::getRequiredComponents(class_names);
@@ -262,7 +266,7 @@ class Component extends BaseObject
 			.filter( bool (string s) => s != "" )
 		;
 		
-		return rs::join("\n", css);
+		return rs::trim( rs::join("\n", css) );
 	}
 	
 	

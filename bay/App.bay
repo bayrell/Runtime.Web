@@ -352,14 +352,7 @@ class App extends BaseProvider
 	 */
 	static function css_save($css_class_names, $file_path)
 	{
-		$css_vars = new \Runtime\Dict();
-		
-		/* Get css vars */
-		$context = \Runtime\rtl::getContext();
-		$css_vars = $context->callHook(AppHook::CSS_VARS, $css_vars);
-		
-		$css_class_names = \Runtime\Web\Component::getRequiredComponents( $css_class_names );
-		$css_content = trim( \Runtime\Web\Component::getCss( $css_class_names, $css_vars ) );
+		$css_content = \Runtime\Web\Component::getCss( $css_class_names );
 		
 		$file_size = 0;
 		if ($file_path)

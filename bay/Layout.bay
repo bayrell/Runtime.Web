@@ -69,10 +69,10 @@ struct Layout extends BaseStruct
 		string layout_page_class_name = d["layout_page_class_name"];
 		if (layout_page_class_name == "")
 		{
-			throw new RuntimeException("Layout page class name is empty for '" ~ layout_name ~ "'");
+			layout_page_class_name = "Runtime.Web.LayoutPage";
 		}
 		
-		return d["layout_page_class_name"];
+		return layout_page_class_name;
 	}
 	
 	
