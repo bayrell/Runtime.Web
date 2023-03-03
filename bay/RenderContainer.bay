@@ -63,6 +63,16 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
+	 * Set layout name
+	 */
+	void setLayoutName(string layout_name)
+	{
+		RenderContainer container = this;
+		container <= layout <= layout_name <= layout_name;
+	}
+	
+	
+	/**
 	 * Create page model if does not exists
 	 */
 	void getPageModel(string class_name)
