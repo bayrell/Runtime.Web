@@ -45,7 +45,6 @@ struct Layout extends BaseStruct
 	string request_full_uri = "";
 	Dict<string> request_params = null;
 	
-	
 	/* Increment assets */
 	string f_inc = "1";
 	
@@ -117,4 +116,10 @@ struct Layout extends BaseStruct
 		}
 		return layout;
 	}
+	
+	
+	/**
+	 * Set new title
+	 */
+	Layout setTitle(string title) => rtl::setAttr(this, ["title"], title);
 }

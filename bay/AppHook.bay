@@ -41,7 +41,6 @@ class AppHook extends BaseHook
 	static const string RESPONSE = "runtime.web.app::response";
 	static const string RENDER_HEAD = "runtime.web.app::render_head";
 	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
-	static const string ENTRY_POINT = "runtime.web.app::entry_point";
 	static const string MAIN = "runtime.web.app::main";
 	
 	
@@ -67,7 +66,6 @@ class AppHook extends BaseHook
 		if (hook_name == static::RESPONSE) return "response";
 		if (hook_name == static::RENDER_HEAD) return "render_head";
 		if (hook_name == static::RENDER_FOOTER) return "render_footer";
-		if (hook_name == static::ENTRY_POINT) return "entry_point";
 		if (hook_name == static::MAIN) return "main";
 		return "";
 	}
@@ -203,15 +201,6 @@ class AppHook extends BaseHook
 	 * Returns render head classes
 	 */
 	Dict render_head(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Returns frontend entry point
-	 */
-	Dict entry_point(Dict d)
 	{
 		return d;
 	}

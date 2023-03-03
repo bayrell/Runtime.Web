@@ -24,6 +24,7 @@ use Runtime.Vector;
 use Runtime.Web.AppHook;
 use Runtime.Web.CoreUI;
 use Runtime.Web.Layout;
+use Runtime.Web.ModelProxy;
 use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
@@ -78,12 +79,37 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
+	 * Returns page model proxy
+	 */
+	ModelProxy modelProxy(Collection path = null)
+		=> new ModelProxy( this, ["layout", "pages", this.layout.page_model_class_name].concat(path) )
+	;
+	
+	
+	/**
+	 * Returns layout model proxy
+	 */
+	ModelProxy layoutProxy(Collection path = null)
+		=> new ModelProxy( this, ["layout"].concat(path) );
+	
+	
+	/**
+	 * Update model event
+	 */
+	void onUpdateModel(Collection path)
+	{
+		
+	}
+	
+	
+	/**
 	 * Render page and setup response
 	 */
 	void render(string class_name)
 	{
 		this.layout = rtl::setAttr(this.layout, ["page_class_name"], class_name);
-		this.response = new RenderResponse{
+		this.response = new RenderResponse
+		{
 			"class_name": class_name,
 			"layout": this.layout,
 		};

@@ -15,6 +15,7 @@
 		"Listener.bay",
 		"LocaleModel.bay",
 		"Message.bay",
+		"ModelProxy.bay",
 		"RenderContainer.bay",
 		"RenderProvider.es6",
 		"Request.bay",
