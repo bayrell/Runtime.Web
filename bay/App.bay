@@ -57,8 +57,9 @@ class App extends BaseProvider
 		
 		#ifcode PHP then
 		$container = $this->createRenderContainer();
-		$this->resolve($container);
-		$this->response($container);
+		$this->init_container($container);
+		$this->resolve_container($container);
+		$this->response($container->response);
 		#endif
 		
 		#ifcode ES6 then
@@ -77,7 +78,7 @@ class App extends BaseProvider
 	/**
 	 * Resolve container
 	 */
-	async void resolve(RenderContainer container)
+	async void init_container(RenderContainer container)
 	{
 		Context context = @;
 		context <= environments <= render_container <= container;
@@ -87,7 +88,14 @@ class App extends BaseProvider
 		@.callAsyncHook(AppHook::INIT_CONTAINER, {
 			"container": container,
 		});
-		
+	}
+	
+	
+	/**
+	 * Resolve container
+	 */
+	async void resolve_container(RenderContainer container)
+	{
 		/* Find route */
 		await this.findRoute(container);
 		
@@ -297,18 +305,18 @@ class App extends BaseProvider
 	/**
 	 * Output result
 	 */
-	function response($ctx, $container)
+	function response($ctx, $response)
 	{
-		if ($container != null && $container->response)
+		if ($response != null)
 		{
-			http_response_code($container->response->http_code);
-			if ($container->response->cookies != null)
+			http_response_code($response->http_code);
+			if ($response->cookies != null)
 			{
-				$keys = $container->response->cookies->keys($ctx);
+				$keys = $response->cookies->keys($ctx);
 				for ($i=0; $i<$keys->count($ctx); $i++)
 				{
 					$key = $keys->item($ctx, $i);
-					$cookie = $container->response->cookies->item($ctx, $key);
+					$cookie = $response->cookies->item($ctx, $key);
 					if ($cookie != null && $cookie->name)
 					{
 						$str = [];
@@ -326,17 +334,16 @@ class App extends BaseProvider
 					}
 				}
 			}
-			if ($container->response->headers != null)
+			if ($response->headers != null)
 			{
-				$keys = $container->response->headers->keys($ctx);
+				$keys = $response->headers->keys($ctx);
 				for ($i=0; $i<$keys->count($ctx); $i++)
 				{
 					$key = $keys->item($ctx, $i);
-					$value = $container->response->headers->item($ctx, $key);
+					$value = $response->headers->item($ctx, $key);
 					header($key . ":" . $value);
 				}
 			}
-			$response = $container->response;
 			echo $response->getContent($ctx);
 		}
 		else

@@ -51,7 +51,7 @@ class ApiRoute extends BaseRoute
 	{
 		/* Call method */
 		string api_name = this.container.route.matches["api_name"];
-		ApiResult api_result = Bus::callApi(api_name, this.container.request.payload);		
+		ApiResult api_result = Bus::callApi(api_name, this.container.request.payload);
 		this.container.setResponse(api_result);
 	}
 	

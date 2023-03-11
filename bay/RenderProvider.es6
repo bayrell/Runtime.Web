@@ -63,16 +63,26 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	{
 		/* Get changes */
 		let old_model = Runtime.rtl.attr(this.layout, component.model_path);
-		let changes = {};
 		
 		/* Set new layout */
 		this.layout = Runtime.rtl.setAttr(this.layout, component.model_path, new_model);
 		
+		/* On update model */
+		this.onUpdateModel(component.model_path, old_model, new_model);
+	},
+	
+	
+	/**
+	 * On update model
+	 */
+	onUpdateModel(model_path, old_model, new_model)
+	{
+		let changes = {};
+		
 		/* Send commit message */
 		let msg = new Runtime.Web.Message();
-		msg.sender = component.vdom;
 		msg.event = new Runtime.Web.Events.CommitModelEvent({
-			"model_path": component.model_path,
+			"model_path": model_path,
 			"old_model": old_model,
 			"new_model": new_model,
 			"changes": changes,
@@ -80,10 +90,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		
 		let context = Runtime.rtl.getContext();
 		let listener = context.provider("Runtime.Web.Listener");
-		listener.dispatch(msg);
-		
-		/* Call onCommitModel directly */
-		component.onCommitModel(msg);
+		/* listener.dispatch(msg); */
 		
 		/* If not cancel repaint all */
 		if (!msg.is_cancel)
@@ -450,7 +457,17 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		
 		listener.dispatch(msg);
 	},
-	
+	assignValue: function(k,v)
+	{
+		if (k == "layout")this.layout = v;
+		else Runtime.BaseProvider.prototype.assignValue.call(this,k,v);
+	},
+	takeValue: function(k,d)
+	{
+		if (d == undefined) d = null;
+		if (k == "layout")return this.layout;
+		return Runtime.BaseProvider.prototype.takeValue.call(this,k,d);
+	},
 });
 Object.assign(Runtime.Web.RenderProvider, Runtime.BaseProvider);
 Object.assign(Runtime.Web.RenderProvider,

@@ -156,6 +156,12 @@ class RenderContainer extends BaseObject
 			"css_class_names": res,
 		});
 		
+		/* Add page class name */
+		if (res.indexOf(this.layout.page_class_name) == -1)
+		{
+			res.pushValue(this.layout.page_class_name);
+		}
+		
 		return d["css_class_names"].toCollection();
 	}
 }

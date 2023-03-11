@@ -54,6 +54,7 @@ class ModelProxy<T> extends BaseObject
 	 */
 	void setAttr(Collection path, var new_data)
 	{
+		if (rtl::isString(path)) path = [ path ];
 		this.container = rtl::setAttr(this.container, this.path.concat(path), new_data);
 	}
 	
@@ -63,8 +64,9 @@ class ModelProxy<T> extends BaseObject
 	 */
 	void setNewModel(var new_model)
 	{
+		BaseStruct old_model = this.data();
 		this.container = rtl::setAttr(this.container, this.path, new_model);
-		this.container.onUpdateModel(this.path);
+		this.container.onUpdateModel(this.path, old_model, new_model);
 	}
 	
 	
@@ -116,6 +118,7 @@ class ModelProxy<T> extends BaseObject
 	 */
 	ModelProxy proxy(Collection path)
 	{
+		if (rtl::isString(path)) path = [ path ];
 		return new ModelProxy(this.container, this.path.concat(path));
 	}
 }

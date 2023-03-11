@@ -35,4 +35,9 @@ struct BaseEvent extends BaseStruct
 	 */
 	pure BaseEvent cancel(BaseEvent event) => event;
 	
+	
+	/**
+	 * Returns es6 event name
+	 */
+	static string getES6EventName() => "";
 }

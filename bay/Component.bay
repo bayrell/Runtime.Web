@@ -25,6 +25,7 @@ use Runtime.Exceptions.FileNotFound;
 use Runtime.Web.AppHook;
 use Runtime.Web.Listener;
 use Runtime.Web.Message;
+use Runtime.Web.ModelProxy;
 use Runtime.Web.RenderProvider;
 use Runtime.Web.VirtualDom;
 use Runtime.Web.Events.BaseEvent;
@@ -60,6 +61,19 @@ class Component extends BaseObject
 		if (model_path == null) model_path = [];
 		var layout = this.layout();
 		return rtl::attr(layout, this.model_path.concat(model_path));
+	}
+	
+	
+	/**
+	 * Returns page model proxy
+	 */
+	ModelProxy modelProxy(Collection path = null)
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		Collection model_path = ["layout"];
+		model_path = model_path.concat( this.model_path );
+		model_path = model_path.concat( path );
+		return new ModelProxy(provider, model_path);
 	}
 	
 	
@@ -141,28 +155,9 @@ class Component extends BaseObject
 		args = Runtime.Collection.from( [ ...arguments ].slice(1) );
 		#endif
 		
-		BaseStruct old_model = this.model();
-		BaseStruct new_model = null;
-		string class_name = old_model::getClassName();
-		
-		if ( rtl::method_exists(old_model, method_name) )
-		{
-			fn f = rtl::method(old_model, method_name);
-			new_model = rtl::apply(f, args);
-		}
-		elseif ( rtl::method_exists(class_name, method_name) )
-		{
-			fn f = rtl::method(class_name, method_name);
-			args = args.prependIm(old_model);
-			new_model = rtl::apply(f, args);
-		}
-		else
-		{
-			throw new FileNotFound(method_name, "Method");
-		}
-		
-		RenderProvider provider = @.provider(classof RenderProvider);
-		provider.commitComponent( this, new_model );
+		/* Commit model */
+		args = args.prependIm(method_name);
+		rtl::applyMethod(this.modelProxy(), "commit", args);
 	}
 	
 	
@@ -368,7 +363,7 @@ class Component extends BaseObject
 	pure Dict _concat_attrs(Dict arr1, var arr2)
 	{
 		if (rtl::isString(arr2)) arr2 = [ arr2 ];
-		return arr1.concat(arr2);
+		return arr1 != null ? arr1.concat(arr2) : arr2;
 	}
 	
 	

@@ -184,15 +184,32 @@ class Bus
 		#case ifcode ES6 then
 		
 		/* Build pos data */
-		data = this.buildPostData(ctx, data.toDict());
+		let post_data = Runtime.Dict.from({
+			"api_name": api_name,
+			"data": data.toDict()
+		});
 		
 		/* Send post */
 		let context = Runtime.rtl.getContext();
 		let api_url = "/" + context.env("LOCALE_CODE") + "/api/" + api_name + "/";
 		
+		let d = context.callHook(
+			Runtime.Web.AppHook.CALL_API_BEFORE,
+			Runtime.Dict.from({
+				"api_url": api_url,
+				"api_name": api_name,
+				"post_data": post_data,
+			})
+		);
+		
+		api_url = d.get("api_url");
+		post_data = d.get("post_data");
+		post_data = post_data.setIm("data", Runtime.rtl.json_encode(post_data.get("data")));
+		post_data = this.buildPostData(ctx, post_data);
+		
 		try
 		{
-			let xhr = await this.sendPost(ctx, api_url, data);
+			let xhr = await this.sendPost(ctx, api_url, post_data);
 		
 			res = Runtime.rtl.json_decode(xhr.responseText);
 			res = new Runtime.Web.ApiResult(res);
@@ -291,6 +308,7 @@ Object.assign(Runtime.Web.Bus,
 			{
 				var xhr = new XMLHttpRequest();
 				xhr.open('POST', url, true);
+				xhr.setRequestHeader("Content-Type", "application/json");
 				xhr.send(post_data);
 				xhr.onreadystatechange = (function(ctx, xhr, resolve, reject) {
 					return function()
