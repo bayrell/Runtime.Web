@@ -30,7 +30,10 @@ class BaseApi extends BaseObject
 		"code": -1,
 		"message": "Empty response",
 	};
-    
+    Dict api_data = null;
+	string action = "";
+	string method_name = "";
+	
 	
     /**
 	 * Returns api name

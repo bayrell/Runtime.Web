@@ -58,7 +58,17 @@ struct ApiResult extends Response
 	
 	
 	/**
-	 * Returns true if false
+	 * Returns true if error
+	 */
+	bool isError()
+	{
+		return this.code < 0;
+	}
+	
+	
+	
+	/**
+	 * Returns true if success
 	 */
 	bool isSuccess()
 	{

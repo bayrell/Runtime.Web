@@ -231,7 +231,7 @@ class App extends BaseProvider
 	 */
 	function getPost($ctx)
 	{
-		$content_type = isset($_SERVER['Content-Type']) ? $_SERVER['Content-Type'] : "";
+		$content_type = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : "";
 		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
 		{
 			$json = file_get_contents("php://input");

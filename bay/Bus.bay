@@ -144,6 +144,8 @@ class Bus
 		$res = null;
 		$route = \Runtime\rtl::newInstance($api->name);
 		$route->container = $api_container;
+		$route->api_data = $data;
+		$route->method_name = $method_name;
 		
 		try
 		{
@@ -151,6 +153,7 @@ class Bus
 			if ($route->container->response == null)
 			{
 				$route_method = $route::getApiMethod($method_name);
+				$route->action = $route_method;
 				call_user_func([ $route, $route_method ]);
 			}
 			$route->onActionAfter();
@@ -308,7 +311,6 @@ Object.assign(Runtime.Web.Bus,
 			{
 				var xhr = new XMLHttpRequest();
 				xhr.open('POST', url, true);
-				xhr.setRequestHeader("Content-Type", "application/json");
 				xhr.send(post_data);
 				xhr.onreadystatechange = (function(ctx, xhr, resolve, reject) {
 					return function()
