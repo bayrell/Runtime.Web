@@ -153,8 +153,15 @@ class Bus
 			if ($route->container->response == null)
 			{
 				$route_method = $route::getApiMethod($method_name);
-				$route->action = $route_method;
-				call_user_func([ $route, $route_method ]);
+				if ($route_method)
+				{
+					$route->action = $route_method;
+					call_user_func([ $route, $route_method ]);
+				}
+				else
+				{
+					throw new \Runtime\Exceptions\ApiException("Route method not found");
+				}
 			}
 			$route->onActionAfter();
 			
