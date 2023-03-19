@@ -265,8 +265,11 @@ class VirtualDom extends BaseObject
 				
 				/* Render component */
 				fn f = render(component, params, content);
-				f(vdom);
-				vdom.p();
+				if (f)
+				{
+					f(vdom);
+					vdom.p();
+				}
 				
 				/* Render event */
 				component.onRender();

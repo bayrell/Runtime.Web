@@ -115,8 +115,9 @@ class RenderContainer extends BaseObject
 	/**
 	 * Render page and setup response
 	 */
-	void render(string class_name)
+	void render(string class_name = "")
 	{
+		if (class_name == "") class_name = this.layout.page_class_name;
 		this.layout = rtl::setAttr(this.layout, ["page_class_name"], class_name);
 		this.response = new RenderResponse
 		{
