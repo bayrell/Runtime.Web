@@ -212,6 +212,7 @@ struct ApiResult extends Response
 			res = res.clone({
 				"code": e.getErrorCode(),
 				"message": e.getErrorMessage(),
+				"http_code": 500,
 				"error_name": e::getClassName(),
 				"error_file": e.getFileName(),
 				"error_line": e.getErrorLine(),

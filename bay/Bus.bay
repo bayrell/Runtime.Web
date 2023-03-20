@@ -226,7 +226,11 @@ class Bus
 		}
 		catch (e)
 		{
-			if (e instanceof Runtime.Exceptions.RuntimeException)
+			if (e instanceof Runtime.Web.ApiResult)
+			{
+				res = e;
+			}
+			else if (e instanceof Runtime.Exceptions.RuntimeException)
 			{
 				res = (new Runtime.Web.ApiResult()).exception(e);
 			}
@@ -329,11 +333,20 @@ Object.assign(Runtime.Web.Bus,
 						}
 						else
 						{
-							reject
-							(
-								new Runtime.Exceptions.RuntimeException
-								(ctx, xhr.status + " " + xhr.statusText) 
-							);
+							var res = Runtime.rtl.json_decode(xhr.responseText);
+							res = res ? new Runtime.Web.ApiResult(res) : null;
+							if (res)
+							{
+								reject(res);
+							}
+							else
+							{
+								reject
+								(
+									new Runtime.Exceptions.RuntimeException
+									(ctx, xhr.status + " " + xhr.statusText)
+								);
+							}
 						}
 					}
 				})(ctx, xhr, resolve, reject);
