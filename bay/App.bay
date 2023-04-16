@@ -155,7 +155,7 @@ class App extends BaseProvider
 		}
 		
 		/* Call hook found route */
-		await @.callAsyncHook(AppHook::FOUND_ROUTE, {
+		await @.callAsyncHook(AppHook::FIND_ROUTE_AFTER, {
 			"container": container,
 		});
 	}

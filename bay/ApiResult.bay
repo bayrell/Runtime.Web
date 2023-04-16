@@ -27,8 +27,8 @@ use Runtime.Web.Response;
 
 struct ApiResult extends Response
 {
-	int code;
-	string message;
+	int code = 0;
+	string message = "";
 	var data = null;
 	string ob_content = "";
 	string error_name = null;
@@ -170,6 +170,8 @@ struct ApiResult extends Response
 		else res <= code <= rtl::ERROR_OK;
 		
 		if (data.has("message")) res <= message <= data["message"];
+		else res <= message <= "";
+		
 		if (data.has("data")) res <= data <= data["data"];
 		
 		res = res.clone({

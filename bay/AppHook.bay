@@ -32,7 +32,7 @@ class AppHook extends BaseHook
 	static const string CSS_SAVE = "runtime.web.app::css_save";
 	static const string CSS_VARS = "runtime.web.app::css_vars";
 	static const string FIND_ROUTE = "runtime.web.app::find_route";
-	static const string FOUND_ROUTE = "runtime.web.app::found_route";
+	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
 	static const string INIT_CONTAINER = "runtime.web.app::init_container";
 	static const string INIT_LAYOUT = "runtime.web.app::init_layout";
 	static const string LAYOUT_PAGE_CLASS_NAME = "runtime.web.app::layout_page_class_name";
@@ -58,7 +58,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::CSS_SAVE) return "css_save";
 		if (hook_name == static::CSS_VARS) return "css_vars";
 		if (hook_name == static::FIND_ROUTE) return "find_route";
-		if (hook_name == static::FOUND_ROUTE) return "found_route";
+		if (hook_name == static::FIND_ROUTE_AFTER) return "find_route_after";
 		if (hook_name == static::INIT_CONTAINER) return "init_container";
 		if (hook_name == static::INIT_LAYOUT) return "init_layout";
 		if (hook_name == static::LAYOUT_PAGE_CLASS_NAME) return "layout_page_class_name";
@@ -172,7 +172,7 @@ class AppHook extends BaseHook
 	/**
 	 * Found route
 	 */
-	async Dict found_route(Dict d)
+	async Dict find_route_after(Dict d)
 	{
 		return d;
 	}
