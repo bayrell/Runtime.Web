@@ -25,7 +25,7 @@ use Runtime.Web.RenderContainer;
 
 class BaseRoute extends BaseObject
 {
-	
+	bool is_cancel_route = false;
 	RenderContainer container = null;
 	
 	
@@ -50,4 +50,21 @@ class BaseRoute extends BaseObject
 	{
 	}
 	
+	
+	/**
+	 * Cancel route
+	 */
+	void cancelRoute()
+	{
+		this.is_cancel_route = true;
+	}
+	
+	
+	/**
+	 * Returns true if current route is canceled
+	 */
+	bool isCancelRoute()
+	{
+		return this.is_cancel_route;
+	}
 }

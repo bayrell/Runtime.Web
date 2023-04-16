@@ -22,6 +22,7 @@ use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.Vector;
 use Runtime.Web.AppHook;
+use Runtime.Web.BaseRoute;
 use Runtime.Web.CoreUI;
 use Runtime.Web.Layout;
 use Runtime.Web.ModelProxy;
@@ -164,5 +165,37 @@ class RenderContainer extends BaseObject
 		}
 		
 		return d["css_class_names"].toCollection();
+	}
+	
+	
+	/**
+	 * Call method
+	 */
+	async void callMethod(var m)
+	{
+		if (m instanceof Collection)
+		{
+			string base_route_class_name = m[0];
+			BaseRoute base_route = rtl::newInstance(base_route_class_name);
+			string method_name = m[1];
+			fn route_method = rtl::method(base_route, method_name);
+			
+			base_route.container = this;
+			
+			await base_route.onActionBefore();
+			if (this.response == null)
+			{
+				await route_method();
+			}
+			if (not base_route.isCancelRoute())
+			{
+				await base_route.onActionAfter();
+			}
+		}
+		
+		else if (rtl::isFn(m))
+		{
+			await m(this);
+		}
 	}
 }

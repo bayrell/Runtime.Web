@@ -186,29 +186,9 @@ class App extends BaseProvider
 		await this.createLayout(container);
 		
 		/* Call route */
-		if (container.route and container.response == null)
+		if (container.route != null and container.response == null)
 		{
-			if (container.route.method instanceof Collection)
-			{
-				string base_route_class_name = container.route.method[0];
-				BaseRoute base_route = rtl::newInstance(base_route_class_name);
-				string method_name = container.route.method[1];
-				fn route_method = rtl::method(base_route, method_name);
-				
-				base_route.container = container;
-				
-				await base_route.onActionBefore();
-				if (container.response == null)
-				{
-					await route_method();
-				}
-				await base_route.onActionAfter();
-			}
-			
-			else if (rtl::isFn(container.route.method))
-			{
-				await container.route.method(container);
-			}
+			await container.callMethod(container.route.method);
 		}
 	}
 	
