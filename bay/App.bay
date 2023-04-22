@@ -190,6 +190,11 @@ class App extends BaseProvider
 		{
 			await container.callMethod(container.route.method);
 		}
+		
+		/* Call route after */
+		await @.callAsyncHook(AppHook::CALL_ROUTE_AFTER, {
+			"container": container,
+		});
 	}
 	
 		
@@ -344,6 +349,7 @@ class App extends BaseProvider
 		$file_size = 0;
 		if ($file_path)
 		{
+			$file_content = "";
 			if (file_exists($file_path)) $file_content = file_get_contents($file_path);
 			if ($css_content != $file_content)
 			{

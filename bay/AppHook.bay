@@ -25,6 +25,7 @@ class AppHook extends BaseHook
 {
 	
 	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
+	static const string CALL_ROUTE_AFTER = "runtime.web.app::call_route_before";
 	static const string CLEAR_LAYOUT = "runtime.web.app::clear_layout";
 	static const string CORE_UI = "runtime.web.app::core_ui";
 	static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
@@ -51,6 +52,7 @@ class AppHook extends BaseHook
 	string getMethodName(string hook_name)
 	{
 		if (hook_name == static::CALL_API_BEFORE) return "call_api_before";
+		if (hook_name == static::CALL_ROUTE_AFTER) return "call_route_before";
 		if (hook_name == static::CLEAR_LAYOUT) return "clear_layout";
 		if (hook_name == static::CORE_UI) return "core_ui";
 		if (hook_name == static::CREATE_LAYOUT) return "create_layout";
@@ -77,6 +79,12 @@ class AppHook extends BaseHook
 	 * Call api before
 	 */
 	Dict call_api_before(Dict d) => d;
+	
+	
+	/**
+	 * Call route after
+	 */
+	async Dict call_route_before(Dict d) => d;
 	
 	
 	/**
