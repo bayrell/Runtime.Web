@@ -118,6 +118,35 @@ class ModelProxy<T> extends BaseObject
 	/**
 	 * Commit model
 	 */
+	var commitAsync(string method_name)
+	{
+		Collection<string> args = null;
+		BaseStruct model = this.data();
+		string class_name = model::getClassName();
+		
+		#switch
+		#case ifcode PHP then
+		$args = \Runtime\Collection::from(func_get_args())->slice(1);
+		#case ifcode ES6 then
+		args = Runtime.Collection.from( [ ...arguments ].slice(1) );
+		#endswitch
+		
+		if ( rtl::method_exists(class_name, method_name) )
+		{
+			fn f = rtl::method(class_name, method_name);
+			args = args.prependIm(this);
+			await rtl::applyAsync(f, args);
+		}
+		else
+		{
+			throw new FileNotFound(class_name ~ "::" ~ method_name, "Method");
+		}
+	}
+	
+	
+	/**
+	 * Commit model
+	 */
 	ModelProxy proxy(Collection path)
 	{
 		if (rtl::isString(path)) path = [ path ];

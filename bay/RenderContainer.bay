@@ -56,6 +56,12 @@ class RenderContainer extends BaseObject
 	 */
 	void setPageModel(BaseStruct model)
 	{
+		if (model == null)
+		{
+			this.layout = rtl::setAttr(this.layout, ["page_model_class_name"], "");
+			return;
+		}
+		
 		string class_name = model::getClassName();
 		
 		this.layout = rtl::setAttr(this.layout, ["page_model_class_name"], class_name);
@@ -70,22 +76,6 @@ class RenderContainer extends BaseObject
 	{
 		RenderContainer container = this;
 		container <= layout <= layout_name <= layout_name;
-	}
-	
-	
-	/**
-	 * Create page model if does not exists
-	 */
-	void getPageModel(string class_name)
-	{
-		BaseStruct model = this.layout.pages[class_name];
-		
-		if (model == null)
-		{
-			model = rtl::newInstance(class_name);
-		}
-		
-		return model;
 	}
 	
 	
@@ -142,29 +132,6 @@ class RenderContainer extends BaseObject
 	 */
 	void redirect(string class_name)
 	{
-	}
-	
-	
-	/**
-	 * Returns css class names
-	 */
-	Collection<string> getCssClasses()
-	{
-		Vector res = new Vector();
-		
-		/* Extends css class names */
-		Dict d = @.callHook(AppHook::CSS_CLASS_NAMES, {
-			"container": this,
-			"css_class_names": res,
-		});
-		
-		/* Add page class name */
-		if (res.indexOf(this.layout.page_class_name) == -1)
-		{
-			res.pushValue(this.layout.page_class_name);
-		}
-		
-		return d["css_class_names"].toCollection();
 	}
 	
 	

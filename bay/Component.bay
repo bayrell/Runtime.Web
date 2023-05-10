@@ -162,6 +162,23 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Commit async
+	 */
+	async void commitAsync(string method_name)
+	{
+		Collection<string> args = null;
+		
+		#ifcode ES6 then
+		args = Runtime.Collection.from( [ ...arguments ].slice(1) );
+		#endif
+		
+		/* Commit model */
+		args = args.prependIm(method_name);
+		await rtl::methodApplyAsync(this.modelProxy(), "commitAsync", args);
+	}
+	
+	
+	/**
 	 * Repaint Virtual Dom
 	 */
 	void repaintRef(var ref)

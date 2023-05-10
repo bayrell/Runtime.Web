@@ -53,7 +53,8 @@ class RenderProvider extends BaseProvider
 		$response = $container->response;
 		
 		/* Get css names */
-		$css_class_names = $container->getCssClasses();
+		$css_class_names = $container->layout ?
+			$container->layout->getCssClasses() : \Runtime\Collection::from([]);
 		
 		/* Save css */
 		$context->callHook(AppHook::CSS_SAVE, Dict::from([

@@ -177,8 +177,8 @@ class App extends BaseProvider
 			}
 		}
 		
-		/* Call hook middleware */
-		await @.callAsyncHook(AppHook::MIDDLEWARE, {
+		/* Call route before */
+		await @.callAsyncHook(AppHook::CALL_ROUTE_BEFORE, {
 			"container": container,
 		});
 		
