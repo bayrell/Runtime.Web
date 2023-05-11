@@ -134,16 +134,10 @@ struct Layout extends BaseStruct
 		
 		/* Extends css class names */
 		Dict d = @.callHook(AppHook::CSS_CLASS_NAMES, {
-			"container": this,
+			"layout": this,
 			"css_class_names": res,
 		});
 		
-		/* Add page class name */
-		if (res.indexOf(this.page_class_name) == -1)
-		{
-			res.pushValue(this.page_class_name);
-		}
-		
-		return d["css_class_names"].toCollection();
+		return d["css_class_names"].toCollection().removeDuplicatesIm();
 	}
 }

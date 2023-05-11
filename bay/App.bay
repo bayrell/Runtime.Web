@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.lib;
 use Runtime.BaseProvider;
 use Runtime.Context;
 use Runtime.Web.AppHook;
@@ -304,18 +305,12 @@ class App extends BaseProvider
 					$cookie = $response->cookies->item($ctx, $key);
 					if ($cookie != null && $cookie->name)
 					{
-						$str = [];
-						$str[] = "Set-Cookie: " . urlencode($cookie->name) .
-							"=" . urlencode($cookie->value)
-						;
-						$str[] = "Expires=" . date(DATE_RFC822, $cookie->expires);
-						if ($cookie->domain) $str[] = "Domain=" . $cookie->domain;
-						if ($cookie->path) $str[] = "Path=" . $cookie->path;
-						if ($cookie->secure) $str[] = "Secure";
-						if ($cookie->httponly) $str[] = "HttpOnly";
-						
-						/* Set cookie */
-						header( implode(";", $str) );
+						setcookie
+						(
+							$cookie->name,
+							$cookie->value,
+							$cookie->getOptions()->_map
+						);
 					}
 				}
 			}
@@ -344,7 +339,7 @@ class App extends BaseProvider
 	 */
 	static function css_save($css_class_names, $file_path)
 	{
-		$css_content = \Runtime\Web\Component::getCss( $css_class_names );
+		$css_content = static::getCss( $css_class_names );
 		
 		$file_size = 0;
 		if ($file_path)
@@ -361,4 +356,92 @@ class App extends BaseProvider
 	}
 	
 	#endif
+	
+	
+	/**
+	 * Returns css
+	 */
+	static string getCss(Collection<string> class_names, Dict css_vars = null)
+	{
+		if (css_vars == null)
+		{
+			css_vars = @.callHook(AppHook::CSS_VARS, css_vars);
+		}
+		
+		/* Get required components */
+		Collection<string> components = static::getRequiredComponents(class_names);
+		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
+		
+		/* Get css */
+		Collection<string> css = components.map
+		(
+			string (string component_name) use (css_vars)
+			{
+				if (component_name == "") return "";
+				if (not rtl::method_exists(component_name, "css")) return "";
+				fn f = rtl::method(component_name, "css");
+				string css = f(css_vars);
+				return css;
+			}
+		);
+		
+		css = css
+			.map( string (string s) => rs::trim(s) )
+			.filter( bool (string s) => s != "" )
+		;
+		
+		return rs::trim( rs::join("\n", css) );
+	}
+	
+	
+	/**
+	 * Returns required modules
+	 * @param string class_name
+	 * @return Collection<string>
+	 */
+	static void _getRequiredComponents
+	(
+		Vector<string> res,
+		Map<string> cache,
+		Collection<string> components
+	)
+	{
+		if (components == null)
+			return;
+		
+		for (int i=0; i<components.count(); i++)
+		{
+			string class_name = components.item(i);
+			if (cache.get(class_name, false) == false)
+			{
+				cache.setValue(class_name, true);
+				if (rtl::method_exists(class_name, "components"))
+				{
+					fn f = rtl::method(class_name, "components");
+					Collection<string> sub_components = f();
+					if (sub_components != null)
+					{
+						static::_getRequiredComponents(res, cache, sub_components);
+					}
+				}
+				res.pushValue(class_name);
+			}
+		}
+	}
+	
+	
+	/**
+	 * Returns all components
+	 * @param Collection<string> components
+	 * @return Collection<string>
+	 */
+	pure Collection<string> getRequiredComponents(Collection<string> components)
+	{
+		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
+		Vector<string> res = new Vector();
+		Map<string> cache = new Map();
+		static::_getRequiredComponents(res, cache, components);
+		res = res.removeDuplicatesIm();
+		return res.toCollection();
+	}
 }

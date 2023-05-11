@@ -188,15 +188,30 @@ struct ApiResult extends Response
 	/**
 	 * Setup fail
 	 */
-	ApiResult fail(Dict data)
+	ApiResult fail(var e, Dict data = null)
 	{
 		ApiResult res = this;
 		
-		if (data.has("code")) res <= code <= data["code"];
-		else res <= code <= rtl::ERROR_UNKNOWN;
-		
-		if (data.has("message")) res <= message <= data["message"];
-		if (data.has("data")) res <= data <= data["data"];
+		if (e instanceof RuntimeException)
+		{
+			res = res.clone({
+				"code": e.getErrorCode(),
+				"message": e.getErrorMessage(),
+				"error_name": e::getClassName(),
+			});
+			
+			res = res.setData(data);
+		}
+		else
+		{
+			data = e;
+			
+			if (data.has("code")) res <= code <= data["code"];
+			else res <= code <= rtl::ERROR_UNKNOWN;
+			
+			if (data.has("message")) res <= message <= data["message"];
+			if (data.has("data")) res <= data <= data["data"];
+		}
 		
 		return res;
 	}

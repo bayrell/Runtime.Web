@@ -124,7 +124,7 @@ class Bus
 		if (!$api)
 		{
 			return (new \Runtime\Web\ApiResult())
-				->exception(
+				->fail(
 					new \Runtime\Exceptions\FileNotFound($api_name, "Api")
 				)
 			;
@@ -182,12 +182,14 @@ class Bus
 			if ($e instanceof \Runtime\Exceptions\RuntimeException)
 			{
 				$res = (new \Runtime\Web\ApiResult())
-					->exception($e)
+					->fail($e)
 				;
 			}
 			else
 			{
-				throw $e;
+				$res = (new \Runtime\Web\ApiResult())
+					->exception($e)
+				;
 			}
 		}
 		
@@ -237,6 +239,21 @@ class Bus
 			else
 			{
 				throw e;
+			}
+		}
+		
+		if (res != null && res instanceof Runtime.Web.ApiResult)
+		{
+			if (res.ob_content)
+			{
+				Runtime.io.print(res.ob_content);
+			}
+			if (res.error_name && res.error_file && res.error_line)
+			{
+				let err = "Fatal error " + res.error_name +
+					" in " + res.error_file + ": " + res.error_line + "\n";
+				if (res.error_trace) err += res.error_trace;
+				if (err) Runtime.io.print_error(err);
 			}
 		}
 		

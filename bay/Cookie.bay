@@ -27,8 +27,46 @@ struct Cookie extends BaseStruct
 	public string value = "";
 	public int expires = null;
 	public string domain = "";
-	public string path = "";
+	public string path = "/";
+	public string samesite = "Lax";
 	public bool secure = false;
 	public bool httponly = false;
 	public bool changed = false;
+	
+	Dict getOptions()
+	{
+		Map res = new Map();
+		
+		if (this.expires)
+		{
+			res.setValue("expires", this.expires);
+		}
+		
+		if (this.domain)
+		{
+			res.setValue("domain", this.domain);
+		}
+		
+		if (this.path)
+		{
+			res.setValue("path", this.path);
+		}
+		
+		if (this.secure)
+		{
+			res.setValue("secure", this.secure);
+		}
+		
+		if (this.httponly)
+		{
+			res.setValue("httponly", this.httponly);
+		}
+		
+		if (this.samesite)
+		{
+			res.setValue("samesite", this.samesite);
+		}
+		
+		return res.toDict();
+	}
 }

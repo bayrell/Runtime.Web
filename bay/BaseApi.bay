@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Web.ApiResult;
+use Runtime.Web.Cookie;
 use Runtime.Web.RenderContainer;
 
 
@@ -65,6 +66,43 @@ class BaseApi extends BaseObject
 	{
         /* Set response */
 		this.container.setResponse( this.api_result );
+	}
+	
+	
+	/**
+	 * Set result
+	 */
+	void setResult(Dict data = null)
+	{
+		this.api_result = this.api_result.setData(data);
+	}
+	
+	
+	/**
+	 * Set fail result
+	 */
+	void fail(var e, Dict data = null)
+	{
+		this.api_result = this.api_result.fail(e, data);
+		return this.api_result;
+	}
+	
+	
+	/**
+	 * Set success result
+	 */
+	void success(Dict data = null)
+	{
+		this.api_result = this.api_result.success(data);
+	}
+	
+	
+	/**
+	 * Add cookie
+	 */
+	void addCookie(Cookie cookie)
+	{
+		this.api_result = this.api_result.addCookie(cookie);
 	}
 	
 }

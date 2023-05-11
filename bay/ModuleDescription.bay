@@ -18,7 +18,9 @@
 
 namespace Runtime.Web;
 
+use Runtime.Entity.Hook;
 use Runtime.Entity.Provider;
+use Runtime.Web.AppHook;
 use Runtime.Web.Listener;
 use Runtime.Web.RenderProvider;
 use Runtime.Web.Route;
@@ -61,6 +63,7 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
+		new Hook("Runtime.Web.AppHook"),
 		new Provider(classof RenderProvider, new RenderProvider),
 		new Provider(classof RouteList, new RouteList),
 		
