@@ -202,15 +202,15 @@ struct ApiResult extends Response
 			
 			res = res.setData(data);
 		}
-		else
+		else if (e instanceof Dict)
 		{
-			data = e;
+			res = res.clone({
+				"code": e.has("code") ? e["code"] : rtl::ERROR_UNKNOWN,
+				"message": e.has("message") ? e["message"] : this.message,
+				"error_name": e.has("error_name") ? e["error_name"] : this.error_name,
+			});
 			
-			if (data.has("code")) res <= code <= data["code"];
-			else res <= code <= rtl::ERROR_UNKNOWN;
-			
-			if (data.has("message")) res <= message <= data["message"];
-			if (data.has("data")) res <= data <= data["data"];
+			if (e.has("data")) res = res.setData(e["data"]);
 		}
 		
 		return res;

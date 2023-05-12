@@ -198,7 +198,7 @@ class App extends BaseProvider
 		});
 	}
 	
-		
+	
 	#ifcode PHP then
 	
 	/**
@@ -443,5 +443,14 @@ class App extends BaseProvider
 		static::_getRequiredComponents(res, cache, components);
 		res = res.removeDuplicatesIm();
 		return res.toCollection();
+	}
+	
+	
+	/**
+	 * Render component
+	 */
+	string render(string class_name, var model)
+	{
+		return "";
 	}
 }

@@ -72,7 +72,7 @@ class BaseApi extends BaseObject
 	/**
 	 * Set result
 	 */
-	void setResult(Dict data = null)
+	void setResult(var data = null)
 	{
 		this.api_result = this.api_result.setData(data);
 	}
