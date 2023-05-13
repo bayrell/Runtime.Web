@@ -36,8 +36,8 @@
 
 
 <template name="renderBody">
-	%var string class_name = layout::getLayoutPageClass(layout.layout_name);
-	<div id="core_ui_root">
+	%var string class_name = layout.getLayoutClassName();
+	<div id="core_ui_root" class="layout" class={{ "layout--" ~ layout.layout_name }}>
 		<{class_name} @model=[] />
 	</div>
 	<textarea id="core_ui_layout" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( layout::getClearLayout(layout) )) }}</textarea>

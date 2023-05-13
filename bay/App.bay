@@ -69,7 +69,7 @@ class App extends BaseProvider
 		let core_ui_layout = document.getElementById("core_ui_layout");
 		let layout = Runtime.rs.base64_decode_url(core_ui_layout.value);
 		layout = Runtime.rtl.json_decode(layout);
-		let layout_page_class_name = layout.constructor.getLayoutPageClass( layout.layout_name );
+		let layout_page_class_name = layout.getLayoutClassName();
 		let provider = context.provider("Runtime.Web.RenderProvider");
 		provider.renderRoot(core_ui_root, layout_page_class_name, layout);
 		#endif

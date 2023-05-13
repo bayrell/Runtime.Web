@@ -97,22 +97,26 @@ class RouteList extends BaseProvider
 		{
 			string route_name = route_names[i];
 			RouteInfo route = this.routes_list[route_name];
-			Collection<string> matches = re::matchAll( route.uri_match, request_uri );
-			if (matches) matches = matches.get(0, null).removeFirstIm();
 			
-			Dict d = @.callAsyncHook(AppHook::MATCH_ROUTE, {
-				"route": route,
-				"request_uri": request_uri,
-				"container": container,
-				"matches": matches,
-			});
-			route = d["route"];
-			matches = d["matches"];
-			
-			if (matches != null)
+			if (route.domain == request.host or route.domain == "")
 			{
-				route = route.addMatches(matches);
-				return route;
+				Collection<string> matches = re::matchAll( route.uri_match, request_uri );
+				if (matches) matches = matches.get(0, null).removeFirstIm();
+				
+				Dict d = @.callAsyncHook(AppHook::MATCH_ROUTE, {
+					"route": route,
+					"request_uri": request_uri,
+					"container": container,
+					"matches": matches,
+				});
+				route = d["route"];
+				matches = d["matches"];
+				
+				if (matches != null)
+				{
+					route = route.addMatches(matches);
+					return route;
+				}
 			}
 		}
 		
