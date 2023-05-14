@@ -26,6 +26,7 @@ use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderProvider;
+use Runtime.Web.RouteInfo;
 use Runtime.Web.RouteList;
 
 
@@ -271,6 +272,9 @@ class App extends BaseProvider
 		$arr = parse_url($uri);
 		$path = isset($arr['path']) ? $arr['path'] : "";
 		
+		$protocol = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ?
+			$_SERVER['HTTP_X_FORWARDED_PROTO'] : "http";
+		
 		/* Create request */
 		$r = new \Runtime\Web\Request($ctx,
 			\Runtime\Dict::from([
@@ -281,6 +285,8 @@ class App extends BaseProvider
 				"query" => $query->toDict($ctx),
 				"payload" => $payload->toDict($ctx),
 				"cookies" => $cookies->toDict($ctx),
+				"headers" => \Runtime\Dict::from($_SERVER),
+				"protocol" => $protocol,
 				"start_time" => $start_time,
 			])
 		);
@@ -452,5 +458,15 @@ class App extends BaseProvider
 	string render(string class_name, var model)
 	{
 		return "";
+	}
+	
+	
+	/**
+	 * Returns url
+	 */
+	string url(string route_name, Dict route_params)
+	{
+		RouteList routes = @.provider(classof RouteList);
+		return routes.url(route_name, route_params);
 	}
 }

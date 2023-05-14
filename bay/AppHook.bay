@@ -26,8 +26,8 @@ class AppHook extends BaseHook
 {
 	
 	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
-	static const string CALL_ROUTE_BEFORE = "runtime.web.app::call_route_before";
 	static const string CALL_ROUTE_AFTER = "runtime.web.app::call_route_after";
+	static const string CALL_ROUTE_BEFORE = "runtime.web.app::call_route_before";
 	static const string CLEAR_LAYOUT = "runtime.web.app::clear_layout";
 	static const string CORE_UI = "runtime.web.app::core_ui";
 	static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
@@ -40,6 +40,8 @@ class AppHook extends BaseHook
 	static const string INIT_LAYOUT = "runtime.web.app::init_layout";
 	static const string LAYOUT_PAGE_CLASS_NAME = "runtime.web.app::layout_page_class_name";
 	static const string MAIN = "runtime.web.app::main";
+	static const string MAKE_URL = "runtime.web.app::make_url";
+	static const string MAKE_URL_AFTER = "runtime.web.app::make_url_after";
 	static const string MATCH_ROUTE = "runtime.web.app::match_route";
 	static const string MIDDLEWARE = "runtime.web.app::middleware";
 	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
@@ -54,8 +56,8 @@ class AppHook extends BaseHook
 	string getMethodName(string hook_name)
 	{
 		if (hook_name == static::CALL_API_BEFORE) return "call_api_before";
-		if (hook_name == static::CALL_ROUTE_BEFORE) return "call_route_before";
 		if (hook_name == static::CALL_ROUTE_AFTER) return "call_route_after";
+		if (hook_name == static::CALL_ROUTE_BEFORE) return "call_route_before";
 		if (hook_name == static::CLEAR_LAYOUT) return "clear_layout";
 		if (hook_name == static::CORE_UI) return "core_ui";
 		if (hook_name == static::CREATE_LAYOUT) return "create_layout";
@@ -68,6 +70,8 @@ class AppHook extends BaseHook
 		if (hook_name == static::INIT_LAYOUT) return "init_layout";
 		if (hook_name == static::LAYOUT_PAGE_CLASS_NAME) return "layout_page_class_name";
 		if (hook_name == static::MAIN) return "main";
+		if (hook_name == static::MAKE_URL) return "make_url";
+		if (hook_name == static::MAKE_URL_AFTER) return "make_url_after";
 		if (hook_name == static::MATCH_ROUTE) return "match_route";
 		if (hook_name == static::RENDER_FOOTER) return "render_footer";
 		if (hook_name == static::RENDER_HEAD) return "render_head";
@@ -215,7 +219,7 @@ class AppHook extends BaseHook
 	/**
 	 * Match route
 	 */
-	async Dict match_route(Dict d)
+	Dict match_route(Dict d)
 	{
 		return d;
 	}
@@ -255,5 +259,17 @@ class AppHook extends BaseHook
 	{
 		return d;
 	}
+	
+	
+	/**
+	 * Make url
+	 */
+	Dict make_url(Dict d) => d;
+	
+	
+	/**
+	 * Make url after
+	 */
+	Dict make_url_after(Dict d) => d;
 	
 }
