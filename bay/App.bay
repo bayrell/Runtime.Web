@@ -168,6 +168,14 @@ class App extends BaseProvider
 	 */
 	async void callRoute(RenderContainer container)
 	{
+		/* Create layout */
+		await this.createLayout(container);
+		
+		/* Call route before */
+		await @.callAsyncHook(AppHook::CALL_ROUTE_BEFORE, {
+			"container": container,
+		});
+		
 		/* Call middleware */
 		if (container.route and container.route.middleware)
 		{
@@ -180,12 +188,9 @@ class App extends BaseProvider
 		}
 		
 		/* Call route before */
-		await @.callAsyncHook(AppHook::CALL_ROUTE_BEFORE, {
+		await @.callAsyncHook(AppHook::MIDDLEWARE, {
 			"container": container,
 		});
-		
-		/* Create layout */
-		await this.createLayout(container);
 		
 		/* Call route */
 		if (container.route != null and container.response == null)
@@ -464,7 +469,7 @@ class App extends BaseProvider
 	/**
 	 * Returns url
 	 */
-	string url(string route_name, Dict route_params)
+	string url(string route_name, Dict route_params = null)
 	{
 		RouteList routes = @.provider(classof RouteList);
 		return routes.url(route_name, route_params);

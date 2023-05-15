@@ -131,7 +131,7 @@ class Bus
 		}
 		
 		$api_container = new \Runtime\Web\RenderContainer();
-		$api_container->backend_storage = $render_container->request->backend_storage;
+		$api_container->backend_storage = $render_container->backend_storage;
 		$api_container->request = new \Runtime\Web\Request($ctx, \Runtime\Dict::from([
 			"uri" => $api_name,
 			"host" => $render_container->request->host,

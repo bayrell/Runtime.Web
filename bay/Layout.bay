@@ -22,8 +22,9 @@ use Runtime.BaseStruct;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.AppHook;
 use Runtime.Web.Breadcrumb;
-use Runtime.Web.SeoModel;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.RouteList;
+use Runtime.Web.SeoModel;
 
 
 struct Layout extends BaseStruct
@@ -123,6 +124,12 @@ struct Layout extends BaseStruct
 	
 	
 	/**
+	 * Set layout name
+	 */
+	Layout setLayoutName(string layout_name) => rtl::setAttr(this, ["layout_name"], layout_name);
+	
+	
+	/**
 	 * Returns css class names
 	 */
 	Collection<string> getCssClasses()
@@ -136,5 +143,15 @@ struct Layout extends BaseStruct
 		});
 		
 		return d["css_class_names"].toCollection().removeDuplicatesIm();
+	}
+	
+	
+	/**
+	 * Returns url
+	 */
+	string url(string route_name, Dict route_params = null)
+	{
+		RouteList routes = @.provider(classof RouteList);
+		return routes.url(route_name, route_params);
 	}
 }

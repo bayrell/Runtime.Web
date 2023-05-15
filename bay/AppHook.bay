@@ -43,6 +43,7 @@ class AppHook extends BaseHook
 	static const string MAKE_URL = "runtime.web.app::make_url";
 	static const string MAKE_URL_AFTER = "runtime.web.app::make_url_after";
 	static const string MATCH_ROUTE = "runtime.web.app::match_route";
+	static const string MIDDLEARE = "runtime.web.app::middleware";
 	static const string MIDDLEWARE = "runtime.web.app::middleware";
 	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
 	static const string RENDER_HEAD = "runtime.web.app::render_head";
@@ -73,6 +74,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::MAKE_URL) return "make_url";
 		if (hook_name == static::MAKE_URL_AFTER) return "make_url_after";
 		if (hook_name == static::MATCH_ROUTE) return "match_route";
+		if (hook_name == static::MIDDLEARE) return "middleware";
 		if (hook_name == static::RENDER_FOOTER) return "render_footer";
 		if (hook_name == static::RENDER_HEAD) return "render_head";
 		if (hook_name == static::RESPONSE) return "response";
@@ -100,6 +102,12 @@ class AppHook extends BaseHook
 	 * Call route before
 	 */
 	async Dict call_route_before(Dict d) => d;
+	
+	
+	/**
+	 * Middleware
+	 */
+	async Dict middleware(Dict d) => d;
 	
 	
 	/**

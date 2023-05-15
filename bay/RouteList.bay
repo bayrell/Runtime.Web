@@ -146,7 +146,7 @@ class RouteList extends BaseProvider
 	/**
 	 * Returns url
 	 */
-	string url(string route_name, Dict route_params)
+	string url(string route_name, Dict route_params = null)
 	{
 		string url = "";
 		RouteInfo route = this.routes_list[route_name];
@@ -155,20 +155,23 @@ class RouteList extends BaseProvider
 		
 		url = route.uri;
 		
-		route_params.each(
-			void (string value, string key) use (url)
-			{
-				int pos = rs::indexOf(url, "{" ~ key ~ "}");
-				if (pos >= 0)
+		if (route_params)
+		{
+			route_params.each(
+				void (string value, string key) use (url)
 				{
-					url = rs::replace("{" ~ key ~ "}", value, url);
+					int pos = rs::indexOf(url, "{" ~ key ~ "}");
+					if (pos >= 0)
+					{
+						url = rs::replace("{" ~ key ~ "}", value, url);
+					}
+					else
+					{
+						url = rs::url_get_add(url, key, value);
+					}
 				}
-				else
-				{
-					url = rs::url_get_add(url, key, value);
-				}
-			}
-		);
+			);
+		}
 		
 		Dict d = @.callHook(AppHook::MAKE_URL, {
 			"route": route,

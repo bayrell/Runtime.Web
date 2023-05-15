@@ -30,6 +30,7 @@ use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.RouteList;
 
 
 class RenderContainer extends BaseObject
@@ -164,5 +165,15 @@ class RenderContainer extends BaseObject
 		{
 			await m(this);
 		}
+	}
+	
+	
+	/**
+	 * Returns url
+	 */
+	string url(string route_name, Dict route_params = null)
+	{
+		RouteList routes = @.provider(classof RouteList);
+		return routes.url(route_name, route_params);
 	}
 }

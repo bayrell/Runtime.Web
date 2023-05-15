@@ -75,6 +75,7 @@ class Component extends BaseObject
 		model_path = model_path.concat( path );
 		return new ModelProxy(provider, model_path);
 	}
+	ModelProxy proxy(Collection path = null) => this.modelProxy(path);
 	
 	
 	#ifdef FRONTEND then
