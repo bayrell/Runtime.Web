@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.RouteInfo;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteList;
 
 
 class BaseRoute extends BaseObject
@@ -66,5 +67,15 @@ class BaseRoute extends BaseObject
 	bool isCancelRoute()
 	{
 		return this.is_cancel_route;
+	}
+	
+	
+	/**
+	 * Returns url
+	 */
+	string url(string route_name, Dict route_params = null)
+	{
+		RouteList routes = @.provider(classof RouteList);
+		return routes.url(route_name, route_params);
 	}
 }

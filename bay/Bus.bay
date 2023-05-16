@@ -198,7 +198,7 @@ class Bus
 		/* Build pos data */
 		let post_data = Runtime.Dict.from({
 			"api_name": api_name,
-			"data": data.toDict()
+			"data": data ? data.toDict() : null,
 		});
 		
 		/* Send post */

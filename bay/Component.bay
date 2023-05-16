@@ -27,6 +27,7 @@ use Runtime.Web.AppHook;
 use Runtime.Web.Listener;
 use Runtime.Web.Message;
 use Runtime.Web.RenderProvider;
+use Runtime.Web.RouteList;
 use Runtime.Web.VirtualDom;
 use Runtime.Web.Events.BaseEvent;
 use Runtime.Web.Events.CommitModelEvent;
@@ -76,6 +77,16 @@ class Component extends BaseObject
 		return new ModelProxy(provider, model_path);
 	}
 	ModelProxy proxy(Collection path = null) => this.modelProxy(path);
+	
+	
+	/**
+	 * Returns url
+	 */
+	string url(string route_name, Dict route_params = null)
+	{
+		RouteList routes = @.provider(classof RouteList);
+		return routes.url(route_name, route_params);
+	}
 	
 	
 	#ifdef FRONTEND then
