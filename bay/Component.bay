@@ -82,7 +82,7 @@ class Component extends BaseObject
 	/**
 	 * Returns url
 	 */
-	string url(string route_name, Dict route_params = null)
+	static string url(string route_name, Dict route_params = null)
 	{
 		RouteList routes = @.provider(classof RouteList);
 		return routes.url(route_name, route_params);
@@ -90,6 +90,14 @@ class Component extends BaseObject
 	
 	
 	#ifdef FRONTEND then
+	
+	/**
+	 * Set reference
+	 */
+	void setRef(string ref_name, VirtualDom vdom)
+	{
+		this[ref_name] = vdom;
+	}
 	
 	
 	/**
@@ -135,7 +143,7 @@ class Component extends BaseObject
 	/**
 	 * Render component
 	 */
-	void onRender()
+	void onRender(bool is_new_component)
 	{
 	}
 	
@@ -176,7 +184,7 @@ class Component extends BaseObject
 	/**
 	 * Commit async
 	 */
-	async void commitAsync(string method_name)
+	async var commitAsync(string method_name)
 	{
 		Collection<string> args = null;
 		
@@ -186,7 +194,7 @@ class Component extends BaseObject
 		
 		/* Commit model */
 		args = args.prependIm(method_name);
-		await rtl::methodApplyAsync(this.modelProxy(), "commitAsync", args);
+		return await rtl::methodApplyAsync(this.modelProxy(), "commitAsync", args);
 	}
 	
 	
@@ -197,6 +205,26 @@ class Component extends BaseObject
 	{
 		RenderProvider provider = @.provider(classof RenderProvider);
 		provider.repaintRef(ref);
+	}
+	
+	
+	/**
+	 * Add function to next render before paint
+	 */
+	void nextRenderBefore(fn f)
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		provider.nextRenderBefore(f);
+	}
+
+
+	/**
+	 * Add function to next render after paint
+	 */
+	void nextRenderAfter(fn f)
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		provider.nextRenderAfter(f);
 	}
 	
 	

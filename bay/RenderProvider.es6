@@ -24,6 +24,8 @@ Runtime.Web.RenderProvider = function()
 	if (window) window["render_provider"] = this;
 	this.vdom = null;
 	this.layout = null;
+	this.render_before_callbacks = [];
+	this.render_after_callbacks = [];
 	this.render_vdom_list = [];
 	this.render_elem_list = [];
 	this.render_elem_obj = {};
@@ -108,7 +110,26 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		if (vdom == null) return;
 		
 		this.render_vdom_list.push(vdom);
+		this.addChangedElem(vdom);
 		this.requestAnimationFrame();
+	},
+	
+	
+	/**
+	 * Add function to next render before paint
+	 */
+	nextRenderBefore(f)
+	{
+		this.render_before_callbacks.push(f);
+	},
+	
+	
+	/**
+	 * Add function to next render before paint
+	 */
+	nextRenderAfter(f)
+	{
+		this.render_after_callbacks.push(f);
 	},
 	
 	
@@ -226,7 +247,25 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		let render_vdom_list = this.render_vdom_list;
 		if (render_vdom_list.length == 0) return;
 		
+		/* Before render */
+		for (let i=0; i<this.render_before_callbacks.length; i++)
+		{
+			let f = this.render_before_callbacks[i];
+			f();
+		}
+		
+		/* Render scene */
 		this.render();
+		
+		/* After render */
+		for (let i=0; i<this.render_after_callbacks.length; i++)
+		{
+			let f = this.render_after_callbacks[i];
+			f();
+		}
+		
+		this.render_before_callbacks = [];
+		this.render_after_callbacks = [];
 	},
 	
 	
@@ -359,8 +398,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			{
 				let component = value[0];
 				let ref_name = value[1];
-				
-				component[ref_name] = vdom;
+				component.setRef(ref_name, vdom);
 				continue;
 			}
 			

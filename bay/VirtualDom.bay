@@ -272,7 +272,7 @@ class VirtualDom extends BaseObject
 				}
 				
 				/* Render event */
-				component.onRender();
+				component.onRender(vdom.is_new_element);
 				
 				/* Change element */
 				if (vdom.is_new_element)
@@ -299,6 +299,26 @@ class VirtualDom extends BaseObject
 		this.childs = this.new_childs.toCollection();
 		this.new_childs = new Vector();
 		this.is_change_childs = true;
+	}
+	
+	
+	/**
+	 * Update element
+	 */
+	void updateElem()
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		provider.updateElem(this);
+	}
+	
+	
+	/**
+	 * Update element params
+	 */
+	void updateElemParams()
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		provider.updateElemParams(this);
 	}
 	
 	
