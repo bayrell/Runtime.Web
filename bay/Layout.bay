@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.ModelProxy;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.AppHook;
 use Runtime.Web.Breadcrumb;
@@ -55,6 +56,36 @@ struct Layout extends BaseStruct
 	 */
 	BaseStruct getPageModel() => this.page_model_class_name ?
 		this.pages[ this.page_model_class_name ] : null;
+	
+	
+	/**
+	 * Returns page model proxy
+	 */
+	ModelProxy modelProxy(Collection path = null)
+		=> new ModelProxy( this, ["pages", this.page_model_class_name].concat(path) )
+	;
+	
+	
+	/**
+	 * Set page model
+	 */
+	Layout setPageModel(BaseStruct model)
+	{
+		Layout layout = this;
+		
+		if (model == null)
+		{
+			layout <= page_model_class_name <= "";
+			return layout;
+		}
+		
+		string class_name = model::getClassName();
+		
+		layout <= page_model_class_name <= class_name;
+		layout <= pages <= { class_name } <= model;
+		
+		return layout;
+	}
 	
 	
 	/**

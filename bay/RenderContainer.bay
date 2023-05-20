@@ -57,16 +57,7 @@ class RenderContainer extends BaseObject
 	 */
 	void setPageModel(BaseStruct model)
 	{
-		if (model == null)
-		{
-			this.layout = rtl::setAttr(this.layout, ["page_model_class_name"], "");
-			return;
-		}
-		
-		string class_name = model::getClassName();
-		
-		this.layout = rtl::setAttr(this.layout, ["page_model_class_name"], class_name);
-		this.layout = rtl::setAttr(this.layout, ["pages", class_name], model);
+		this.layout = this.layout.setPageModel(model);
 	}
 	
 	
@@ -75,8 +66,7 @@ class RenderContainer extends BaseObject
 	 */
 	void setLayoutName(string layout_name)
 	{
-		RenderContainer container = this;
-		container <= layout <= layout_name <= layout_name;
+		this.layout = this.layout.setLayoutName(layout_name);
 	}
 	
 	

@@ -151,9 +151,7 @@ class RouteList extends BaseProvider
 		string url = "";
 		RouteInfo route = this.routes_list[route_name];
 		
-		if (not route) return "";
-		
-		url = route.uri;
+		if (route) url = route.uri;
 		
 		if (route_params)
 		{
@@ -181,7 +179,7 @@ class RouteList extends BaseProvider
 		});
 		url = d["url"];
 		
-		if (route.domain)
+		if (route and route.domain)
 		{
 			if (@.env("HTTP_PROTOCOL") == "https")
 			{
