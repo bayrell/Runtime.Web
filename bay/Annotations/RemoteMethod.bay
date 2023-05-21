@@ -16,49 +16,11 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Runtime.Web.Annotations;
 
-use Runtime.BaseObject;
-use Runtime.Web.ApiResult;
-use Runtime.Web.Cookie;
-use Runtime.Web.RenderContainer;
+use Runtime.Entity;
 
 
-class BaseApi extends BaseObject
+class RemoteMethod extends Entity
 {
-	RenderContainer container = null;
-	string action = "";
-	string method_name = "";
-	
-	
-    /**
-	 * Returns api name
-	 */
-	pure string apiName() => "";
-	
-	
-	/**
-	 * Returns api methods
-	 */
-	pure string getApiMethod(string api_name)
-	{
-		return "";
-	}
-	
-    
-	/**
-	 * Before route
-	 */
-	async void onActionBefore()
-	{
-	}
-	
-	
-	/**
-	 * After route
-	 */
-	async void onActionAfter()
-	{
-	}
-	
 }

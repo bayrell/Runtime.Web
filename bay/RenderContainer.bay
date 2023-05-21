@@ -22,8 +22,10 @@ use Runtime.BaseObject;
 use Runtime.BaseStruct;
 use Runtime.ModelProxy;
 use Runtime.Vector;
+use Runtime.Web.ApiResult;
 use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
+use Runtime.Web.Cookie;
 use Runtime.Web.CoreUI;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderResponse;
@@ -165,5 +167,50 @@ class RenderContainer extends BaseObject
 	{
 		RouteList routes = @.provider(classof RouteList);
 		return routes.url(route_name, route_params);
+	}
+	
+	
+	/**
+	 * Add cookie
+	 */
+	void addCookie(Cookie cookie)
+	{
+		this.response = this.response.addCookie(cookie);
+	}
+	
+	
+	/**
+	 * Set api data
+	 */
+	void setApiData(Dict data)
+	{
+		if (this.response instanceof ApiResult)
+		{
+			this.response = this.response.setData(data);
+		}
+	}
+	
+	
+	/**
+	 * Set success result
+	 */
+	void success(Dict data = null)
+	{
+		if (this.response instanceof ApiResult)
+		{
+			this.response = this.response.success(data);
+		}
+	}
+	
+	
+	/**
+	 * Set fail result
+	 */
+	void fail(var e, Dict data = null)
+	{
+		if (this.response instanceof ApiResult)
+		{
+			this.response = this.response.fail(e, data);
+		}
 	}
 }

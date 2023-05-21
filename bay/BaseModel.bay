@@ -18,47 +18,30 @@
 
 namespace Runtime.Web;
 
-use Runtime.BaseObject;
+use Runtime.BaseStruct;
+use Runtime.RouteInfo;
 use Runtime.Web.ApiResult;
-use Runtime.Web.Cookie;
+use Runtime.Web.Bus;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteList;
 
 
-class BaseApi extends BaseObject
+struct BaseModel extends BaseStruct
 {
-	RenderContainer container = null;
-	string action = "";
-	string method_name = "";
-	
-	
-    /**
-	 * Returns api name
-	 */
-	pure string apiName() => "";
-	
 	
 	/**
-	 * Returns api methods
+	 * Remote call
 	 */
-	pure string getApiMethod(string api_name)
+	async static ApiResult remoteCall(string method_name, Dict data)
 	{
-		return "";
-	}
-	
-    
-	/**
-	 * Before route
-	 */
-	async void onActionBefore()
-	{
-	}
-	
-	
-	/**
-	 * After route
-	 */
-	async void onActionAfter()
-	{
+		return await Bus::callApi(
+			"runtime.web.remote_call",
+			{
+				"class_name": static::getClassName(),
+				"method_name": method_name,
+				"data": data,
+			}
+		);
 	}
 	
 }

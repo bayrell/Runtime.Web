@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.Entity.Hook;
 use Runtime.Entity.Provider;
+use Runtime.Web.Api;
 use Runtime.Web.AppHook;
 use Runtime.Web.Listener;
 use Runtime.Web.RenderProvider;
@@ -72,6 +73,7 @@ static class ModuleDescription
 		#endif
 		
 		#ifdef BACKEND then
+		new Api("Runtime.Web.ApiRoute"),
 		new Route("Runtime.Web.ApiRoute"),
 		#endif
 	];

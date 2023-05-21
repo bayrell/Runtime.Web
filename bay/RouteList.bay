@@ -53,14 +53,17 @@ class RouteList extends BaseProvider
 				
 				/* Create routes */
 				Collection<RouteInfo> routes_info = getRoutes();
-				for (int j=0; j<routes_info.count(); j++)
+				if (routes_info)
 				{
-					RouteInfo route = routes_info[j];
-					if (rtl::isString(route.method))
+					for (int j=0; j<routes_info.count(); j++)
 					{
-						route <= method <= [info.name, route.method];
+						RouteInfo route = routes_info[j];
+						if (rtl::isString(route.method))
+						{
+							route <= method <= [info.name, route.method];
+						}
+						routes_list.setValue( route.name, route );
 					}
-					routes_list.setValue( route.name, route );
 				}
 			}
 		}
