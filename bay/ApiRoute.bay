@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.lib;
 use Runtime.Exceptions.ApiException;
 use Runtime.Web.Annotations.Model;
+use Runtime.Web.Annotations.RemoteMethod;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Bus;
@@ -119,6 +120,16 @@ class ApiRoute extends BaseRoute
 			this.container.fail(
 				new ApiException("Method name not found")
 			);
+		}
+		
+		Collection annotations = methods[method_name];
+		RemoteMethod annotation = annotations.findItem( lib::isInstance(classof RemoteMethod) );
+		if (not annotation)
+		{
+			this.container.fail(
+				new ApiException("Method name not found")
+			);
+			return;
 		}
 		
 		fn f = rtl::method(class_name, method_name);
