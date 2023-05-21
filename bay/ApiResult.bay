@@ -66,7 +66,6 @@ struct ApiResult extends Response
 	}
 	
 	
-	
 	/**
 	 * Returns true if success
 	 */
@@ -172,7 +171,7 @@ struct ApiResult extends Response
 		if (data.has("message")) res <= message <= data["message"];
 		else res <= message <= "";
 		
-		if (data.has("data")) res <= data <= data["data"];
+		if (data.has("data")) res = res.setData(data["data"]);
 		
 		res = res.clone({
 			"error_name": "",
