@@ -41,8 +41,8 @@ class RenderContainer extends BaseObject
     Response response = null;
 	RouteInfo route = null;
     Layout layout = null;
-	Dict frontend_env = {};
-	Dict backend_storage = {};
+	Map frontend_env = new Map();
+	Map backend_storage = new Map();
 	
     
     /**

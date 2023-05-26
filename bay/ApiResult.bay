@@ -169,7 +169,7 @@ struct ApiResult extends Response
 		else res <= code <= rtl::ERROR_OK;
 		
 		if (data.has("message")) res <= message <= data["message"];
-		else res <= message <= "";
+		else res <= message <= "Ok";
 		
 		if (data.has("data")) res = res.setData(data["data"]);
 		

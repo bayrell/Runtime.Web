@@ -191,6 +191,14 @@ class Bus
 		}
 		catch (\Exception $e)
 		{
+			if (
+				$render_container->route->name != "runtime:web:api" &&
+				$render_container->route->name != "runtime:web:api2"
+			)
+			{
+				throw $e;
+			}
+			
 			if ($e instanceof \Runtime\Exceptions\ApiException)
 			{
 				$res = (new \Runtime\Web\ApiResult())

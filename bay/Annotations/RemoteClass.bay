@@ -21,7 +21,7 @@ namespace Runtime.Web.Annotations;
 use Runtime.Entity;
 
 
-class Model extends Entity
+class RemoteClass extends Entity
 {
 	void constructor(string model_name)
 	{

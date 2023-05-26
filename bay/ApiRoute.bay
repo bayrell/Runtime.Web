@@ -20,7 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.Exceptions.ApiException;
-use Runtime.Web.Annotations.Model;
+use Runtime.Web.Annotations.RemoteClass;
 use Runtime.Web.Annotations.RemoteMethod;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
@@ -37,13 +37,14 @@ class ApiRoute extends BaseRoute
 	/**
 	 * Returns routes
 	 */
-	pure Collection<RouteInfo> getRoutes() => [
+	pure Collection<RouteInfo> getRoutes() =>
+	[
 		
 		new RouteInfo
 		{
 			"uri": "/api/{api_name}/",
 			"params": ["api_name"],
-			"name": "site:api",
+			"name": "runtime:web:api",
 			"method": "actionIndex",
 		},
 		
@@ -51,7 +52,7 @@ class ApiRoute extends BaseRoute
 		{
 			"uri": "/api/{api_name}/{remote_name}/",
 			"params": ["api_name"],
-			"name": "site:api2",
+			"name": "runtime:web:api2",
 			"method": "actionIndex",
 		},
 		
@@ -102,23 +103,23 @@ class ApiRoute extends BaseRoute
 		string method_name = payload["method_name"];
 		Dict post_data = payload["data"];
 		
-		Model model = @.entities
-			.filter( lib::isInstance(classof Model) )
+		RemoteClass model = @.entities
+			.filter( lib::isInstance(classof RemoteClass) )
 			.findItem( lib::equalAttr("name", class_name) )
 		;
 		
 		if (not model)
 		{
-			this.container.fail(
-				new ApiException("Class name not found")
+			return this.container.fail(
+				new ApiException("Class '" ~ rs::htmlEscape(class_name) ~ "' not found")
 			);
 		}
 		
 		Dict methods = rtl::getMethodsAnnotations(class_name);
 		if (not methods.has(method_name))
 		{
-			this.container.fail(
-				new ApiException("Method name not found")
+			return this.container.fail(
+				new ApiException("Method '" ~ rs::htmlEscape(method_name) ~ "' not found")
 			);
 		}
 		
@@ -126,10 +127,9 @@ class ApiRoute extends BaseRoute
 		RemoteMethod annotation = annotations.findItem( lib::isInstance(classof RemoteMethod) );
 		if (not annotation)
 		{
-			this.container.fail(
+			return this.container.fail(
 				new ApiException("Method name not found")
 			);
-			return;
 		}
 		
 		fn f = rtl::method(class_name, method_name);

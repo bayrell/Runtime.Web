@@ -27,7 +27,6 @@
 		"SeoModel.bay",
 		"VirtualDom.bay",
 		"Annotations/Api.bay",
-		"Annotations/Model.bay",
 		"Annotations/Route.bay",
 		"Events/BaseEvent.bay",
 		"Events/WebEvent.bay",
