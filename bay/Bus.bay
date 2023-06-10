@@ -80,6 +80,22 @@ class Bus
 	
 	
 	/**
+	 * Remote call
+	 */
+	async static ApiResult remoteCall(string class_name, string method_name, Dict data)
+	{
+		return await Bus::callApi(
+			"runtime.web.remote_call",
+			{
+				"class_name": class_name,
+				"method_name": method_name,
+				"data": data,
+			}
+		);
+	}
+	
+	
+	/**
 	 * Bus call
 	 */
 	static ApiResult call(string url, Dict data = null)
