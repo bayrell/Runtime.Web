@@ -147,11 +147,19 @@ struct ApiResult extends Response
 		
 		if (data == null) return res;
 		
-		Collection<string> keys = data.keys();
-		for (int i=0; i<keys.count(); i++)
+		if (data instanceof Dict)
 		{
-			string key = keys[i];
-			res <= data <= { key } <= data[key];
+			Collection<string> keys = data.keys();
+			for (int i=0; i<keys.count(); i++)
+			{
+				string key = keys[i];
+				res <= data <= { key } <= data[key];
+			}
+		}
+		
+		if (data instanceof Collection)
+		{
+			res <= data <= data;
 		}
 		
 		return res;
