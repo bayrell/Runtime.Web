@@ -19,10 +19,14 @@
 namespace Runtime.Web.Annotations;
 
 use Runtime.Entity;
-use Runtime.Web.Route as RouteAnnotation;
 
 
-class Route extends RouteAnnotation
+class Route extends Entity
 {
-	
+	void constructor(string route_name)
+	{
+		parent({
+			"name": route_name,
+		});
+	}
 }

@@ -70,7 +70,7 @@ class ApiRoute extends BaseRoute
 	 */
 	pure string getApiMethod(string api_name)
 	{
-		if (api_name == "remote_call") return "actionRemoteCall";
+		/*if (api_name == "remote_call") return "actionRemoteCall";*/
 		return "";
 	}
 	

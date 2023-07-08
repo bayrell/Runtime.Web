@@ -26,6 +26,7 @@ use Runtime.Web.RenderContainer;
 
 class BaseApi extends BaseObject
 {
+	Dict post_data = null;
 	RenderContainer container = null;
 	string action = "";
 	string method_name = "";

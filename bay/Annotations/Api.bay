@@ -19,10 +19,14 @@
 namespace Runtime.Web.Annotations;
 
 use Runtime.Entity;
-use Runtime.Web.Api as ApiAnnotation;
 
 
-class Api extends ApiAnnotation
+class Api extends Entity
 {
-	
+	void constructor(string api_name)
+	{
+		parent({
+			"name": api_name,
+		});
+	}
 }

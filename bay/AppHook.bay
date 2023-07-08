@@ -105,12 +105,6 @@ class AppHook extends BaseHook
 	
 	
 	/**
-	 * Middleware
-	 */
-	async Dict middleware(Dict d) => d;
-	
-	
-	/**
 	 * Call route after
 	 */
 	async Dict call_route_after(Dict d) => d;

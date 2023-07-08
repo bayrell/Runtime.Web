@@ -21,7 +21,6 @@
 		"RenderProvider.es6",
 		"Request.bay",
 		"Response.bay",
-		"Route.bay",
 		"RouteInfo.bay",
 		"RouteList.bay",
 		"SeoModel.bay",

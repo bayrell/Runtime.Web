@@ -124,16 +124,29 @@ class Bus
 		
 		$arr = explode(".", $api_name);
 		$api_route_name = implode(".", array_slice($arr, 0, count($arr) - 1));
-		$method_name = $arr[ count($arr) - 1 ];
+		$api_method_name = $arr[ count($arr) - 1 ];
 		
 		/* Find api */
 		$api = $context->entities
-			->filter( \Runtime\lib::isInstance("Runtime.Web.Api") )
-			->findItem( function ($item) use ($api_route_name) {
+			->filter( \Runtime\lib::isInstance("Runtime.Web.Annotations.Api") )
+			->findItem( function ($item) use ($api_route_name, $api_method_name) {
 				if (!\Runtime\rtl::class_exists($item->name)) return false;
 				$route_name = \Runtime\rtl::find_class($item->name);
 				$api_name = call_user_func([$route_name, "apiName"]);
-				return $api_name == $api_route_name;
+				if ($api_name != $api_route_name)
+				{
+					return false;
+				}
+				
+				$route_method = call_user_func_array(
+					[$route_name, "getApiMethod"], [$api_method_name]
+				);
+				if ($route_method == "")
+				{
+					return false;
+				}
+				
+				return true;
 			} )
 		;
 		
@@ -141,7 +154,7 @@ class Bus
 		{
 			return (new \Runtime\Web\ApiResult())
 				->fail(
-					new \Runtime\Exceptions\ApiException("Api not found")
+					new \Runtime\Exceptions\ApiException("Api '" . $api_name . "' not found")
 				)
 			;
 		}
@@ -160,7 +173,8 @@ class Bus
 		$res = null;
 		$route = \Runtime\rtl::newInstance($api->name);
 		$route->container = $api_container;
-		$route->method_name = $method_name;
+		$route->method_name = $api_method_name;
+		$route->post_data = $data;
 		
 		try
 		{
@@ -172,7 +186,7 @@ class Bus
 					"message" => "Empty response",
 				]));
 				
-				$route_method = $route::getApiMethod($method_name);
+				$route_method = $route::getApiMethod($api_method_name);
 				if ($route_method)
 				{
 					$route->action = $route_method;
@@ -241,7 +255,7 @@ class Bus
 		let context = Runtime.rtl.getContext();
 		let api_url = "/" + context.env("LOCALE_CODE") + "/api/" + api_name + "/";
 		
-		if (api_name = "runtime.web.remote_call")
+		if (api_name == "runtime.web.remote_call")
 		{
 			let class_name = Runtime.rtl.attr(data, "class_name");
 			let method_name = Runtime.rtl.attr(data, "method_name");
