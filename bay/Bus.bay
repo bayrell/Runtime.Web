@@ -132,7 +132,7 @@ class Bus
 			->findItem( function ($item) use ($api_route_name, $api_method_name) {
 				if (!\Runtime\rtl::class_exists($item->name)) return false;
 				$route_name = \Runtime\rtl::find_class($item->name);
-				$api_name = call_user_func([$route_name, "apiName"]);
+				$api_name = call_user_func([$route_name, "getApiName"]);
 				if ($api_name != $api_route_name)
 				{
 					return false;
