@@ -42,16 +42,16 @@ struct ApiResult extends Response
 	 */
 	protected Dict _init_data(Dict changed)
 	{
-		if (changed == null) changed = {};
+		Dict headers = changed["headers"];
 		
 		if (not this.headers.has("Content-Type"))
 		{
-			Dict headers = changed["headers"];
 			if (headers == null) headers = {};
-			if (not headers.has("Content-Type"))
-			{
-				changed <= headers <= headers.setIm("Content-Type", "application/json");
-			}
+		}
+		
+		if (headers != null and not headers.has("Content-Type"))
+		{
+			changed <= headers <= headers.setIm("Content-Type", "application/json");
 		}
 		
 		return changed;
