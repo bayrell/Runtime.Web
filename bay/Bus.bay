@@ -122,15 +122,17 @@ class Bus
 		$context = \Runtime\rtl::getContext();
 		$render_container = $context->environments->get("render_container");
 		
-		$arr = explode(".", $api_name);
+		$arr = explode("::", $api_name);
 		$api_route_name = implode(".", array_slice($arr, 0, count($arr) - 1));
-		$api_method_name = $arr[ count($arr) - 1 ];
+		$api_method_name = implode(".", array_slice($arr, count($arr) - 1));
 		
 		/* Find api */
 		$api = $context->entities
 			->filter( \Runtime\lib::isInstance("Runtime.Web.Annotations.Api") )
 			->findItem( function ($item) use ($api_route_name, $api_method_name) {
+				
 				if (!\Runtime\rtl::class_exists($item->name)) return false;
+				
 				$route_name = \Runtime\rtl::find_class($item->name);
 				$api_name = call_user_func([$route_name, "getApiName"]);
 				if ($api_name != $api_route_name)
