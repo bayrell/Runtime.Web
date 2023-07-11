@@ -40,17 +40,18 @@ struct ApiResult extends Response
 	/**
 	 * Init struct data
 	 */
-	static protected Dict _init_data(BaseStruct old_item, BaseStruct new_item)
+	protected Dict _init_data(Dict changed)
 	{
-		Dict changed = parent::_init_data(old_item, new_item);
 		if (changed == null) changed = {};
 		
-		if (not new_item.headers.has("Content-Type"))
+		if (not this.headers.has("Content-Type"))
 		{
-			changed <= headers <= new_item.headers.setIm(
-				"Content-Type",
-				"application/json"
-			);
+			Dict headers = changed["headers"];
+			if (headers == null) headers = {};
+			if (not headers.has("Content-Type"))
+			{
+				changed <= headers <= headers.setIm("Content-Type", "application/json");
+			}
 		}
 		
 		return changed;

@@ -39,14 +39,13 @@ struct RouteInfo extends BaseStruct
 	/**
 	 * Init struct data
 	 */
-	static protected Dict _init_data(BaseStruct old_item, BaseStruct new_item)
+	protected Dict _init_data(Dict changed)
 	{
-		Dict changed = {};
-		string uri = new_item.uri;
-		string uri_match = new_item.uri_match;
-		
-		if (rtl::isEmpty(uri_match))
+		if (changed.has("uri") and not changed.has("uri_match"))
 		{
+			string uri = changed["uri"];
+			string uri_match = changed["uri_match"];
+			
 			uri_match = re::replace("\\/", "\\/", uri);
 			
 			Collection matches = re::matchAll("{(.*?)}", uri);
