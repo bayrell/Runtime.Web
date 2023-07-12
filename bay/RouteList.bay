@@ -26,8 +26,8 @@ use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
-use Runtime.Web.Route;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.Annotations.Route;
 
 
 class RouteList extends BaseProvider
