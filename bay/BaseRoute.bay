@@ -31,6 +31,12 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
+	 * Returns layout name
+	 */
+	string getLayoutName() => "";
+	
+	
+	/**
 	 * Returns routes
 	 */
 	pure Collection<RouteInfo> getRoutes() => [];

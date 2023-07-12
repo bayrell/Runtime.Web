@@ -111,9 +111,11 @@ class Bus
 	/**
 	 * Call api
 	 */
-	static async ApiResult callApi(string api_name, Dict data = null)
+	static async ApiResult callApi(string api_name, Dict api_data = null)
 	{
 		ApiResult res = null;
+		
+		if (api_data == null) api_data = {};
 		
 		#switch
 		
@@ -167,7 +169,7 @@ class Bus
 			"uri" => $api_name,
 			"host" => $render_container->request->host,
 			"method" => "POST",
-			"payload" => $data,
+			"payload" => $api_data,
 			"cookies" => $render_container->request->cookies,
 			"start_time" => time(),
 		]));
@@ -176,7 +178,7 @@ class Bus
 		$route = \Runtime\rtl::newInstance($api->name);
 		$route->container = $api_container;
 		$route->method_name = $api_method_name;
-		$route->post_data = $data;
+		$route->post_data = $api_data;
 		
 		try
 		{
@@ -250,7 +252,7 @@ class Bus
 		/* Build pos data */
 		let post_data = Runtime.Dict.from({
 			"api_name": api_name,
-			"data": data ? data.toDict() : null,
+			"data": api_data ? api_data.toDict() : null,
 		});
 		
 		/* Send post */
@@ -259,8 +261,8 @@ class Bus
 		
 		if (api_name == "runtime.web.remote_call")
 		{
-			let class_name = Runtime.rtl.attr(data, "class_name");
-			let method_name = Runtime.rtl.attr(data, "method_name");
+			let class_name = Runtime.rtl.attr(api_data, "class_name");
+			let method_name = Runtime.rtl.attr(api_data, "method_name");
 			if (class_name || method_name)
 			{
 				api_url += class_name + "::" + method_name + "/";

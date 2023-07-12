@@ -37,6 +37,7 @@ use Runtime.Web.RouteList;
 
 class RenderContainer extends BaseObject
 {
+	BaseRoute base_route = null;
     Request request = null;
     Response response = null;
 	RouteInfo route = null;
@@ -133,23 +134,35 @@ class RenderContainer extends BaseObject
 	 */
 	async void callMethod(var m)
 	{
+		if (this.base_route != null)
+		{
+			this.base_route.cancelRoute();
+		}
+		
 		if (m instanceof Collection)
 		{
 			string base_route_class_name = m[0];
-			BaseRoute base_route = rtl::newInstance(base_route_class_name);
+			this.base_route = rtl::newInstance(base_route_class_name);
 			string method_name = m[1];
-			fn route_method = rtl::method(base_route, method_name);
+			fn route_method = rtl::method(this.base_route, method_name);
 			
-			base_route.container = this;
+			this.base_route.container = this;
 			
-			await base_route.onActionBefore();
+			/* Setup layout */
+			string layout_name = this.base_route.getLayoutName();
+			if (layout_name)
+			{
+				this.setLayoutName(layout_name);
+			}
+			
+			await this.base_route.onActionBefore();
 			if (this.response == null)
 			{
 				await route_method();
 			}
-			if (not base_route.isCancelRoute())
+			if (not this.base_route.isCancelRoute())
 			{
-				await base_route.onActionAfter();
+				await this.base_route.onActionAfter();
 			}
 		}
 		
