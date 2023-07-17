@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
+use Runtime.ModelProxy;
 use Runtime.RouteInfo;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteList;
@@ -28,6 +29,8 @@ class BaseRoute extends BaseObject
 {
 	bool is_cancel_route = false;
 	RenderContainer container = null;
+	ModelProxy layout_proxy = null;
+	ModelProxy page_model_proxy = null;
 	
 	
 	/**
@@ -37,9 +40,25 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
+	 * Returns page model
+	 */
+	string getPageModelName() => "";
+	
+	
+	/**
 	 * Returns routes
 	 */
 	pure Collection<RouteInfo> getRoutes() => [];
+	
+	
+	/**
+	 * Set new page model
+	 */
+	void setPageModel(string page_model)
+	{
+		this.container.setPageModel(page_model);
+		this.page_model_proxy = this.container.modelProxy();
+	}
 	
 	
 	/**
@@ -47,6 +66,21 @@ class BaseRoute extends BaseObject
 	 */
 	async void onActionBefore()
 	{
+		/* Setup layout */
+		string layout_name = this.getLayoutName();
+		if (layout_name)
+		{
+			this.container.setLayoutName(layout_name);
+			this.layout_proxy = this.container.layoutProxy();
+		}
+		
+		/* Setup page model */
+		string model_name = this.getPageModelName();
+		if (model_name)
+		{
+			this.container.setPageModel( rtl::newInstance(model_name) );
+			this.page_model_proxy = this.container.modelProxy();
+		}
 	}
 	
 	

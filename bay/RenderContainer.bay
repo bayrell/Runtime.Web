@@ -148,13 +148,6 @@ class RenderContainer extends BaseObject
 			
 			this.base_route.container = this;
 			
-			/* Setup layout */
-			string layout_name = this.base_route.getLayoutName();
-			if (layout_name)
-			{
-				this.setLayoutName(layout_name);
-			}
-			
 			await this.base_route.onActionBefore();
 			if (this.response == null)
 			{
