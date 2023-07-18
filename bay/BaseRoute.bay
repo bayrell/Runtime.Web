@@ -113,9 +113,18 @@ class BaseRoute extends BaseObject
 	/**
 	 * Returns url
 	 */
-	string url(string route_name, Dict route_params = null)
+	static string url(string route_name, Dict route_params = null)
 	{
 		RouteList routes = @.provider(classof RouteList);
 		return routes.url(route_name, route_params);
+	}
+	
+	
+	/**
+	 * Render page and setup response
+	 */
+	void render(string class_name = "")
+	{
+		this.container.render(class_name);
 	}
 }
