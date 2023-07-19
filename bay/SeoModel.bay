@@ -39,4 +39,12 @@ struct SeoModel extends BaseStruct
     string article_modified_time = "";
     Collection<string> tags = [];
     Collection<string> params = [];
+    
+    
+    /**
+     * Add tags
+     */
+    SeoModel addTags(Collection tags) => tags != null ? this.clone({
+        "tags": this.tags.concat(tags)
+    }) : this;
 }

@@ -124,7 +124,14 @@ class App extends BaseProvider
 		{
 			container <= layout <= new Layout();
 		}
-		
+	}
+	
+	
+	/**
+	 * Init layout
+	 */
+	async void initLayout(RenderContainer container)
+	{
 		/* Setup request params */
 		container <= layout <= route <= container.route;
 		container <= layout <= request_uri <= container.request.uri;
@@ -170,6 +177,9 @@ class App extends BaseProvider
 	{
 		/* Create layout */
 		await this.createLayout(container);
+		
+		/* Init layout */
+		await this.initLayout(container);
 		
 		/* Call route before */
 		await @.callAsyncHook(AppHook::CALL_ROUTE_BEFORE, {
