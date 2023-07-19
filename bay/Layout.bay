@@ -49,8 +49,7 @@ struct Layout extends BaseStruct
 	
 	/* Increment assets */
 	string f_inc = "1";
-	
-	
+		
 	/**
 	 * Returns page model
 	 */

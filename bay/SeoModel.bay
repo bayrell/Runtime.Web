@@ -23,11 +23,10 @@ use Runtime.BaseStruct;
 
 struct SeoModel extends BaseStruct
 {
-	string page_title = "";
-	string full_title = "";
+	string title_ext = "";
 	string description = "";
 	string site_name = "";
-	Collection<string> robots = [];
+	Collection<string> robots = ["follow", "index"];
     string canonical_url = "";
     string prev_url = "";
     string next_url = "";
@@ -38,6 +37,6 @@ struct SeoModel extends BaseStruct
     string article_publisher = "";
     string article_published_time = "";
     string article_modified_time = "";
-    Collection<string> article_tags = [];
+    Collection<string> tags = [];
     Collection<string> params = [];
 }
