@@ -128,9 +128,22 @@ class AppHook extends BaseHook
 		Vector css_class_names = d["css_class_names"];
 		
 		/* Add page class name */
-		if (css_class_names.indexOf(layout.page_class_name) == -1)
+		if (
+			layout.page_class_name != "" and
+			css_class_names.indexOf(layout.page_class_name) == -1
+		)
 		{
 			css_class_names.pushValue(layout.page_class_name);
+		}
+		
+		/* Add layout name */
+		string layout_class_name = layout.getLayoutClassName();
+		if (
+			layout_class_name != "" and
+			css_class_names.indexOf(layout_class_name) == -1
+		)
+		{
+			css_class_names.pushValue(layout_class_name);
 		}
 		
 		return d;

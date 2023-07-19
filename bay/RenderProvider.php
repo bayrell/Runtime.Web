@@ -52,16 +52,6 @@ class RenderProvider extends BaseProvider
 		$container = $d->get("container");
 		$response = $container->response;
 		
-		/* Get css names */
-		$css_class_names = $container->layout ?
-			$container->layout->getCssClasses() : \Runtime\Collection::from([]);
-		
-		/* Save css */
-		$context->callHook(AppHook::CSS_SAVE, Dict::from([
-			"container" => $container,
-			"css_class_names" => $css_class_names,
-		]));
-		
 		/* Render tempate */
 		if ($response instanceof RenderResponse && $response->get("content") == null)
 		{
