@@ -36,7 +36,7 @@ class BaseRoute extends BaseObject
 	/**
 	 * Returns layout name
 	 */
-	string getLayoutName() => "";
+	string getLayoutName() => "default";
 	
 	
 	/**
@@ -70,6 +70,16 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
+	 * Set page description
+	 */
+	void setPageDescription(string description)
+	{
+		ModelProxy seo = this.layout_proxy.proxy(["models", "seo"]);
+		seo.setAttr("description", description);
+	}
+	
+	
+	/**
 	 * Set new page model
 	 */
 	void setPageModel(string page_model)
@@ -89,8 +99,10 @@ class BaseRoute extends BaseObject
 		if (layout_name)
 		{
 			this.container.setLayoutName(layout_name);
-			this.layout_proxy = this.container.layoutProxy();
 		}
+		
+		/* Setup layout proxy */
+		this.layout_proxy = this.container.layoutProxy();
 		
 		/* Setup page model */
 		string model_name = this.getPageModelName();
