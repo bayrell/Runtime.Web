@@ -157,6 +157,14 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Repaint component
+	 */
+	void onRepaint()
+	{
+	}
+	
+	
+	/**
 	 * On commit model message
 	 */
 	void onCommitModel(Message<CommitModelEvent> message)

@@ -151,6 +151,7 @@ struct Layout extends BaseStruct
 	 * Set new title
 	 */
 	Layout setTitle(string title) => rtl::setAttr(this, ["title"], title);
+	Layout setPageTitle(string title) => rtl::setAttr(this, ["title"], title);
 	
 	
 	/**

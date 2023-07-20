@@ -94,11 +94,16 @@ class RouteList extends BaseProvider
 		if (request_uri == "") request_uri = "/";
 		
 		/* Find route */
-		Collection<string> route_names = this.routes_list.keys();
-		for (int i=0; i<route_names.count(); i++)
+		Collection<RouteInfo> routes = this.routes_list.values();
+		routes = routes.sort(
+			int (RouteInfo a, RouteInfo b)
+			{
+				return a.pos - b.pos;
+			}
+		);
+		for (int i=0; i<routes.count(); i++)
 		{
-			string route_name = route_names[i];
-			RouteInfo route = this.routes_list[route_name];
+			RouteInfo route = routes[i];
 			
 			if (route.domain == request.host or route.domain == "")
 			{

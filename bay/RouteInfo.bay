@@ -34,6 +34,7 @@ struct RouteInfo extends BaseStruct
 	Collection<string> params = [];
 	Dict<string> matches = {};
 	bool enable_locale = true;
+	int pos = 0;
 	
 	
 	/**

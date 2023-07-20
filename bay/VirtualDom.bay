@@ -199,7 +199,6 @@ class VirtualDom extends BaseObject
 			vdom.is_changed_item = vdom.isChanged(params, content);
 			vdom.params = params;
 			vdom.content = content;
-			vdom.isChanged(params, content);
 		}
 		
 		/* Set element */
@@ -275,10 +274,7 @@ class VirtualDom extends BaseObject
 				component.onRender(vdom.is_new_element);
 				
 				/* Change element */
-				if (vdom.is_new_element)
-				{
-					provider.addChangedElem(vdom);
-				}
+				provider.addChangedElem(vdom);
 			}
 		}
 		

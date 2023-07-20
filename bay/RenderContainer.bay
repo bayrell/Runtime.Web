@@ -45,9 +45,18 @@ class RenderContainer extends BaseObject
 	Map frontend_env = new Map();
 	Map backend_storage = new Map();
 	
-    
+	
     /**
-	 * Page title
+	 * Set page title
+	 */
+	void setTitle(string title)
+	{
+		this.layout = rtl::setAttr(this.layout, ["title"], title);
+	}
+	
+	
+    /**
+	 * Set page title
 	 */
 	void setPageTitle(string title)
 	{

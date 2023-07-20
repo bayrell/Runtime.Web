@@ -52,6 +52,24 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
+	 * Set page title
+	 */
+	void setTitle(string title)
+	{
+		this.container.setTitle(title);
+	}
+	
+	
+	/**
+	 * Set page title
+	 */
+	void setPageTitle(string title)
+	{
+		this.container.setPageTitle(title);
+	}
+	
+	
+	/**
 	 * Set new page model
 	 */
 	void setPageModel(string page_model)

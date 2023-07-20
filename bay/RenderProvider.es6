@@ -230,6 +230,16 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			this.updateElemChilds(vdom);
 		}
 		
+		/* Component repaint */
+		for (let i=0; i<this.render_elem_list.length; i++)
+		{
+			let vdom = render_elem_list[i];
+			if (vdom.kind == Runtime.Web.VirtualDom.KIND_COMPONENT)
+			{
+				vdom.component.onRepaint();
+			}
+		}
+		
 		this.render_elem_list = [];
 		this.render_elem_obj = {};
 		this.render_elem_childs_list = [];
