@@ -83,6 +83,13 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
+	 * Returns proxy
+	 */
+	ModelProxy proxy(Collection path = null)
+		=> new ModelProxy( this, path );
+	
+	
+	/**
 	 * Returns page model proxy
 	 */
 	ModelProxy modelProxy(Collection path = null)

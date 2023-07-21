@@ -55,7 +55,7 @@ class RenderProvider extends BaseProvider
 		/* Render tempate */
 		if ($response instanceof RenderResponse && $response->get("content") == null)
 		{
-			$layout = $response->layout;
+			$layout = $container->layout;
 			
 			$d = $context->callHook(AppHook::CORE_UI, Dict::from([
 				"core_ui" => "Runtime.Web.CoreUI",
