@@ -157,4 +157,13 @@ class BaseRoute extends BaseObject
 	{
 		this.container.render(class_name);
 	}
+	
+	
+	/**
+	 * Redirect to url
+	 */
+	void redirect(string url, int http_code = 301)
+	{
+		this.container.redirect(url, http_code);
+	}
 }

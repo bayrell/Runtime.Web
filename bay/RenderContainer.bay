@@ -133,8 +133,12 @@ class RenderContainer extends BaseObject
 	/**
 	 * Setup redirect response
 	 */
-	void redirect(string class_name)
+	void redirect(string url, int http_code = 301)
 	{
+		Response response = new Response();
+		response <= http_code <= http_code;
+		response <= headers <= "Location" <= url;
+		this.response = response;
 	}
 	
 	
