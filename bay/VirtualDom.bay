@@ -220,7 +220,7 @@ class VirtualDom extends BaseObject
 		this.new_childs.pushValue(vdom);
 		
 		/* Get render provider */
-		RenderProvider provider = @.provider(classof RenderProvider);
+		RenderProvider provider = window["render_provider"];
 		
 		/* Add to render_dom_list if vdom is changed */
 		if (vdom.is_changed_item)
@@ -245,6 +245,7 @@ class VirtualDom extends BaseObject
 				{
 					vdom.component = rtl::newInstance(class_name);
 					vdom.component.vdom = vdom;
+					vdom.component.provider = provider;
 					vdom.is_new_element = true;
 				}
 				
@@ -263,18 +264,21 @@ class VirtualDom extends BaseObject
 				fn render = rtl::method(class_name, "render");
 				
 				/* Render component */
-				fn f = render(component, params, content);
-				if (f)
+				if (component.isRender())
 				{
-					f(vdom);
-					vdom.p();
+					fn f = render(component, params, content);
+					if (f)
+					{
+						f(vdom);
+						vdom.p();
+					}
+					
+					/* Render event */
+					component.onRender();
+					
+					/* Change element */
+					provider.addChangedElem(vdom);
 				}
-				
-				/* Render event */
-				component.onRender(vdom.is_new_element);
-				
-				/* Change element */
-				provider.addChangedElem(vdom);
 			}
 		}
 		

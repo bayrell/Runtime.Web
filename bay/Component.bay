@@ -35,6 +35,7 @@ use Runtime.Web.Events.CommitModelEvent;
 
 class Component extends BaseObject
 {
+	RenderProvider provider = null;
 	Collection model_path = [];
 	var old_model = null;
 	var params = null;
@@ -111,6 +112,15 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * If component needs render
+	 */
+	bool isRender()
+	{
+		return true;
+	}
+	
+	
+	/**
 	 * Update params
 	 */
 	void updateParams(Collection model_path, Dict params, var content)
@@ -143,7 +153,7 @@ class Component extends BaseObject
 	/**
 	 * Render component
 	 */
-	void onRender(bool is_new_component)
+	void onRender()
 	{
 	}
 	
