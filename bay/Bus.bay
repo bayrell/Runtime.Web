@@ -172,6 +172,7 @@ class Bus
 			"method" => "POST",
 			"payload" => $api_data,
 			"cookies" => $render_container ? $render_container->request->cookies : null,
+			"headers" => $render_container ? $render_container->request->headers : null,
 			"start_time" => time(),
 		]));
 		

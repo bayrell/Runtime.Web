@@ -293,7 +293,7 @@ class VirtualDom extends BaseObject
 	{
 		if (this.childs.count() != this.new_childs.count())
 		{
-			RenderProvider provider = @.provider(classof RenderProvider);
+			RenderProvider provider = window["render_provider"];
 			provider.addChangedElemChilds(this);
 		}
 		this.childs = this.new_childs.toCollection();
