@@ -95,15 +95,29 @@ class RouteList extends BaseProvider
 		
 		/* Find route */
 		Collection<RouteInfo> routes = this.routes_list.values();
+		
+		routes = routes.map(
+			list (RouteInfo value, int index) => [ value, index ]
+		);
+		
 		routes = routes.sort(
-			int (RouteInfo a, RouteInfo b)
+			int (list a, list b)
 			{
-				return a.pos - b.pos;
+				int pos_a = a[0].pos;
+				int pos_b = b[0].pos;
+				
+				if (pos_a == pos_b)
+				{
+					return a[1] - b[1];
+				}
+				
+				return pos_a - pos_b;
 			}
 		);
+		
 		for (int i=0; i<routes.count(); i++)
 		{
-			RouteInfo route = routes[i];
+			RouteInfo route = routes[i][0];
 			
 			if (route.domain == request.host or route.domain == "")
 			{
