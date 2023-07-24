@@ -532,7 +532,7 @@ Object.assign(Runtime.Web.RenderProvider,
 			
 			/* Patch content */
 			var e = document.createElement("div");
-			e.innerHTML = "<svg>" + content + "</svg>";
+			e.innerHTML = "<svg>" + (content ? content : "") + "</svg>";
 			var item = e.childNodes[0];
 			while (item.childNodes.length > 0)
 			{
