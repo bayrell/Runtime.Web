@@ -31,8 +31,10 @@ Runtime.Web.RenderProvider = function()
 	this.render_elem_obj = {};
 	this.render_elem_childs_list = [];
 	this.render_elem_childs_obj = {};
+	this.is_first_render = false;
 	this.model_path = new Runtime.Collection();
 	this.animation_frame = null;
+	this.constructor.is_debug = false;
 };
 Runtime.Web.RenderProvider.prototype = Object.create(Runtime.BaseProvider.prototype);
 Runtime.Web.RenderProvider.prototype.constructor = Runtime.Web.RenderProvider;
@@ -310,10 +312,14 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				"@model":[this, Runtime.Collection.from("")],
 			}), null);
 		};
-		this.repaintRef(this.vdom);
 		
-		/* Call next frame */
-		this.requestAnimationFrame();
+		this.is_first_render = true;
+		
+		this.render_vdom_list.push(this.vdom);
+		this.addChangedElem(this.vdom);
+		this.render();
+		
+		this.is_first_render = false;
 	},
 	
 	
@@ -326,6 +332,32 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		if (!vdom.isElement()) return;
 		if (vdom.isText()) return;
 		
+		var findElementPos = function (nodes, find_e)
+		{
+			for (var i = 0; i < nodes.count(); i++)
+			{
+				let node = nodes[i];
+				
+				if (node instanceof HTMLElement && find_e instanceof HTMLElement)
+				{
+					if (node.tagName == find_e.tagName)
+					{
+						return i;
+					}
+				}
+				
+				if (node instanceof Text && find_e instanceof Text)
+				{
+					if (node.textContent == find_e.textContent)
+					{
+						return i;
+					}
+				}
+			}
+			
+			return -1;
+		}
+		
 		vdom.is_change_childs = false;
 		
 		/* Get vdom HTML childs */
@@ -335,6 +367,32 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			.flatten()
 			.filter( Runtime.lib.equalNot(null) )
 		;
+		
+		/* If childs error */
+		if (vdom.is_childs_error)
+		{
+			if (this.constructor.is_debug) console.log("elem count childs error");
+			
+			let old_childs = Runtime.Vector.from([...vdom.elem.childNodes]);
+			
+			for (let i=0; i<new_childs.count(); i++)
+			{
+				let pos = findElementPos(old_childs, new_childs[i]);
+				if (pos >= 0)
+				{
+					let v = old_childs[pos]._vdom;
+					new_childs[i] = old_childs[pos];
+					new_childs[i]._vdom = v;
+					if (v != undefined)
+					{
+						this.updateElemParams(v);
+					}
+					old_childs.removePosition(pos);
+				}
+			}
+			
+			vdom.is_childs_error = false;
+		}
 		
 		/* Patch HTML element childs */
 		this.constructor.patchElemChilds(vdom.elem, new_childs);
@@ -346,6 +404,52 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	 */
 	updateElem: function(vdom)
 	{
+		/* Setup exists childs for first init */
+		if (this.is_first_render)
+		{
+			if (vdom.kind == Runtime.Web.VirtualDom.KIND_ELEMENT)
+			{
+				if (vdom.elem != null)
+				{
+					let new_childs = vdom.getChildElements();
+					let child_nodes = Runtime.Collection.from([...vdom.elem.childNodes]);
+					
+					child_nodes = child_nodes
+						.map(
+							(item) => {
+								if (item.tagName == "TBODY")
+								{
+									return Runtime.Collection.from([...item.childNodes]);
+								}
+								return item;
+							}
+						)
+						.flatten()
+					;
+					
+					if (new_childs.count() == child_nodes.length)
+					{
+						for (let i=0; i<new_childs.count(); i++)
+						{
+							new_childs[i].elem = child_nodes[i];
+							new_childs[i].elem._vdom = new_childs[i];
+						}
+					}
+					else
+					{
+						vdom.is_childs_error = true;
+						//console.log("elem count childs error");
+						//console.log(vdom);
+					}
+				}
+				else
+				{
+					//console.log("elem is null");
+					//console.log(vdom);
+				}
+			}
+		}
+		
 		if (vdom.kind == Runtime.Web.VirtualDom.KIND_ELEMENT)
 		{
 			if (vdom.elem == null)
@@ -377,7 +481,10 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		
 		else if (vdom.kind == Runtime.Web.VirtualDom.KIND_RAW)
 		{
-			vdom.elem = this.constructor.rawHtml(vdom.content);
+			if (vdom.elem == null || !this.is_first_render)
+			{
+				vdom.elem = this.constructor.rawHtml(vdom.content);
+			}
 		}
 		
 		else if (vdom.kind == Runtime.Web.VirtualDom.KIND_COMPONENT)
@@ -569,6 +676,9 @@ Object.assign(Runtime.Web.RenderProvider,
 	{
 		if (new_childs == null) new_childs = [];
 		
+		var is_debug = false;
+		is_debug = this.is_debug;
+		
 		var findElementPos = function (elem, e)
 		{
 			var childs = elem.childNodes;
@@ -612,8 +722,7 @@ Object.assign(Runtime.Web.RenderProvider,
 			}
 		}
 		
-		
-		/* Remove elems */
+		/* Remove old elems if does not exists in new_childs */
 		var i = parent_elem.childNodes.length - 1;
 		while (i >= 0)
 		{
@@ -625,11 +734,10 @@ Object.assign(Runtime.Web.RenderProvider,
 				{
 					this.remove_keys.pushValue(null, e._path_id);
 				}
-				/* console.log('Remove child ', i); */
+				if (is_debug) console.log('Remove child ', i, e);
 			}
 			i--;
 		}
-		
 		
 		var prevElem = null;
 		for (var i=0; i<new_childs.length; i++)
@@ -650,13 +758,13 @@ Object.assign(Runtime.Web.RenderProvider,
 				{
 					insertFirst(parent_elem, new_e);
 					flag = true;
-					/* console.log('Insert first ', i); */
+					if (is_debug) console.log('Insert first ', i, new_e);
 				}
 				else
 				{
 					insertAfter(parent_elem, prevElem, new_e);
 					flag = true;
-					/* console.log('Insert after[1] ', i); */
+					if (is_debug) console.log('Insert after[1] ', i, new_e);
 				}
 			}
 			
@@ -669,7 +777,7 @@ Object.assign(Runtime.Web.RenderProvider,
 					{
 						insertAfter(parent_elem, prevElem, new_e);
 						flag = true;
-						/* console.log('Insert after[2] ', i); */
+						if (is_debug) console.log('Insert after[2] ', i, new_e);
 					}
 				}
 				else
@@ -679,7 +787,7 @@ Object.assign(Runtime.Web.RenderProvider,
 					{
 						insertAfter(parent_elem, prevElem, new_e);
 						flag = true;
-						/* console.log('Insert after[3] ', i); */
+						if (is_debug) console.log('Insert after[3] ', i, new_e);
 					}
 				}
 			}

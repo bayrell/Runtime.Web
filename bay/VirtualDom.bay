@@ -45,6 +45,7 @@ class VirtualDom extends BaseObject
 	bool is_new_element = false;
 	bool is_changed_item = false;
 	bool is_change_childs = false;
+	bool is_childs_error = false;
 	var render = null;
 	var elem = null;
 	
@@ -291,11 +292,13 @@ class VirtualDom extends BaseObject
 	 */
 	void p()
 	{
+		RenderProvider provider = window["render_provider"];
+		
 		if (this.childs.count() != this.new_childs.count())
 		{
-			RenderProvider provider = window["render_provider"];
 			provider.addChangedElemChilds(this);
 		}
+		
 		this.childs = this.new_childs.toCollection();
 		this.new_childs = new Vector();
 		this.is_change_childs = true;
