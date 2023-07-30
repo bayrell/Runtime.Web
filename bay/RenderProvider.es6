@@ -332,32 +332,6 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		if (!vdom.isElement()) return;
 		if (vdom.isText()) return;
 		
-		var findElementPos = function (nodes, find_e)
-		{
-			for (var i = 0; i < nodes.count(); i++)
-			{
-				let node = nodes[i];
-				
-				if (node instanceof HTMLElement && find_e instanceof HTMLElement)
-				{
-					if (node.tagName == find_e.tagName)
-					{
-						return i;
-					}
-				}
-				
-				if (node instanceof Text && find_e instanceof Text)
-				{
-					if (node.textContent == find_e.textContent)
-					{
-						return i;
-					}
-				}
-			}
-			
-			return -1;
-		}
-		
 		vdom.is_change_childs = false;
 		
 		/* Get vdom HTML childs */
@@ -367,32 +341,6 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			.flatten()
 			.filter( Runtime.lib.equalNot(null) )
 		;
-		
-		/* If childs error */
-		if (vdom.is_childs_error)
-		{
-			if (this.constructor.is_debug) console.log("elem count childs error");
-			
-			let old_childs = Runtime.Vector.from([...vdom.elem.childNodes]);
-			
-			for (let i=0; i<new_childs.count(); i++)
-			{
-				let pos = findElementPos(old_childs, new_childs[i]);
-				if (pos >= 0)
-				{
-					let v = old_childs[pos]._vdom;
-					new_childs[i] = old_childs[pos];
-					new_childs[i]._vdom = v;
-					if (v != undefined)
-					{
-						this.updateElemParams(v);
-					}
-					old_childs.removePosition(pos);
-				}
-			}
-			
-			vdom.is_childs_error = false;
-		}
 		
 		/* Patch HTML element childs */
 		this.constructor.patchElemChilds(vdom.elem, new_childs);
@@ -411,15 +359,44 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 			{
 				if (vdom.elem != null)
 				{
-					let new_childs = vdom.getChildElements();
-					let child_nodes = Runtime.Collection.from([...vdom.elem.childNodes]);
+					var findVirtualDomPos = function (nodes, vdom)
+					{
+						for (var i = 0; i < nodes.count(); i++)
+						{
+							let node = nodes[i];
+							
+							if (node instanceof HTMLElement &&
+								vdom.kind == Runtime.Web.VirtualDom.KIND_ELEMENT)
+							{
+								if (node.tagName == vdom.name.toUpperCase())
+								{
+									return i;
+								}
+							}
+							
+							if (node instanceof Text &&
+								vdom.kind == Runtime.Web.VirtualDom.KIND_TEXT)
+							{
+								if (node.textContent == vdom.content)
+								{
+									return i;
+								}
+							}
+						}
+						
+						return -1;
+					}
 					
-					child_nodes = child_nodes
+					let new_childs = vdom.getChildElements();
+					let parent_elem = vdom.elem;
+					let old_childs = Runtime.Vector.from([...parent_elem.childNodes]);
+					
+					old_childs = old_childs
 						.map(
 							(item) => {
 								if (item.tagName == "TBODY")
 								{
-									return Runtime.Collection.from([...item.childNodes]);
+									return Runtime.Vector.from([...item.childNodes]);
 								}
 								return item;
 							}
@@ -427,20 +404,17 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 						.flatten()
 					;
 					
-					if (new_childs.count() == child_nodes.length)
+					for (let i=0; i<new_childs.count(); i++)
 					{
-						for (let i=0; i<new_childs.count(); i++)
+						let pos = findVirtualDomPos(old_childs, new_childs[i]);
+						if (pos >= 0)
 						{
-							new_childs[i].elem = child_nodes[i];
+							new_childs[i].elem = old_childs[pos];
 							new_childs[i].elem._vdom = new_childs[i];
+							old_childs.removePosition(pos);
 						}
 					}
-					else
-					{
-						vdom.is_childs_error = true;
-						//console.log("elem count childs error");
-						//console.log(vdom);
-					}
+					
 				}
 				else
 				{
@@ -481,9 +455,70 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		
 		else if (vdom.kind == Runtime.Web.VirtualDom.KIND_RAW)
 		{
-			if (vdom.elem == null || !this.is_first_render)
+			var findElementPos = function (nodes, find_e)
 			{
-				vdom.elem = this.constructor.rawHtml(vdom.content);
+				for (let i = 0; i < nodes.count(); i++)
+				{
+					let node = nodes[i];
+					
+					if (node._attached == true)
+					{
+						continue;
+					}
+					
+					if (node instanceof HTMLElement &&
+						find_e instanceof HTMLElement)
+					{
+						if (node.tagName != find_e.tagName)
+						{
+							continue;
+						}
+						if (node.outerHTML == find_e.outerHTML)
+						{
+							return i;
+						}
+					}
+					
+					if (node instanceof Text &&
+						find_e instanceof Text)
+					{
+						if (node.textContent == find_e.textContent)
+						{
+							return i;
+						}
+					}
+				}
+				
+				return -1;
+			}
+			
+			let parent_elem = vdom.getParentElement().elem;
+			let old_childs = Runtime.Vector.from([...parent_elem.childNodes]);
+			let new_childs = this.constructor.rawHtml(vdom.content);
+			
+			if (this.is_first_render)
+			{
+				let res = [];
+				
+				for (let i=0; i<new_childs.count(); i++)
+				{
+					let pos = findElementPos(old_childs, new_childs[i]);
+					if (pos >= 0)
+					{
+						res.push(old_childs[pos]);
+						old_childs[pos]._attached = true;
+					}
+					else
+					{
+						res.push(new_childs[i]);
+					}
+				}
+				
+				vdom.elem = Runtime.Collection.from(res);
+			}
+			else
+			{
+				vdom.elem = new_childs;
 			}
 		}
 		

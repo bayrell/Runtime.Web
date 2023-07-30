@@ -36,6 +36,7 @@ class VirtualDom extends BaseObject
 	string key = "";
 	string kind = "";
 	string name = "";
+	string content = "";
 	Dict params = null;
 	Collection childs = [];
 	Vector new_childs = new Vector();
@@ -45,9 +46,9 @@ class VirtualDom extends BaseObject
 	bool is_new_element = false;
 	bool is_changed_item = false;
 	bool is_change_childs = false;
-	bool is_childs_error = false;
 	var render = null;
 	var elem = null;
+	var parent_elem = null;
 	
 	
 	/**
@@ -200,12 +201,6 @@ class VirtualDom extends BaseObject
 			vdom.is_changed_item = vdom.isChanged(params, content);
 			vdom.params = params;
 			vdom.content = content;
-		}
-		
-		/* Set element */
-		if (not vdom.isElement())
-		{
-			vdom.elem = this.elem;
 		}
 		
 		/* Set component */
