@@ -75,7 +75,7 @@
 
 
 <template>
-	<html>
+	<html lang={{ @.env("LOCALE_CODE") }}>
 		<head>
 			<script>
 			window.$onReady=[];
