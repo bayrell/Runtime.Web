@@ -46,6 +46,7 @@ class AppHook extends BaseHook
 	static const string MIDDLEARE = "runtime.web.app::middleware";
 	static const string MIDDLEWARE = "runtime.web.app::middleware";
 	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
+	static const string RENDER_BODY = "runtime.web.app::render_body";
 	static const string RENDER_HEAD = "runtime.web.app::render_head";
 	static const string RESPONSE = "runtime.web.app::response";
 	static const string ROUTES_INIT = "runtime.web.app::routes_init";
@@ -76,6 +77,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::MATCH_ROUTE) return "match_route";
 		if (hook_name == static::MIDDLEARE) return "middleware";
 		if (hook_name == static::RENDER_FOOTER) return "render_footer";
+		if (hook_name == static::RENDER_BODY) return "render_body";
 		if (hook_name == static::RENDER_HEAD) return "render_head";
 		if (hook_name == static::RESPONSE) return "response";
 		if (hook_name == static::ROUTES_INIT) return "routes_init";
@@ -262,6 +264,15 @@ class AppHook extends BaseHook
 	 * Returns render head classes
 	 */
 	Dict render_head(Dict d)
+	{
+		return d;
+	}
+	
+	
+	/**
+	 * Returns render body classes
+	 */
+	Dict render_body(Dict d)
 	{
 		return d;
 	}

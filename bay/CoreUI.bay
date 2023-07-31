@@ -36,6 +36,17 @@
 
 
 <template name="renderBody">
+	%var Dict d = @.callHook(AppHook::RENDER_BODY, { "classes": [] });
+	%var Collection<string> classes = d["classes"];
+	%for (int i=0; i<classes.count(); i++)
+	{
+		%var string class_name = classes[i];
+		<{class_name} />
+	}
+</template>
+
+
+<template name="renderApp">
 	%var string class_name = layout.getLayoutClassName();
 	<div id="core_ui_root" class="layout" class={{ "layout--" ~ layout.layout_name }}>
 		<{class_name} @model=[] />
@@ -44,10 +55,6 @@
 	window["data_core_ui_layout"] = @raw{{ rtl::json_encode( layout::getClearLayout(layout) ) }};
 	window["data_frontend_env"] = @raw{{ rtl::json_encode( render_params["container", "frontend_env"] ) }};
 	</script>
-</template>
-
-
-<template name="renderApp">
 	<script>
 		onReady(function(){
 			let env = window["data_frontend_env"];
@@ -88,10 +95,10 @@
 			%render static::renderApp();
 			%render static::renderFooter();
 			<script>
-			window.onload = function(){
+			window.addEventListener('load', function() {
 				console.log('window load');
 				window.$onReady.forEach( function(f){ f(); } );
-			};
+			});
 			</script>
 		</body>
 	</html>
