@@ -36,6 +36,7 @@ Runtime.Web.RenderProvider = function()
 	this.js_href_click_bind = this.js_href_click.bind(this);
 	this.model_path = new Runtime.Collection();
 	this.history = new Runtime.Vector();
+	this.enable_lazy_load = false;
 };
 Runtime.Web.RenderProvider.prototype = Object.create(Runtime.BaseProvider.prototype);
 Runtime.Web.RenderProvider.prototype.constructor = Runtime.Web.RenderProvider;
@@ -49,7 +50,10 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		/* window.requestAnimationFrame( this.animationFrame.bind(this) ); */
 		
 		/* Add history listener */
-		window.onpopstate = this.js_onpopstate.bind(this);
+		if (this.enable_lazy_load)
+		{
+			window.onpopstate = this.js_onpopstate.bind(this);
+		}
 	},
 	
 	
@@ -601,7 +605,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		}
 		
 		/* Lazy load event */
-		if (vdom.is_new_element && elem != null)
+		if (this.enable_lazy_load && vdom.is_new_element && elem != null)
 		{
 			if (elem.tagName == "A" && elem.classList.contains('lazy_load'))
 			{
@@ -617,12 +621,12 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	openUrl: async function(href, add_history)
 	{
 		if (add_history == undefined) add_history = true;
-		/*
+		
 		var obj = { "href": href, };
 		history.pushState(obj, "", href);
 		
 		this.history.pushValue(href);
-		*/
+		
 		await this.renderPage(href);
 	},
 	
@@ -661,7 +665,8 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		await app.resolveContainer(container, models);
 		
 		/* Render */
-		console.log(container);
+		this.layout = container.layout;
+		this.repaintRef(this.vdom);
 	},
 	
 	

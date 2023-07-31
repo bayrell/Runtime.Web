@@ -40,16 +40,19 @@
 	<div id="core_ui_root" class="layout" class={{ "layout--" ~ layout.layout_name }}>
 		<{class_name} @model=[] />
 	</div>
-	<textarea id="core_ui_layout" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( layout::getClearLayout(layout) )) }}</textarea>
-	<textarea id="frontend_env" style="display: none">@raw{{ rs::base64_encode_url( rtl::json_encode( render_params["container", "frontend_env"] )) }}</textarea>
+	<script>
+	window["data_core_ui_layout"] = @raw{{ rtl::json_encode( layout::getClearLayout(layout) ) }};
+	window["data_frontend_env"] = @raw{{ rtl::json_encode( render_params["container", "frontend_env"] ) }};
+	</script>
 </template>
 
 
 <template name="renderApp">
 	<script>
 		onReady(function(){
-			let env = document.getElementById("frontend_env");
-			env = Runtime.rtl.json_decode(Runtime.rs.base64_decode_url( env.value ));
+			let env = window["data_frontend_env"];
+			env = Runtime.rtl.NativeToObject(env);
+			/*env = Runtime.rtl.json_decode(env);*/
 			Runtime.rtl.runApp(
 				@json{ @.start_modules },
 				@json{ @.entry_point },
@@ -85,7 +88,10 @@
 			%render static::renderApp();
 			%render static::renderFooter();
 			<script>
-			window.$onReady.forEach( function(f){ f(); } );
+			window.onload = function(){
+				console.log('window load');
+				window.$onReady.forEach( function(f){ f(); } );
+			};
 			</script>
 		</body>
 	</html>
