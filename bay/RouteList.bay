@@ -87,9 +87,10 @@ class RouteList extends BaseProvider
 		Dict<string> params = null;
 		
 		string request_uri = request.uri;
-		string route_prefix = request.route_prefix;
-		
+		/*
+		string route_prefix = @.env("route_prefix");
 		request_uri = static::splitRoutePrefix(request_uri, route_prefix);
+		*/
 		if (request_uri === null) return null;
 		if (request_uri == "") request_uri = "/";
 		

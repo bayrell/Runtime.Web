@@ -39,7 +39,6 @@ struct Request extends BaseStruct
 	public string host = "";
 	public string method = "GET";
 	public string protocol = "";
-	public string route_prefix = "";
 	public Dict<string> query = null;
 	public Dict<var> payload = null;
 	public Dict<Cookie> cookies = null;
@@ -53,5 +52,23 @@ struct Request extends BaseStruct
 	string getClientIp()
 	{
 		return this.headers.get("REMOTE_ADDR");
+	}
+	
+	
+	/**
+	 * Init request
+	 */
+	Request init(string full_uri)
+	{
+		Dict res = rs::parse_url(full_uri);
+		
+		string uri = res["uri"];
+		Dict<string> query = res["query_arr"];
+		
+		return this.clone({
+			"full_uri": full_uri,
+			"uri": uri,
+			"query": query,
+		});
 	}
 }

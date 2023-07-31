@@ -28,6 +28,7 @@ use Runtime.Web.BaseRoute;
 use Runtime.Web.Cookie;
 use Runtime.Web.CoreUI;
 use Runtime.Web.Layout;
+use Runtime.Web.RedirectResponse;
 use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
@@ -123,7 +124,6 @@ class RenderContainer extends BaseObject
 		this.response = new RenderResponse
 		{
 			"class_name": class_name,
-			"layout": this.layout,
 		};
 	}
 	
@@ -142,9 +142,10 @@ class RenderContainer extends BaseObject
 	 */
 	void redirect(string url, int http_code = 301)
 	{
-		Response response = new Response();
+		Response response = new RedirectResponse();
+		response <= redirect <= url;
 		response <= http_code <= http_code;
-		response <= headers <= "Location" <= url;
+		/*response <= headers <= "Location" <= url;*/
 		this.response = response;
 	}
 	

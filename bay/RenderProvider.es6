@@ -24,29 +24,32 @@ Runtime.Web.RenderProvider = function()
 	if (window) window["render_provider"] = this;
 	this.vdom = null;
 	this.layout = null;
-	this.render_before_callbacks = [];
-	this.render_after_callbacks = [];
 	this.render_vdom_list = [];
 	this.render_elem_list = [];
 	this.render_elem_obj = {};
 	this.render_elem_childs_list = [];
 	this.render_elem_childs_obj = {};
 	this.is_first_render = false;
-	this.model_path = new Runtime.Collection();
 	this.animation_frame = null;
 	this.constructor.is_debug = false;
+	this.js_event_bind = this.js_event.bind(this);
+	this.js_href_click_bind = this.js_href_click.bind(this);
+	this.model_path = new Runtime.Collection();
+	this.history = new Runtime.Vector();
 };
 Runtime.Web.RenderProvider.prototype = Object.create(Runtime.BaseProvider.prototype);
 Runtime.Web.RenderProvider.prototype.constructor = Runtime.Web.RenderProvider;
 Object.assign(Runtime.Web.RenderProvider.prototype,
 {
-	
 	/**
 	 * Start driver
 	 */
 	start: function()
 	{
 		/* window.requestAnimationFrame( this.animationFrame.bind(this) ); */
+		
+		/* Add history listener */
+		window.onpopstate = this.js_onpopstate.bind(this);
 	},
 	
 	
@@ -114,24 +117,6 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		this.render_vdom_list.push(vdom);
 		this.addChangedElem(vdom);
 		this.requestAnimationFrame();
-	},
-	
-	
-	/**
-	 * Add function to next render before paint
-	 */
-	nextRenderBefore(f)
-	{
-		this.render_before_callbacks.push(f);
-	},
-	
-	
-	/**
-	 * Add function to next render before paint
-	 */
-	nextRenderAfter(f)
-	{
-		this.render_after_callbacks.push(f);
 	},
 	
 	
@@ -259,25 +244,8 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		let render_vdom_list = this.render_vdom_list;
 		if (render_vdom_list.length == 0) return;
 		
-		/* Before render */
-		for (let i=0; i<this.render_before_callbacks.length; i++)
-		{
-			let f = this.render_before_callbacks[i];
-			f();
-		}
-		
 		/* Render scene */
 		this.render();
-		
-		/* After render */
-		for (let i=0; i<this.render_after_callbacks.length; i++)
-		{
-			let f = this.render_after_callbacks[i];
-			f();
-		}
-		
-		this.render_before_callbacks = [];
-		this.render_after_callbacks = [];
 	},
 	
 	
@@ -581,7 +549,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				
 				if (vdom.is_new_element && es6_event_name != "" && vdom.isElement())
 				{
-					vdom.elem.addEventListener(es6_event_name, this.js_event);
+					vdom.elem.addEventListener(es6_event_name, this.js_event_bind);
 				}
 				
 				continue;
@@ -631,8 +599,75 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				}
 			}
 		}
+		
+		/* Lazy load event */
+		if (vdom.is_new_element && elem != null)
+		{
+			if (elem.tagName == "A" && elem.classList.contains('lazy_load'))
+			{
+				elem.addEventListener("click", this.js_href_click_bind);
+			}
+		}
 	},
 	
+	
+	/**
+	 * Open URL
+	 */
+	openUrl: async function(href, add_history)
+	{
+		if (add_history == undefined) add_history = true;
+		/*
+		var obj = { "href": href, };
+		history.pushState(obj, "", href);
+		
+		this.history.pushValue(href);
+		*/
+		await this.renderPage(href);
+	},
+	
+	
+	/**
+	 * Render page
+	 */
+	renderPage: async function(href)
+	{
+		let context = Runtime.rtl.getContext();
+		let app = context.app;
+		
+		/* Save models */
+		let models = this.layout.models;
+		
+		/* Create request */
+		let obj = {
+			"method": "GET",
+			"protocol": document.location.protocol.slice(0,-1),
+			"host": document.location.host,
+		};
+		let request = new Runtime.Web.Request(Runtime.Dict.from(obj));
+		request = request.init(href);
+		
+		/* Create container */
+		let container = new Runtime.Web.RenderContainer();
+		container.request = request;
+		
+		/* Init container */
+		await app.initContainer(container);
+		
+		/* Setup layout */
+		container.layout = this.layout;
+		
+		/* Resolve container */
+		await app.resolveContainer(container, models);
+		
+		/* Render */
+		console.log(container);
+	},
+	
+	
+	/**
+	 * JS event
+	 */
 	js_event: function(e)
 	{
 		let msg = null;
@@ -647,6 +682,60 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		
 		listener.dispatch(msg);
 	},
+	
+	
+	/**
+	 * Lazy load
+	 */
+	js_href_click: function(e)
+	{
+		var elem = e.currentTarget;
+		if (elem.tagName == "A" && elem.classList.contains('lazy_load'))
+		{
+			var target = elem.getAttribute("target");
+			var href = elem.getAttribute("href");
+			
+			if (target == null)
+			{
+				e.preventDefault();
+				
+				(async () => {
+					try { await this.openUrl(href); }
+					catch (e) { console.log(e.stack); }
+				})();
+				
+				return false;
+			}
+		}
+	},
+	
+	
+	/**
+	 * Pos state event
+	 */
+	js_onpopstate: function(e)
+	{
+		if (this.history.count() == 0)
+		{
+			document.location = document.location;
+		}
+		else
+		{
+			let href = "/";
+			if (e.state != null && typeof e.state.href == "string")
+			{
+				href = e.state.href;
+			}
+			
+			this.history.pop();
+			
+			(async () => {
+				try { await this.openUrl(href, false); }
+				catch (e) { console.log(e.stack); }
+			})();
+		}
+	},
+	
 	assignValue: function(k,v)
 	{
 		if (k == "layout")this.layout = v;

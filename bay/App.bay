@@ -57,13 +57,35 @@ class App extends BaseProvider
 	{
 		await @.callAsyncHook(AppHook::MAIN, {});
 		
-		#ifcode PHP then
-		$container = $this->createRenderContainer();
-		$this->init_container($container);
-		$this->resolve_container($container);
-		$this->response($container->response);
+		#ifdef BACKEND then
+		this.renderBackend();
 		#endif
 		
+		#ifdef FRONTEND then
+		this.renderFrontend();
+		#endif
+	}
+	
+	
+	/**
+	 * Render backend
+	 */
+	async void renderBackend()
+	{
+		#ifcode PHP then
+		$container = $this->createRenderContainer();
+		$this->initContainer($container);
+		$this->resolveContainer($container);
+		$this->responseBackend($container->response);
+		#endif
+	}
+	
+	
+	/**
+	 * Render backend
+	 */
+	async void renderFrontend()
+	{
 		#ifcode ES6 then
 		let context = Runtime.rtl.getContext();
 		let core_ui_root = document.getElementById("core_ui_root");
@@ -80,7 +102,7 @@ class App extends BaseProvider
 	/**
 	 * Resolve container
 	 */
-	async void init_container(RenderContainer container)
+	async void initContainer(RenderContainer container)
 	{
 		Context context = @;
 		context <= environments <= render_container <= container;
@@ -96,10 +118,13 @@ class App extends BaseProvider
 	/**
 	 * Resolve container
 	 */
-	async void resolve_container(RenderContainer container)
+	async void resolveContainer(RenderContainer container, Dict models = null)
 	{
 		/* Find route */
 		await this.findRoute(container);
+		
+		/* Init layout */
+		await this.initLayout(container, models);
 		
 		/* Call route */
 		await this.callRoute(container);
@@ -112,11 +137,12 @@ class App extends BaseProvider
 	
 	
 	/**
-	 * Create layout
+	 * Init layout
 	 */
-	async void createLayout(RenderContainer container)
+	async void initLayout(RenderContainer container, Dict models = null)
 	{
-		@.callAsyncHook(AppHook::CREATE_LAYOUT, {
+		/* Create layout */
+		await @.callAsyncHook(AppHook::CREATE_LAYOUT, {
 			"container": container,
 		});
 		
@@ -124,21 +150,21 @@ class App extends BaseProvider
 		{
 			container <= layout <= new Layout();
 		}
-	}
-	
-	
-	/**
-	 * Init layout
-	 */
-	async void initLayout(RenderContainer container)
-	{
+		
+		/* Set models */
+		if (models)
+		{
+			container <= models <= models;
+		}
+		
 		/* Setup request params */
 		container <= layout <= route <= container.route;
+		container <= layout <= request_host <= container.request.host;
 		container <= layout <= request_uri <= container.request.uri;
 		container <= layout <= request_full_uri <= container.request.full_uri;
 		container <= layout <= request_query <= container.request.query;
 		
-		@.callAsyncHook(AppHook::INIT_LAYOUT, {
+		await @.callAsyncHook(AppHook::INIT_LAYOUT, {
 			"container": container,
 		});
 		
@@ -175,12 +201,6 @@ class App extends BaseProvider
 	 */
 	async void callRoute(RenderContainer container)
 	{
-		/* Create layout */
-		await this.createLayout(container);
-		
-		/* Init layout */
-		await this.initLayout(container);
-		
 		/* Call route before */
 		await @.callAsyncHook(AppHook::CALL_ROUTE_BEFORE, {
 			"container": container,
@@ -312,7 +332,7 @@ class App extends BaseProvider
 	/**
 	 * Output result
 	 */
-	function response($ctx, $response)
+	function responseBackend($ctx, $response)
 	{
 		if ($response != null)
 		{
@@ -345,6 +365,12 @@ class App extends BaseProvider
 					header($key . ":" . $value);
 				}
 			}
+			
+			if ($response instanceof \Runtime\Web\RedirectResponse)
+			{
+				header("Location:" . $response->redirect);
+			}
+			
 			echo $response->getContent($ctx);
 		}
 		else

@@ -43,8 +43,9 @@ struct Layout extends BaseStruct
 	
 	/* Current route */
 	RouteInfo route = null;
-	string request_uri = "";
 	string request_full_uri = "";
+	string request_host = "";
+	string request_uri = "";
 	Dict<string> request_query = null;
 	
 	/* Increment assets */
