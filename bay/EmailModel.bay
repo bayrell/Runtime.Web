@@ -30,4 +30,5 @@ struct EmailModel extends BaseStruct
 {
 	string title = "";
 	Collection<string> dest = [];
+	bool delete_after = false;
 }
