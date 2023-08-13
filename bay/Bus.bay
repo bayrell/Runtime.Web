@@ -258,7 +258,8 @@ class Bus
 		
 		/* Send post */
 		let context = Runtime.rtl.getContext();
-		let api_url = "/" + context.env("LOCALE_CODE") + "/api/" + api_name + "/";
+		/*let api_url = "/" + context.env("LOCALE_CODE") + "/api/" + api_name + "/";*/
+		let api_url = "/api/" + api_name + "/";
 		
 		if (api_name == "runtime.web.remote_call")
 		{

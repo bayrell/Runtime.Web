@@ -34,7 +34,7 @@ struct ApiResult extends Response
 	string error_name = null;
 	string error_file = "";
 	string error_line = "";
-	string error_trace = "";
+	Collection<string> error_trace = null;
 	
 	
 	/**
@@ -186,7 +186,7 @@ struct ApiResult extends Response
 			"error_name": "",
 			"error_file": "",
 			"error_line": "",
-			"error_trace": "",
+			"error_trace": null,
 		});
 		
 		return res;
@@ -241,7 +241,7 @@ struct ApiResult extends Response
 				"error_name": e::getClassName(),
 				"error_file": e.getFileName(),
 				"error_line": e.getErrorLine(),
-				"error_trace": e.getTraceStr(),
+				"error_trace": e.getTraceCollection(),
 				"err": e,
 			});
 			
@@ -252,9 +252,22 @@ struct ApiResult extends Response
 		else
 		{
 			string message = "";
+			string error_file = "";
+			string error_line = "";
+			Collection<string> error_trace = null;
 			
 			#ifcode PHP then
 			$message = $e->getMessage();
+			$error_file = $e->getFile();
+			$error_line = $e->getLine();
+			$error_trace = $e->getTrace();
+			$error_trace = array_map(
+				function ($item){
+					return $item["file"] . "(" . $item["line"] . "): " . $item["function"];
+				},
+				$error_trace
+			);
+			$error_trace = \Runtime\Collection::from($error_trace);
 			#endif
 			
 			return res.clone({
@@ -262,6 +275,9 @@ struct ApiResult extends Response
 				"message": message,
 				"error": null,
 				"data": null,
+				"error_file": error_file,
+				"error_line": error_line,
+				"error_trace": error_trace,
 			});
 		}
 		
