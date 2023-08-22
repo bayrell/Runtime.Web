@@ -90,7 +90,7 @@ class AppHook extends BaseHook
 	 */
 	void register_hooks()
 	{
-		this.register( static::CSS_CLASS_NAMES, 100 );
+		this.register( static::CSS_CLASS_NAMES );
 	}
 	
 	
