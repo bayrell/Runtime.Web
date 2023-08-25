@@ -19,9 +19,10 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
+use Runtime.BaseStruct;
 use Runtime.ModelProxy;
-use Runtime.RouteInfo;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteInfo;
 use Runtime.Web.RouteList;
 
 
@@ -166,4 +167,27 @@ class BaseRoute extends BaseObject
 	{
 		this.container.redirect(url, http_code);
 	}
+	
+	
+	/**
+	 * Returns page model proxy
+	 */
+	ModelProxy modelProxy(Collection path = null)
+		=> this.container.modelProxy(path)
+	;
+	
+	
+	/**
+	 * Returns layout model proxy
+	 */
+	ModelProxy layoutProxy(Collection path = null)
+		=> this.container.layoutProxy(path)
+	;
+	
+	
+	/**
+	 * Returns model
+	 */
+	BaseStruct model() => this.container.layout.getPageModel();
+	
 }
