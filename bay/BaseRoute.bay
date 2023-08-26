@@ -30,8 +30,8 @@ class BaseRoute extends BaseObject
 {
 	bool is_cancel_route = false;
 	RenderContainer container = null;
-	ModelProxy layout_proxy = null;
-	ModelProxy page_model_proxy = null;
+	ModelProxy layout = null;
+	ModelProxy page_model = null;
 	
 	
 	/**
@@ -75,8 +75,8 @@ class BaseRoute extends BaseObject
 	 */
 	void setPageDescription(string description)
 	{
-		ModelProxy seo = this.layout_proxy.proxy(["models", "seo"]);
-		seo.setAttr("description", description);
+		ModelProxy seo = this.layout.proxy(["models", "seo"]);
+		seo.commit("setDescription", description)
 	}
 	
 	
@@ -86,7 +86,7 @@ class BaseRoute extends BaseObject
 	void setPageModel(string page_model)
 	{
 		this.container.setPageModel(page_model);
-		this.page_model_proxy = this.container.modelProxy();
+		this.page_model = this.container.modelProxy();
 	}
 	
 	
@@ -103,14 +103,14 @@ class BaseRoute extends BaseObject
 		}
 		
 		/* Setup layout proxy */
-		this.layout_proxy = this.container.layoutProxy();
+		this.layout = this.container.layoutProxy();
 		
 		/* Setup page model */
 		string model_name = this.getPageModelName();
 		if (model_name)
 		{
 			this.container.setPageModel( rtl::newInstance(model_name) );
-			this.page_model_proxy = this.container.modelProxy();
+			this.page_model = this.container.modelProxy();
 		}
 	}
 	
@@ -172,9 +172,8 @@ class BaseRoute extends BaseObject
 	/**
 	 * Returns page model proxy
 	 */
-	ModelProxy modelProxy(Collection path = null)
-		=> this.container.modelProxy(path)
-	;
+	ModelProxy modelProxy(Collection path = null) => this.container.modelProxy(path);
+	ModelProxy proxy(Collection path = null) => this.container.modelProxy(path);
 	
 	
 	/**

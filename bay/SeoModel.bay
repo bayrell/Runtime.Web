@@ -27,24 +27,53 @@ struct SeoModel extends BaseStruct
 	string description = "";
 	string site_name = "";
 	Collection<string> robots = ["follow", "index"];
-    string canonical_url = "";
-    string prev_url = "";
-    string next_url = "";
-    string locale = "";
-    string og_type = "";
-    string og_image = "";
-    string article_section = "";
-    string article_publisher = "";
-    string article_published_time = "";
-    string article_modified_time = "";
-    Collection<string> tags = [];
-    Collection<string> params = [];
-    
-    
-    /**
-     * Add tags
-     */
-    SeoModel addTags(Collection tags) => tags != null ? this.clone({
-        "tags": this.tags.concat(tags)
-    }) : this;
+	string canonical_url = "";
+	string prev_url = "";
+	string next_url = "";
+	string locale = "";
+	string og_type = "";
+	string og_image = "";
+	string article_section = "";
+	string article_publisher = "";
+	string article_published_time = "";
+	string article_modified_time = "";
+	Collection<string> tags = [];
+	Collection<string> params = [];
+	
+	
+	/**
+	 * Add tags
+	 */
+	SeoModel addTags(Collection tags) =>
+		tags != null
+			? this.clone({
+				"tags": this.tags.concat(tags)
+			})
+			: this
+	;
+	
+	
+	/**
+	 * Setup site name
+	 */
+	SeoModel setSiteName(string site_name) => this.clone{
+		"site_name": site_name,
+	};
+	
+	
+	/**
+	 * Setup title
+	 */
+	SeoModel setTitleExt(string site_name) => this.clone{
+		"site_name": site_name,
+	};
+	
+	
+	/**
+	 * Setup description
+	 */
+	SeoModel setDescription(string description) => this.clone{
+		"description": description
+	};
+	
 }

@@ -61,19 +61,13 @@ struct ApiResult extends Response
 	/**
 	 * Returns true if error
 	 */
-	bool isError()
-	{
-		return this.code < 0;
-	}
+	bool isError() => this.code < 0;
 	
 	
 	/**
 	 * Returns true if success
 	 */
-	bool isSuccess()
-	{
-		return this.code > 0;
-	}
+	bool isSuccess() => this.code > 0;
 	
 	
 	/**

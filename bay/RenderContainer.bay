@@ -87,7 +87,8 @@ class RenderContainer extends BaseObject
 	 * Returns proxy
 	 */
 	ModelProxy proxy(Collection path = null)
-		=> new ModelProxy( this, path );
+		=> new ModelProxy( this, ["layout", "pages", this.layout.page_model_class_name].concat(path) )
+	;
 	
 	
 	/**

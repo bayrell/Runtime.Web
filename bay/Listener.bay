@@ -106,7 +106,7 @@ class Listener extends BaseProvider
 				else if (rtl::isString(method_name))
 				{
 					fn callback = rtl::method(component, method_name);
-					callback(message);
+					rtl::apply(callback, [message]);
 				}
 			}
 		}
