@@ -200,7 +200,7 @@ struct ApiResult extends Response
 		if (e instanceof RuntimeException)
 		{
 			res = res.clone({
-				"http_code": 500,
+				"http_code": 200,
 				"code": e.getErrorCode(),
 				"message": e.getErrorMessage(),
 				"error_name": e::getClassName(),
@@ -211,7 +211,7 @@ struct ApiResult extends Response
 		else if (e instanceof Dict)
 		{
 			res = res.clone({
-				"http_code": 500,
+				"http_code": 200,
 				"code": e.has("code") ? e["code"] : rtl::ERROR_UNKNOWN,
 				"message": e.has("message") ? e["message"] : this.message,
 				"error_name": e.has("error_name") ? e["error_name"] : this.error_name,

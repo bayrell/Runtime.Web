@@ -157,7 +157,7 @@ class Bus
 		if (!$api)
 		{
 			return (new \Runtime\Web\ApiResult())
-				->fail(
+				->exception(
 					new \Runtime\Exceptions\ApiException("Api '" . $api_name . "' not found")
 				)
 			;
@@ -201,7 +201,7 @@ class Bus
 				else
 				{
 					return (new \Runtime\Web\ApiResult())
-						->fail(
+						->exception(
 							new \Runtime\Exceptions\ApiException("Api method '" .
 								$api_name . "' not found")
 						)
@@ -220,7 +220,7 @@ class Bus
 			else
 			{
 				return (new \Runtime\Web\ApiResult())
-					->fail(
+					->exception(
 						new \Runtime\Exceptions\ApiException("Api response not found")
 					)
 				;
