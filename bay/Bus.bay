@@ -188,11 +188,12 @@ class Bus
 			{
 				$route->container->response = new ApiResult( new \Runtime\Dict([
 					"code" => -1,
+					"http_code" => 500,
 					"message" => "Empty response",
 				]));
 				
 				$route_method = $route::getApiMethod($api_method_name);
-				if ($route_method)
+				if ($route_method && method_exists($route, $route_method))
 				{
 					$route->action = $route_method;
 					call_user_func([ $route, $route_method ]);
@@ -201,7 +202,8 @@ class Bus
 				{
 					return (new \Runtime\Web\ApiResult())
 						->fail(
-							new \Runtime\Exceptions\ApiException("Api method not found")
+							new \Runtime\Exceptions\ApiException("Api method '" .
+								$api_name . "' not found")
 						)
 					;
 				}
