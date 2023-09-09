@@ -276,9 +276,11 @@ struct ApiResult extends Response
 			
 			return res.clone({
 				"code": rtl::ERROR_UNKNOWN,
+				"http_code": 500,
 				"message": message,
 				"error": null,
 				"data": null,
+				"error_name": "Error",
 				"error_file": error_file,
 				"error_line": error_line,
 				"error_trace": error_trace,

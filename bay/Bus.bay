@@ -318,10 +318,20 @@ class Bus
 			}
 			if (res.error_name && res.error_file && res.error_line)
 			{
-				let err = "Fatal error " + res.error_name +
-					" in " + res.error_file + ": " + res.error_line + "\n";
-				if (res.error_trace) err += res.error_trace;
-				if (err) Runtime.io.print_error(err);
+				let err = [
+					res.message,
+					"Fatal error " + res.error_name +
+					" in " + res.error_file + ": " + res.error_line
+				];
+				if (res.error_trace)
+				{
+					err.push("Trace:");
+					for (let i=0; i < res.error_trace.length; i++)
+					{
+						err.push("\t" + (res.error_trace.length - i) + ") " + res.error_trace[i]);
+					}
+				}
+				if (err) Runtime.io.print_error(err.join("\n"));
 			}
 		}
 		

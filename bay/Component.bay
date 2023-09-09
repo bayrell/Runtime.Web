@@ -143,6 +143,14 @@ class Component extends BaseObject
 	
 	
 	/**
+	 * Destroy component
+	 */
+	void onDestroy()
+	{
+	}
+	
+	
+	/**
 	 * Update component
 	 */
 	void onUpdate()

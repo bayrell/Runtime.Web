@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.Web.Component;
 use Runtime.Web.RenderProvider;
+use Runtime.Web.Listener;
 
 
 class VirtualDom extends BaseObject
@@ -39,6 +40,7 @@ class VirtualDom extends BaseObject
 	string content = "";
 	Dict params = null;
 	Collection childs = [];
+	Vector old_childs = new Vector();
 	Vector new_childs = new Vector();
 	Collection<string> path_id = null;
 	VirtualDom parent_vdom = null;
@@ -194,6 +196,8 @@ class VirtualDom extends BaseObject
 			vdom.is_changed_item = true;
 			vdom.is_new_element = true;
 		}
+		
+		/* Exists element */
 		else
 		{
 			vdom.is_new_element = false;
@@ -201,6 +205,10 @@ class VirtualDom extends BaseObject
 			vdom.is_changed_item = vdom.isChanged(params, content);
 			vdom.params = params;
 			vdom.content = content;
+			if (vdom.parent_vdom != null)
+			{
+				vdom.parent_vdom.old_childs.removeValue(vdom);
+			}
 		}
 		
 		/* Set component */
@@ -211,6 +219,8 @@ class VirtualDom extends BaseObject
 		
 		/* Clear vdom childs */
 		vdom.new_childs = new Vector();
+		vdom.old_childs = new Vector();
+		vdom.old_childs.appendVector( vdom.childs );
 		
 		/* Push child */
 		this.new_childs.pushValue(vdom);
@@ -297,6 +307,34 @@ class VirtualDom extends BaseObject
 		this.childs = this.new_childs.toCollection();
 		this.new_childs = new Vector();
 		this.is_change_childs = true;
+		
+		if (this.old_childs.count() > 0)
+		{
+			for (int i=0; i<this.old_childs.count(); i++)
+			{
+				VirtualDom vdom = this.old_childs.get(i);
+				vdom.destroy();
+			}
+		}
+	}
+	
+	
+	/**
+	 * Destroy virtual dom tree
+	 */
+	void destroy()
+	{
+		for (int i=0; i<this.childs.count(); i++)
+		{
+			VirtualDom vdom = this.childs.get(i);
+			vdom.destroy();
+		}
+		
+		if (this.isComponent())
+		{
+			Listener listener = @.provider("Runtime.Web.Listener");
+			listener.removeComponent(this.component);
+		}
 	}
 	
 	
