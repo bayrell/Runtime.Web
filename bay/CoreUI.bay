@@ -61,8 +61,8 @@
 			env = Runtime.rtl.NativeToObject(env);
 			/*env = Runtime.rtl.json_decode(env);*/
 			Runtime.rtl.runApp(
-				@json{ @.start_modules },
 				@json{ @.entry_point },
+				@json{ @.start_modules },
 				Runtime.Dict.from({"environments": env,"tz":@json{ @.tz }})
 			);
 		});
