@@ -140,6 +140,20 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
+	 * Setup dictionary
+	 */
+	void setDictionary(string key, Collection items)
+	{
+		if (this.response instanceof ApiResult)
+		{
+			ApiResult api_result = this.response;
+			api_result <= data <= dictionary <= { key } <= items;
+			this.response = api_result;
+		}
+	}
+	
+	
+	/**
 	 * Setup redirect response
 	 */
 	void redirect(string url, int http_code = 301)
