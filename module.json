@@ -8,6 +8,7 @@
 		"BaseRoute.bay",
 		"Breadcrumb.bay",
 		"BaseModel.bay",
+		"BaseWidget.bay",
 		"Bus.bay",
 		"Component.bay",
 		"Cookie.bay",
