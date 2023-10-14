@@ -129,6 +129,16 @@ class AppHook extends BaseHook
 		Layout layout = d["layout"];
 		Vector css_class_names = d["css_class_names"];
 		
+		/* Add css classes */
+		if (layout.css_classes and layout.css_classes.count())
+		{
+			for (int i=0; i<layout.css_classes.count(); i++)
+			{
+				string css_class_name = layout.css_classes.get(i);
+				css_class_names.pushValue(css_class_name);
+			}
+		}
+		
 		/* Add page class name */
 		if (
 			layout.page_class_name != "" and

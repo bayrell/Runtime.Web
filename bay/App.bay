@@ -81,7 +81,7 @@ class App extends BaseProvider
 	/**
 	 * Render backend
 	 */
-	async void renderBackend()
+	void renderBackend()
 	{
 		#ifcode PHP then
 		$container = $this->createRenderContainer();
@@ -95,7 +95,7 @@ class App extends BaseProvider
 	/**
 	 * Render backend
 	 */
-	async void renderFrontend()
+	void renderFrontend()
 	{
 		#ifcode ES6 then
 		let context = Runtime.rtl.getContext();
@@ -415,94 +415,6 @@ class App extends BaseProvider
 	}
 	
 	#endif
-	
-	
-	/**
-	 * Returns css
-	 */
-	static string getCss(Collection<string> class_names, Dict css_vars = null)
-	{
-		if (css_vars == null)
-		{
-			css_vars = @.callHook(AppHook::CSS_VARS, css_vars);
-		}
-		
-		/* Get required components */
-		Collection<string> components = static::getRequiredComponents(class_names);
-		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
-		
-		/* Get css */
-		Collection<string> css = components.map
-		(
-			string (string component_name) use (css_vars)
-			{
-				if (component_name == "") return "";
-				if (not rtl::method_exists(component_name, "css")) return "";
-				fn f = rtl::method(component_name, "css");
-				string css = f(css_vars);
-				return css;
-			}
-		);
-		
-		css = css
-			.map( string (string s) => rs::trim(s) )
-			.filter( bool (string s) => s != "" )
-		;
-		
-		return rs::trim( rs::join("\n", css) );
-	}
-	
-	
-	/**
-	 * Returns required modules
-	 * @param string class_name
-	 * @return Collection<string>
-	 */
-	static void _getRequiredComponents
-	(
-		Vector<string> res,
-		Map<string> cache,
-		Collection<string> components
-	)
-	{
-		if (components == null)
-			return;
-		
-		for (int i=0; i<components.count(); i++)
-		{
-			string class_name = components.item(i);
-			if (cache.get(class_name, false) == false)
-			{
-				cache.setValue(class_name, true);
-				if (rtl::method_exists(class_name, "components"))
-				{
-					fn f = rtl::method(class_name, "components");
-					Collection<string> sub_components = f();
-					if (sub_components != null)
-					{
-						static::_getRequiredComponents(res, cache, sub_components);
-					}
-				}
-				res.pushValue(class_name);
-			}
-		}
-	}
-	
-	
-	/**
-	 * Returns all components
-	 * @param Collection<string> components
-	 * @return Collection<string>
-	 */
-	pure Collection<string> getRequiredComponents(Collection<string> components)
-	{
-		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
-		Vector<string> res = new Vector();
-		Map<string> cache = new Map();
-		static::_getRequiredComponents(res, cache, components);
-		res = res.removeDuplicatesIm();
-		return res.toCollection();
-	}
 	
 	
 	/**

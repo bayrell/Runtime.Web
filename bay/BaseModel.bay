@@ -20,33 +20,33 @@ namespace Runtime.Web;
 
 use Runtime.BaseStruct;
 use Runtime.ModelProxy;
-use Runtime.Web.BaseWidget;
 
 
 struct BaseModel extends BaseStruct
 {
+	string widget_name = "";
 	Dict widgets = {};
 	
 	
 	/**
 	 * Add widget
 	 */
-	BaseModel addWidget(BaseWidget widget) => this.clone
+	BaseModel addWidget(BaseModel model) => this.clone
 	{
-		"widget": this.widgets.setValueIm(widget.name, widget),
+		"widgets": this.widgets.setIm(model.widget_name, model),
 	};
 	
 	
 	/**
 	 * Returns widget
 	 */
-	BaseWidget getWidget(string widget_name) => this.widgets.get(widget_name);
+	BaseModel getWidget(string widget_name) => this.widgets.get(widget_name);
 	
 	
 	/**
-	 * Init widgets
+	 * Setup widgets
 	 */
-	async void initWidgets(ModelProxy model)
+	async static void setupWidgets(ModelProxy<BaseModel> model)
 	{
 		Dict widgets = model.data("widgets");
 		Collection widgets_keys = widgets.keys();
@@ -54,8 +54,25 @@ struct BaseModel extends BaseStruct
 		for (int i=0; i<widgets_keys.count(); i++)
 		{
 			string widget_name = widgets_keys.get(i);
-			ModelProxy<BaseWidget> widget = model.data("widgets", widget_name);
-			await widget.commitAsync("init");
+			ModelProxy<BaseModel> widget = model.proxy(["widgets", widget_name]);
+			await widget.commitAsync("setupWidgets");
+		}
+	}
+	
+	
+	/**
+	 * Load widgets data
+	 */
+	async static void loadWidgets(ModelProxy model)
+	{
+		Dict widgets = model.data("widgets");
+		Collection widgets_keys = widgets.keys();
+		
+		for (int i=0; i<widgets_keys.count(); i++)
+		{
+			string widget_name = widgets_keys.get(i);
+			ModelProxy<BaseModel> widget = model.proxy(["widgets", widget_name]);
+			await widget.commitAsync("loadWidgets");
 		}
 	}
 	
