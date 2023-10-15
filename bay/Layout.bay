@@ -32,9 +32,10 @@ use Runtime.Web.SeoModel;
 struct Layout extends BaseStruct
 {
 	string title = "";
-	string page_model_class_name = "";
 	string layout_name = "default";
 	string page_class_name = "";
+	string page_model_class_name = "";
+	string page_route_class_name = "";
 	Collection<string> css_classes = [];
 	Collection<Breadcrumb> breadcrumbs = [];
 	Dict<BaseStruct> pages = {};
