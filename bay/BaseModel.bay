@@ -46,10 +46,38 @@ struct BaseModel extends BaseStruct
 	
 	
 	/**
+	 * Setup widget
+	 */
+	async static void setup
+	(
+		ModelProxy<BaseModel> page_model,
+		ModelProxy<BaseModel> widget,
+		BaseRoute route
+	)
+	{
+	}
+	
+	
+	/**
+	 * Load widget
+	 */
+	async static void load
+	(
+		ModelProxy<BaseModel> page_model,
+		ModelProxy<BaseModel> widget,
+		BaseRoute route
+	)
+	{
+	}
+	
+	
+	/**
 	 * Setup widgets
 	 */
 	async static void setupWidgets(ModelProxy<BaseModel> widget, BaseRoute route)
 	{
+		await route.page_model.commitAsync("setup", widget, route);
+		
 		Dict widgets = widget.data("widgets");
 		Collection widgets_keys = widgets.keys();
 		
@@ -67,6 +95,8 @@ struct BaseModel extends BaseStruct
 	 */
 	async static void loadWidgets(ModelProxy<BaseModel> widget, BaseRoute route)
 	{
+		await route.page_model.commitAsync("load", widget, route);
+		
 		Dict widgets = widget.data("widgets");
 		Collection widgets_keys = widgets.keys();
 		
