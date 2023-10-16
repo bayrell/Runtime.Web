@@ -68,6 +68,31 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	
 	
 	/**
+	 * Returns page model proxy
+	 */
+	modelProxy: function(path)
+	{
+		return new Runtime.ModelProxy(
+			this,
+			Runtime.Collection.from(["layout", "pages", this.layout.page_model_class_name])
+				.concat(path)
+		);
+	},
+	
+	
+	/**
+	 * Returns layout proxy
+	 */
+	layoutProxy: function(path)
+	{
+		return new Runtime.ModelProxy(
+			this,
+			Runtime.Collection.from(["layout"]).concat(path)
+		);
+	},
+	
+	
+	/**
 	 * Commit layout
 	 */
 	commitComponent: function(component, new_model)

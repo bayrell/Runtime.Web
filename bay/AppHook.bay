@@ -24,7 +24,6 @@ use Runtime.Web.Layout;
 
 class AppHook extends BaseHook
 {
-	
 	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
 	static const string CALL_ROUTE_AFTER = "runtime.web.app::call_route_after";
 	static const string CALL_ROUTE_BEFORE = "runtime.web.app::call_route_before";

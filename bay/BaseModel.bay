@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseStruct;
 use Runtime.ModelProxy;
 use Runtime.Web.BaseRoute;
+use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
 
@@ -72,40 +73,77 @@ struct BaseModel extends BaseStruct
 	
 	
 	/**
+	 * Widget event
+	 */
+	async static Dict event
+	(
+		ModelProxy<BaseModel> page_model,
+		ModelProxy<BaseModel> widget,
+		string action, Dict obj
+	)
+	{
+		return obj;
+	}
+	
+	
+	/**
 	 * Setup widgets
 	 */
-	async static void setupWidgets(ModelProxy<BaseModel> widget, BaseRoute route)
+	async static void setupWidgets(ModelProxy<BaseModel> model, BaseRoute route)
 	{
-		await route.page_model.commitAsync("setup", widget, route);
-		
-		Dict widgets = widget.data("widgets");
+		Dict widgets = model.data("widgets");
 		Collection widgets_keys = widgets.keys();
 		
 		for (int i=0; i<widgets_keys.count(); i++)
 		{
 			string widget_name = widgets_keys.get(i);
-			ModelProxy<BaseModel> widget = widget.proxy(["widgets", widget_name]);
+			ModelProxy<BaseModel> widget = model.proxy(["widgets", widget_name]);
 			await widget.commitAsync("setupWidgets", route);
 		}
+		
+		await route.page_model.commitAsync("setup", model, route);
 	}
 	
 	
 	/**
 	 * Load widgets data
 	 */
-	async static void loadWidgets(ModelProxy<BaseModel> widget, BaseRoute route)
+	async static void loadWidgets(ModelProxy<BaseModel> model, BaseRoute route)
 	{
-		await route.page_model.commitAsync("load", widget, route);
-		
-		Dict widgets = widget.data("widgets");
+		Dict widgets = model.data("widgets");
 		Collection widgets_keys = widgets.keys();
 		
 		for (int i=0; i<widgets_keys.count(); i++)
 		{
 			string widget_name = widgets_keys.get(i);
-			ModelProxy<BaseModel> widget = widget.proxy(["widgets", widget_name]);
+			ModelProxy<BaseModel> widget = model.proxy(["widgets", widget_name]);
 			await widget.commitAsync("loadWidgets", route);
 		}
+		
+		await route.page_model.commitAsync("load", model, route);
+	}
+	
+	
+	/**
+	 * Call widget event
+	 */
+	async static Dict callEvent(ModelProxy<BaseModel> widget, string action, Dict obj)
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		
+		/* Get models */
+		ModelProxy<BaseModel> page_model = provider.modelProxy();
+		BaseModel widget_data = widget.data();
+		BaseModel page_model_data = page_model.data();
+		
+		/* Call event */
+		obj = await widget_data::event(page_model, widget, action, obj);
+		if (page_model_data != widget_data)
+		{
+			obj = await page_model.commitAsync("event", widget, action, obj);
+		}
+		
+		return obj;
 	}
 	
 	

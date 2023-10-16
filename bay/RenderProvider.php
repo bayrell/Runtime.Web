@@ -30,8 +30,7 @@ use \Runtime\Web\RenderResponse;
 
 
 class RenderProvider extends BaseProvider
-{
-	
+{	
 	/**
 	 * Start provider
 	 */
@@ -40,6 +39,28 @@ class RenderProvider extends BaseProvider
 		$ctx = rtl::getContext();
 		$hook = $ctx->provider("hook");
 		$hook->register(AppHook::RESPONSE, $this, "response", 9999);
+	}
+	
+	
+	/**
+	 * Returns page model proxy
+	 */
+	function modelProxy($path = null)
+	{
+		$context = rtl::getContext();
+		$render_container = $context->environments->get("render_container");
+		return $render_container->modelProxy($path);
+	}
+	
+	
+	/**
+	 * Returns layout proxy
+	 */
+	function layoutProxy($path = null)
+	{
+		$context = rtl::getContext();
+		$render_container = $context->environments->get("render_container");
+		return $render_container->layoutProxy($path);
 	}
 	
 	
