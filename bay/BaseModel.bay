@@ -28,15 +28,15 @@ use Runtime.Web.RouteList;
 struct BaseModel extends BaseStruct
 {
 	string widget_name = "";
+	string widget_path = "";
 	Dict widgets = {};
 	
 	
 	/**
 	 * Add widget
 	 */
-	BaseModel addWidget(BaseModel model) => this.clone
-	{
-		"widgets": this.widgets.setIm(model.widget_name, model),
+	BaseModel addWidget(BaseModel widget) => this.clone{
+		"widgets": this.widgets.setIm(widget.widget_name, widget)
 	};
 	
 	
@@ -47,49 +47,27 @@ struct BaseModel extends BaseStruct
 	
 	
 	/**
-	 * Setup widget
+	 * Set widget path
 	 */
-	async static void setup
-	(
-		ModelProxy<BaseModel> page_model,
-		ModelProxy<BaseModel> widget,
-		BaseRoute route
-	)
+	BaseModel setWidgetPath(string widget_path) => this.clone
+	{
+		"widget_path": widget_path,
+	};
+	
+	
+	/**
+	 * Create widget
+	 */
+	async static void createWidget(ModelProxy<BaseModel> widget, BaseRoute route)
 	{
 	}
 	
 	
-	/**
-	 * Load widget
-	 */
-	async static void load
-	(
-		ModelProxy<BaseModel> page_model,
-		ModelProxy<BaseModel> widget,
-		BaseRoute route
-	)
-	{
-	}
-	
 	
 	/**
-	 * Widget event
+	 * Init widget
 	 */
-	async static Dict event
-	(
-		ModelProxy<BaseModel> page_model,
-		ModelProxy<BaseModel> widget,
-		string action, Dict obj
-	)
-	{
-		return obj;
-	}
-	
-	
-	/**
-	 * Setup widgets
-	 */
-	async static void setupWidgets(ModelProxy<BaseModel> model, BaseRoute route)
+	async static void initWidgets(ModelProxy<BaseModel> model, BaseRoute route)
 	{
 		Dict widgets = model.data("widgets");
 		Collection widgets_keys = widgets.keys();
@@ -98,10 +76,8 @@ struct BaseModel extends BaseStruct
 		{
 			string widget_name = widgets_keys.get(i);
 			ModelProxy<BaseModel> widget = model.proxy(["widgets", widget_name]);
-			await widget.commitAsync("setupWidgets", route);
+			await widget.commitAsync("initWidgets", route);
 		}
-		
-		await route.page_model.commitAsync("setup", model, route);
 	}
 	
 	
@@ -119,8 +95,20 @@ struct BaseModel extends BaseStruct
 			ModelProxy<BaseModel> widget = model.proxy(["widgets", widget_name]);
 			await widget.commitAsync("loadWidgets", route);
 		}
-		
-		await route.page_model.commitAsync("load", model, route);
+	}
+	
+	
+	/**
+	 * Widget event
+	 */
+	async static Dict event
+	(
+		ModelProxy<BaseModel> page_model,
+		ModelProxy<BaseModel> widget,
+		string action, Dict obj
+	)
+	{
+		return obj;
 	}
 	
 	
@@ -140,7 +128,7 @@ struct BaseModel extends BaseStruct
 		obj = await widget_data::event(page_model, widget, action, obj);
 		if (page_model_data != widget_data)
 		{
-			obj = await page_model.commitAsync("event", widget, action, obj);
+			obj = await page_model_data::event(page_model, widget, action, obj);
 		}
 		
 		return obj;
