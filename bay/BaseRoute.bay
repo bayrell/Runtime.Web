@@ -130,12 +130,11 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
-	 * Load widgets
+	 * Setup page model widget
 	 */
-	async void loadWidgets()
+	async void setupWidget()
 	{
-		await this.page_model.commitAsync("initWidgets", this);
-		await this.page_model.commitAsync("loadWidgets", this);
+		await this.page_model.commitAsync("setupWidget", this);
 	}
 	
 	
