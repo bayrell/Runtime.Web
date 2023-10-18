@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.Callback;
 use Runtime.ModelProxy;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderProvider;
@@ -30,6 +31,7 @@ struct BaseModel extends BaseStruct
 	string widget_name = "";
 	string widget_path = "";
 	Dict widgets = {};
+	Collection<Callback> events = [];
 	
 	
 	/**
@@ -52,6 +54,15 @@ struct BaseModel extends BaseStruct
 	BaseModel setWidgetPath(string widget_path) => this.clone
 	{
 		"widget_path": widget_path,
+	};
+	
+	
+	/**
+	 * Add event
+	 */
+	BaseModel addEvent(Callback event) => this.clone
+	{
+		"events": this.events.pushIm(event)
 	};
 	
 	
@@ -112,9 +123,8 @@ struct BaseModel extends BaseStruct
 	 */
 	async static Dict event
 	(
-		ModelProxy<BaseModel> page_model,
 		ModelProxy<BaseModel> widget,
-		string action, Dict obj
+		string action, Dict obj, var tag = null
 	)
 	{
 		return obj;
@@ -126,18 +136,17 @@ struct BaseModel extends BaseStruct
 	 */
 	async static Dict callEvent(ModelProxy<BaseModel> widget, string action, Dict obj)
 	{
-		RenderProvider provider = @.provider(classof RenderProvider);
-		
 		/* Get models */
-		ModelProxy<BaseModel> page_model = provider.modelProxy();
 		BaseModel widget_data = widget.data();
-		BaseModel page_model_data = page_model.data();
 		
 		/* Call event */
-		obj = await widget_data::event(page_model, widget, action, obj);
-		if (page_model_data != widget_data)
+		obj = await widget_data::event(widget, action, obj);
+		
+		/* Call events */
+		for (int i=0; i<widget_data.events.count(); i++)
 		{
-			obj = await page_model_data::event(page_model, widget, action, obj);
+			Callback f = widget_data.events[i];
+			obj = await f.callAsync([widget, action, obj, f.tag]);
 		}
 		
 		return obj;

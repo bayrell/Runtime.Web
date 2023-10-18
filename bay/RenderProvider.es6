@@ -228,6 +228,8 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 		/* Render changed elements */
 		let render_elem_list = this.render_elem_list;
 		
+		/* console.log("Repaint " + this.render_elem_list.length + " items"); */
+		
 		/* Create elements or update params */
 		for (let i=0; i<this.render_elem_list.length; i++)
 		{
@@ -535,6 +537,7 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 	{
 		if (!vdom.params) return;
 		
+		let used_attrs = {};
 		let elem = vdom.elem;
 		let keys = vdom.params.keys();
 		for (let i=0; i<keys.count(); i++)
@@ -625,6 +628,21 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 				if (elem.getAttribute(key) != value)
 				{
 					elem.setAttribute(key, value);
+				}
+				used_attrs[key] = value;
+			}
+		}
+		
+		/* Remove old attributes */
+		if (!this.is_first_render && vdom.kind == Runtime.Web.VirtualDom.KIND_ELEMENT)
+		{
+			let elem_attrs = elem.getAttributeNames();
+			for (let i=0; i<elem_attrs.length; i++)
+			{
+				let attr_name = elem_attrs[i];
+				if (used_attrs[attr_name] == undefined)
+				{
+					elem.removeAttribute(attr_name);
 				}
 			}
 		}
