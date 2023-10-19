@@ -90,51 +90,14 @@ class BaseRoute extends BaseObject
 		this.page_model = this.container.modelProxy();
 	}
 	
-	
-	/**
-	 * Add widget
-	 */
-	async ModelProxy<BaseModel> addWidget
-	(
-		BaseModel widget, ModelProxy<BaseModel> parent_model = null
-	)
-	{
-		if (parent_model == null)
-		{
-			parent_model = this.page_model;
-		}
 		
-		/* Setup widget path */
-		string widget_path = "";
-		
-		widget_path = parent_model.data("widget_path");
-		widget_path = (widget_path != "")
-			? widget_path ~ "." ~ widget.widget_name
-			: widget.widget_name
-		;
-		
-		widget <= widget_path <= widget_path;
-		
-		/* Add widget */
-		parent_model.commit("addWidget", widget);
-		
-		/* Get widget proxy */
-		ModelProxy<BaseModel> widget_proxy = parent_model.proxy(["widgets", widget.widget_name]);
-		
-		/* Setup new widget */
-		await widget_proxy.commitAsync("createWidget", this);
-		
-		/* Return widget */
-		return widget_proxy;
-	}
-	
-	
 	/**
 	 * Setup page model widget
 	 */
 	async void setupWidget()
 	{
-		await this.page_model.commitAsync("setupWidget", this);
+		await this.page_model.commitAsync("initWidget", this.layout);
+		await this.page_model.commitAsync("loadWidget", this.layout);
 	}
 	
 	
@@ -159,7 +122,7 @@ class BaseRoute extends BaseObject
 		{
 			this.container.setPageModel( rtl::newInstance(model_name) );
 			this.page_model = this.container.modelProxy();
-			await this.page_model.commit("createWidget", this);
+			this.page_model.commit("createWidget");
 		}
 	}
 	

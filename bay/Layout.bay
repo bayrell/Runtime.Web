@@ -70,6 +70,14 @@ struct Layout extends BaseStruct
 	
 	
 	/**
+	 * Returns model path
+	 */
+	Collection getPageModelPath(Collection path = null)
+		=> ["pages", this.page_model_class_name].concat(path)
+	;
+	
+	
+	/**
 	 * Set page model
 	 */
 	Layout setPageModel(BaseStruct model)

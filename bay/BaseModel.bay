@@ -22,24 +22,18 @@ use Runtime.BaseStruct;
 use Runtime.Callback;
 use Runtime.ModelProxy;
 use Runtime.Web.BaseRoute;
+use Runtime.Web.Layout;
 use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
 
 struct BaseModel extends BaseStruct
 {
+	string component_name = "";
 	string widget_name = "";
 	string widget_path = "";
 	Dict widgets = {};
 	Collection<Callback> events = [];
-	
-	
-	/**
-	 * Add widget
-	 */
-	BaseModel addWidget(BaseModel widget) => this.clone{
-		"widgets": this.widgets.setIm(widget.widget_name, widget)
-	};
 	
 	
 	/**
@@ -58,6 +52,15 @@ struct BaseModel extends BaseStruct
 	
 	
 	/**
+	 * Set component name
+	 */
+	BaseModel setComponentName(string component_name) => this.clone
+	{
+		"component_name": component_name,
+	};
+	
+	
+	/**
 	 * Add event
 	 */
 	BaseModel addEventCallback(Callback event) => this.clone
@@ -67,9 +70,41 @@ struct BaseModel extends BaseStruct
 	
 	
 	/**
+	 * Add widget
+	 */
+	static ModelProxy addWidget(ModelProxy<BaseModel> model, BaseModel new_widget)
+	{
+		string widget_name = new_widget.widget_name;
+		
+		/* Setup widget path */
+		string widget_path = "";
+		
+		widget_path = model.data("widget_path");
+		widget_path = (widget_path != "")
+			? widget_path ~ "." ~ widget_name
+			: widget_name
+		;
+		
+		new_widget <= widget_path <= widget_path;
+		
+		/* Add widget */
+		model.proxy("widgets").commit("setIm", widget_name, new_widget);
+		
+		/* Get widget proxy */
+		ModelProxy<BaseModel> widget_proxy = model.proxy(["widgets", widget_name]);
+		
+		/* Create new widget */
+		widget_proxy.commit("createWidget");
+		
+		/* Return widget */
+		return widget_proxy;
+	}
+	
+	
+	/**
 	 * Create widget
 	 */
-	async static void createWidget(ModelProxy<BaseModel> widget, BaseRoute route)
+	static void createWidget(ModelProxy<BaseModel> widget)
 	{
 	}
 	
@@ -77,34 +112,7 @@ struct BaseModel extends BaseStruct
 	/**
 	 * Init widget
 	 */
-	async static void initWidget(ModelProxy<BaseModel> widget, BaseRoute route)
-	{
-	}
-	
-	
-	/**
-	 * Load widget
-	 */
-	async static void loadWidget(ModelProxy<BaseModel> widget, BaseRoute route)
-	{
-	}
-	
-	
-	/**
-	 * Setup widget
-	 */
-	async static void setupWidget(ModelProxy<BaseModel> widget, BaseRoute route)
-	{
-		await widget.commitAsync("initWidget", route);
-		await widget.commitAsync("loadWidget", route);
-		await widget.commitAsync("setupSubWidgets", route);
-	}
-	
-	
-	/**
-	 * Setup sub widgets
-	 */
-	async static void setupSubWidgets(ModelProxy<BaseModel> widget, BaseRoute route)
+	async static void initWidget(ModelProxy<BaseModel> widget, ModelProxy<Layout> layout)
 	{
 		Dict widgets = widget.data("widgets");
 		Collection widgets_keys = widgets.keys();
@@ -113,7 +121,24 @@ struct BaseModel extends BaseStruct
 		{
 			string widget_name = widgets_keys.get(i);
 			ModelProxy<BaseModel> sub_widget = widget.proxy(["widgets", widget_name]);
-			await sub_widget.commitAsync("setupWidget", route);
+			await sub_widget.commitAsync("initWidget", layout);
+		}
+	}
+	
+	
+	/**
+	 * Load widget
+	 */
+	async static void loadWidget(ModelProxy<BaseModel> widget, ModelProxy<Layout> layout)
+	{
+		Dict widgets = widget.data("widgets");
+		Collection widgets_keys = widgets.keys();
+		
+		for (int i=0; i<widgets_keys.count(); i++)
+		{
+			string widget_name = widgets_keys.get(i);
+			ModelProxy<BaseModel> sub_widget = widget.proxy(["widgets", widget_name]);
+			await sub_widget.commitAsync("loadWidget", layout);
 		}
 	}
 	
