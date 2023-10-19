@@ -114,15 +114,6 @@ struct BaseModel extends BaseStruct
 	 */
 	async static void initWidget(ModelProxy<BaseModel> widget, ModelProxy<Layout> layout)
 	{
-		Dict widgets = widget.data("widgets");
-		Collection widgets_keys = widgets.keys();
-		
-		for (int i=0; i<widgets_keys.count(); i++)
-		{
-			string widget_name = widgets_keys.get(i);
-			ModelProxy<BaseModel> sub_widget = widget.proxy(["widgets", widget_name]);
-			await sub_widget.commitAsync("initWidget", layout);
-		}
 	}
 	
 	
