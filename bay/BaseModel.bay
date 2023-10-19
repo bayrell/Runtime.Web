@@ -60,7 +60,7 @@ struct BaseModel extends BaseStruct
 	/**
 	 * Add event
 	 */
-	BaseModel addEvent(Callback event) => this.clone
+	BaseModel addEventCallback(Callback event) => this.clone
 	{
 		"events": this.events.pushIm(event)
 	};
