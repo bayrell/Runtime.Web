@@ -31,15 +31,23 @@ struct BaseModel extends BaseStruct
 {
 	string component_name = "";
 	string widget_name = "";
-	string widget_path = "";
-	Dict widgets = {};
 	Collection<Callback> events = [];
+	Collection<string> widget_path = [];
+	Dict widgets = {};
 	
 	
 	/**
 	 * Returns widget
 	 */
 	BaseModel getWidget(string widget_name) => this.widgets.get(widget_name);
+	
+	
+	/**
+	 * Returns parent widget
+	 */
+	BaseModel getParentWidget(Layout layout) =>
+		layout.getWidget( this.widget_path.removeLastIm() )
+	;
 	
 	
 	/**
@@ -77,14 +85,8 @@ struct BaseModel extends BaseStruct
 		string widget_name = new_widget.widget_name;
 		
 		/* Setup widget path */
-		string widget_path = "";
-		
-		widget_path = model.data("widget_path");
-		widget_path = (widget_path != "")
-			? widget_path ~ "." ~ widget_name
-			: widget_name
-		;
-		
+		Collection<string> widget_path = model.data("widget_path");
+		widget_path = widget_path.pushIm(widget_name);
 		new_widget <= widget_path <= widget_path;
 		
 		/* Add widget */

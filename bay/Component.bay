@@ -46,11 +46,10 @@ class Component extends BaseObject
 	/**
 	 * Returns layout
 	 */
-	var layout(Collection<string> model_path = null)
+	var layout(Collection<string> path = null)
 	{
-		RenderProvider provider = @.provider(classof RenderProvider);
-		if (model_path == null) return provider.layout;
-		return rtl::attr(provider.layout, this.model_path.concat(model_path));
+		if (path == null) return this.provider.layout;
+		return rtl::attr(this.provider.layout, path);
 	}
 	
 	
@@ -71,13 +70,23 @@ class Component extends BaseObject
 	 */
 	ModelProxy modelProxy(Collection path = null)
 	{
-		RenderProvider provider = @.provider(classof RenderProvider);
 		Collection model_path = ["layout"];
 		model_path = model_path.concat( this.model_path );
 		model_path = model_path.concat( path );
-		return new ModelProxy(provider, model_path);
+		return new ModelProxy(this.provider, model_path);
 	}
 	ModelProxy proxy(Collection path = null) => this.modelProxy(path);
+	
+	
+	/**
+	 * Returns parent widget
+	 */
+	ModelProxy proxyParentWidget()
+	{
+		Collection widget_path = this.model().widget_path.removeLastIm();
+		Collection model_path = this.provider.layout.getWidgetGlobalPath(widget_path);
+		return new ModelProxy(this.provider, ["layout"].concat(model_path));
+	}
 	
 	
 	/**

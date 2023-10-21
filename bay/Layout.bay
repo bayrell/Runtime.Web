@@ -53,19 +53,13 @@ struct Layout extends BaseStruct
 	
 	/* Increment assets */
 	string f_inc = "1";
-		
+	
+	
 	/**
 	 * Returns page model
 	 */
-	BaseStruct getPageModel() => this.page_model_class_name ?
-		this.pages[ this.page_model_class_name ] : null;
-	
-	
-	/**
-	 * Returns page model proxy
-	 */
-	ModelProxy modelProxy(Collection path = null)
-		=> new ModelProxy( this, ["pages", this.page_model_class_name].concat(path) )
+	BaseStruct getPageModel(Collection path = null) =>
+		rtl::attr(this, this.getPageModelPath(path))
 	;
 	
 	
@@ -73,7 +67,60 @@ struct Layout extends BaseStruct
 	 * Returns model path
 	 */
 	Collection getPageModelPath(Collection path = null)
-		=> ["pages", this.page_model_class_name].concat(path)
+		=> path
+			? ["pages", this.page_model_class_name].concat(path)
+			: ["pages", this.page_model_class_name]
+	;
+	
+	
+	/**
+	 * Returns widget model path
+	 */
+	Collection getWidgetModelPath(Collection widget_path = null)
+	{
+		Vector path = new Vector();
+		
+		if (widget_path)
+		{
+			for (int i=0; i<widget_path.count(); i++)
+			{
+				path.pushValue("widgets");
+				path.pushValue(widget_path.get(i));
+			}
+		}
+		
+		return path.toCollection();
+	}
+	
+	
+	/**
+	 * Returns widget global path
+	 */
+	Collection getWidgetGlobalPath(Collection widget_path = null)
+	{
+		Vector path = new Vector();
+		
+		path.pushValue("pages");
+		path.pushValue(this.page_model_class_name);
+		
+		if (widget_path)
+		{
+			for (int i=0; i<widget_path.count(); i++)
+			{
+				path.pushValue("widgets");
+				path.pushValue(widget_path.get(i));
+			}
+		}
+		
+		return path.toCollection();
+	}
+	
+	
+	/**
+	 * Returns widget
+	 */
+	ModelProxy getWidget(Collection widget_path = null)
+		=> rtl::attr(this, this.getWidgetGlobalPath(widget_path))
 	;
 	
 	
