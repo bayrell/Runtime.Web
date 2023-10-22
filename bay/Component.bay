@@ -81,10 +81,20 @@ class Component extends BaseObject
 	/**
 	 * Returns parent widget
 	 */
-	ModelProxy proxyParentWidget()
+	ModelProxy proxyParentWidgetModelPath()
 	{
 		Collection widget_path = this.model().widget_path.removeLastIm();
 		Collection model_path = this.provider.layout.getWidgetGlobalPath(widget_path);
+		return model_path;
+	}
+	
+	
+	/**
+	 * Returns parent widget
+	 */
+	ModelProxy proxyParentWidget()
+	{
+		Collection model_path = this.proxyParentWidgetModelPath();
 		return new ModelProxy(this.provider, ["layout"].concat(model_path));
 	}
 	

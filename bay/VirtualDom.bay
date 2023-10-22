@@ -414,6 +414,7 @@ class VirtualDom extends BaseObject
 		
 		var component = attr[0];
 		var model_path = attr[1];
+		if (component == null) return model_path;
 		if (component.model_path == null) return null;
 		
 		return component.model_path.concat(model_path);
