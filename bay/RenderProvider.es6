@@ -607,6 +607,15 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 					else if (elem.value != value)
 					{
 						elem.value = value;
+						if (
+							elem.tagName == "INPUT" ||
+							elem.tagName == "SELECT" ||
+							elem.tagName == "OPTION"
+						)
+						{
+							elem.setAttribute("value", value);
+							used_attrs[key] = value;
+						}
 					}
 					elem._old_value = value;
 				}

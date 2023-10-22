@@ -106,7 +106,7 @@ struct BaseModel extends BaseStruct
 	/**
 	 * Create widget
 	 */
-	static void createWidget(ModelProxy<BaseModel> widget)
+	static void createWidget(ModelProxy<BaseModel> model)
 	{
 	}
 	
@@ -114,7 +114,7 @@ struct BaseModel extends BaseStruct
 	/**
 	 * Init widget
 	 */
-	async static void initWidget(ModelProxy<BaseModel> widget, ModelProxy<Layout> layout)
+	async static void initWidget(ModelProxy<BaseModel> model, ModelProxy<Layout> layout)
 	{
 	}
 	
@@ -122,15 +122,15 @@ struct BaseModel extends BaseStruct
 	/**
 	 * Load widget
 	 */
-	async static void loadWidget(ModelProxy<BaseModel> widget, ModelProxy<Layout> layout)
+	async static void loadWidget(ModelProxy<BaseModel> model, ModelProxy<Layout> layout)
 	{
-		Dict widgets = widget.data("widgets");
+		Dict widgets = model.data("widgets");
 		Collection widgets_keys = widgets.keys();
 		
 		for (int i=0; i<widgets_keys.count(); i++)
 		{
 			string widget_name = widgets_keys.get(i);
-			ModelProxy<BaseModel> sub_widget = widget.proxy(["widgets", widget_name]);
+			ModelProxy<BaseModel> sub_widget = model.proxy(["widgets", widget_name]);
 			await sub_widget.commitAsync("loadWidget", layout);
 		}
 	}
@@ -141,7 +141,7 @@ struct BaseModel extends BaseStruct
 	 */
 	async static Dict event
 	(
-		ModelProxy<BaseModel> widget,
+		ModelProxy<BaseModel> model,
 		string action, Dict obj, var tag = null
 	)
 	{
@@ -152,19 +152,19 @@ struct BaseModel extends BaseStruct
 	/**
 	 * Call widget event
 	 */
-	async static Dict callEvent(ModelProxy<BaseModel> widget, string action, Dict obj)
+	async static Dict callEvent(ModelProxy<BaseModel> model, string action, Dict obj)
 	{
 		/* Get models */
-		BaseModel widget_data = widget.data();
+		BaseModel model_data = model.data();
 		
 		/* Call event */
-		obj = await widget_data::event(widget, action, obj);
+		obj = await model_data::event(model, action, obj);
 		
 		/* Call events */
-		for (int i=0; i<widget_data.events.count(); i++)
+		for (int i=0; i<model_data.events.count(); i++)
 		{
-			Callback f = widget_data.events[i];
-			obj = await f.callAsync([widget, action, obj, f.tag]);
+			Callback f = model_data.events[i];
+			obj = await f.callAsync([model, action, obj, f.tag]);
 		}
 		
 		return obj;
