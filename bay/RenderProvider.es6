@@ -614,9 +614,9 @@ Object.assign(Runtime.Web.RenderProvider.prototype,
 						)
 						{
 							elem.setAttribute("value", value);
-							used_attrs[key] = value;
 						}
 					}
+					used_attrs[key] = value;
 					elem._old_value = value;
 				}
 				continue;
