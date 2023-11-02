@@ -265,4 +265,18 @@ class RenderContainer extends BaseObject
 			this.response = this.response.fail(e, data);
 		}
 	}
+	
+	
+	/**
+	 * Set error message
+	 */
+	void setErrorMessage(string message)
+	{
+		if (this.response instanceof ApiResult)
+		{
+			ApiResult response = this.response;
+			response <= message <= message;
+			this.response = response;
+		}
+	}
 }
