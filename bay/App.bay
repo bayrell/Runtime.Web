@@ -269,7 +269,7 @@ class App extends BaseProvider
 		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
 		{
 			$json = file_get_contents("php://input");
-			$json = @json_decode($json, true);
+			$json = @json_decode($json);
 			return $json;
 		}
 		
@@ -295,7 +295,7 @@ class App extends BaseProvider
 		
 		/* Read POST */
 		$post = $this->getPost($ctx);
-		if ($post && gettype($post) == "array")
+		if ($post != null)
 		{
 			foreach ($post as $key => $val)
 			{
