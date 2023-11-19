@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.Callback;
 use Runtime.Web.ApiResult;
+use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
 use Runtime.Web.Request;
@@ -48,5 +49,25 @@ class RenderContainer extends BaseObject
 	ApiResult callApi(Map params)
 	{
 		return null;
+	}
+	
+	
+	/**
+	 * Export data
+	 */
+	Map exportData()
+	{
+		Map params = {
+			"entry_point": "",
+			"modules": [],
+			"environments": this.frontend_env,
+			"layout": this.layout.exportData(),
+			"route": this.route,
+		};
+		
+		/* Call hook */
+		@.callHook(AppHook::EXPORT_DATA, params);
+		
+		return params;
 	}
 }

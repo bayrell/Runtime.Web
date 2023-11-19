@@ -20,6 +20,7 @@ namespace Bayrell.CloudOS;
 
 use Runtime.lib;
 use Runtime.Callback;
+use Runtime.Render.RenderHook;
 use Runtime.Web.AppHook;
 use Runtime.Web.BaseModel;
 use Runtime.Web.PageModel;
@@ -89,6 +90,22 @@ class Layout extends BaseModel
 	void setPageTitle(string title)
 	{
 		this.title = title;
+	}
+	
+	
+	/**
+	 * Returns layout class name
+	 */
+	string getLayoutClassName()
+	{
+		string layout_name = this.layout_name;
+		
+		Dict params = @.callHook(RenderHook::LAYOUT_CLASS_NAME, {
+			"layout_name": this.layout_name,
+			"class_name": "",
+		});
+		
+		return params["class_name"];
 	}
 	
 	

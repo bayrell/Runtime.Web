@@ -18,13 +18,14 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseObject;
 use Runtime.BaseProvider;
 use Runtime.Callback;
-use Runtime.Web.AppHook;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteList;
+use Runtime.Web.Hooks.AppHook;
 
 
 class BaseApp extends BaseObject

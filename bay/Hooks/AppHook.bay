@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Runtime.Web.Hooks;
 
 use Runtime.BaseHook;
 use Runtime.Web.Layout;
@@ -24,15 +24,21 @@ use Runtime.Web.Layout;
 
 class AppHook extends BaseHook
 {
-	static const string CALL_ROUTE_AFTER = "runtime.web.app::call_route_after";
-	static const string CALL_ROUTE_BEFORE = "runtime.web.app::call_route_before";
 	static const string COMPONENTS = "runtime.web.app::components";
+	static const string CORE_UI = "runtime.web.app::core_ui";
 	static const string CREATE_CONTAINER = "runtime.web.app::create_container";
+	static const string EXPORT_DATA = "runtime.web.app::export_data";
 	static const string FIND_ROUTE = "runtime.web.app::find_route";
 	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
 	static const string INIT_CONTAINER = "runtime.web.app::init_container";
+	static const string LAYOUT_CLASS_NAME = "runtime.web.app::layout_class_name";
 	static const string MIDDLEWARE_AFTER = "runtime.web.app::middleware_after";
 	static const string MIDDLEWARE_BEFORE = "runtime.web.app::middleware_before";
+	static const string RENDER_BODY = "runtime.web.app::render_body";
+	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
+	static const string RENDER_HEAD = "runtime.web.app::render_head";
+	static const string RESPONSE = "runtime.web.app::response";
+	static const string ROUTE_BEFORE = "runtime.web.app::route_before";
 	
 	
 	/**
@@ -40,15 +46,21 @@ class AppHook extends BaseHook
 	 */
 	string getMethodName(string hook_name)
 	{
-		if (hook_name == static::CALL_ROUTE_AFTER) return "call_route_after";
-		if (hook_name == static::CALL_ROUTE_BEFORE) return "call_route_before";
 		if (hook_name == static::COMPONENTS) return "components";
+		if (hook_name == static::CORE_UI) return "core_ui";
 		if (hook_name == static::CREATE_CONTAINER) return "create_container";
+		if (hook_name == static::EXPORT_DATA) return "export_data";
 		if (hook_name == static::FIND_ROUTE) return "find_route";
 		if (hook_name == static::FIND_ROUTE_AFTER) return "find_route_after";
 		if (hook_name == static::INIT_CONTAINER) return "init_container";
+		if (hook_name == static::LAYOUT_CLASS_NAME) return "layout_class_name";
 		if (hook_name == static::MIDDLEWARE_AFTER) return "middleware_after";
 		if (hook_name == static::MIDDLEWARE_BEFORE) return "middleware_before";
+		if (hook_name == static::RENDER_BODY) return "render_body";
+		if (hook_name == static::RENDER_FOOTER) return "render_footer";
+		if (hook_name == static::RENDER_HEAD) return "render_head";
+		if (hook_name == static::RESPONSE) return "response";
+		if (hook_name == static::ROUTE_BEFORE) return "route_before";
 		return "";
 	}
 	
@@ -62,55 +74,91 @@ class AppHook extends BaseHook
 	
 	
 	/**
-	 * Route before
-	 */
-	async Map call_route_before(Map d) => d;
-	
-	
-	/**
-	 * Route after
-	 */
-	async Map call_route_after(Map d) => d;
-	
-	
-	/**
 	 * Components
 	 */
-	Map components(Map d) => d;
+	void components(Map params){}
+	
+	
+	/**
+	 * Core ui
+	 */
+	void core_ui(Map params){}
 	
 	
 	/**
 	 * Create container
 	 */
-	Map create_container(Map d) => d;
+	void create_container(Map params){}
+	
+	
+	/**
+	 * Export data
+	 */
+	void export_data(Map params){}
 	
 	
 	/**
 	 * Find route
 	 */
-	Map find_route(Map d) => d;
+	void find_route(Map params){}
 	
 	
 	/**
 	 * Find route after
 	 */
-	Map find_route_after(Map d) => d;
+	void find_route_after(Map params){}
 	
 	
 	/**
 	 * Init container
 	 */
-	async Map init_container(Map d) => d;
+	async void init_container(Map params){}
+	
+	
+	/**
+	 * Layout class name
+	 */
+	void layout_class_name(Map params){}
 	
 	
 	/**
 	 * Middleware before
 	 */
-	async Map middleware_before(Map d) => d;
+	async void middleware_before(Map params){}
 	
 	
 	/**
 	 * Middleware after
 	 */
-	async Map middleware_after(Map d) => d;
+	async void middleware_after(Map params){}
+	
+	
+	/**
+	 * Render body
+	 */
+	async void render_body(Map params){}
+	
+	
+	/**
+	 * Render footer
+	 */
+	async void render_footer(Map params){}
+	
+	
+	/**
+	 * Render head
+	 */
+	async void render_head(Map params){}
+	
+	
+	/**
+	 * Route before
+	 */
+	async void route_before(Map params){}
+
+
+	/**
+	 * Response
+	 */
+	async void response(Map params){}
 }

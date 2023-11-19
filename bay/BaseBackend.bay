@@ -20,12 +20,12 @@ namespace Runtime.Web;
 
 use Runtime.BaseProvider;
 use Runtime.Callback;
-use Runtime.Web.AppHook;
 use Runtime.Web.BaseApp;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteList;
+use Runtime.Web.Hooks.AppHook;
 
 
 class BaseBackend extends BaseApp
@@ -74,7 +74,7 @@ class BaseBackend extends BaseApp
 	async void resolveRoute(RenderContainer container)
 	{
 		/* Call route before */
-		await @.callHook(AppHook::CALL_ROUTE_BEFORE, {
+		await @.callHook(AppHook::ROUTE_BEFORE, {
 			"container": container,
 		});
 		
@@ -85,7 +85,7 @@ class BaseBackend extends BaseApp
 		await this.callRoute(container);
 		
 		/* Call route after */
-		await @.callHook(AppHook::CALL_ROUTE_AFTER, {
+		await @.callHook(AppHook::RESPONSE, {
 			"container": container,
 		});
 	}

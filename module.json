@@ -3,7 +3,6 @@
 	"assets":
 	[
 		"ApiResult.bay",
-		"AppHook.bay",
 		"BaseApp.bay",
 		"BaseModel.bay",
 		"BaseRoute.bay",
@@ -12,6 +11,7 @@
 		"RenderContainer.bay",
 		"Request.bay",
 		"RouteInfo.bay",
+		"Hooks/AppHook.bay",
 		"ModuleDescription.bay"
 	],
 	"src": "./bay",
