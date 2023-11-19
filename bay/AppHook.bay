@@ -24,31 +24,15 @@ use Runtime.Web.Layout;
 
 class AppHook extends BaseHook
 {
-	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
 	static const string CALL_ROUTE_AFTER = "runtime.web.app::call_route_after";
 	static const string CALL_ROUTE_BEFORE = "runtime.web.app::call_route_before";
-	static const string CLEAR_LAYOUT = "runtime.web.app::clear_layout";
-	static const string CORE_UI = "runtime.web.app::core_ui";
-	static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
-	static const string CSS_CLASS_NAMES = "runtime.web.app::css_class_names";
-	static const string CSS_SAVE = "runtime.web.app::css_save";
-	static const string CSS_VARS = "runtime.web.app::css_vars";
+	static const string COMPONENTS = "runtime.web.app::components";
 	static const string FIND_ROUTE = "runtime.web.app::find_route";
 	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
 	static const string INIT_CONTAINER = "runtime.web.app::init_container";
-	static const string INIT_LAYOUT = "runtime.web.app::init_layout";
-	static const string LAYOUT_PAGE_CLASS_NAME = "runtime.web.app::layout_page_class_name";
-	static const string MAIN = "runtime.web.app::main";
-	static const string MAKE_URL = "runtime.web.app::make_url";
-	static const string MAKE_URL_AFTER = "runtime.web.app::make_url_after";
-	static const string MATCH_ROUTE = "runtime.web.app::match_route";
-	static const string MIDDLEARE = "runtime.web.app::middleware";
-	static const string MIDDLEWARE = "runtime.web.app::middleware";
-	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
-	static const string RENDER_BODY = "runtime.web.app::render_body";
-	static const string RENDER_HEAD = "runtime.web.app::render_head";
+	static const string MIDDLEWARE_AFTER = "runtime.web.app::middleware_after";
+	static const string MIDDLEWARE_BEFORE = "runtime.web.app::middleware_before";
 	static const string RESPONSE = "runtime.web.app::response";
-	static const string ROUTES_INIT = "runtime.web.app::routes_init";
 	
 	
 	/**
@@ -56,30 +40,15 @@ class AppHook extends BaseHook
 	 */
 	string getMethodName(string hook_name)
 	{
-		if (hook_name == static::CALL_API_BEFORE) return "call_api_before";
 		if (hook_name == static::CALL_ROUTE_AFTER) return "call_route_after";
 		if (hook_name == static::CALL_ROUTE_BEFORE) return "call_route_before";
-		if (hook_name == static::CLEAR_LAYOUT) return "clear_layout";
-		if (hook_name == static::CORE_UI) return "core_ui";
-		if (hook_name == static::CREATE_LAYOUT) return "create_layout";
-		if (hook_name == static::CSS_CLASS_NAMES) return "css_class_names";
-		if (hook_name == static::CSS_SAVE) return "css_save";
-		if (hook_name == static::CSS_VARS) return "css_vars";
+		if (hook_name == static::COMPONENTS) return "components";
 		if (hook_name == static::FIND_ROUTE) return "find_route";
 		if (hook_name == static::FIND_ROUTE_AFTER) return "find_route_after";
 		if (hook_name == static::INIT_CONTAINER) return "init_container";
-		if (hook_name == static::INIT_LAYOUT) return "init_layout";
-		if (hook_name == static::LAYOUT_PAGE_CLASS_NAME) return "layout_page_class_name";
-		if (hook_name == static::MAIN) return "main";
-		if (hook_name == static::MAKE_URL) return "make_url";
-		if (hook_name == static::MAKE_URL_AFTER) return "make_url_after";
-		if (hook_name == static::MATCH_ROUTE) return "match_route";
-		if (hook_name == static::MIDDLEARE) return "middleware";
-		if (hook_name == static::RENDER_FOOTER) return "render_footer";
-		if (hook_name == static::RENDER_BODY) return "render_body";
-		if (hook_name == static::RENDER_HEAD) return "render_head";
+		if (hook_name == static::MIDDLEWARE_AFTER) return "middleware_after";
+		if (hook_name == static::MIDDLEWARE_BEFORE) return "middleware_before";
 		if (hook_name == static::RESPONSE) return "response";
-		if (hook_name == static::ROUTES_INIT) return "routes_init";
 		return "";
 	}
 	
@@ -89,222 +58,59 @@ class AppHook extends BaseHook
 	 */
 	void register_hooks()
 	{
-		this.register( static::CSS_CLASS_NAMES );
 	}
 	
 	
 	/**
-	 * Call api before
+	 * Route before
 	 */
-	Dict call_api_before(Dict d) => d;
+	async Map call_route_before(Map d) => d;
 	
 	
 	/**
-	 * Call route before
+	 * Route after
 	 */
-	async Dict call_route_before(Dict d) => d;
+	async Map call_route_after(Map d) => d;
 	
 	
 	/**
-	 * Call route after
+	 * Components
 	 */
-	async Dict call_route_after(Dict d) => d;
-	
-	
-	/**
-	 * Returns layout class name
-	 */
-	Dict layout_page_class_name(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Get css class names
-	 */
-	Dict css_class_names(Dict d)
-	{
-		Layout layout = d["layout"];
-		Vector css_class_names = d["css_class_names"];
-		
-		/* Add css classes */
-		if (layout.css_classes and layout.css_classes.count())
-		{
-			for (int i=0; i<layout.css_classes.count(); i++)
-			{
-				string css_class_name = layout.css_classes.get(i);
-				css_class_names.pushValue(css_class_name);
-			}
-		}
-		
-		/* Add page class name */
-		if (
-			layout.page_class_name != "" and
-			css_class_names.indexOf(layout.page_class_name) == -1
-		)
-		{
-			css_class_names.pushValue(layout.page_class_name);
-		}
-		
-		/* Add layout name */
-		string layout_class_name = layout.getLayoutClassName();
-		if (
-			layout_class_name != "" and
-			css_class_names.indexOf(layout_class_name) == -1
-		)
-		{
-			css_class_names.pushValue(layout_class_name);
-		}
-		
-		return d;
-	}
-	
-	
-	/**
-	 * Get css save
-	 */
-	async Dict css_save(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Get css vars
-	 */
-	Dict css_vars(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Routes init
-	 */
-	async Dict routes_init(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Create layout
-	 */
-	async Dict create_layout(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Init layout
-	 */
-	async Dict init_layout(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Clear layout
-	 */
-	Dict clear_layout(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Init container
-	 */
-	async Dict init_container(Dict d)
-	{
-		return d;
-	}
+	Map components(Map d) => d;
 	
 	
 	/**
 	 * Find route
 	 */
-	async Dict find_route(Dict d)
-	{
-		return d;
-	}
+	Map find_route(Map d) => d;
 	
 	
 	/**
-	 * Found route
+	 * Find route after
 	 */
-	async Dict find_route_after(Dict d)
-	{
-		return d;
-	}
+	Map find_route_after(Map d) => d;
 	
 	
 	/**
-	 * Match route
+	 * Init container
 	 */
-	Dict match_route(Dict d)
-	{
-		return d;
-	}
+	async Map init_container(Map d) => d;
 	
 	
 	/**
-	 * Middleware
+	 * Middleware before
 	 */
-	async Dict middleware(Dict d)
-	{
-		return d;
-	}
+	async Map middleware_before(Map d) => d;
+	
+	
+	/**
+	 * Middleware after
+	 */
+	async Map middleware_after(Map d) => d;
 	
 	
 	/**
 	 * Response
 	 */
-	async Dict response(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Returns render head classes
-	 */
-	Dict render_head(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Returns render body classes
-	 */
-	Dict render_body(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Main function
-	 */
-	async Dict main(Dict d)
-	{
-		return d;
-	}
-	
-	
-	/**
-	 * Make url
-	 */
-	Dict make_url(Dict d) => d;
-	
-	
-	/**
-	 * Make url after
-	 */
-	Dict make_url_after(Dict d) => d;
-	
+	async Map response(Map d) => d;
 }

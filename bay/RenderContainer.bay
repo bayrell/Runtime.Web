@@ -19,264 +19,57 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
-use Runtime.BaseStruct;
-use Runtime.ModelProxy;
-use Runtime.Vector;
-use Runtime.Web.ApiResult;
-use Runtime.Web.AppHook;
+use Runtime.Callback;
 use Runtime.Web.BaseRoute;
-use Runtime.Web.Cookie;
-use Runtime.Web.CoreUI;
 use Runtime.Web.Layout;
-use Runtime.Web.RedirectResponse;
-use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.RouteInfo;
-use Runtime.Web.RouteList;
 
 
 class RenderContainer extends BaseObject
 {
-	BaseRoute base_route = null;
-    Request request = null;
-    Response response = null;
-	RouteInfo route = null;
-    Layout layout = null;
-	Map frontend_env = new Map();
-	Map backend_storage = new Map();
-	
-	
-    /**
-	 * Set page title
-	 */
-	void setTitle(string title)
-	{
-		this.layout = rtl::setAttr(this.layout, ["title"], title);
-	}
-	
-	
-    /**
-	 * Set page title
-	 */
-	void setPageTitle(string title)
-	{
-		this.layout = rtl::setAttr(this.layout, ["title"], title);
-	}
+	public BaseRoute base_route = null;
+	public Request request = null;
+	public Response response = null;
+	public RouteInfo route = null;
+	public Layout layout = null;
+	public Map frontend_env = {};
+	public Map backend_storage = {};
 	
 	
 	/**
-	 * Set page model to layout
+	 * Call route
 	 */
-	void setPageModel(BaseStruct model)
-	{
-		this.layout = this.layout.setPageModel(model);
-	}
-	
-	
-	/**
-	 * Set layout name
-	 */
-	void setLayoutName(string layout_name)
-	{
-		this.layout = this.layout.setLayoutName(layout_name);
-	}
-	
-	
-	/**
-	 * Returns proxy
-	 */
-	ModelProxy proxy(Collection path = null)
-		=> new ModelProxy( this, ["layout", "pages", this.layout.page_model_class_name].concat(path) )
-	;
-	
-	
-	/**
-	 * Returns page model proxy
-	 */
-	ModelProxy modelProxy(Collection path = null)
-		=> new ModelProxy( this, ["layout", "pages", this.layout.page_model_class_name].concat(path) )
-	;
-	
-	
-	/**
-	 * Returns layout model proxy
-	 */
-	ModelProxy layoutProxy(Collection path = null)
-		=> new ModelProxy( this, ["layout"].concat(path) )
-	;
-	
-	
-	/**
-	 * Update model event
-	 */
-	void onUpdateModel(Collection path)
-	{
-		
-	}
-	
-	
-	/**
-	 * Render page and setup response
-	 */
-	void render(string class_name = "")
-	{
-		if (class_name == "") class_name = this.layout.page_class_name;
-		this.layout = rtl::setAttr(this.layout, ["page_class_name"], class_name);
-		this.response = new RenderResponse
-		{
-			"class_name": class_name,
-		};
-	}
-	
-	
-	/**
-	 * Set response
-	 */
-	void setResponse(Response response)
-	{
-		this.response = response;
-	}
-	
-	
-	/**
-	 * Setup dictionary
-	 */
-	void setDictionary(string key, Collection items)
-	{
-		if (this.response instanceof ApiResult)
-		{
-			ApiResult api_result = this.response;
-			api_result <= data <= dictionary <= { key } <= items;
-			this.response = api_result;
-		}
-	}
-	
-	
-	/**
-	 * Setup redirect response
-	 */
-	void redirect(string url, int http_code = 301)
-	{
-		Response response = new RedirectResponse();
-		response <= redirect <= url;
-		response <= http_code <= http_code;
-		/*response <= headers <= "Location" <= url;*/
-		this.response = response;
-	}
-	
-	
-	/**
-	 * Call method
-	 */
-	async void callMethod(var m)
+	async void callRoute()
 	{
 		if (this.base_route != null)
 		{
 			this.base_route.cancelRoute();
-			this.layout = rtl::setAttr(
-				this.layout, ["page_route_class_name"], ""
-			);
+		}
+		if (this.route == null)
+		{
+			return;
 		}
 		
-		if (m instanceof Collection)
-		{
-			string base_route_class_name = m[0];
-			this.base_route = rtl::newInstance(base_route_class_name);
-			string method_name = m[1];
-			fn route_method = rtl::method(this.base_route, method_name);
-			
-			/* Set route class name */
-			this.layout = rtl::setAttr(
-				this.layout, ["page_route_class_name"], base_route_class_name
-			);
-			
-			/* Set container */
-			this.base_route.container = this;
-			
-			await this.base_route.onActionBefore();
-			if (this.response == null)
-			{
-				await route_method();
-			}
-			if (not this.base_route.isCancelRoute())
-			{
-				await this.base_route.onActionAfter();
-			}
-		}
+		string class_name = this.route.class_name;
+		string method_name = this.route.method_name;
 		
-		else if (rtl::isFn(m))
+		/* Create route */
+		this.base_route = rtl::newInstance(class_name, [this]);
+		
+		/* Action before */
+		await this.base_route.onActionBefore();
+		
+		/* Call route */
+		Callback route = new Callback(this.base_route, method_name);
+		await rtl::apply(route);
+		
+		/* Action after */
+		if (not this.base_route.isCancelRoute())
 		{
-			await m(this);
+			await this.base_route.onActionAfter();
 		}
 	}
 	
-	
-	/**
-	 * Returns url
-	 */
-	string url(string route_name, Dict route_params = null)
-	{
-		RouteList routes = @.provider(classof RouteList);
-		return routes.url(route_name, route_params);
-	}
-	
-	
-	/**
-	 * Add cookie
-	 */
-	void addCookie(Cookie cookie)
-	{
-		this.response = this.response.addCookie(cookie);
-	}
-	
-	
-	/**
-	 * Set api data
-	 */
-	void setApiData(Dict data)
-	{
-		if (this.response instanceof ApiResult)
-		{
-			this.response = this.response.setData(data);
-		}
-	}
-	
-	
-	/**
-	 * Set success result
-	 */
-	void success(Dict data = null)
-	{
-		if (this.response instanceof ApiResult)
-		{
-			this.response = this.response.success(data);
-		}
-	}
-	
-	
-	/**
-	 * Set fail result
-	 */
-	void fail(var e, Dict data = null)
-	{
-		if (this.response instanceof ApiResult)
-		{
-			this.response = this.response.fail(e, data);
-		}
-	}
-	
-	
-	/**
-	 * Set error message
-	 */
-	void setErrorMessage(string message)
-	{
-		if (this.response instanceof ApiResult)
-		{
-			ApiResult response = this.response;
-			response <= message <= message;
-			this.response = response;
-		}
-	}
 }

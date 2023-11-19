@@ -1,7 +1,7 @@
 /*!
- *  Bayrell Runtime Library
+ *  Bayrell Cloud OS
  *
- *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2020-2023 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Events;
+namespace Bayrell.CloudOS;
 
-use Runtime.Web.Events.BaseEvent;
+use Runtime.lib;
+use Runtime.Web.BaseModel;
 
 
-struct SignalEvent extends BaseEvent
+class PageModel extends BaseModel
 {
-	public string command = "";
-	public string method_name = "";
-	public BaseEvent event = null;
-	public Collection args = null;
-	public Dict params = null;
+	void constructor()
+	{
+		parent();
+		this.widget_name = static::getClassName();
+	}
 }
-

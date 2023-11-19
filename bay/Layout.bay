@@ -1,7 +1,7 @@
 /*!
- *  Bayrell Runtime Library
+ *  Bayrell Cloud OS
  *
- *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2020-2023 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,280 +16,110 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Bayrell.CloudOS;
 
 use Runtime.lib;
-use Runtime.BaseStruct;
-use Runtime.ModelProxy;
-use Runtime.Exceptions.RuntimeException;
+use Runtime.Callback;
 use Runtime.Web.AppHook;
-use Runtime.Web.Breadcrumb;
-use Runtime.Web.RouteInfo;
-use Runtime.Web.RouteList;
-use Runtime.Web.SeoModel;
+use Runtime.Web.BaseModel;
+use Runtime.Web.PageModel;
 
 
-struct Layout extends BaseStruct
+class Layout extends BaseModel
 {
 	string title = "";
 	string layout_name = "default";
-	string page_class_name = "";
-	string page_model_class_name = "";
-	string page_route_class_name = "";
-	Collection<string> css_classes = [];
-	Collection<Breadcrumb> breadcrumbs = [];
-	Dict<BaseStruct> pages = {};
-	Dict<BaseStruct> models = {
-		"seo": new SeoModel,
-		"current_user": null,
-	};
+	string current_page_model = "";
+	string current_page = "";
 	
-	/* Current route */
-	RouteInfo route = null;
-	string request_full_uri = "";
-	string request_host = "";
-	string request_uri = "";
-	Dict<string> request_query = null;
+	/* Components list */
+	Vector<string> components = [];
 	
 	/* Increment assets */
 	string f_inc = "1";
 	
 	
 	/**
+	 * Returns model
+	 */
+	var model(Collection<string> model_path) => rtl::attr(this, model_path);
+	
+	
+	/**
 	 * Returns page model
 	 */
-	BaseStruct getPageModel(Collection path = null) =>
-		rtl::attr(this, this.getPageModelPath(path))
-	;
-	
-	
-	/**
-	 * Returns model path
-	 */
-	Collection getPageModelPath(Collection path = null)
-		=> path
-			? ["pages", this.page_model_class_name].concat(path)
-			: ["pages", this.page_model_class_name]
-	;
-	
-	
-	/**
-	 * Returns widget model path
-	 */
-	Collection getWidgetModelPath(Collection widget_path = null)
+	PageModel getPageModel()
 	{
-		Vector path = new Vector();
-		
-		if (widget_path)
-		{
-			for (int i=0; i<widget_path.count(); i++)
-			{
-				path.pushValue("widgets");
-				path.pushValue(widget_path.get(i));
-			}
-		}
-		
-		return path.toCollection();
+		return this.widgets.get(this.current_page_model);
 	}
 	
 	
 	/**
-	 * Returns widget global path
+	 * Set current page model
 	 */
-	Collection getWidgetGlobalPath(Collection widget_path = null)
+	void setPageModel(PageModel page_model)
 	{
-		Vector path = new Vector();
-		
-		path.pushValue("pages");
-		path.pushValue(this.page_model_class_name);
-		
-		if (widget_path)
-		{
-			for (int i=0; i<widget_path.count(); i++)
-			{
-				path.pushValue("widgets");
-				path.pushValue(widget_path.get(i));
-			}
-		}
-		
-		return path.toCollection();
+		this.addWidget(page_model);
+		this.current_page_model = page_model::getClassName();
 	}
 	
 	
 	/**
-	 * Returns widget
+	 * Set current page
 	 */
-	ModelProxy getWidget(Collection widget_path = null)
-		=> rtl::attr(this, this.getWidgetGlobalPath(widget_path))
-	;
-	
-	
-	/**
-	 * Set page model
-	 */
-	Layout setPageModel(BaseStruct model)
+	void setCurrentPage(string current_page)
 	{
-		Layout layout = this;
-		
-		if (model == null)
-		{
-			layout <= page_model_class_name <= "";
-			return layout;
-		}
-		
-		string class_name = model::getClassName();
-		
-		layout <= page_model_class_name <= class_name;
-		layout <= pages <= { class_name } <= model;
-		
-		return layout;
+		this.current_page = current_page;
 	}
-	
-	
-	/**
-	 * Returns layout class name
-	 */
-	string getLayoutClassName()
-	{
-		string layout_name = this.layout_name;
-		
-		Dict d = @.callHook(AppHook::LAYOUT_PAGE_CLASS_NAME, new Map());
-		
-		string layout_page_class_name = d[layout_name]
-			|> default string "Runtime.Web.LayoutPage"
-		;
-		
-		return layout_page_class_name;
-	}
-	
-	
-	/**
-	 * Init layout
-	 */
-	async Layout init_layout() => this;
-	
-	
-	/**
-	 * Clear layout
-	 */
-	Layout clear_layout() => this;
-	
-	
-	/**
-	 * Returns clear layout
-	 **/
-	static Layout getClearLayout(Layout layout)
-	{
-		Dict d = @.callHook(AppHook::CLEAR_LAYOUT, {
-			"layout": layout,
-		});
-		layout = d["layout"];
-		return layout.clear_layout();
-	}
-	
-	
-	/**
-	 * Add breadcrumbs
-	 */
-	Layout addBreadcrumb(Dict d)
-	{
-		Layout layout = this;
-		if (d instanceof Dict)
-		{
-			d = new Breadcrumb(d);
-		}
-		if (d instanceof Breadcrumb)
-		{
-			layout <= breadcrumbs <=  layout.breadcrumbs.pushIm(d);
-		}
-		return layout;
-	}
-	
-	
-	/**
-	 * Set new title
-	 */
-	Layout setTitle(string title) => rtl::setAttr(this, ["title"], title);
-	Layout setPageTitle(string title) => rtl::setAttr(this, ["title"], title);
 	
 	
 	/**
 	 * Set layout name
 	 */
-	Layout setLayoutName(string layout_name) => rtl::setAttr(this, ["layout_name"], layout_name);
+	void setLayoutName(string layout_name)
+	{
+		this.layout_name = layout_name;
+	}
+	
+	
+	/**
+	 * Set page title
+	 */
+	void setPageTitle(string title)
+	{
+		this.title = title;
+	}
 	
 	
 	/**
 	 * Add component
 	 */
-	Layout addComponent(string component_name)
+	void addComponent(string class_name)
 	{
-		Layout layout = this;
-		layout <= css_classes <= layout.css_classes.appendIm(component_name);
-		return layout;
+		this.components.push(class_name);
 	}
 	
 	
 	/**
-	 * Returns css class names
+	 * Returns all components
+	 * @return Collection<string>
 	 */
-	Collection<string> getCssClasses()
+	Vector<string> getComponents()
 	{
-		Vector res = new Vector();
+		Vector<string> res = new Vector();
+		Map<string> cache = new Map();
 		
-		/* Extends css class names */
-		Dict d = @.callHook(AppHook::CSS_CLASS_NAMES, {
+		/* Extends components */
+		static::_getRequiredComponents(res, cache, this.components);
+		res.removeDuplicates();
+		
+		/* Call hook */
+		Map d = @.callHook(AppHook::COMPONENTS, {
 			"layout": this,
-			"css_class_names": res,
+			"components": res,
 		});
 		
-		return d["css_class_names"].toCollection().removeDuplicatesIm();
-	}
-	
-	
-	/**
-	 * Returns url
-	 */
-	string url(string route_name, Dict route_params = null)
-	{
-		RouteList routes = @.provider(classof RouteList);
-		return routes.url(route_name, route_params);
-	}
-	
-	
-	/**
-	 * Returns css
-	 */
-	static string getCss(Collection<string> class_names, Dict css_vars = null)
-	{
-		if (css_vars == null)
-		{
-			css_vars = @.callHook(AppHook::CSS_VARS, css_vars);
-		}
-		
-		/* Get required components */
-		Collection<string> components = static::getRequiredComponents(class_names);
-		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
-		
-		/* Get css */
-		Collection<string> css = components.map
-		(
-			string (string component_name) use (css_vars)
-			{
-				if (component_name == "") return "";
-				if (not rtl::method_exists(component_name, "css")) return "";
-				fn f = rtl::method(component_name, "css");
-				string css = f(css_vars);
-				return css;
-			}
-		);
-		
-		css = css
-			.map( string (string s) => rs::trim(s) )
-			.filter( bool (string s) => s != "" )
-		;
-		
-		return rs::trim( rs::join("\n", css) );
+		return d.get("components");
 	}
 	
 	
@@ -311,18 +141,21 @@ struct Layout extends BaseStruct
 		for (int i=0; i<components.count(); i++)
 		{
 			string class_name = components.item(i);
-			if (cache.get(class_name, false) == false)
+			if (class_name)
+			{
+				continue;
+			}
+			if (not cache.has(class_name))
 			{
 				cache.setValue(class_name, true);
-				if (rtl::method_exists(class_name, "components"))
+				
+				Callback f = new Callback(class_name, "components");
+				if (f.exists())
 				{
-					fn f = rtl::method(class_name, "components");
-					Collection<string> sub_components = f();
-					if (sub_components != null)
-					{
-						static::_getRequiredComponents(res, cache, sub_components);
-					}
+					Collection<string> sub_components = rtl::apply(f);
+					static::_getRequiredComponents(res, cache, sub_components);
 				}
+				
 				res.pushValue(class_name);
 			}
 		}
@@ -330,17 +163,29 @@ struct Layout extends BaseStruct
 	
 	
 	/**
-	 * Returns all components
-	 * @param Collection<string> components
-	 * @return Collection<string>
+	 * Returns css
 	 */
-	pure Collection<string> getRequiredComponents(Collection<string> components)
+	static string getCss(Collection<string> components, Dict css_vars = null)
 	{
-		components = components.filter(lib::equalNot("")).removeDuplicatesIm();
-		Vector<string> res = new Vector();
-		Map<string> cache = new Map();
-		static::_getRequiredComponents(res, cache, components);
-		res = res.removeDuplicatesIm();
-		return res.toCollection();
+		Collection<string> css = components.map
+		(
+			string (string component_name) use (css_vars)
+			{
+				if (component_name == "") return "";
+				
+				Callback f = new Callback(component_name, "css");
+				if (not f.exists()) return "";
+				
+				string css = rtl::apply(f, [css_vars]);
+				return css;
+			}
+		);
+		
+		css = css
+			.map( string (string s) => rs::trim(s) )
+			.filter( bool (string s) => s != "" )
+		;
+		
+		return rs::trim( rs::join("\n", css) );
 	}
 }

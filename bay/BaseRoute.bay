@@ -19,9 +19,6 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
-use Runtime.BaseStruct;
-use Runtime.ModelProxy;
-use Runtime.Web.BaseModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RouteList;
@@ -29,75 +26,26 @@ use Runtime.Web.RouteList;
 
 class BaseRoute extends BaseObject
 {
-	bool is_cancel_route = false;
-	RenderContainer container = null;
-	ModelProxy layout = null;
-	ModelProxy page_model = null;
+	protected bool is_cancel_route = false;
+	protected RenderContainer container;
 	
 	
 	/**
-	 * Returns layout name
+	 * Constructor
 	 */
-	string getLayoutName() => "default";
-	
-	
-	/**
-	 * Returns page model
-	 */
-	string getPageModelName() => "";
+	void construct(RenderContainer container)
+	{
+		parent();
+		this.container = container;
+	}
 	
 	
 	/**
 	 * Returns routes
 	 */
-	pure Collection<RouteInfo> getRoutes() => [];
-	
-	
-	/**
-	 * Set page title
-	 */
-	void setTitle(string title)
+	static Collection<RouteInfo> getRoutes()
 	{
-		this.container.setTitle(title);
-	}
-	
-	
-	/**
-	 * Set page title
-	 */
-	void setPageTitle(string title)
-	{
-		this.container.setPageTitle(title);
-	}
-	
-	
-	/**
-	 * Set page description
-	 */
-	void setPageDescription(string description)
-	{
-		ModelProxy seo = this.layout.proxy(["models", "seo"]);
-		seo.commit("setDescription", description)
-	}
-	
-	
-	/**
-	 * Set new page model
-	 */
-	void setPageModel(string page_model)
-	{
-		this.container.setPageModel(page_model);
-		this.page_model = this.container.modelProxy();
-	}
-	
-		
-	/**
-	 * Setup page model widget
-	 */
-	async void setupWidget()
-	{
-		await this.page_model.commitAsync("initWidget", this.layout);
-		await this.page_model.commitAsync("loadWidget", this.layout);
+		return [];
 	}
 	
 	
@@ -106,24 +54,6 @@ class BaseRoute extends BaseObject
 	 */
 	async void onActionBefore()
 	{
-		/* Setup layout */
-		string layout_name = this.getLayoutName();
-		if (layout_name)
-		{
-			this.container.setLayoutName(layout_name);
-		}
-		
-		/* Setup layout proxy */
-		this.layout = this.container.layoutProxy();
-		
-		/* Setup page model */
-		string model_name = this.getPageModelName();
-		if (model_name)
-		{
-			this.container.setPageModel( rtl::newInstance(model_name) );
-			this.page_model = this.container.modelProxy();
-			this.page_model.commit("createWidget");
-		}
 	}
 	
 	
@@ -147,7 +77,7 @@ class BaseRoute extends BaseObject
 	/**
 	 * Returns true if current route is canceled
 	 */
-	bool isCancelRoute()
+	void isCancelRoute()
 	{
 		return this.is_cancel_route;
 	}
@@ -161,44 +91,4 @@ class BaseRoute extends BaseObject
 		RouteList routes = @.provider(classof RouteList);
 		return routes.url(route_name, route_params);
 	}
-	
-	
-	/**
-	 * Render page and setup response
-	 */
-	void render(string class_name = "")
-	{
-		this.container.render(class_name);
-	}
-	
-	
-	/**
-	 * Redirect to url
-	 */
-	void redirect(string url, int http_code = 301)
-	{
-		this.container.redirect(url, http_code);
-	}
-	
-	
-	/**
-	 * Returns page model proxy
-	 */
-	ModelProxy modelProxy(Collection path = null) => this.container.modelProxy(path);
-	ModelProxy proxy(Collection path = null) => this.container.modelProxy(path);
-	
-	
-	/**
-	 * Returns layout model proxy
-	 */
-	ModelProxy layoutProxy(Collection path = null)
-		=> this.container.layoutProxy(path)
-	;
-	
-	
-	/**
-	 * Returns model
-	 */
-	BaseStruct model() => this.container.layout.getPageModel();
-	
 }

@@ -18,36 +18,21 @@
 
 namespace Runtime.Web;
 
-use Runtime.lib;
 use Runtime.BaseProvider;
-use Runtime.Context;
+use Runtime.Callback;
 use Runtime.Web.AppHook;
-use Runtime.Web.BaseRoute;
-use Runtime.Web.Layout;
 use Runtime.Web.RenderContainer;
-use Runtime.Web.RenderProvider;
-use Runtime.Web.RouteInfo;
+use Runtime.Web.Request;
 use Runtime.Web.RouteList;
 
 
-class App extends BaseProvider
+class App
 {
-	
-	/**
-	 * Modules
-	 */
-	async Context modules(Context c)
-	{
-		return c;
-	}
-	
-	
 	/**
 	 * Init app
 	 */
-	async Context init(Context c)
+	async void init()
 	{
-		return c;
 	}
 	
 	
@@ -60,18 +45,17 @@ class App extends BaseProvider
 	
 	
 	/**
-	 * Main entry point
+	 * Run Web Application
 	 */
 	async int main()
 	{
-		await @.callAsyncHook(AppHook::MAIN, {});
-		
 		#ifdef BACKEND then
-		this.renderBackend();
-		#endif
 		
-		#ifdef FRONTEND then
-		this.renderFrontend();
+		RenderContainer container = this.createRenderContainer();
+		await this.initContainer(container);
+		await this.resolveContainer(container);
+		await this.responseBackend(container);
+		
 		#endif
 		
 		return 0;
@@ -79,49 +63,25 @@ class App extends BaseProvider
 	
 	
 	/**
-	 * Render backend
+	 * Create render container
 	 */
-	void renderBackend()
+	RenderContainer createRenderContainer()
 	{
-		#ifcode PHP then
-		$container = $this->createRenderContainer();
-		$this->initContainer($container);
-		$this->resolveContainer($container);
-		$this->responseBackend($container->response);
-		#endif
+		RenderContainer container = @.create(classof RenderContainer);
+		container.request = this.createRequest();
+		return container;
 	}
 	
 	
 	/**
-	 * Render backend
-	 */
-	void renderFrontend()
-	{
-		#ifcode ES6 then
-		let context = Runtime.rtl.getContext();
-		let core_ui_root = document.getElementById("core_ui_root");
-		/*let layout = Runtime.rs.base64_decode_url(window["data_core_ui_layout"]);*/
-		/*layout = Runtime.rtl.json_decode(layout);*/
-		let layout = window["data_core_ui_layout"];
-		layout = Runtime.rtl.NativeToObject(layout);
-		let layout_page_class_name = layout.getLayoutClassName();
-		let provider = context.provider("Runtime.Web.RenderProvider");
-		provider.renderRoot(core_ui_root, layout_page_class_name, layout);
-		#endif
-	}
-	
-	
-	/**
-	 * Resolve container
+	 * Init container
 	 */
 	async void initContainer(RenderContainer container)
 	{
-		Context context = @;
-		context <= environments <= render_container <= container;
-		@ = context;
+		/* @.setEnvironment("render_container", container); */
 		
-		/* Init container */
-		@.callAsyncHook(AppHook::INIT_CONTAINER, {
+		/* Call hook init container */
+		await @.callHookAsync(AppHook::INIT_CONTAINER, {
 			"container": container,
 		});
 	}
@@ -130,67 +90,28 @@ class App extends BaseProvider
 	/**
 	 * Resolve container
 	 */
-	async void resolveContainer(RenderContainer container, Dict models = null)
+	async void resolveContainer(RenderContainer container)
 	{
 		/* Find route */
-		await this.findRoute(container);
-		
-		/* Init layout */
-		await this.initLayout(container, models);
+		this.findRoute(container);
 		
 		/* Call route */
 		await this.callRoute(container);
 		
 		/* Call hook response */
-		await @.callAsyncHook(AppHook::RESPONSE, {
+		await @.callHookAsync(AppHook::RESPONSE, {
 			"container": container,
 		});
-	}
-	
-	
-	/**
-	 * Init layout
-	 */
-	async void initLayout(RenderContainer container, Dict models = null)
-	{
-		/* Create layout */
-		await @.callAsyncHook(AppHook::CREATE_LAYOUT, {
-			"container": container,
-		});
-		
-		if (container.layout == null)
-		{
-			container <= layout <= new Layout();
-		}
-		
-		/* Set models */
-		if (models)
-		{
-			container <= models <= models;
-		}
-		
-		/* Setup request params */
-		container <= layout <= route <= container.route;
-		container <= layout <= request_host <= container.request.host;
-		container <= layout <= request_uri <= container.request.uri;
-		container <= layout <= request_full_uri <= container.request.full_uri;
-		container <= layout <= request_query <= container.request.query;
-		
-		await @.callAsyncHook(AppHook::INIT_LAYOUT, {
-			"container": container,
-		});
-		
-		container <= layout <= await container.layout.init_layout();
 	}
 	
 	
 	/**
 	 * Find route
 	 */
-	async void findRoute(RenderContainer container)
+	void findRoute(RenderContainer container)
 	{
 		/* Call hook find route */
-		await @.callAsyncHook(AppHook::FIND_ROUTE, {
+		@.callHook(AppHook::FIND_ROUTE, {
 			"container": container,
 		});
 		
@@ -198,11 +119,11 @@ class App extends BaseProvider
 		if (container.route == null)
 		{
 			RouteList routes = @.provider(classof RouteList);
-			container.route = routes.findRoute( container );
+			container.route = routes.findRoute(container);
 		}
 		
 		/* Call hook found route */
-		await @.callAsyncHook(AppHook::FIND_ROUTE_AFTER, {
+		await @.callHook(AppHook::FIND_ROUTE_AFTER, {
 			"container": container,
 		});
 	}
@@ -214,101 +135,100 @@ class App extends BaseProvider
 	async void callRoute(RenderContainer container)
 	{
 		/* Call route before */
-		await @.callAsyncHook(AppHook::CALL_ROUTE_BEFORE, {
+		await @.callHook(AppHook::CALL_ROUTE_BEFORE, {
 			"container": container,
 		});
 		
 		/* Call middleware */
-		if (container.route and container.route.middleware)
-		{
-			for (int i=0; i<container.route.middleware.count(); i++)
-			{
-				string class_name_middleware = container.route.middleware[i];
-				fn middleware_method = rtl::method(class_name_middleware, "actionMiddleware");
-				await middleware_method(container);
-			}
-		}
-		
-		/* Call route before */
-		await @.callAsyncHook(AppHook::MIDDLEWARE, {
-			"container": container,
-		});
+		await this.callRouteMiddleware(container);
 		
 		/* Call route */
 		if (container.route != null and container.response == null)
 		{
-			await container.callMethod(container.route.method);
+			await container.callRoute();
 		}
 		
 		/* Call route after */
-		await @.callAsyncHook(AppHook::CALL_ROUTE_AFTER, {
+		await @.callHook(AppHook::CALL_ROUTE_AFTER, {
 			"container": container,
 		});
 	}
 	
 	
-	#ifcode PHP then
-	
 	/**
-	 * Create render container
+	 * Call route middleware
 	 */
-	function createRenderContainer($ctx)
+	async void callRouteMiddleware(RenderContainer container)
 	{
-		$container = new \Runtime\Web\RenderContainer($ctx);
-		$container->request = $this->createRequest($ctx);
-		return $container;
-	}
-	
-	
-	/**
-	 * Returns POST
-	 */
-	function getPost($ctx)
-	{
-		$content_type = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : "";
-		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
+		/* Call hook middleware */
+		await @.callHook(AppHook::MIDDLEWARE_BEFORE, {
+			"container": container,
+		});
+		
+		if (container.route and container.route.middleware)
 		{
-			$json = file_get_contents("php://input");
-			$json = @json_decode($json);
-			return $json;
+			for (int i = 0; i<container.route.middleware.count(); i++)
+			{
+				Callback middleware = container.route.middleware.get(i);
+				await rtl::apply(middleware, [container]);
+			}
 		}
 		
-		return $_POST;
+		/* Call hook middleware */
+		await @.callHook(AppHook::MIDDLEWARE_AFTER, {
+			"container": container,
+		});
 	}
 	
 	
 	/**
 	 * Create request
 	 */
-	function createRequest($ctx)
+	Request createRequest()
 	{
+		Request request = new Request();
+		
+		#ifcode PHP then
+		
 		$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : "";
 		$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : "";
 		$method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : "";
 		$start_time = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : "";
 		$content_type = isset($_SERVER['Content-Type']) ? $_SERVER['Content-Type'] : "";
 		
-		$query = new \Runtime\Map($ctx);
-		$payload = new \Runtime\Map($ctx);
-		$cookies = new \Runtime\Map($ctx);
-		foreach ($_GET as $key => $val) $query->setValue($ctx, $key, $val);
+		$query = new \Runtime\Map();
+		$payload = new \Runtime\Map();
+		$cookies = new \Runtime\Map();
+		foreach ($_GET as $key => $val) $query->setValue($key, $val);
 		
 		/* Read POST */
-		$post = $this->getPost($ctx);
+		$post = null;
+		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
+		{
+			$json = file_get_contents("php://input");
+			$post = @json_decode($json);
+		}
+		else
+		{
+			if ($method == "POST")
+			{
+				$post = $_POST;
+			}
+		}
 		if ($post != null)
 		{
 			foreach ($post as $key => $val)
 			{
-				$payload->setValue($ctx, $key, \Runtime\rtl::NativeToObject($ctx, $val));
+				$payload->setValue($key, \Runtime\Serializer::NativeToObject($val));
 			}
 		}
 		
 		/* Read Cookie */
 		foreach ($_COOKIE as $key => $val)
 		{
-			$cookies->setValue($ctx,
+			$cookies->setValue(
 				$key,
-				new \Runtime\Web\Cookie($ctx,
+				new \Runtime\Web\Cookie(
 					\Runtime\Dict::from([
 						'name' => $key,
 						'value' => $val,
@@ -316,122 +236,86 @@ class App extends BaseProvider
 				)
 			);
 		}
-		$arr = parse_url($uri);
-		$path = isset($arr['path']) ? $arr['path'] : "";
 		
-		$protocol = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ?
+		/* Setup uri */
+		$request->initUri($uri);
+		$request->protocol = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ?
 			$_SERVER['HTTP_X_FORWARDED_PROTO'] : "http";
 		
-		/* Create request */
-		$r = new \Runtime\Web\Request($ctx,
-			\Runtime\Dict::from([
-				"host" => $host,
-				"full_uri" => $uri,
-				"uri" => $path,
-				"method" => $method,
-				"query" => $query->toDict($ctx),
-				"payload" => $payload->toDict($ctx),
-				"cookies" => $cookies->toDict($ctx),
-				"headers" => \Runtime\Dict::from($_SERVER),
-				"protocol" => $protocol,
-				"start_time" => $start_time,
-			])
-		);
-		return $r;
+		/* Setup request */
+		$request->host = $host;
+		$request->method = $method;
+		$request->query = $query;
+		$request->payload = $payload;
+		$request->cookies = $cookies;
+		$request->headers = \Runtime\Map::from($_SERVER);
+		$request->start_time = $start_time;
+		
+		#endif
+		
+		return request;
 	}
 	
 	
 	/**
-	 * Output result
+	 * Send response
 	 */
-	function responseBackend($ctx, $response)
+	async void responseBackend(RenderContainer container)
 	{
+		#ifcode PHP then
+		
+		$response = $container->response;
+		
 		if ($response != null)
 		{
 			http_response_code($response->http_code);
+			
+			/* Setup cookies */
 			if ($response->cookies != null)
 			{
-				$keys = $response->cookies->keys($ctx);
-				for ($i=0; $i<$keys->count($ctx); $i++)
-				{
-					$key = $keys->item($ctx, $i);
-					$cookie = $response->cookies->item($ctx, $key);
-					if ($cookie != null && $cookie->name)
+				$response->cookies->each(
+					function (Cookie $cookie)
 					{
+						if ($cookie == null) return;
+						if ($cookie->name == "") return;
+						
 						setcookie
 						(
 							$cookie->name,
 							$cookie->value,
-							$cookie->getOptions()->_map
+							$cookie->getOptions()
 						);
 					}
-				}
-			}
-			if ($response->headers != null)
-			{
-				$keys = $response->headers->keys($ctx);
-				for ($i=0; $i<$keys->count($ctx); $i++)
-				{
-					$key = $keys->item($ctx, $i);
-					$value = $response->headers->item($ctx, $key);
-					header($key . ":" . $value);
-				}
+				);
 			}
 			
-			if ($response instanceof \Runtime\Web\RedirectResponse)
+			/* Setup headers */
+			if ($response->headers != null)
+			{
+				$response->headers->each(
+					function (string $value, string $key)
+					{
+						header($key . ":" . $value);
+					}
+				);
+			}
+			
+			/* Redirect */
+			if ($response instanceof RedirectResponse)
 			{
 				header("Location:" . $response->redirect);
 			}
 			
-			echo $response->getContent($ctx);
+			echo $response->getContent();
 		}
+		
 		else
 		{
 			http_response_code(404);
 			echo "404 Response not found";
 		}
-	}
-	
-	
-	/**
-	 * Css save
-	 */
-	static function css_save($css_class_names, $file_path)
-	{
-		$css_content = static::getCss( $css_class_names );
 		
-		$file_size = 0;
-		if ($file_path)
-		{
-			$file_content = "";
-			if (file_exists($file_path)) $file_content = file_get_contents($file_path);
-			if ($css_content != $file_content)
-			{
-				$dir_name = dirname($file_path);
-				if (!file_exists($dir_name)) mkdir($dir_name, 0775, true);
-				file_put_contents($file_path, $css_content);
-			}
-		}
+		#endif
 	}
 	
-	#endif
-	
-	
-	/**
-	 * Render component
-	 */
-	string render(string class_name, var model)
-	{
-		return "";
-	}
-	
-	
-	/**
-	 * Returns url
-	 */
-	string url(string route_name, Dict route_params = null)
-	{
-		RouteList routes = @.provider(classof RouteList);
-		return routes.url(route_name, route_params);
-	}
 }

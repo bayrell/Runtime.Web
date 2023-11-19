@@ -18,20 +18,12 @@
 
 namespace Runtime.Web;
 
-use Runtime.Entity.Hook;
 use Runtime.Entity.Provider;
-use Runtime.Web.Annotations.Api;
-use Runtime.Web.Annotations.Route;
-use Runtime.Web.AppHook;
-use Runtime.Web.Listener;
-use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
 
 static class ModuleDescription
 {
-
-	
 	/**
 	 * Returns module name
 	 * @return string
@@ -39,13 +31,11 @@ static class ModuleDescription
 	pure string getModuleName() => "Runtime.Web";
 	
 	
-	
 	/**
 	 * Returns module name
 	 * @return string
 	 */
-	pure string getModuleVersion() => "0.11.0";
-	
+	pure string getModuleVersion() => "0.12.0";
 	
 	
 	/**
@@ -54,9 +44,8 @@ static class ModuleDescription
 	 */
 	pure Dict<string> requiredModules() =>
 	{
-		'Runtime': '>=0.11',
+		'Runtime': '>=0.12',
 	};
-	
 	
 	
 	/**
@@ -64,18 +53,7 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		new Hook("Runtime.Web.AppHook"),
-		new Provider(classof RenderProvider, new RenderProvider),
 		new Provider(classof RouteList, new RouteList),
-		
-		#ifdef FRONTEND then
-		new Provider(classof Listener, new Listener),
-		#endif
-		
-		#ifdef BACKEND then
-		/*new Api("Runtime.Web.ApiRoute"),*/
-		new Route("Runtime.Web.ApiRoute"),
-		#endif
 	];
 	
 }

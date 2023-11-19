@@ -18,21 +18,23 @@
 
 namespace Runtime.Web;
 
-use Runtime.re;
-use Runtime.lib;
 use Runtime.BaseProvider;
-use Runtime.Vector;
-use Runtime.Web.AppHook;
-use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
-use Runtime.Web.Request;
 use Runtime.Web.RouteInfo;
-use Runtime.Web.Annotations.Route;
 
 
 class RouteList extends BaseProvider
 {
-	Dict<RouteInfo> routes_list = {};
+	public Vector routes_list = [];
+	
+	
+	/**
+	 * Init provider
+	 */
+	async void init()
+	{
+		await parent::init();
+	}
 	
 	
 	/**
@@ -40,40 +42,7 @@ class RouteList extends BaseProvider
 	 */
 	async void start()
 	{
-		Map routes_list = new Map();
-		
-		Collection<Route> routes = @.entities.filter( lib::isInstance(classof Route) );
-		for (int i=0; i<routes.count(); i++)
-		{
-			Route info = routes[i];
-			if (info.name)
-			{
-				/* Get method getRoutes */
-				fn getRoutes = rtl::method(info.name, "getRoutes");
-				
-				/* Create routes */
-				Collection<RouteInfo> routes_info = getRoutes();
-				if (routes_info)
-				{
-					for (int j=0; j<routes_info.count(); j++)
-					{
-						RouteInfo route = routes_info[j];
-						if (rtl::isString(route.method))
-						{
-							route <= method <= [info.name, route.method];
-						}
-						routes_list.setValue( route.name, route );
-					}
-				}
-			}
-		}
-		
-		await @.callAsyncHook(AppHook::ROUTES_INIT, {
-			"routes": this,
-			"routes_list": routes_list,
-		});
-		
-		this.routes_list = routes_list.toDict();
+		await parent::start();
 	}
 	
 	
@@ -82,146 +51,7 @@ class RouteList extends BaseProvider
 	 */
 	RouteInfo findRoute(RenderContainer container)
 	{
-		Route route = null;
-		Request request = container.request;
-		Dict<string> params = null;
-		
-		string request_uri = request.uri;
-		/*
-		string route_prefix = @.env("route_prefix");
-		request_uri = static::splitRoutePrefix(request_uri, route_prefix);
-		*/
-		if (request_uri === null) return null;
-		if (request_uri == "") request_uri = "/";
-		
-		/* Find route */
-		Collection<RouteInfo> routes = this.routes_list.values();
-		
-		routes = routes.map(
-			list (RouteInfo value, int index) => [ value, index ]
-		);
-		
-		routes = routes.sort(
-			int (list a, list b)
-			{
-				int pos_a = a[0].pos;
-				int pos_b = b[0].pos;
-				
-				if (pos_a == pos_b)
-				{
-					return a[1] - b[1];
-				}
-				
-				return pos_a - pos_b;
-			}
-		);
-		
-		for (int i=0; i<routes.count(); i++)
-		{
-			RouteInfo route = routes[i][0];
-			
-			if (route.domain == request.host or route.domain == "")
-			{
-				Collection<string> matches = re::matchAll( route.uri_match, request_uri );
-				if (matches) matches = matches.get(0, null).removeFirstIm();
-				
-				Dict d = @.callHook(AppHook::MATCH_ROUTE, {
-					"route": route,
-					"request_uri": request_uri,
-					"container": container,
-					"matches": matches,
-				});
-				route = d["route"];
-				matches = d["matches"];
-				
-				if (matches != null)
-				{
-					route = route.addMatches(matches);
-					return route;
-				}
-			}
-		}
-		
 		return null;
 	}
 	
-	
-	/**
-	 * Split route prefix
-	 */
-	pure string splitRoutePrefix(string request_uri, string route_prefix)
-	{
-		int prefix_len = rs::strlen(route_prefix);
-		if (prefix_len > 0)
-		{
-			int pos = rs::search(request_uri, route_prefix);
-			if (pos == -1)
-			{
-				return null;
-			}
-			request_uri = rs::substr(request_uri, prefix_len);
-		}
-		if (request_uri == "") request_uri = "/";
-		return request_uri;
-	}
-	
-	
-	/**
-	 * Returns url
-	 */
-	string url(string route_name, Dict route_params = null)
-	{
-		string url = "";
-		RouteInfo route = this.routes_list[route_name];
-		
-		if (route) url = route.uri;
-		
-		if (route_params)
-		{
-			route_params.each(
-				void (string value, string key) use (url)
-				{
-					int pos = rs::indexOf(url, "{" ~ key ~ "}");
-					if (pos >= 0)
-					{
-						url = rs::replace("{" ~ key ~ "}", value, url);
-					}
-					else
-					{
-						url = rs::url_get_add(url, key, value);
-					}
-				}
-			);
-		}
-		
-		Dict d = @.callHook(AppHook::MAKE_URL, {
-			"route": route,
-			"route_name": route_name,
-			"route_params": route_params,
-			"url": url,
-		});
-		url = d["url"];
-		
-		if (route and route.domain)
-		{
-			if (@.env("HTTP_PROTOCOL") == "https")
-			{
-				url = "https://" ~ route.domain ~ url;
-			}
-			else
-			{
-				url = "http://" ~ route.domain ~ url;
-			}
-		}
-		
-		Dict d = @.callHook(AppHook::MAKE_URL_AFTER, {
-			"route": route,
-			"route_name": route_name,
-			"route_params": route_params,
-			"url": url,
-		});
-		url = d["url"];
-		
-		return url;
-	}
 }

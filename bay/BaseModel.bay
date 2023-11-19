@@ -1,7 +1,7 @@
 /*!
- *  Bayrell Runtime Library
+ *  Bayrell Cloud OS
  *
- *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2020-2023 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,168 +16,42 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Bayrell.CloudOS;
 
-use Runtime.BaseStruct;
-use Runtime.Callback;
-use Runtime.ModelProxy;
-use Runtime.Web.BaseRoute;
-use Runtime.Web.Layout;
-use Runtime.Web.RenderProvider;
-use Runtime.Web.RouteList;
+use Runtime.lib;
+use Runtime.BaseObject;
 
 
-struct BaseModel extends BaseStruct
+class BaseModel extends BaseObject
 {
-	string component_name = "";
 	string widget_name = "";
-	Collection<Callback> events = [];
-	Collection<string> widget_path = [];
-	Dict widgets = {};
-	
-	
-	/**
-	 * Returns widget
-	 */
-	BaseModel getWidget(string widget_name) => this.widgets.get(widget_name);
-	
-	
-	/**
-	 * Returns parent widget
-	 */
-	BaseModel getParentWidget(Layout layout) =>
-		layout.getWidget( this.widget_path.removeLastIm() )
-	;
-	
-	
-	/**
-	 * Set widget path
-	 */
-	BaseModel setWidgetPath(string widget_path) => this.clone
-	{
-		"widget_path": widget_path,
-	};
-	
-	
-	/**
-	 * Set component name
-	 */
-	BaseModel setComponentName(string component_name) => this.clone
-	{
-		"component_name": component_name,
-	};
-	
-	
-	/**
-	 * Add event
-	 */
-	BaseModel addEventCallback(Callback event) => this.clone
-	{
-		"events": this.events.pushIm(event)
-	};
+	Map widgets = {};
 	
 	
 	/**
 	 * Add widget
 	 */
-	static ModelProxy addWidget(ModelProxy<BaseModel> model, BaseModel new_widget)
+	void addWidget(BaseModel new_widget)
 	{
 		string widget_name = new_widget.widget_name;
-		
-		/* Setup widget path */
-		Collection<string> widget_path = model.data("widget_path");
-		widget_path = widget_path.pushIm(widget_name);
-		new_widget <= widget_path <= widget_path;
-		
-		/* Add widget */
-		model.proxy("widgets").commit("setIm", widget_name, new_widget);
-		
-		/* Get widget proxy */
-		ModelProxy<BaseModel> widget_proxy = model.proxy(["widgets", widget_name]);
-		
-		/* Create new widget */
-		widget_proxy.commit("createWidget");
-		
-		/* Return widget */
-		return widget_proxy;
+		this.widgets.set(widget_name, new_widget);
 	}
 	
 	
 	/**
-	 * Create widget
+	 * Load data
 	 */
-	static void createWidget(ModelProxy<BaseModel> model)
+	async void loadWidget()
 	{
 	}
 	
 	
 	/**
-	 * Init widget
+	 * Export data
 	 */
-	async static void initWidget(ModelProxy<BaseModel> model, ModelProxy<Layout> layout)
+	Map exportData()
 	{
+		return {
+		};
 	}
-	
-	
-	/**
-	 * Load widget
-	 */
-	async static void loadWidget(ModelProxy<BaseModel> model, ModelProxy<Layout> layout)
-	{
-		Dict widgets = model.data("widgets");
-		Collection widgets_keys = widgets.keys();
-		
-		for (int i=0; i<widgets_keys.count(); i++)
-		{
-			string widget_name = widgets_keys.get(i);
-			ModelProxy<BaseModel> sub_widget = model.proxy(["widgets", widget_name]);
-			await sub_widget.commitAsync("loadWidget", layout);
-		}
-	}
-	
-	
-	/**
-	 * Widget event
-	 */
-	async static Dict event
-	(
-		ModelProxy<BaseModel> model,
-		string action, Dict obj, var tag = null
-	)
-	{
-		return obj;
-	}
-	
-	
-	/**
-	 * Call widget event
-	 */
-	async static Dict callEvent(ModelProxy<BaseModel> model, string action, Dict obj)
-	{
-		/* Get models */
-		BaseModel model_data = model.data();
-		
-		/* Call event */
-		obj = await model_data::event(model, action, obj);
-		
-		/* Call events */
-		for (int i=0; i<model_data.events.count(); i++)
-		{
-			Callback f = model_data.events[i];
-			obj = await f.callAsync([model, action, obj, f.tag]);
-		}
-		
-		return obj;
-	}
-	
-	
-	/**
-	 * Returns url
-	 */
-	static string url(string route_name, Dict route_params = null)
-	{
-		RouteList routes = @.provider(classof RouteList);
-		return routes.url(route_name, route_params);
-	}
-	
 }
