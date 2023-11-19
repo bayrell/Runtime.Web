@@ -20,12 +20,25 @@ namespace Bayrell.CloudOS;
 
 use Runtime.lib;
 use Runtime.BaseObject;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteList;
 
 
 class BaseModel extends BaseObject
 {
+	RenderContainer container = null;
 	string widget_name = "";
 	Map widgets = {};
+	
+	
+	/**
+	 * Create model
+	 */
+	void constructor(RenderContainer container)
+	{
+		parent();
+		this.container = container;
+	}
 	
 	
 	/**
@@ -39,9 +52,17 @@ class BaseModel extends BaseObject
 	
 	
 	/**
+	 * Init model
+	 */
+	async void init()
+	{
+	}
+	
+	
+	/**
 	 * Load data
 	 */
-	async void loadWidget()
+	async void loadData()
 	{
 	}
 	
@@ -53,5 +74,15 @@ class BaseModel extends BaseObject
 	{
 		return {
 		};
+	}
+	
+	
+	/**
+	 * Returns url
+	 */
+	static string url(string route_name, Dict route_params = null)
+	{
+		RouteList routes = @.provider(classof RouteList);
+		return routes.url(route_name, route_params);
 	}
 }

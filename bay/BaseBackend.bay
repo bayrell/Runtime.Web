@@ -21,91 +21,30 @@ namespace Runtime.Web;
 use Runtime.BaseProvider;
 use Runtime.Callback;
 use Runtime.Web.AppHook;
+use Runtime.Web.BaseApp;
+use Runtime.Web.Layout;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteList;
 
 
-class App
+class BaseBackend extends BaseApp
 {
-	/**
-	 * Init app
-	 */
-	async void init()
-	{
-	}
-	
-	
-	/**
-	 * Start app
-	 */
-	async void start()
-	{
-	}
-	
-	
 	/**
 	 * Run Web Application
 	 */
 	async int main()
 	{
-		#ifdef BACKEND then
-		
 		RenderContainer container = this.createRenderContainer();
 		await this.initContainer(container);
-		await this.resolveContainer(container);
+		this.findRoute(container);
+		await this.resolveRoute(container);
 		await this.responseBackend(container);
-		
-		#endif
-		
 		return 0;
 	}
 	
-	
-	/**
-	 * Create render container
-	 */
-	RenderContainer createRenderContainer()
-	{
-		RenderContainer container = @.create(classof RenderContainer);
-		container.request = this.createRequest();
-		return container;
-	}
-	
-	
-	/**
-	 * Init container
-	 */
-	async void initContainer(RenderContainer container)
-	{
-		/* @.setEnvironment("render_container", container); */
-		
-		/* Call hook init container */
-		await @.callHookAsync(AppHook::INIT_CONTAINER, {
-			"container": container,
-		});
-	}
-	
-	
-	/**
-	 * Resolve container
-	 */
-	async void resolveContainer(RenderContainer container)
-	{
-		/* Find route */
-		this.findRoute(container);
-		
-		/* Call route */
-		await this.callRoute(container);
-		
-		/* Call hook response */
-		await @.callHookAsync(AppHook::RESPONSE, {
-			"container": container,
-		});
-	}
-	
-	
-	/**
+    
+    /**
 	 * Find route
 	 */
 	void findRoute(RenderContainer container)
@@ -127,12 +66,12 @@ class App
 			"container": container,
 		});
 	}
-	
+    
 	
 	/**
-	 * Call route
+	 * Resolve route
 	 */
-	async void callRoute(RenderContainer container)
+	async void resolveRoute(RenderContainer container)
 	{
 		/* Call route before */
 		await @.callHook(AppHook::CALL_ROUTE_BEFORE, {
@@ -143,15 +82,52 @@ class App
 		await this.callRouteMiddleware(container);
 		
 		/* Call route */
-		if (container.route != null and container.response == null)
-		{
-			await container.callRoute();
-		}
+		await this.callRoute(container);
 		
 		/* Call route after */
 		await @.callHook(AppHook::CALL_ROUTE_AFTER, {
 			"container": container,
 		});
+	}
+	
+	
+	/**
+	 * Call route
+	 */
+	async void callRoute(RenderContainer container)
+	{
+		if (container.base_route != null)
+		{
+			container.base_route.cancelRoute();
+			container.base_route = null;
+		}
+		if (container.route == null)
+		{
+			return;
+		}
+		if (container.response != null)
+		{
+			return;
+		}
+		
+		string class_name = container.route.class_name;
+		string method_name = container.route.method_name;
+		
+		/* Create route */
+		container.base_route = rtl::newInstance(class_name, [container]);
+		
+		/* Action before */
+		await container.base_route.onActionBefore();
+		
+		/* Call route */
+		Callback route = new Callback(container.base_route, method_name);
+		await rtl::apply(route);
+		
+		/* Action after */
+		if (not container.base_route.isCancelRoute())
+		{
+			await container.base_route.onActionAfter();
+		}
 	}
 	
 	

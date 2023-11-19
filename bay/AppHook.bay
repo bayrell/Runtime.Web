@@ -27,12 +27,12 @@ class AppHook extends BaseHook
 	static const string CALL_ROUTE_AFTER = "runtime.web.app::call_route_after";
 	static const string CALL_ROUTE_BEFORE = "runtime.web.app::call_route_before";
 	static const string COMPONENTS = "runtime.web.app::components";
+	static const string CREATE_CONTAINER = "runtime.web.app::create_container";
 	static const string FIND_ROUTE = "runtime.web.app::find_route";
 	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
 	static const string INIT_CONTAINER = "runtime.web.app::init_container";
 	static const string MIDDLEWARE_AFTER = "runtime.web.app::middleware_after";
 	static const string MIDDLEWARE_BEFORE = "runtime.web.app::middleware_before";
-	static const string RESPONSE = "runtime.web.app::response";
 	
 	
 	/**
@@ -43,12 +43,12 @@ class AppHook extends BaseHook
 		if (hook_name == static::CALL_ROUTE_AFTER) return "call_route_after";
 		if (hook_name == static::CALL_ROUTE_BEFORE) return "call_route_before";
 		if (hook_name == static::COMPONENTS) return "components";
+		if (hook_name == static::CREATE_CONTAINER) return "create_container";
 		if (hook_name == static::FIND_ROUTE) return "find_route";
 		if (hook_name == static::FIND_ROUTE_AFTER) return "find_route_after";
 		if (hook_name == static::INIT_CONTAINER) return "init_container";
 		if (hook_name == static::MIDDLEWARE_AFTER) return "middleware_after";
 		if (hook_name == static::MIDDLEWARE_BEFORE) return "middleware_before";
-		if (hook_name == static::RESPONSE) return "response";
 		return "";
 	}
 	
@@ -80,6 +80,12 @@ class AppHook extends BaseHook
 	
 	
 	/**
+	 * Create container
+	 */
+	Map create_container(Map d) => d;
+	
+	
+	/**
 	 * Find route
 	 */
 	Map find_route(Map d) => d;
@@ -107,10 +113,4 @@ class AppHook extends BaseHook
 	 * Middleware after
 	 */
 	async Map middleware_after(Map d) => d;
-	
-	
-	/**
-	 * Response
-	 */
-	async Map response(Map d) => d;
 }

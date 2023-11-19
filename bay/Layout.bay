@@ -57,8 +57,9 @@ class Layout extends BaseModel
 	/**
 	 * Set current page model
 	 */
-	void setPageModel(PageModel page_model)
+	void setPageModel(string class_name)
 	{
+		PageModel page_model = rtl::newInstance(class_name, [this.container]);
 		this.addWidget(page_model);
 		this.current_page_model = page_model::getClassName();
 	}

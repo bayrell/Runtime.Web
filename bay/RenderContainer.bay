@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Callback;
+use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
 use Runtime.Web.Request;
@@ -29,47 +30,23 @@ use Runtime.Web.RouteInfo;
 
 class RenderContainer extends BaseObject
 {
+	#ifdef BACKEND then
 	public BaseRoute base_route = null;
 	public Request request = null;
 	public Response response = null;
+	#endif
+	
 	public RouteInfo route = null;
 	public Layout layout = null;
 	public Map frontend_env = {};
-	public Map backend_storage = {};
+	public Map storage = {};
 	
 	
 	/**
-	 * Call route
+	 * Call api
 	 */
-	async void callRoute()
+	ApiResult callApi(Map params)
 	{
-		if (this.base_route != null)
-		{
-			this.base_route.cancelRoute();
-		}
-		if (this.route == null)
-		{
-			return;
-		}
-		
-		string class_name = this.route.class_name;
-		string method_name = this.route.method_name;
-		
-		/* Create route */
-		this.base_route = rtl::newInstance(class_name, [this]);
-		
-		/* Action before */
-		await this.base_route.onActionBefore();
-		
-		/* Call route */
-		Callback route = new Callback(this.base_route, method_name);
-		await rtl::apply(route);
-		
-		/* Action after */
-		if (not this.base_route.isCancelRoute())
-		{
-			await this.base_route.onActionAfter();
-		}
+		return null;
 	}
-	
 }

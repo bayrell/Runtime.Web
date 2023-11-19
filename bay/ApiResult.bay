@@ -1,0 +1,141 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+
+class ApiResult
+{
+	int code = 0;
+	string message = "";
+	Map data = {};
+	string ob_content = "";
+	string error_name = null;
+	string error_file = "";
+	string error_line = "";
+	Collection<string> error_trace = null;
+	
+	
+	/**
+	 * Returns true if error
+	 */
+	bool isError() => this.code < 0;
+	
+	
+	/**
+	 * Returns true if success
+	 */
+	bool isSuccess() => this.code > 0;
+	
+	
+	/**
+	 * Get error message
+	 */
+	string getErrorMessage() => this.message;
+	
+	
+	/**
+	 * Get error code
+	 */
+	int getErrorCode() => this.code;
+	
+	
+	/**
+	 * Returns content
+	 */
+	string getContent()
+	{
+		return rtl::json_encode({
+			"code": this.code,
+			"message": this.message,
+			"ob_content": this.ob_content,
+			"error_name": this.error_name,
+			"error_file": this.error_file,
+			"error_line": this.error_line,
+			"error_trace": this.error_trace,
+			"data": this.data,
+		});
+	}
+	
+	
+	/**
+	 * Set data
+	 */
+	void setData(Dict data)
+	{
+		if (data == null) return;
+		
+		Collection<string> keys = data.keys();
+		for (int i=0; i<keys.count(); i++)
+		{
+			string key = keys.get(i);
+			this.data.set(key, data.get(key));
+		}
+	}
+	
+	
+	/**
+	 * Setup success
+	 */
+	void success(Dict data = null)
+	{
+		if (data == null)
+		{
+			this.code = rtl::ERROR_OK;
+			this.message = "Ok";
+			return;
+		}
+		
+		/* Set code */
+		if (data.has("code")) this.code = data["code"];
+		else this.code = rtl::ERROR_OK;
+		
+		/* Set message */
+		if (data.has("message")) this.message = data["message"];
+		else this.message = "Ok";
+		
+		/* Set data */
+		if (data.has("data")) this.setData(data["data"]);
+	}
+	
+	
+	/**
+	 * Setup fail
+	 */
+	ApiResult fail(Dict data = null)
+	{
+		if (data == null)
+		{
+			this.code = rtl::ERROR_UNKNOWN;
+			this.message = "Error";
+			return;
+		}
+		
+		/* Set code */
+		if (data.has("code")) this.code = data["code"];
+		else this.code = rtl::ERROR_UNKNOWN;
+		
+		/* Set message */
+		if (data.has("message")) this.message = data["message"];
+		else this.message = "Error";
+		
+		/* Set data */
+		if (data.has("data")) this.setData(data["data"]);
+	}
+	
+}
