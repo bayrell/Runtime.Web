@@ -20,13 +20,14 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.Web.BaseModel;
+use Runtime.Web.LayoutModel;
 
 
 class PageModel extends BaseModel
 {
-	void constructor()
+	void constructor(LayoutModel layout)
 	{
-		parent();
+		parent(layout);
 		this.widget_name = static::getClassName();
 	}
 }

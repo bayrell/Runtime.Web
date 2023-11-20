@@ -110,6 +110,7 @@ class BaseModel extends BaseObject
 	{
 		return {
 			"__class_name__": static::getClassName(),
+			"widget_name": this.widget_name,
 			"widgets": this.exportWidgets(),
 		};
 	}
