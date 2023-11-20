@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Render;
+namespace Runtime.Web;
 
 use Runtime.re;
 use Runtime.rtl;

@@ -1,4 +1,4 @@
-<!--
+/*!
  *  Bayrell Runtime Library
  *
  *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
@@ -14,51 +14,19 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
--->
-
-<class name="Runtime.Web.Component">
-
-<use name="Runtime.Web.RouteList" />
-
-<template></template>
-
-
-<script>
-
-props Collection<string> model_path = [];
-
-void _class_name()
-{
-}
-
-void _merge_attrs()
-{
-}
-
-void _flatten()
-{
-}
-
-void _e()
-{
-}
-
-/**
- * Returns url
  */
-static string url(string route_name, Dict route_params = null)
+
+namespace Runtime.Web.Annotations;
+
+use Runtime.Entity;
+
+
+struct Route extends Entity
 {
-	RouteList routes = @.provider(classof RouteList);
-	return routes.url(route_name, route_params);
+	void constructor(string route_name)
+	{
+		parent({
+			"name": route_name,
+		});
+	}
 }
-
-</script>
-
-</class>
-
-#ifcode ES6 then
-Runtime.Render.Component.render = function ()
-{
-	return this.render();
-}
-#endif

@@ -1,7 +1,7 @@
 /*!
- *  Bayrell Cloud OS
+ *  Bayrell Runtime Library
  *
- *  (c) Copyright 2020-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-namespace Bayrell.CloudOS;
+namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.Callback;
@@ -43,9 +43,22 @@ class LayoutModel extends BaseModel
 	
 	/* Components list */
 	Vector<string> components = [];
+	Map<string> routes = {};
 	
 	/* Increment assets */
 	string f_inc = "1";
+	
+	/* Backend storage */
+	public Map storage = {};
+	
+	
+	/**
+	 * Create model
+	 */
+	void constructor()
+	{
+		parent(this);
+	}
 	
 	
 	/**
@@ -64,6 +77,7 @@ class LayoutModel extends BaseModel
 		this.request_uri = import_data.get("request_uri");
 		this.request_query = import_data.get("request_query");
 		this.components = import_data.get("components");
+		this.routes = import_data.get("routes");
 	}
 	
 	
@@ -83,6 +97,7 @@ class LayoutModel extends BaseModel
 		data.set("request_uri", this.request_uri);
 		data.set("request_query", this.request_query);
 		data.set("components", this.components);
+		data.set("routes", this.routes);
 		return data;
 	}
 	

@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
+use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RouteList;
@@ -28,15 +29,17 @@ class BaseRoute extends BaseObject
 {
 	protected bool is_cancel_route = false;
 	protected RenderContainer container;
+	protected LayoutModel layout;
 	
 	
 	/**
 	 * Constructor
 	 */
-	void construct(RenderContainer container)
+	void constructor(RenderContainer container)
 	{
 		parent();
 		this.container = container;
+		this.layout = container.layout;
 	}
 	
 	

@@ -15,64 +15,36 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
+ 
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
-use Runtime.BaseProvider;
-use Runtime.Callback;
-use Runtime.Web.LayoutModel;
-use Runtime.Web.RenderContainer;
-use Runtime.Web.Request;
-use Runtime.Web.RouteList;
-use Runtime.Web.Hooks.AppHook;
+use Runtime.Web.Cookie;
 
 
-class BaseApp extends BaseObject
+class Response extends BaseObject
 {
+	public int http_code = 200;
+	public string ob_content = "";
+	public string content = "";
+	public Dict<Cookie> cookies = {};
+	public Dict<string> headers = {};
+	
+	
 	/**
-	 * Init app
+	 * Returns content
 	 */
-	async void init()
+	string getContent()
 	{
+		return this.content;
 	}
 	
 	
 	/**
-	 * Start app
+	 * Add cookie
 	 */
-	async void start()
+	Response addCookie(Cookie cookie)
 	{
-	}
-	
-	
-	/**
-	 * Run Web Application
-	 */
-	async int main()
-	{
-		return 0;
-	}
-	
-	
-	/**
-	 * Create render container
-	 */
-	RenderContainer createRenderContainer()
-	{
-		RenderContainer container = new RenderContainer();
-		
-		/* Create request */
-		container.request = this.createRequest();
-		
-		/* Create layout */
-		container.layout = new LayoutModel();
-		
-		/* Create layout */
-		@.callHook(AppHook::CREATE_CONTAINER, {
-			"container": container,
-		});
-		
-		return container;
+        this.cookies.set(cookie.name, cookie);
 	}
 }

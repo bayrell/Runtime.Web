@@ -21,7 +21,7 @@ namespace Runtime.Web.Hooks;
 use Runtime.re;
 use Runtime.ModelProxy;
 use Runtime.Exceptions.RuntimeException;
-use Runtime.Render.CoreUI;
+use Runtime.Web.CoreUI;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderResponse;
 use Runtime.Web.Response;
@@ -52,7 +52,7 @@ class ResponseHook extends AppHook
 		
 		/* Get class name core ui */
 		Map res = @.callHook(AppHook::CORE_UI, {
-			"class_name": null,
+			"class_name": classof CoreUI,
 		});
 		
 		string class_name = res.get("class_name");
@@ -68,7 +68,8 @@ class ResponseHook extends AppHook
 		
 		/* Render component */
 		string content = "<!doctype html>\n";
-		content ~= component.render();
+		component.render();
+		/*content ~= component.render();*/
 		
 		/* Set result */
 		response.content = content;

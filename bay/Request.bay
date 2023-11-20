@@ -15,7 +15,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
- 
+
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
@@ -65,8 +65,10 @@ class Request extends BaseObject
 		string uri = res["uri"];
 		Dict<string> query = res["query_arr"];
 		
-        this.full_uri = full_uri;
-        this.uri = uri;
-        this.query = query;
+		this.full_uri = full_uri;
+		this.uri = uri;
+		this.query = query;
+		
+		if (this.uri == "") this.uri = "/";
 	}
 }

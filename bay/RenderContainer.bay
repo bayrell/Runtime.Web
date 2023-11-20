@@ -21,12 +21,13 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.Callback;
 use Runtime.Web.ApiResult;
-use Runtime.Web.AppHook;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
+use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.Hooks.AppHook;
 
 
 class RenderContainer extends BaseObject
@@ -37,7 +38,6 @@ class RenderContainer extends BaseObject
 	public RouteInfo route = null;
 	public Layout layout = null;
 	public Map frontend_env = {};
-	public Map storage = {};
 	
 	
 	/**
@@ -54,34 +54,42 @@ class RenderContainer extends BaseObject
 	 */
 	Map exportData()
 	{
-		Map params = {
+		Map data = {
 			"entry_point": "",
 			"modules": [],
 			"environments": this.frontend_env,
 			"layout": this.layout.exportData(),
-			"route": this.route,
 		};
 		
 		/* Call hook */
-		@.callHook(AppHook::EXPORT_DATA, params);
+		@.callHook(AppHook::EXPORT_DATA, {
+			"container": this,
+			"data": data,
+		});
 		
-		return params;
+		return data;
 	}
 	
 	
 	/**
 	 * Import data
 	 */
-	void importData(Map import_data)
+	void importData(Map data)
 	{
 		/* Call hook */
-		@.callHook(AppHook::IMPORT_DATA, import_data);
+		@.callHook(AppHook::IMPORT_DATA, {
+			"container": this,
+			"data": data,
+		});
 		
 		/* Load data */
-		this.layout.importData(import_data.get("layout"));
+		this.layout.importData(data.get("layout"));
 		
 		/* Call hook */
-		@.callHook(AppHook::IMPORT_DATA_AFTER, import_data);
+		@.callHook(AppHook::IMPORT_DATA_AFTER, {
+			"container": this,
+			"data": data,
+		});
 	}
 	
 	
@@ -92,5 +100,6 @@ class RenderContainer extends BaseObject
 	{
 		this.layout.setCurrentPage(class_name);
 		this.response = new RenderResponse();
+		this.response.class_name = class_name;
 	}
 }

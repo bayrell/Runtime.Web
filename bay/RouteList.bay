@@ -18,13 +18,19 @@
 
 namespace Runtime.Web;
 
+use Runtime.re;
 use Runtime.BaseProvider;
+use Runtime.Callback;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.Request;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.Annotations.Route;
+use Runtime.Web.Hooks.AppHook;
 
 
 class RouteList extends BaseProvider
 {
+	public Map routes = {};
 	public Vector routes_list = [];
 	
 	
@@ -34,6 +40,84 @@ class RouteList extends BaseProvider
 	async void init()
 	{
 		await parent::init();
+		this.initRoutes();
+	}
+	
+	
+	/**
+	 * Init routes
+	 */
+	void initRoutes()
+	{
+		this.routes = {};
+		Collection<Route> routes = @.getEntities(classof Route);
+		for (int i=0; i<routes.count(); i++)
+		{
+			Route info = routes[i];
+			if (not info.name) continue;
+			
+			/* Get method getRoutes */
+			Callback getRoutes = new Callback(info.name, "getRoutes");
+			if (not getRoutes.exists()) continue;
+			
+			/* Create routes */
+			Collection<RouteInfo> routes_info = rtl::apply(getRoutes);
+			if (not routes_info) continue;
+			
+			for (int j=0; j<routes_info.count(); j++)
+			{
+				RouteInfo route = routes_info.get(j);
+				route <= method <= new Collection(info.name, route.method);
+				this.addRoute(route);
+			}
+		}
+		
+		await @.callHookAsync(AppHook::ROUTES_INIT, {
+			"routes": this,
+		});
+		
+		/* Sort routes */
+		this.sortRoutes();
+	}
+	
+	
+	/**
+	 * Add route
+	 */
+	void addRoute(RouteInfo route)
+	{
+		this.routes.set(route.name, route);
+		this.routes_list.push(route);
+	}
+	
+	
+	/**
+	 * Sort routes
+	 */
+	void sortRoutes()
+	{
+		Vector routes_list = this.routes_list.map(
+			list (RouteInfo value, int index) => [ value, index ]
+		);
+		
+		routes_list = routes_list.sort(
+			int (list a, list b)
+			{
+				int pos_a = a.get(0).pos;
+				int pos_b = b.get(0).pos;
+				
+				if (pos_a == pos_b)
+				{
+					return a.get(1) - b.get(1);
+				}
+				
+				return pos_a - pos_b;
+			}
+		);
+		
+		this.routes_list = routes_list.map(
+			RouteInfo (list item) => item.get(0)
+		);
 	}
 	
 	
@@ -51,7 +135,51 @@ class RouteList extends BaseProvider
 	 */
 	RouteInfo findRoute(RenderContainer container)
 	{
+		Request request = container.request;
+		if (request.uri === null) return null;
+		
+		for (int i=0; i<this.routes_list.count(); i++)
+		{
+			RouteInfo route = this.routes_list.get(i);
+			
+			Collection<string> matches = this.matchRoute(container, route);
+			if (matches == null) continue;
+			
+			route = route.addMatches(matches);
+			return route;
+		}
+		
 		return null;
 	}
 	
+	
+	/**
+	 * Match route
+	 */
+	Collection<string> matchRoute(RenderContainer container, RouteInfo route)
+	{
+		if (route == null) return null;
+		
+		Request request = container.request;
+		if (route.domain != "" and route.domain != request.host) return null;
+		
+		/* Get matches */
+		Vector<string> matches = re::matchAll( route.uri_match, request.uri );
+		if (matches)
+		{
+			matches = matches.get(0, null);
+			matches.removeItem(0);
+		}
+		
+		/* Call hook */
+		Dict d = @.callHook(AppHook::MATCH_ROUTE, {
+			"route": route,
+			"container": container,
+			"matches": matches,
+		});
+		matches = d.get("matches");
+		if (matches == null) return null;
+		
+		return matches;
+	}
 }

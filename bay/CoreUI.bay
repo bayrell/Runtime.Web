@@ -20,8 +20,8 @@
 
 <use name="Runtime.rtl" />
 <use name="Runtime.Exceptions.RuntimeException" />
-<use name="Runtime.Web.AppHook" />
 <use name="Runtime.Web.AppComponent" />
+<use name="Runtime.Web.Hooks.AppHook" />
 
 
 <template name="renderHead">
@@ -58,14 +58,13 @@
 	
 	<script>
 		onReady(function(){
-			let env = window["data_frontend_env"];
 			Runtime.rtl.runApp(
 				app_data["entry_point"],
 				app_data["modules"],
 				Runtime.Dict.from({
 					"environments": app_data["environments"],
-					"tz": @json{ @.tz }}
-				)
+					"tz": @json{ @.tz }
+				})
 			);
 		});
 	</script>
