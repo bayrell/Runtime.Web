@@ -1,0 +1,111 @@
+<!--
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+-->
+
+<class name="Runtime.Web.CoreUI">
+
+<use name="Runtime.rtl" />
+<use name="Runtime.Exceptions.RuntimeException" />
+<use name="Runtime.Web.AppHook" />
+<use name="Runtime.Web.AppComponent" />
+
+
+<template name="renderHead">
+	%var Dict d = @.callHook(AppHook::RENDER_HEAD, { "components": [] });
+	%var Collection<string> components = d["components"];
+	%for (int i=0; i<components.count(); i++)
+	{
+		%var string class_name = components[i];
+		<{class_name} />
+	}
+</template>
+
+
+<template name="renderBody">
+	%var Dict d = @.callHook(AppHook::RENDER_BODY, { "components": [] });
+	%var Collection<string> components = d["components"];
+	%for (int i=0; i<components.count(); i++)
+	{
+		%var string class_name = components[i];
+		<{class_name} />
+	}
+</template>
+
+
+<template name="renderApp">
+	
+	<div id="core_ui_root">
+		<AppComponent @model=[] />
+	</div>
+	
+	<script>
+		window["app_data"] = @json{{ this.container.exportData() }};
+	</script>
+	
+	<script>
+		onReady(function(){
+			let env = window["data_frontend_env"];
+			Runtime.rtl.runApp(
+				app_data["entry_point"],
+				app_data["modules"],
+				Runtime.Dict.from({
+					"environments": app_data["environments"],
+					"tz": @json{ @.tz }}
+				)
+			);
+		});
+	</script>
+	
+</template>
+
+
+<template name="renderFooter">
+	%var Dict d = @.callHook(AppHook::RENDER_FOOTER, { "components": [] });
+	%var Collection<string> components = d["components"];
+	%for (int i=0; i<components.count(); i++)
+	{
+		%var string class_name = components[i];
+		<{class_name} />
+	}
+</template>
+
+
+<template>
+	<html lang={{ this.layout.lang }}>
+		<head>
+			<script>
+			window.$onReady=[];
+			function onReady(f){ window.$onReady.push(f) };
+			</script>
+			%render static::renderHead();
+		</head>
+		<body>
+			%render static::renderBody();
+			%render static::renderApp();
+			%render static::renderFooter();
+			<script>
+			window.addEventListener('load', function() {
+				console.log('window load');
+				window.$onReady.forEach( function(f){ f(); } );
+			});
+			</script>
+		</body>
+	</html>
+</template>
+
+
+</class>

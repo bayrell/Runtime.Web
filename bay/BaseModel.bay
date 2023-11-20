@@ -20,13 +20,14 @@ namespace Bayrell.CloudOS;
 
 use Runtime.lib;
 use Runtime.BaseObject;
+use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteList;
 
 
 class BaseModel extends BaseObject
 {
-	RenderContainer container = null;
+	LayoutModel layout = null;
 	string widget_name = "";
 	Map widgets = {};
 	
@@ -34,10 +35,10 @@ class BaseModel extends BaseObject
 	/**
 	 * Create model
 	 */
-	void constructor(RenderContainer container)
+	void constructor(LayoutModel layout)
 	{
 		parent();
-		this.container = container;
+		this.layout = layout;
 	}
 	
 	
@@ -54,7 +55,7 @@ class BaseModel extends BaseObject
 	/**
 	 * Init model
 	 */
-	async void init()
+	void init()
 	{
 	}
 	
@@ -68,12 +69,68 @@ class BaseModel extends BaseObject
 	
 	
 	/**
+	 * Import data
+	 */
+	void importData(Map import_data)
+	{
+		this.importWidgets(import_data.get("widgets"));
+	}
+	
+	
+	/**
+	 * Import widgets
+	 */
+	void importWidgets(Map widgets_data)
+	{
+		Collection<string> widgets_keys = widgets_data.keys();
+		for (int i=0; i<widgets_keys.count(); i++)
+		{
+			string widget_key = widgets_keys.get(i);
+			
+			BaseModel widget = this.widgets.get(widget_key);
+			Map widget_data = widgets_data.get(widget_key);
+			
+			if (widget == null)
+			{
+				string class_name = widget_data.get("__class_name__");
+				widget = rtl::newInstance(class_name, [this.layout]);
+				widget.init();
+				this.widgets.set(widget_key, widget);
+			}
+			
+			widget.importData(widget_data);
+		}
+	}
+	
+	
+	/**
 	 * Export data
 	 */
 	Map exportData()
 	{
 		return {
+			"__class_name__": static::getClassName(),
+			"widgets": this.exportWidgets(),
 		};
+	}
+	
+	
+	/**
+	 * Export widgets
+	 */
+	Map exportWidgets()
+	{
+		Map res = {};
+		
+		Collection widgets_keys = this.widgets.keys();
+		for (int i=0; i<widgets_keys.count(); i++)
+		{
+			string widget_key = widgets_keys.get(i);
+			BaseModel widget = this.widgets.get(widget_key);
+			res.set(widget_key, widget.exportData());
+		}
+		
+		return res;
 	}
 	
 	

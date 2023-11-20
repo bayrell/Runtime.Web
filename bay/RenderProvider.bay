@@ -1,0 +1,112 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.BaseProvider;
+use Runtime.Web.AppComponent;
+use Runtime.Web.BaseApp;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteInfo;
+use Runtime.Web.Hooks.AppHook;
+
+
+class RenderProvider extends BaseProvider
+{
+	/**
+	 * Constructor
+	 */
+	void constructor(Dict params = null)
+	{
+		parent(params);
+	}
+	
+	
+	/**
+	 * Init provider
+	 */
+	async void init()
+	{
+		await parent::init();
+		
+		/* Create render container */
+		BaseApp app = @.getApp();
+		this.container = app.createRenderContainer();
+		await app.initContainer(this.container);
+	}
+	
+	
+	/**
+	 * Start provider
+	 */
+	async void start()
+	{
+		await parent::start();
+		
+		fn createLayout = null;
+		
+		#ifcode JAVASCRIPT then
+		let createLayout = function(layout)
+		{
+		    return {
+		        install: () => {
+		            app.config.globalProperties.$layout = layout;
+		        },
+		    };
+		};
+		#endif
+		
+		var Vue = window["Vue"];
+		
+		/* Import data */
+		this.container.importData(window["app_data"]);
+		
+		/* Get render settings */
+		Map render_settings = @.callHook(AppHook::RENDER_SETTINGS, {
+			"app": "#core_ui_root",
+			"ssr": true,
+		});
+		
+		/* Create vue app */
+		bool is_ssr = render_settings.get("ssr");
+		if (is_ssr)
+		{
+			this.vue = Vue.createSSRApp( rtl::find_class(classof AppComponent) );
+		}
+		else
+		{
+			this.vue = Vue.createApp( rtl::find_class(classof AppComponent) );
+		}
+		
+		/* Create layout */
+		this.layout = Vue.reactive(this.container.layout);
+		this.vue.use(createLayout(this.layout));
+		
+		await @.callHookAsync(AppHook::VUE_MODULES, {
+			"vue": this.vue,
+		});
+		
+		/* Mount app */
+		string app_selector = render_settings.get("app");
+		this.vue.mount(app_selector, true);
+		
+		#ifcode JAVASCRIPT then
+		if (window) window["app_layout"] = this.layout;
+		#endif
+	}
+}

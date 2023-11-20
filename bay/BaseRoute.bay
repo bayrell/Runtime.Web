@@ -84,6 +84,15 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
+	 * Render page and setup response
+	 */
+	void render(string class_name = "")
+	{
+		this.container.render(class_name);
+	}
+	
+	
+	/**
 	 * Returns url
 	 */
 	static string url(string route_name, Dict route_params = null)

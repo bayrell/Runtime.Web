@@ -30,6 +30,8 @@ class AppHook extends BaseHook
 	static const string EXPORT_DATA = "runtime.web.app::export_data";
 	static const string FIND_ROUTE = "runtime.web.app::find_route";
 	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
+	static const string IMPORT_DATA = "runtime.web.app::import_data";
+	static const string IMPORT_DATA_AFTER = "runtime.web.app::import_data_after";
 	static const string INIT_CONTAINER = "runtime.web.app::init_container";
 	static const string LAYOUT_CLASS_NAME = "runtime.web.app::layout_class_name";
 	static const string MIDDLEWARE_AFTER = "runtime.web.app::middleware_after";
@@ -37,8 +39,10 @@ class AppHook extends BaseHook
 	static const string RENDER_BODY = "runtime.web.app::render_body";
 	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
 	static const string RENDER_HEAD = "runtime.web.app::render_head";
+	static const string RENDER_SETTINGS = "runtime.web.app::render_settings";
 	static const string RESPONSE = "runtime.web.app::response";
 	static const string ROUTE_BEFORE = "runtime.web.app::route_before";
+	static const string VUE_MODULES = "runtime.web.app::vue_modules";
 	
 	
 	/**
@@ -52,6 +56,8 @@ class AppHook extends BaseHook
 		if (hook_name == static::EXPORT_DATA) return "export_data";
 		if (hook_name == static::FIND_ROUTE) return "find_route";
 		if (hook_name == static::FIND_ROUTE_AFTER) return "find_route_after";
+		if (hook_name == static::IMPORT_DATA) return "import_data";
+		if (hook_name == static::IMPORT_DATA_AFTER) return "import_data_after";
 		if (hook_name == static::INIT_CONTAINER) return "init_container";
 		if (hook_name == static::LAYOUT_CLASS_NAME) return "layout_class_name";
 		if (hook_name == static::MIDDLEWARE_AFTER) return "middleware_after";
@@ -59,8 +65,10 @@ class AppHook extends BaseHook
 		if (hook_name == static::RENDER_BODY) return "render_body";
 		if (hook_name == static::RENDER_FOOTER) return "render_footer";
 		if (hook_name == static::RENDER_HEAD) return "render_head";
+		if (hook_name == static::RENDER_SETTINGS) return "render_settings";
 		if (hook_name == static::RESPONSE) return "response";
 		if (hook_name == static::ROUTE_BEFORE) return "route_before";
+		if (hook_name == static::VUE_MODULES) return "vue_modules";
 		return "";
 	}
 	
@@ -95,6 +103,18 @@ class AppHook extends BaseHook
 	 * Export data
 	 */
 	void export_data(Map params){}
+	
+	
+	/**
+	 * Import data
+	 */
+	void import_data(Map params){}
+	
+	
+	/**
+	 * Import data after
+	 */
+	void import_data_after(Map params){}
 	
 	
 	/**
@@ -152,6 +172,12 @@ class AppHook extends BaseHook
 	
 	
 	/**
+	 * Render settings
+	 */
+	async void render_settings(Map params){}
+	
+	
+	/**
 	 * Route before
 	 */
 	async void route_before(Map params){}
@@ -161,4 +187,10 @@ class AppHook extends BaseHook
 	 * Response
 	 */
 	async void response(Map params){}
+	
+	
+	/**
+	 * Vue modules
+	 */
+	async void vue_modules(Map params){}
 }

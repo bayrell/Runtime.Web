@@ -24,20 +24,67 @@ use Runtime.Render.RenderHook;
 use Runtime.Web.AppHook;
 use Runtime.Web.BaseModel;
 use Runtime.Web.PageModel;
+use Runtime.Web.RouteInfo;
 
 
-class Layout extends BaseModel
+class LayoutModel extends BaseModel
 {
 	string title = "";
 	string layout_name = "default";
 	string current_page_model = "";
 	string current_page = "";
 	
+	/* Current route */
+	RouteInfo route = null;
+	string request_full_uri = "";
+	string request_host = "";
+	string request_uri = "";
+	Dict<string> request_query = null;
+	
 	/* Components list */
 	Vector<string> components = [];
 	
 	/* Increment assets */
 	string f_inc = "1";
+	
+	
+	/**
+	 * Import data
+	 */
+	void importData(Map import_data)
+	{
+		parent::importData(import_data);
+		this.title = import_data.get("title");
+		this.layout_name = import_data.get("layout_name");
+		this.current_page_model = import_data.get("current_page_model");
+		this.current_page = import_data.get("current_page");
+		this.f_inc = import_data.get("f_inc");
+		this.route = import_data.get("route");
+		this.request_full_uri = import_data.get("request_full_uri");
+		this.request_uri = import_data.get("request_uri");
+		this.request_query = import_data.get("request_query");
+		this.components = import_data.get("components");
+	}
+	
+	
+	/**
+	 * Export data
+	 */
+	Map exportData()
+	{
+		Map data = parent::exportData();
+		data.set("title", this.title);
+		data.set("layout_name", this.layout_name);
+		data.set("current_page_model", this.current_page_model);
+		data.set("current_page", this.current_page);
+		data.set("f_inc", this.f_inc);
+		data.set("route", this.route);
+		data.set("request_full_uri", this.request_full_uri);
+		data.set("request_uri", this.request_uri);
+		data.set("request_query", this.request_query);
+		data.set("components", this.components);
+		return data;
+	}
 	
 	
 	/**
@@ -60,7 +107,11 @@ class Layout extends BaseModel
 	 */
 	void setPageModel(string class_name)
 	{
-		PageModel page_model = rtl::newInstance(class_name, [this.container]);
+		/* Create page model */
+		PageModel page_model = rtl::newInstance(class_name, [this.layout]);
+		page_model.init();
+		
+		/* Add page model to layout */
 		this.addWidget(page_model);
 		this.current_page_model = page_model::getClassName();
 	}

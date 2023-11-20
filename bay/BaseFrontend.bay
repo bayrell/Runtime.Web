@@ -18,47 +18,18 @@
 
 namespace Runtime.Web;
 
-use Runtime.Entity.Provider;
-use Runtime.Web.RouteList;
-use Runtime.Web.RenderProvider;
+use Runtime.BaseProvider;
+use Runtime.Callback;
+use Runtime.Web.BaseApp;
 
 
-static class ModuleDescription
+class BaseFrontend extends BaseApp
 {
 	/**
-	 * Returns module name
-	 * @return string
+	 * Run Web Application
 	 */
-	pure string getModuleName() => "Runtime.Web";
-	
-	
-	/**
-	 * Returns module name
-	 * @return string
-	 */
-	pure string getModuleVersion() => "0.12.0";
-	
-	
-	/**
-	 * Returns required modules
-	 * @return Dict<string>
-	 */
-	pure Dict<string> requiredModules() =>
+	async int main()
 	{
-		'Runtime': '>=0.12',
-	};
-	
-	
-	/**
-	 * Returns enities
-	 */
-	pure Collection<Dict> entities() => 
-	[
-		new Provider(classof RouteList, new RouteList),
-		
-		#ifdef FRONTEND then
-		new Provider(classof RenderProvider, new RenderProvider),
-		#endif
-	];
-	
+		return 0;
+	}
 }

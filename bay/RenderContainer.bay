@@ -31,12 +31,9 @@ use Runtime.Web.RouteInfo;
 
 class RenderContainer extends BaseObject
 {
-	#ifdef BACKEND then
 	public BaseRoute base_route = null;
 	public Request request = null;
 	public Response response = null;
-	#endif
-	
 	public RouteInfo route = null;
 	public Layout layout = null;
 	public Map frontend_env = {};
@@ -69,5 +66,31 @@ class RenderContainer extends BaseObject
 		@.callHook(AppHook::EXPORT_DATA, params);
 		
 		return params;
+	}
+	
+	
+	/**
+	 * Import data
+	 */
+	void importData(Map import_data)
+	{
+		/* Call hook */
+		@.callHook(AppHook::IMPORT_DATA, import_data);
+		
+		/* Load data */
+		this.layout.importData(import_data.get("layout"));
+		
+		/* Call hook */
+		@.callHook(AppHook::IMPORT_DATA_AFTER, import_data);
+	}
+	
+	
+	/**
+	 * Render page and setup response
+	 */
+	void render(string class_name = "")
+	{
+		this.layout.setCurrentPage(class_name);
+		this.response = new RenderResponse();
 	}
 }
