@@ -18,7 +18,10 @@
 
 <class name="Runtime.Web.Component">
 
+<use name="Runtime.rs" />
+<use name="Runtime.RawString" />
 <use name="Runtime.Web.RouteList" />
+
 
 <template></template>
 
@@ -27,8 +30,11 @@
 
 props Collection<string> model_path = [];
 
-void _class_name()
+string _class_name(Collection names)
 {
+	#ifcode PHP then
+	return implode(" ", $names);
+	#endif
 }
 
 void _merge_attrs()
@@ -39,8 +45,94 @@ void _flatten()
 {
 }
 
-void _e()
+string _escape(var s)
 {
+	if (s instanceof RawString) return s;
+	if (rtl::isString(s)) return rs::htmlEscape(s);
+	return "";
+}
+
+var _e(var parent_elem, string elem_name = null, var attrs = null, var content = null)
+{
+	var elem = null;
+	
+	#ifcode PHP then
+	
+	/* Text */
+	if ($elem_name == null)
+	{
+		if ($content instanceof \Runtime\Collection)
+		{
+			$parent_elem->appendItems($content);
+		}
+		else
+		{
+			$parent_elem->push($content);
+		}
+	}
+	
+	/* Component */
+	else if (static::isComponent($elem_name))
+	{
+		$component = \Runtime\rtl::newInstance($elem_name);
+		$component->layout = $this->layout;
+		$component->model_path = $this->model_path;
+		if ($attrs != null)
+		{
+			foreach ($attrs as $key => $value)
+			{
+				$component->$key = $value;
+			}
+		}
+		$elem = $component->render();
+		
+		if ($elem instanceof \Runtime\Collection)
+		{
+			$parent_elem->appendItems($elem);
+		}
+		else if (is_string($elem) or $elem instanceof \Runtime\RawString)
+		{
+			$parent_elem->push($elem);
+		}
+	}
+	
+	/* Element */
+	else
+	{
+		$attrs_str = "";
+		
+		if ($attrs != null && count($attrs) > 0)
+		{
+			$attrs = array_map(
+				function ($value, $key)
+				{
+					return $key . "='" . \Runtime\rs::escapeHtml($value) . "'";
+				},
+				array_values($attrs),
+				array_keys($attrs)
+			);
+			$attrs_str = " " . implode(" ", $attrs);
+		}
+		
+		$elem = new \Runtime\Vector();
+		$elem->push("<" . $elem_name . $attrs_str . ">");
+		
+		if ($content instanceof \Runtime\Collection)
+		{
+			$elem->appendItems($content);
+		}
+		else if (is_string($content) or $content instanceof \Runtime\RawString)
+		{
+			$elem->push($content);
+		}
+		
+		$elem->push("</" . $elem_name . ">");
+		$parent_elem->appendItems($elem);
+	}
+	
+	#endif
+	
+	return elem;
 }
 
 /**
@@ -50,6 +142,17 @@ static string url(string route_name, Dict route_params = null)
 {
 	RouteList routes = @.provider(classof RouteList);
 	return routes.url(route_name, route_params);
+}
+
+
+/**
+ * Is component
+ */
+pure bool isComponent(string tag_name)
+{
+	string ch1 = rs::substr(tag_name, 0, 1);
+	string ch2 = rs::upper(ch1);
+	return tag_name != "" and (ch1 == "{" or ch1 == ch2);
 }
 
 </script>

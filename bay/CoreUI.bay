@@ -61,7 +61,7 @@
 			Runtime.rtl.runApp(
 				app_data["entry_point"],
 				app_data["modules"],
-				Runtime.Dict.from({
+				Runtime.Map.from({
 					"environments": app_data["environments"],
 					"tz": @json{ @.tz }
 				})

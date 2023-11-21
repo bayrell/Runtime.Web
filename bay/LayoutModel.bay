@@ -20,11 +20,10 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.Callback;
-use Runtime.Render.RenderHook;
-use Runtime.Web.AppHook;
 use Runtime.Web.BaseModel;
 use Runtime.Web.PageModel;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.Hooks.AppHook;
 
 
 class LayoutModel extends BaseModel
@@ -166,7 +165,7 @@ class LayoutModel extends BaseModel
 	{
 		string layout_name = this.layout_name;
 		
-		Dict params = @.callHook(RenderHook::LAYOUT_CLASS_NAME, {
+		Dict params = @.callHook(AppHook::LAYOUT_CLASS_NAME, {
 			"layout_name": this.layout_name,
 			"class_name": "",
 		});

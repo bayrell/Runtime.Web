@@ -16,11 +16,11 @@
  *  limitations under the License.
 -->
 
-<class name="Runtime.Render.Component">
+<class name="Runtime.Web.AppComponent">
 
 <template>
-    %var string class_name = this.layout.getLayoutClassName();
-    <{class_name} @model=[] />
+	%var string class_name = this.layout.getLayoutClassName();
+	<{class_name} @model=[] />
 </template>
 
 </class>

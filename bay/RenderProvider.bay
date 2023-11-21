@@ -61,7 +61,7 @@ class RenderProvider extends BaseProvider
 		fn createLayout = null;
 		
 		#ifcode JAVASCRIPT then
-		let createLayout = function(layout)
+		createLayout = function(layout)
 		{
 		    return {
 		        install: () => {
@@ -77,7 +77,7 @@ class RenderProvider extends BaseProvider
 		this.container.importData(window["app_data"]);
 		
 		/* Get render settings */
-		Map render_settings = @.callHook(AppHook::RENDER_SETTINGS, {
+		Map render_settings = @.callHook(AppHook::RENDER_PROVIDER_SETTINGS, {
 			"app": "#core_ui_root",
 			"ssr": true,
 		});

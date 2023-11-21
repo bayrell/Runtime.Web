@@ -20,6 +20,7 @@ namespace Runtime.Web.Hooks;
 
 use Runtime.re;
 use Runtime.ModelProxy;
+use Runtime.RawString;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.CoreUI;
 use Runtime.Web.RenderContainer;
@@ -63,13 +64,13 @@ class ResponseHook extends AppHook
 		
 		/* Create component */
 		CoreUI component = rtl::newInstance(class_name);
+		component.layout = container.layout;
 		component.container = container;
 		component.model_path = [];
 		
 		/* Render component */
 		string content = "<!doctype html>\n";
-		component.render();
-		/*content ~= component.render();*/
+		content ~= RawString::normalize(component.render());
 		
 		/* Set result */
 		response.content = content;

@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.Entity.Hook;
 use Runtime.Entity.Provider;
 use Runtime.Web.RouteList;
 use Runtime.Web.RenderProvider;
@@ -58,6 +59,10 @@ static class ModuleDescription
 		
 		#ifdef FRONTEND then
 		new Provider(classof RenderProvider, new RenderProvider),
+		#endif
+		
+		#ifdef BACKEND then
+		new Hook("Runtime.Web.Hooks.ResponseHook"),
 		#endif
 	];
 	
