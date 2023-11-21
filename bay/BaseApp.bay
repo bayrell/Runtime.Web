@@ -75,4 +75,13 @@ class BaseApp extends BaseObject
 		
 		return container;
 	}
+	
+	
+	/**
+	 * Create request
+	 */
+	Request createRequest()
+	{
+		return null;
+	}
 }

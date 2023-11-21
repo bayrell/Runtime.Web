@@ -55,13 +55,12 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		new Provider(classof RouteList, new RouteList),
-		
 		#ifdef FRONTEND then
 		new Provider(classof RenderProvider, new RenderProvider),
 		#endif
 		
 		#ifdef BACKEND then
+		new Provider(classof RouteList, new RouteList),
 		new Hook("Runtime.Web.Hooks.ResponseHook"),
 		#endif
 	];

@@ -62,7 +62,7 @@
 				app_data["entry_point"],
 				app_data["modules"],
 				Runtime.Map.from({
-					"environments": app_data["environments"],
+					"environments": Runtime.Map.from(app_data["environments"]),
 					"tz": @json{ @.tz }
 				})
 			);

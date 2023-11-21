@@ -187,14 +187,19 @@ class LayoutModel extends BaseModel
 	 * Returns all components
 	 * @return Collection<string>
 	 */
-	Vector<string> getComponents()
+	Vector<string> getComponents(Vector components = null)
 	{
+		if (components == null) components = [];
+		
 		Vector<string> res = new Vector();
 		Map<string> cache = new Map();
 		
+		Vector components = components.concat(this.components);
+		components.push(this.getLayoutClassName());
+		components.push(this.current_page);
+		
 		/* Extends components */
-		static::_getRequiredComponents(res, cache, this.components);
-		res.removeDuplicates();
+		static::_getRequiredComponents(res, cache, components);
 		
 		/* Call hook */
 		Map d = @.callHook(AppHook::COMPONENTS, {
@@ -202,7 +207,7 @@ class LayoutModel extends BaseModel
 			"components": res,
 		});
 		
-		return d.get("components");
+		return d.get("components").removeDuplicates();
 	}
 	
 	
@@ -224,13 +229,13 @@ class LayoutModel extends BaseModel
 		for (int i=0; i<components.count(); i++)
 		{
 			string class_name = components.item(i);
-			if (class_name)
+			if (class_name == "")
 			{
 				continue;
 			}
 			if (not cache.has(class_name))
 			{
-				cache.setValue(class_name, true);
+				cache.set(class_name, true);
 				
 				Callback f = new Callback(class_name, "components");
 				if (f.exists())
@@ -239,7 +244,7 @@ class LayoutModel extends BaseModel
 					static::_getRequiredComponents(res, cache, sub_components);
 				}
 				
-				res.pushValue(class_name);
+				res.push(class_name);
 			}
 		}
 	}
@@ -250,6 +255,11 @@ class LayoutModel extends BaseModel
 	 */
 	static string getCss(Collection<string> components, Dict css_vars = null)
 	{
+		if (css_vars == null)
+		{
+			css_vars = @.callHook(AppHook::CSS_VARS, css_vars);
+		}
+		
 		Collection<string> css = components.map
 		(
 			string (string component_name) use (css_vars)

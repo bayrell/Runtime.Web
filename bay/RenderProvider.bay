@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseProvider;
+use Runtime.Serializer;
 use Runtime.Web.AppComponent;
 use Runtime.Web.BaseApp;
 use Runtime.Web.RenderContainer;
@@ -47,7 +48,6 @@ class RenderProvider extends BaseProvider
 		/* Create render container */
 		BaseApp app = @.getApp();
 		this.container = app.createRenderContainer();
-		await app.initContainer(this.container);
 	}
 	
 	
@@ -74,7 +74,9 @@ class RenderProvider extends BaseProvider
 		var Vue = window["Vue"];
 		
 		/* Import data */
-		this.container.importData(window["app_data"]);
+		var app_data = window["app_data"];
+		app_data = Serializer::NativeToObject(app_data);
+		this.container.importData(app_data);
 		
 		/* Get render settings */
 		Map render_settings = @.callHook(AppHook::RENDER_PROVIDER_SETTINGS, {

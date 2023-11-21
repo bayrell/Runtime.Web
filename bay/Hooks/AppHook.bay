@@ -27,6 +27,7 @@ class AppHook extends BaseHook
 	static const string COMPONENTS = "runtime.web.app::components";
 	static const string CORE_UI = "runtime.web.app::core_ui";
 	static const string CREATE_CONTAINER = "runtime.web.app::create_container";
+	static const string CSS_VARS = "runtime.web.app::css_vars";
 	static const string EXPORT_DATA = "runtime.web.app::export_data";
 	static const string FIND_ROUTE = "runtime.web.app::find_route";
 	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
@@ -55,6 +56,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::COMPONENTS) return "components";
 		if (hook_name == static::CORE_UI) return "core_ui";
 		if (hook_name == static::CREATE_CONTAINER) return "create_container";
+		if (hook_name == static::CSS_VARS) return "css_vars";
 		if (hook_name == static::EXPORT_DATA) return "export_data";
 		if (hook_name == static::FIND_ROUTE) return "find_route";
 		if (hook_name == static::FIND_ROUTE_AFTER) return "find_route_after";
@@ -101,6 +103,12 @@ class AppHook extends BaseHook
 	 * Create container
 	 */
 	void create_container(Map params){}
+	
+	
+	/**
+	 * CSS Vars
+	 */
+	void css_vars(Map params){}
 	
 	
 	/**

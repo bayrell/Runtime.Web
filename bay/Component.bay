@@ -19,6 +19,7 @@
 <class name="Runtime.Web.Component">
 
 <use name="Runtime.rs" />
+<use name="Runtime.lib" />
 <use name="Runtime.RawString" />
 <use name="Runtime.Web.RouteList" />
 
@@ -30,9 +31,10 @@
 
 props Collection<string> model_path = [];
 
-string _class_name(Collection names)
+string _class_name(var names)
 {
 	#ifcode PHP then
+	$names[] = static::getCssHash(static::getClassName());
 	return implode(" ", $names);
 	#endif
 }
@@ -135,13 +137,48 @@ var _e(var parent_elem, string elem_name = null, var attrs = null, var content =
 	return elem;
 }
 
+
 /**
- * Returns url
+ * Returns components
  */
-static string url(string route_name, Dict route_params = null)
+static Vector components()
 {
-	RouteList routes = @.provider(classof RouteList);
-	return routes.url(route_name, route_params);
+	return [];
+}
+
+
+/**
+ * Returns css hash
+ */
+pure memorize string getCssHash(string class_name) =>
+	rtl::getParents(class_name)
+		|> .toVector()
+		|> .prepend(class_name)
+		|> .filter
+		(
+			bool (string class_name) =>
+				class_name != "Runtime.BaseObject" and
+				class_name != "Runtime.Web.Component" and
+				class_name != ""
+		)
+		|> .map
+		(
+			string (string class_name) => "h-" ~ static::hash(class_name)
+		)
+		|> lib::join(" ")
+	;
+
+
+/**
+ * Retuns css hash
+ * @param string component class name
+ * @return string hash
+ */
+pure memorize string hash(string s)
+{
+	int h = rs::hash(s, true, 337, 65537) + 65537;
+	string res = rs::toHex(h);
+	return rs::substr(res, -4);
 }
 
 
