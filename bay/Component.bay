@@ -31,6 +31,19 @@
 
 props Collection<string> model_path = [];
 
+
+/**
+ * Returns component model
+ */
+var model()
+{
+	return this.layout.model();
+}
+
+
+/**
+ * Returns component class name
+ */
 string _class_name(var names)
 {
 	#ifcode PHP then
@@ -39,14 +52,26 @@ string _class_name(var names)
 	#endif
 }
 
+
+/**
+ * Merge attrs
+ */
 void _merge_attrs()
 {
 }
 
+
+/**
+ * Flatten elements
+ */
 void _flatten()
 {
 }
 
+
+/**
+ * Escape html
+ */
 string _escape(var s)
 {
 	if (s instanceof RawString) return s;
@@ -54,11 +79,16 @@ string _escape(var s)
 	return "";
 }
 
+
+/**
+ * Render elem
+ */
 var _e(var parent_elem, string elem_name = null, var attrs = null, var content = null)
 {
 	var elem = null;
 	
-	#ifcode PHP then
+	#switch
+	#case ifcode PHP then
 	
 	/* Text */
 	if ($elem_name == null)
@@ -132,7 +162,11 @@ var _e(var parent_elem, string elem_name = null, var attrs = null, var content =
 		$parent_elem->appendItems($elem);
 	}
 	
-	#endif
+	#case ifcode JAVASCRIPT then
+	
+	elem = Vue.h(elem_name, attrs, content);
+	
+	#endswitch
 	
 	return elem;
 }
@@ -195,10 +229,3 @@ pure bool isComponent(string tag_name)
 </script>
 
 </class>
-
-#ifcode ES6 then
-Runtime.Render.Component.render = function ()
-{
-	return this.render();
-}
-#endif

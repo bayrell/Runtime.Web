@@ -61,13 +61,13 @@ class RenderProvider extends BaseProvider
 		fn createLayout = null;
 		
 		#ifcode JAVASCRIPT then
-		createLayout = function(layout)
+		createLayout = (layout) =>
 		{
-		    return {
-		        install: () => {
-		            app.config.globalProperties.$layout = layout;
-		        },
-		    };
+			return {
+				install: () => {
+					this.vue.config.globalProperties.$layout = layout;
+				},
+			};
 		};
 		#endif
 		
@@ -86,6 +86,7 @@ class RenderProvider extends BaseProvider
 		
 		/* Create vue app */
 		bool is_ssr = render_settings.get("ssr");
+		is_ssr = false;
 		if (is_ssr)
 		{
 			this.vue = Vue.createSSRApp( rtl::find_class(classof AppComponent) );
@@ -112,3 +113,15 @@ class RenderProvider extends BaseProvider
 		#endif
 	}
 }
+
+#ifcode ES6 then
+Runtime.Web.Component.render = function ()
+{
+	return this.render();
+}
+Runtime.Web.Component.computed = {
+	layout: function (){
+		return this.$layout;
+	},
+}
+#endif

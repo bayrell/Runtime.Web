@@ -13,6 +13,7 @@
 		"RenderHelper.bay",
 		"RenderProvider.bay",
 		"Hooks/AppHook.bay",
+		"AppComponent.bay",
 		"ModuleDescription.bay"
 	],
 	"src": "./bay",
