@@ -12,6 +12,7 @@
 		"RenderContainer.bay",
 		"RenderHelper.bay",
 		"RenderProvider.bay",
+		"RouteInfo.bay",
 		"Hooks/AppHook.bay",
 		"AppComponent.bay",
 		"ModuleDescription.bay"

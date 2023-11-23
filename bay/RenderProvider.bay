@@ -86,7 +86,6 @@ class RenderProvider extends BaseProvider
 		
 		/* Create vue app */
 		bool is_ssr = render_settings.get("ssr");
-		is_ssr = false;
 		if (is_ssr)
 		{
 			this.vue = Vue.createSSRApp( rtl::find_class(classof AppComponent) );
