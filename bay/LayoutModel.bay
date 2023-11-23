@@ -47,8 +47,12 @@ class LayoutModel extends BaseModel
 	/* Increment assets */
 	string f_inc = "1";
 	
+	#ifdef BACKEND then
+	
 	/* Backend storage */
-	public Map storage = {};
+	public Map backend_storage = {};
+	
+	#endif
 	
 	
 	/**

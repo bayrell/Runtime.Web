@@ -46,10 +46,17 @@ var model()
  */
 string _class_name(var names)
 {
-	#ifcode PHP then
+	#switch
+	
+	#case ifcode PHP then
 	$names[] = static::getCssHash(static::getClassName());
 	return implode(" ", $names);
-	#endif
+	
+	#case ifcode JAVASCRIPT then
+	names.push(this.$options.getCssHash(this.$options.getClassName()));
+	return names.join(" ");
+	
+	#endswitch
 }
 
 
@@ -57,14 +64,6 @@ string _class_name(var names)
  * Merge attrs
  */
 void _merge_attrs()
-{
-}
-
-
-/**
- * Flatten elements
- */
-void _flatten()
 {
 }
 
@@ -81,7 +80,32 @@ string _escape(var s)
 
 
 /**
- * Render elem
+ * Render text
+ */
+void _t(var parent_elem, var content = null)
+{
+	#switch
+	#case ifcode PHP then
+	
+	if ($content instanceof \Runtime\Collection)
+	{
+		$parent_elem->appendItems($content);
+	}
+	else
+	{
+		$parent_elem->push($content);
+	}
+	
+	#case ifcode JAVASCRIPT then
+	
+	this._parent_elem_push(parent_elem, content);
+	
+	#endswitch
+}
+
+
+/**
+ * Render element
  */
 var _e(var parent_elem, string elem_name = null, var attrs = null, var content = null)
 {
@@ -90,85 +114,145 @@ var _e(var parent_elem, string elem_name = null, var attrs = null, var content =
 	#switch
 	#case ifcode PHP then
 	
-	/* Text */
-	if ($elem_name == null)
-	{
-		if ($content instanceof \Runtime\Collection)
-		{
-			$parent_elem->appendItems($content);
-		}
-		else
-		{
-			$parent_elem->push($content);
-		}
-	}
+	$attrs_str = "";
 	
-	/* Component */
-	else if (static::isComponent($elem_name))
+	if ($attrs != null && count($attrs) > 0)
 	{
-		$component = \Runtime\rtl::newInstance($elem_name);
-		$component->layout = $this->layout;
-		$component->model_path = $this->model_path;
-		if ($attrs != null)
-		{
-			foreach ($attrs as $key => $value)
+		$attrs = array_map(
+			function ($value, $key)
 			{
-				$component->$key = $value;
-			}
-		}
-		$elem = $component->render();
-		
-		if ($elem instanceof \Runtime\Collection)
-		{
-			$parent_elem->appendItems($elem);
-		}
-		else if (is_string($elem) or $elem instanceof \Runtime\RawString)
-		{
-			$parent_elem->push($elem);
-		}
+				return $key . "='" . \Runtime\rs::escapeHtml($value) . "'";
+			},
+			array_values($attrs),
+			array_keys($attrs)
+		);
+		$attrs_str = " " . implode(" ", $attrs);
 	}
 	
-	/* Element */
-	else
+	$elem = new \Runtime\Vector();
+	$elem->push("<" . $elem_name . $attrs_str . ">");
+	
+	if ($content instanceof \Runtime\Collection)
 	{
-		$attrs_str = "";
-		
-		if ($attrs != null && count($attrs) > 0)
-		{
-			$attrs = array_map(
-				function ($value, $key)
-				{
-					return $key . "='" . \Runtime\rs::escapeHtml($value) . "'";
-				},
-				array_values($attrs),
-				array_keys($attrs)
-			);
-			$attrs_str = " " . implode(" ", $attrs);
-		}
-		
-		$elem = new \Runtime\Vector();
-		$elem->push("<" . $elem_name . $attrs_str . ">");
-		
-		if ($content instanceof \Runtime\Collection)
-		{
-			$elem->appendItems($content);
-		}
-		else if (is_string($content) or $content instanceof \Runtime\RawString)
-		{
-			$elem->push($content);
-		}
-		
-		$elem->push("</" . $elem_name . ">");
-		$parent_elem->appendItems($elem);
+		$elem->appendItems($content);
 	}
+	else if (is_string($content) or $content instanceof \Runtime\RawString)
+	{
+		$elem->push($content);
+	}
+	
+	$elem->push("</" . $elem_name . ">");
+	$parent_elem->appendItems($elem);
 	
 	#case ifcode JAVASCRIPT then
 	
-	elem = Vue.h(elem_name, attrs, content);
+	elem = Vue.h(elem_name, attrs, []);
+	this._parent_elem_push(parent_elem, elem);
 	
 	#endswitch
 	
 	return elem;
+}
+
+
+/**
+ * Render component
+ */
+var _c(var parent_elem, string component_name = null, var attrs = null, var content = null)
+{
+	var elem = null;
+	
+	#switch
+	#case ifcode PHP then
+	
+	$component = \Runtime\rtl::newInstance($component_name);
+	$component->layout = $this->layout;
+	$component->model_path = $this->model_path;
+	if ($attrs != null)
+	{
+		foreach ($attrs as $key => $value)
+		{
+			$component->$key = $value;
+		}
+	}
+	$elem = $component->render();
+	
+	if ($elem instanceof \Runtime\Collection)
+	{
+		$parent_elem->appendItems($elem);
+	}
+	else if (is_string($elem) or $elem instanceof \Runtime\RawString)
+	{
+		$parent_elem->push($elem);
+	}
+	
+	#case ifcode JAVASCRIPT then
+	
+	let component = use(component_name);
+	if (component == undefined)
+	{
+		throw new Runtime.Exceptions.ItemNotFound(component_name);
+	}
+	
+	elem = Vue.h(component, attrs, content);
+	this._parent_elem_push(parent_elem, elem);
+	
+	#endswitch
+	
+	return elem;
+}
+
+
+/**
+ * Push to parent elem
+ */
+void _parent_elem_push(var parent_elem, var elem)
+{
+	#ifcode JAVASCRIPT then
+	
+	if (parent_elem instanceof Array)
+	{
+		if (elem instanceof Array)
+		{
+			parent_elem += elem;
+		}
+		else
+		{
+			parent_elem.push(elem);
+		}
+	}
+	else if (typeof parent_elem == "object")
+	{
+		if (parent_elem.children == null)
+		{
+			parent_elem.children = [];
+		}
+		if (elem instanceof Array)
+		{
+			parent_elem.children += elem;
+		}
+		else
+		{
+			parent_elem.children.push(elem);
+		}
+	}
+	
+	#endif
+}
+
+
+/**
+ * Flatten elements
+ */
+void _flatten(var arr)
+{
+	#ifcode JAVASCRIPT then
+	
+	if (arr.length == 0) return null;
+	if (arr.length == 1) return arr[0];
+	return arr;
+	
+	#endif
 }
 
 
