@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Web.LayoutModel;
+use Runtime.Web.PageModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RouteList;
@@ -30,6 +31,18 @@ class BaseRoute extends BaseObject
 	protected bool is_cancel_route = false;
 	protected RenderContainer container;
 	protected LayoutModel layout;
+	
+	
+	/**
+	 * Returns layout name
+	 */
+	string getLayoutName() => "default";
+	
+	
+	/**
+	 * Returns page model name
+	 */
+	string getPageModelName() => "";
 	
 	
 	/**
@@ -57,6 +70,19 @@ class BaseRoute extends BaseObject
 	 */
 	async void onActionBefore()
 	{
+		/* Setup layout */
+		string layout_name = this.getLayoutName();
+		if (layout_name)
+		{
+			this.layout.setLayoutName(layout_name);
+		}
+		
+		/* Setup page model */
+		string page_model_name = this.getPageModelName();
+		if (page_model_name)
+		{
+			this.layout.setPageModel(page_model_name);
+		}
 	}
 	
 	

@@ -1,0 +1,121 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.Web.ApiResult;
+
+
+class Bus
+{
+	
+	/**
+	 * Call api
+	 */
+	static async ApiResult callApi(Dict params)
+	{
+		string service = params["service"] |> default string "app";
+		string api_name = params["class"] |> default string "app";
+		string method_name = params["method"] |> default string "app";
+		Dict post_data = params["post_data"] |> default Dict null;
+		Dict backend_storage = params["backend_storage"];
+		
+		if (service != "app")
+		{
+			ApiResult result = new ApiResult();
+			return result.fail({
+				"message": "Service must be app"
+			});
+		}
+		
+		
+		#switch
+		
+		#case ifcode PHP then
+		
+		/* Get api list */
+		$context = \Runtime\rtl::getContext();
+		$api_list = $context->getEntities("Runtime.Web.Annotations.Api");
+		
+		/* Find api */
+		$api = $api_list->findItem(
+			function ($annotation) use ($api_name)
+			{
+				/* Get function */
+				$getApiName = new \Runtime\Callback($annotation->name, "getApiName");
+				if (!$getApiName->exists()) return false;
+				
+				return $getApiName() == $api_name;
+			}
+		);
+		if ($api == null)
+		{
+			$result = new ApiResult();
+			return result.exception( new \Runtime\Exceptions\ItemNotFound($api_name, "Api"));
+		}
+		
+		/* Find method */
+		$getMethodInfoByName = new \Runtime\Callback($annotation->name, "getMethodInfoByName");
+		$method_info = $getMethodInfoByName($method_name);
+		
+		/* Method not found */
+		if ($method_info == null)
+		{
+			$result = new ApiResult();
+			return result.exception(
+				new \Runtime\Exceptions\ItemNotFound($api_name . "::" . $method_name, "Api method")
+			);
+		}
+		
+		/* Check if method is api */
+		$is_api_method = $method_info->annotations
+			->findItem( \Runtime\lib::isInstance("Runtime.Web.ApiMethod") )
+		;
+		if ($is_api_method == null)
+		{
+			return result.exception(
+				new \Runtime\Exceptions\ItemNotFound($api_name . "::" . $method_name, "Api method")
+			);
+		}
+		
+		/* Create api instance */
+		$api_instance = \Runtime\rtl::newInstance($annotation->name);
+		$api_instance->action = $method_name;
+		$api_instance->post_data = $post_data;
+		$api_instance->backend_storage = $backend_storage;
+		
+		/* Call api */
+		try
+		{
+			$api_instance->onActionBefore();
+			$f = new \Runtime\Callback($api_instance, $method_name);
+			$f();
+			$api_instance->onActionAfter();
+		}
+		catch (\Exception $e)
+		{
+			$api_instance->result = new ApiResult();
+			$api_instance->result->exception($e);
+		}
+		
+		return $api_instance->result;
+		
+		#endswitch
+	}
+	
+}

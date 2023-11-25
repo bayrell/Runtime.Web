@@ -58,9 +58,9 @@ class ApiResult
 	/**
 	 * Returns content
 	 */
-	string getContent()
+	Map getContent()
 	{
-		return rtl::json_encode({
+		return {
 			"code": this.code,
 			"message": this.message,
 			"ob_content": this.ob_content,
@@ -69,7 +69,7 @@ class ApiResult
 			"error_line": this.error_line,
 			"error_trace": this.error_trace,
 			"data": this.data,
-		});
+		};
 	}
 	
 	
