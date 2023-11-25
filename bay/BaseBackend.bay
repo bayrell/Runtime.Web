@@ -224,7 +224,7 @@ class BaseBackend extends BaseApp
 		$query = new \Runtime\Map();
 		$payload = new \Runtime\Map();
 		$cookies = new \Runtime\Map();
-		foreach ($_GET as $key => $val) $query->setValue($key, $val);
+		foreach ($_GET as $key => $val) $query->set($key, $val);
 		
 		/* Read POST */
 		$post = null;
@@ -244,14 +244,14 @@ class BaseBackend extends BaseApp
 		{
 			foreach ($post as $key => $val)
 			{
-				$payload->setValue($key, \Runtime\Serializer::NativeToObject($val));
+				$payload->set($key, \Runtime\Serializer::NativeToObject($val));
 			}
 		}
 		
 		/* Read Cookie */
 		foreach ($_COOKIE as $key => $val)
 		{
-			$cookies->setValue(
+			$cookies->set(
 				$key,
 				new \Runtime\Web\Cookie(
 					\Runtime\Dict::from([
