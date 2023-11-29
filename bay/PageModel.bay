@@ -29,5 +29,6 @@ class PageModel extends BaseModel
 	{
 		parent(layout);
 		this.widget_name = static::getClassName();
+		this.model_path = ["widgets", this.widget_name];
 	}
 }

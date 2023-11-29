@@ -16,37 +16,11 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web;
+namespace Runtime.Web.Annotations;
 
-use Runtime.Web.ApiResult;
+use Runtime.Entity;
 
 
-class Bus
+class ApiMethod extends Entity
 {
-	
-	/**
-	 * Call api
-	 */
-	static async ApiResult callApi(Dict params)
-	{
-		ApiProvider provider = @.provider(classof ApiProvider);
-		ApiResult api = await provider.callApi(params);
-		return api;
-	}
-	
-	
-	#ifdef BACKEND then
-	
-	/**
-	 * Call system
-	 */
-	static async ApiResult callSystem(Dict params)
-	{
-		ApiProvider provider = @.provider(classof ApiProvider);
-		ApiResult api = await provider.callSystem(params);
-		return api;
-	}
-	
-	#endif
-	
 }

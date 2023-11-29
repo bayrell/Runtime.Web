@@ -18,6 +18,8 @@
 
 namespace Runtime.Web;
 
+use Runtime.Exceptions.AbstractException;
+
 
 class ApiResult
 {
@@ -29,12 +31,19 @@ class ApiResult
 	string error_file = "";
 	string error_line = "";
 	Collection<string> error_trace = null;
+	bool is_exception = false;
 	
 	
 	/**
 	 * Returns true if error
 	 */
 	bool isError() => this.code < 0;
+	
+	
+	/**
+	 * Returns true if is exception
+	 */
+	bool isException() => this.is_exception;
 	
 	
 	/**
@@ -115,27 +124,47 @@ class ApiResult
 	
 	
 	/**
+	 * Setup exception
+	 */
+	ApiResult exception(AbstractException e)
+	{
+		this.code = e.getErrorCode();
+		this.message = e.getErrorMessage();
+		this.error_name = e::getClassName();
+		this.is_exception = true;
+	}
+	
+	
+	/**
 	 * Setup fail
 	 */
-	ApiResult fail(Dict data = null)
+	ApiResult fail(var data = null)
 	{
-		if (data == null)
+		if (data instanceof AbstractException)
+		{
+			this.code = data.getErrorCode();
+			this.message = data.getErrorMessage();
+			this.error_name = data::getClassName();
+		}
+		
+		else if (data instanceof Dict)
+		{
+			/* Set code */
+			if (data.has("code")) this.code = data["code"];
+			else this.code = rtl::ERROR_UNKNOWN;
+			
+			/* Set message */
+			if (data.has("message")) this.message = data["message"];
+			else this.message = "Error";
+			
+			/* Set data */
+			if (data.has("data")) this.setData(data["data"]);
+		}
+		else
 		{
 			this.code = rtl::ERROR_UNKNOWN;
 			this.message = "Error";
-			return;
 		}
-		
-		/* Set code */
-		if (data.has("code")) this.code = data["code"];
-		else this.code = rtl::ERROR_UNKNOWN;
-		
-		/* Set message */
-		if (data.has("message")) this.message = data["message"];
-		else this.message = "Error";
-		
-		/* Set data */
-		if (data.has("data")) this.setData(data["data"]);
 	}
 	
 }

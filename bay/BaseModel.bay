@@ -29,7 +29,9 @@ class BaseModel extends BaseObject
 {
 	LayoutModel layout = null;
 	string widget_name = "";
+	string component_name = "";
 	Map widgets = {};
+	Collection model_path = [];
 	
 	
 	/**
@@ -49,6 +51,7 @@ class BaseModel extends BaseObject
 	{
 		string widget_name = new_widget.widget_name;
 		this.widgets.set(widget_name, new_widget);
+		new_widget.model_path = this.model_path.concat(["widgets", widget_name]);
 		return new_widget;
 	}
 	
@@ -101,8 +104,8 @@ class BaseModel extends BaseObject
 			{
 				string class_name = widget_data.get("__class_name__");
 				widget = rtl::newInstance(class_name, [this.layout]);
+				this.addWidget(widget);
 				widget.init();
-				this.widgets.set(widget_key, widget);
 			}
 			
 			widget.importData(widget_data);

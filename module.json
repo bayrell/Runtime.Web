@@ -2,6 +2,7 @@
 	"name": "Runtime.Web",
 	"assets":
 	[
+		"ApiProvider.bay",
 		"ApiResult.bay",
 		"BaseApp.bay",
 		"BaseFrontend.bay",

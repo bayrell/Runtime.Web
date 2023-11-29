@@ -20,8 +20,9 @@ namespace Runtime.Web;
 
 use Runtime.Entity.Hook;
 use Runtime.Entity.Provider;
-use Runtime.Web.RouteList;
+use Runtime.Web.ApiProvider;
 use Runtime.Web.RenderProvider;
+use Runtime.Web.RouteList;
 
 
 static class ModuleDescription
@@ -55,6 +56,8 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
+		new Provider(classof ApiProvider, new ApiProvider),
+		
 		#ifdef FRONTEND then
 		new Provider(classof RenderProvider, new RenderProvider),
 		#endif

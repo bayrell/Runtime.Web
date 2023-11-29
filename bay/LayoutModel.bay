@@ -20,6 +20,8 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.Callback;
+use Runtime.Web.ApiProvider;
+use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
 use Runtime.Web.PageModel;
 use Runtime.Web.RouteInfo;
@@ -127,11 +129,13 @@ class LayoutModel extends BaseModel
 	{
 		/* Create page model */
 		PageModel page_model = rtl::newInstance(class_name, [this.layout]);
-		page_model.init();
 		
 		/* Add page model to layout */
 		this.addWidget(page_model);
 		this.current_page_model = page_model::getClassName();
+		
+		/* Init page */
+		page_model.init();
 	}
 	
 	
@@ -175,6 +179,21 @@ class LayoutModel extends BaseModel
 		});
 		
 		return params["class_name"];
+	}
+	
+	
+	/**
+	 * Call Api
+	 */
+	ApiResult callApi(Map params)
+	{
+		#ifdef BACKEND then
+		params.set("backend_storage", this.backend_storage);
+		#endif
+		
+		ApiProvider provider = @.provider(classof ApiProvider);
+		ApiResult api = await provider.callApi(params);
+		return api;
 	}
 	
 	

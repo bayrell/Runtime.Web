@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Bus;
@@ -25,7 +26,7 @@ use Runtime.Web.JsonResponse;
 use Runtime.Web.RouteInfo;
 
 
-class MainRoute extends BaseRoute
+class ApiRoute extends BaseRoute
 {
 	/**
 	 * Returns routes
@@ -63,16 +64,23 @@ class MainRoute extends BaseRoute
 		string api_name = this.container.route.matches["api_name"];
 		string method_name = this.container.route.matches["method_name"];
 		
-		ApiResult api = await Bus::callApi({
+		ApiProvider provider = @.provider(classof ApiProvider);
+		ApiResult api = await provider.callApi({
 			"service": service,
 			"class": api_name,
 			"method": method_name,
 			"data": post_data,
-			"backend_storage": this.container.layout.backend_storage,
+			"backend_storage": this.layout.backend_storage,
 		});
 		
 		/* Create response */
 		this.container.response = new JsonResponse(api.getContent());
+		
+		/* HTTP error if exception */
+		if (api.isException())
+		{
+			this.container.response.http_code = 500;
+		}
 	}
 	
 }
