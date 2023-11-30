@@ -22,13 +22,13 @@ use Runtime.lib;
 use Runtime.Callback;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
-use Runtime.Web.BaseModel;
+use Runtime.Web.BaseWidget;
 use Runtime.Web.PageModel;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.Hooks.AppHook;
 
 
-class LayoutModel extends BaseModel
+class LayoutModel extends BaseWidget
 {
 	string title = "";
 	string layout_name = "default";

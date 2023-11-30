@@ -19,11 +19,11 @@
 namespace Runtime.Web;
 
 use Runtime.lib;
-use Runtime.Web.BaseModel;
+use Runtime.Web.BaseWidget;
 use Runtime.Web.LayoutModel;
 
 
-class PageModel extends BaseModel
+class PageModel extends BaseWidget
 {
 	void constructor(LayoutModel layout)
 	{

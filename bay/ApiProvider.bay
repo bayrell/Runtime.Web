@@ -89,10 +89,12 @@ class ApiProvider extends BaseProvider
 		for (int i=0; i<api_list.count(); i++)
 		{
 			Api api = api_list.get(i);
+			string class_name = api.name;
+			Callback getApiName = new Callback(class_name, "getApiName");
 			
 			/* Save api */
-			string api_name = api::getApiName() ~ "::" ~ api::getInterfaceName();
-			this.api_list[api_name] = api;
+			string api_name = rtl::apply(getApiName);
+			this.api_list.set(api_name, api);
 		}
 	}
 	
@@ -161,7 +163,8 @@ class ApiProvider extends BaseProvider
 		}
 		
 		/* Check if method is api */
-		bool is_api_method = method_info.annotations
+		bool is_api_method = method_info
+			.get("annotations")
 			.findItem( lib::isInstance(classof ApiMethod) )
 		;
 		if (is_api_method == null)

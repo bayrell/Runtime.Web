@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 
 

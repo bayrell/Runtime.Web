@@ -18,10 +18,11 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseObject;
 use Runtime.Exceptions.AbstractException;
 
 
-class ApiResult
+class ApiResult extends BaseObject
 {
 	int code = 0;
 	string message = "";
