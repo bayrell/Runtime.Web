@@ -74,7 +74,7 @@ class ApiRoute extends BaseRoute
 		});
 		
 		/* Create response */
-		this.container.response = new JsonResponse(api.getContent());
+		this.container.setResponse( new JsonResponse(api.getContent()) );
 		
 		/* HTTP error if exception */
 		if (api.isException())

@@ -20,12 +20,13 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.BaseObject;
+use Runtime.SerializeInterface;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteList;
 
 
-class BaseWidget extends BaseObject
+class BaseWidget extends BaseObject implements SerializeInterface
 {
 	LayoutModel layout = null;
 	string widget_name = "";
