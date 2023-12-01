@@ -64,9 +64,9 @@ class ResponseHook extends AppHook
 		
 		/* Create component */
 		CoreUI component = rtl::newInstance(class_name);
-		component.layout = container.layout;
 		component.container = container;
-		component.model_path = [];
+		component.layout = container.layout;
+		component.model = container.layout;
 		
 		/* Render component */
 		string content = "<!doctype html>\n";

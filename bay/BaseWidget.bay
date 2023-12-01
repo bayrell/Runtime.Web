@@ -29,8 +29,8 @@ use Runtime.Web.RouteList;
 class BaseWidget extends BaseObject implements SerializeInterface
 {
 	LayoutModel layout = null;
+	string component = "";
 	string widget_name = "";
-	string component_name = "";
 	Map widgets = {};
 	Collection model_path = [];
 	

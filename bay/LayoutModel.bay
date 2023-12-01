@@ -217,20 +217,21 @@ class LayoutModel extends BaseWidget
 		Vector<string> res = new Vector();
 		Map<string> cache = new Map();
 		
-		Vector components = components.concat(this.components);
+		/* Call hook */
+		Map d = @.callHook(AppHook::COMPONENTS, {
+			"layout": this,
+			"components": components,
+		});
+		
+		components = d.get("components");
+		components = components.concat(this.components);
 		components.push(this.getLayoutClassName());
 		components.push(this.current_page);
 		
 		/* Extends components */
 		static::_getRequiredComponents(res, cache, components);
 		
-		/* Call hook */
-		Map d = @.callHook(AppHook::COMPONENTS, {
-			"layout": this,
-			"components": res,
-		});
-		
-		return d.get("components").removeDuplicates();
+		return res.removeDuplicates();
 	}
 	
 	

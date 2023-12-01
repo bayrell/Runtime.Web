@@ -84,19 +84,27 @@ class RenderProvider extends BaseProvider
 			"ssr": true,
 		});
 		
+		/* Create layout */
+		this.layout = Vue.reactive(this.container.layout);
+		
+		/* Get props */
+		var component = rtl::find_class(classof AppComponent);
+		Dict props = {
+			"model": this.layout,
+		};
+		
 		/* Create vue app */
 		bool is_ssr = render_settings.get("ssr");
 		if (is_ssr)
 		{
-			this.vue = Vue.createSSRApp( rtl::find_class(classof AppComponent) );
+			this.vue = Vue.createSSRApp(component, props.toObject());
 		}
 		else
 		{
-			this.vue = Vue.createApp( rtl::find_class(classof AppComponent) );
+			this.vue = Vue.createApp(component, props.toObject());
 		}
 		
-		/* Create layout */
-		this.layout = Vue.reactive(this.container.layout);
+		/* Add modules */
 		this.vue.use(createLayout(this.layout));
 		
 		await @.callHookAsync(AppHook::VUE_MODULES, {
@@ -121,6 +129,6 @@ Runtime.Web.Component.render = function ()
 Runtime.Web.Component.computed = {
 	layout: function (){
 		return this.$layout;
-	},
+	}
 }
 #endif

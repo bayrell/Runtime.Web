@@ -20,6 +20,7 @@
 
 <use name="Runtime.rs" />
 <use name="Runtime.lib" />
+<use name="Runtime.BaseObject" />
 <use name="Runtime.RawString" />
 <use name="Runtime.Web.RouteList" />
 
@@ -29,15 +30,47 @@
 
 <script>
 
-props Collection<string> model_path = [];
+props var model = null;
 
 
 /**
- * Returns component model
+ * Render slot
  */
-var model()
+var renderSlot(string slot_name)
 {
-	return this.layout.model();
+	#switch
+	
+	#case ifcode PHP then
+	$f = $this->_slots->get($slot_name);
+	return $f();
+	
+	#case ifcode JAVASCRIPT then
+	
+	let f = this.$slots[slot_name];
+	return f();
+	
+	#endswitch
+}
+
+
+/**
+ * Returns model for component
+ */
+var _model(var obj = null, bool is_global = false)
+{
+	if (obj instanceof Collection)
+	{
+		if (obj.count() == 0)
+		{
+			return this.model;
+		}
+		if (is_global)
+		{
+			return this.layout.model(obj);
+		}
+		return rtl::attr(this.model, obj);
+	}
+	return obj;
 }
 
 
@@ -50,10 +83,12 @@ string _class_name(var names)
 	
 	#case ifcode PHP then
 	$names[] = static::getCssHash(static::getClassName());
+	$names = array_filter($names, function($s){ return $s != ""; });
 	return implode(" ", $names);
 	
 	#case ifcode JAVASCRIPT then
 	names.push(this.$options.getCssHash(this.$options.getClassName()));
+	names = names.map((s) => s != "");
 	return names.join(" ");
 	
 	#endswitch
@@ -63,8 +98,17 @@ string _class_name(var names)
 /**
  * Merge attrs
  */
-void _merge_attrs()
+var _merge_attrs(var attr1, var attr2)
 {
+	#switch
+	
+	#case ifcode PHP then
+	return array_merge($attr1, $attr2->_map);
+	
+	#case ifcode JAVASCRIPT then
+	return Object.assign({}, attr1, attr2.toObject());
+	
+	#endswitch
 }
 
 
@@ -74,7 +118,7 @@ void _merge_attrs()
 string _escape(var s)
 {
 	if (s instanceof RawString) return s;
-	if (rtl::isString(s)) return rs::htmlEscape(s);
+	if (rtl::isScalarValue(s)) return rs::htmlEscape(s);
 	return "";
 }
 
@@ -84,6 +128,8 @@ string _escape(var s)
  */
 void _t(var parent_elem, var content = null)
 {
+	if (content == null) return;
+	
 	#switch
 	#case ifcode PHP then
 	
@@ -167,7 +213,9 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	
 	$component = \Runtime\rtl::newInstance($component_name);
 	$component->layout = $this->layout;
-	$component->model_path = $this->model_path;
+	$component->_slots = \Runtime\Dict::from([
+		"default" => $content
+	]);
 	if ($attrs != null)
 	{
 		foreach ($attrs as $key => $value)
@@ -214,7 +262,7 @@ void _parent_elem_push(var parent_elem, var elem)
 	{
 		if (elem instanceof Array)
 		{
-			parent_elem += elem;
+			for (let i=0; i<elem.length; i++) parent_elem.push(elem[i]);
 		}
 		else
 		{
@@ -229,7 +277,7 @@ void _parent_elem_push(var parent_elem, var elem)
 		}
 		if (elem instanceof Array)
 		{
-			parent_elem.children += elem;
+			for (let i=0; i<elem.length; i++) parent_elem.children.push(elem[i]);
 		}
 		else
 		{

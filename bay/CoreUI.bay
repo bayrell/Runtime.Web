@@ -30,7 +30,7 @@
 	%for (int i=0; i<components.count(); i++)
 	{
 		%var string class_name = components[i];
-		<{class_name} />
+		<{class_name} @model=[] />
 	}
 </template>
 
