@@ -228,7 +228,9 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	
 	if ($elem instanceof \Runtime\Collection)
 	{
+		$parent_elem->push("<!--[-->");
 		$parent_elem->appendItems($elem);
+		$parent_elem->push("<!--]-->");
 	}
 	else if (is_string($elem) or $elem instanceof \Runtime\RawString)
 	{
@@ -295,13 +297,24 @@ void _parent_elem_push(var parent_elem, var elem)
  */
 void _flatten(var arr)
 {
-	#ifcode JAVASCRIPT then
+	#switch
+	#case ifcode PHP then
+	
+	if ($arr->count() == 0) return "";
+	if ($arr->count() == 1) return \Runtime\rtl::toString($arr->get(0));
+	
+	$arr->insert(0, "<!--[-->");
+	$arr->push("<!--]-->");
+	
+	return $arr->join("");
+	
+	#case ifcode JAVASCRIPT then
 	
 	if (arr.length == 0) return null;
 	if (arr.length == 1) return arr[0];
 	return arr;
 	
-	#endif
+	#endswitch
 }
 
 
