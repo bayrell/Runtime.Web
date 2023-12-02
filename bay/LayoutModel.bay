@@ -136,9 +136,6 @@ class LayoutModel extends BaseWidget
 		/* Add page model to layout */
 		this.addWidget(page_model);
 		this.current_page_model = page_model::getClassName();
-		
-		/* Init page */
-		page_model.init();
 	}
 	
 	

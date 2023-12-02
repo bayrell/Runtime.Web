@@ -29,6 +29,8 @@ use Runtime.Web.Hooks.AppHook;
 
 class RenderProvider extends BaseProvider
 {
+	var vue = null;
+	
 	/**
 	 * Constructor
 	 */
@@ -117,6 +119,7 @@ class RenderProvider extends BaseProvider
 		
 		#ifcode JAVASCRIPT then
 		if (window) window["app_layout"] = this.layout;
+		if (window) window["render_provider"] = this;
 		#endif
 	}
 }

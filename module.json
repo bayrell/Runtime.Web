@@ -8,6 +8,7 @@
 		"BaseModel.bay",
 		"BaseWidget.bay",
 		"Component.bay",
+		"Events.bay",
 		"LayoutModel.bay",
 		"PageModel.bay",
 		"RenderContainer.bay",

@@ -70,14 +70,6 @@ class BaseWidget extends BaseModel
 	
 	
 	/**
-	 * Init model
-	 */
-	void init()
-	{
-	}
-	
-	
-	/**
 	 * Load data
 	 */
 	async void loadData()
@@ -114,7 +106,6 @@ class BaseWidget extends BaseModel
 					"layout": this.layout,
 				}]);
 				this.addWidget(widget);
-				widget.init();
 			}
 			
 			widget.importData(widget_data);

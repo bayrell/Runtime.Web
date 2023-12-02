@@ -42,6 +42,7 @@ var renderSlot(string slot_name)
 	
 	#case ifcode PHP then
 	$f = $this->_slots->get($slot_name);
+	if ($f == null) return null;
 	return $f();
 	
 	#case ifcode JAVASCRIPT then
@@ -88,7 +89,7 @@ string _class_name(var names)
 	
 	#case ifcode JAVASCRIPT then
 	names.push(this.$options.getCssHash(this.$options.getClassName()));
-	names = names.map((s) => s != "");
+	names = names.filter((s) => s != "");
 	return names.join(" ");
 	
 	#endswitch
