@@ -60,9 +60,10 @@ class LayoutModel extends BaseWidget
 	/**
 	 * Create model
 	 */
-	void constructor()
+	void constructor(Dict params = null)
 	{
-		parent(this);
+		parent(params);
+		this.layout = this;
 	}
 	
 	
@@ -128,7 +129,9 @@ class LayoutModel extends BaseWidget
 	void setPageModel(string class_name)
 	{
 		/* Create page model */
-		PageModel page_model = rtl::newInstance(class_name, [this.layout]);
+		PageModel page_model = rtl::newInstance(class_name, [{
+			"layout": this.layout,
+		}]);
 		
 		/* Add page model to layout */
 		this.addWidget(page_model);

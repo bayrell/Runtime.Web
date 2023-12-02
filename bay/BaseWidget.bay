@@ -21,12 +21,13 @@ namespace Runtime.Web;
 use Runtime.lib;
 use Runtime.BaseObject;
 use Runtime.SerializeInterface;
+use Runtime.Web.BaseModel;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteList;
 
 
-class BaseWidget extends BaseObject implements SerializeInterface
+class BaseWidget extends BaseModel
 {
 	LayoutModel layout = null;
 	string component = "";
@@ -38,10 +39,15 @@ class BaseWidget extends BaseObject implements SerializeInterface
 	/**
 	 * Create model
 	 */
-	void constructor(LayoutModel layout)
+	void constructor(Dict params = null)
 	{
-		parent();
-		this.layout = layout;
+		parent(params);
+		if (params)
+		{
+			if (params.has("layout")) this.layout = params.get("layout");
+			if (params.has("component")) this.component = params.get("component");
+			if (params.has("widget_name")) this.widget_name = params.get("widget_name");
+		}
 	}
 	
 	
@@ -104,7 +110,9 @@ class BaseWidget extends BaseObject implements SerializeInterface
 			if (widget == null)
 			{
 				string class_name = widget_data.get("__class_name__");
-				widget = rtl::newInstance(class_name, [this.layout]);
+				widget = rtl::newInstance(class_name, [{
+					"layout": this.layout,
+				}]);
 				this.addWidget(widget);
 				widget.init();
 			}
@@ -119,11 +127,10 @@ class BaseWidget extends BaseObject implements SerializeInterface
 	 */
 	Map exportData()
 	{
-		return {
-			"__class_name__": static::getClassName(),
-			"widget_name": this.widget_name,
-			"widgets": this.exportWidgets(),
-		};
+		Map data = parent::exportData();
+		data.set("widget_name", this.widget_name);
+		data.set("widgets", this.exportWidgets());
+		return data;
 	}
 	
 	
