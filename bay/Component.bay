@@ -118,7 +118,6 @@ var _merge_attrs(var attr1, var attr2)
  */
 string _escape(var s)
 {
-	if (s instanceof RawString) return s;
 	if (rtl::isScalarValue(s)) return rs::htmlEscape(s);
 	return "";
 }
@@ -213,6 +212,7 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	#case ifcode PHP then
 	
 	$component = \Runtime\rtl::newInstance($component_name);
+	$component->container = $this->container;
 	$component->layout = $this->layout;
 	$component->_slots = \Runtime\Dict::from([
 		"default" => $content
@@ -313,6 +313,29 @@ void _flatten(var arr)
 	if (arr.length == 0) return null;
 	if (arr.length == 1) return arr[0];
 	return arr;
+	
+	#endswitch
+}
+
+
+/**
+ * Teleport
+ */
+void _teleport(var parent_elem, var attrs = null, var content = null)
+{
+	#switch
+	#case ifcode PHP then
+	
+	$parent_elem->push("<!--teleport start--><!--teleport end-->");
+	$this->container->teleports->push($content->join(""));
+	
+	#case ifcode JAVASCRIPT then
+	
+	if (attrs.to == undefined) attrs["to"] = ".teleports";
+	let elem = Vue.h(Vue.Teleport, attrs, []);
+	this._parent_elem_push(parent_elem, elem);
+	
+	return elem;
 	
 	#endswitch
 }

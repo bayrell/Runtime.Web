@@ -38,6 +38,7 @@ class RenderContainer extends BaseObject
 	public RouteInfo route = null;
 	public Layout layout = null;
 	public Map frontend_env = {};
+	public Vector teleports = [];
 	
 	
 	/**
@@ -111,5 +112,4 @@ class RenderContainer extends BaseObject
 	{
 		this.response = response;
 	}
-	
 }
