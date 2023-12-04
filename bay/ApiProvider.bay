@@ -18,12 +18,15 @@
 
 namespace Runtime.Web;
 
+use Runtime.io;
 use Runtime.lib;
 use Runtime.BaseProvider;
 use Runtime.Bus;
 use Runtime.Callback;
 use Runtime.Curl;
+use Runtime.Exceptions.AbstractException;
 use Runtime.Exceptions.ApiError;
+use Runtime.Exceptions.CurlException;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseApi;
@@ -230,9 +233,16 @@ class ApiProvider extends BaseProvider
 		Dict data = params["data"] |> default Dict null;
 		
 		string locale_code = "";
-		string api_url = "/" ~ locale_code ~ "/api/" ~
-			service ~ "/" ~ api_name ~ "/" ~ method_name ~ "/"
-		;
+		
+		Vector api_url_arr = [
+			locale_code,
+			"api",
+			service,
+			api_name,
+			method_name,
+		];
+		api_url_arr = api_url_arr.filter( bool (string s) => s != "" );
+		string api_url = "/" ~ api_url_arr.join("/") ~ "/";
 		
 		ApiResult res = new ApiResult();
 		try
@@ -254,20 +264,27 @@ class ApiProvider extends BaseProvider
 			Dict answer = rtl::json_decode(response);
 			if (answer and answer instanceof Dict)
 			{
-				res.importData(answer);
+				res.importContent(answer);
 			}
 			
-			/* HTTP error */
+			/* Response error */
 			else
 			{
-				res.fail({
-					"code": rtl::ERROR_API_ERROR,
-					"message": "HTTP error code: " ~ curl.code,
-				});
+				res.exception( new AbstractException("Api response error") );
+			}
+		}
+		catch (CurlException e)
+		{
+			res.exception(e);
+			res.ob_content = e.http_content;
+			if (@.env("DEBUG"))
+			{
+				io::print_error(e.http_content);
 			}
 		}
 		catch (var e)
 		{
+			throw e;
 		}
 		
 		return res;

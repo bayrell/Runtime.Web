@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.Entity.Hook;
 use Runtime.Entity.Provider;
+use Runtime.Web.Annotations.Route;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
@@ -63,8 +64,9 @@ static class ModuleDescription
 		#endif
 		
 		#ifdef BACKEND then
-		new Provider(classof RouteList, new RouteList),
 		new Hook("Runtime.Web.Hooks.ResponseHook"),
+		new Provider(classof RouteList, new RouteList),
+		new Route("Runtime.Web.ApiRoute"),
 		#endif
 	];
 	

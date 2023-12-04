@@ -185,7 +185,7 @@ class LayoutModel extends BaseWidget
 	/**
 	 * Call Api
 	 */
-	ApiResult callApi(Map params)
+	async ApiResult callApi(Map params)
 	{
 		#ifdef BACKEND then
 		params.set("backend_storage", this.backend_storage);

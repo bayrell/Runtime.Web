@@ -144,6 +144,7 @@ void _t(var parent_elem, var content = null)
 	
 	#case ifcode JAVASCRIPT then
 	
+	if (Runtime.rtl.isScalarValue(content)) content = "" + content;
 	this._parent_elem_push(parent_elem, content);
 	
 	#endswitch
@@ -192,7 +193,7 @@ var _e(var parent_elem, string elem_name = null, var attrs = null, var content =
 	
 	#case ifcode JAVASCRIPT then
 	
-	elem = Vue.h(elem_name, attrs, []);
+	elem = Vue.h(elem_name, attrs);
 	this._parent_elem_push(parent_elem, elem);
 	
 	#endswitch
@@ -274,16 +275,43 @@ void _parent_elem_push(var parent_elem, var elem)
 	}
 	else if (typeof parent_elem == "object")
 	{
-		if (parent_elem.children == null)
-		{
-			parent_elem.children = [];
-		}
 		if (elem instanceof Array)
 		{
+			if (parent_elem.children == null)
+			{
+				parent_elem.children = [];
+				parent_elem.shapeFlag = 17;
+			}
 			for (let i=0; i<elem.length; i++) parent_elem.children.push(elem[i]);
 		}
-		else
+		else if (typeof elem == "string")
 		{
+			if (parent_elem.children == null)
+			{
+				parent_elem.children = "";
+				parent_elem.shapeFlag = 9;
+			}
+			if (parent_elem.children instanceof Array)
+			{
+				parent_elem.children.push(elem);
+			}
+			else
+			{
+				parent_elem.children += elem;
+			}
+		}
+		else if (typeof elem == "object")
+		{
+			if (parent_elem.children == null)
+			{
+				parent_elem.children = [];
+				parent_elem.shapeFlag = 17;
+			}
+			if (typeof parent_elem.children == "string")
+			{
+				parent_elem.children = [parent_elem.children];
+				parent_elem.shapeFlag = 17;
+			}
 			parent_elem.children.push(elem);
 		}
 	}

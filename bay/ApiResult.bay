@@ -84,6 +84,21 @@ class ApiResult extends BaseObject
 	
 	
 	/**
+	 * Import content
+	 */
+	void importContent(Map content)
+	{
+		this.data = content.get("data", null);
+		this.code = content.get("code", -1);
+		this.message = content.get("message", "Unknown error");
+		this.ob_content = content.get("ob_content", "");
+		this.error_name = content.get("error_name", "");
+		this.error_file = content.get("error_file", "");
+		this.error_line = content.get("error_line", "");
+	}
+	
+	
+	/**
 	 * Set data
 	 */
 	void setData(Dict data)

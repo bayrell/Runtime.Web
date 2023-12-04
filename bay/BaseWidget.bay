@@ -59,6 +59,7 @@ class BaseWidget extends BaseModel
 		string widget_name = new_widget.widget_name;
 		this.widgets.set(widget_name, new_widget);
 		new_widget.model_path = this.model_path.concat(["widgets", widget_name]);
+		if (new_widget.layout != null) new_widget.layout = this.layout;
 		return new_widget;
 	}
 	

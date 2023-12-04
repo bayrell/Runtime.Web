@@ -289,7 +289,7 @@ class BaseApp extends BaseObject
 		{
 			foreach ($post as $key => $val)
 			{
-				$payload->set($key, \Runtime\Serializer::NativeToObject($val));
+				$payload->set($key, \Runtime\Serializer::toPrimitive($val, false));
 			}
 		}
 		
