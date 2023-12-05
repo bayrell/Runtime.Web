@@ -77,7 +77,7 @@ class RenderProvider extends BaseProvider
 		
 		/* Import data */
 		var app_data = window["app_data"];
-		app_data = Serializer::toPrimitive(app_data);
+		app_data = Serializer::toPrimitive(app_data, Serializer::ALLOW_CLASS_NAME);
 		this.container.importData(app_data);
 		
 		/* Get render settings */
