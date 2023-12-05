@@ -48,10 +48,15 @@
 
 <template name="renderApp">
 	
+	%set Map render_settings = @.callHook(AppHook::RENDER_PROVIDER_SETTINGS, {
+		"app": "#core_ui_root",
+		"ssr": true,
+	});
+	
 	<div id="core_ui_root">
 		<AppComponent @model=[] />
 	</div>
-	<div class="teleports">@raw{ this.container.teleports.join("") }</div>
+	<div class="teleports">@raw{ render_settings["ssr"] ? this.container.teleports.join("") : "" }</div>
 	
 	<script>
 		window["app_data"] = @json{{ this.container.exportData() }};

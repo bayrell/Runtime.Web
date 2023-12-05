@@ -46,14 +46,14 @@ class Events extends BaseObject
 	/**
 	 * Emmit event
 	 */
-	void emmit(string event_name)
+	void emmit(string event_name, Collection attrs = null)
 	{
 		if (not this.items.has(event_name)) return;
 		Vector<Callback> events = this.items.get(event_name);
 		for (int i=0; i<events.count(); i++)
 		{
 			Callback f = events.get(i);
-			rtl::apply(f);
+			rtl::apply(f, attrs);
 		}
 	}
 	

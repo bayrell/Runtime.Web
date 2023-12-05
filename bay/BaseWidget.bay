@@ -33,7 +33,8 @@ class BaseWidget extends BaseModel
 	string component = "";
 	string widget_name = "";
 	Map widgets = {};
-	Collection model_path = [];
+	Vector<string> model_path = [];
+	Vector<string> render_list = [];
 	
 	
 	/**
@@ -65,9 +66,24 @@ class BaseWidget extends BaseModel
 	
 	
 	/**
+	 * Add render
+	 */
+	void addRender(string widget_name)
+	{
+		this.render_list.push(widget_name);
+	}
+	
+	
+	/**
 	 * Returns widget by name
 	 */
 	BaseWidget getWidget(string widget_name) => this.widgets.get(widget_name);
+	
+	
+	/**
+	 * Returns widget name
+	 */
+	BaseWidget getWidgetName() => this.widget_name;
 	
 	
 	/**

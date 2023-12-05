@@ -31,6 +31,7 @@
 <script>
 
 props var model = null;
+props var data = null;
 
 
 /**
