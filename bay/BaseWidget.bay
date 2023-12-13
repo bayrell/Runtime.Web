@@ -48,20 +48,14 @@ class BaseWidget extends BaseModel
 			if (params.has("layout")) this.layout = params.get("layout");
 			if (params.has("component")) this.component = params.get("component");
 			if (params.has("widget_name")) this.widget_name = params.get("widget_name");
+			if (params.has("parent_widget"))
+			{
+				BaseWidget parent_widget = params.get("parent_widget");
+				this.layout = parent_widget.layout;
+				this.model_path = parent_widget.model_path.concat(["widgets", this.widget_name]);
+				parent_widget.widgets.set(this.widget_name, this);
+			}
 		}
-	}
-	
-	
-	/**
-	 * Add widget
-	 */
-	BaseWidget addWidget(BaseWidget new_widget)
-	{
-		string widget_name = new_widget.widget_name;
-		this.widgets.set(widget_name, new_widget);
-		new_widget.model_path = this.model_path.concat(["widgets", widget_name]);
-		if (new_widget.layout != null) new_widget.layout = this.layout;
-		return new_widget;
 	}
 	
 	
@@ -118,18 +112,19 @@ class BaseWidget extends BaseModel
 		Collection<string> widgets_keys = widgets_data.keys();
 		for (int i=0; i<widgets_keys.count(); i++)
 		{
-			string widget_key = widgets_keys.get(i);
+			string widget_name = widgets_keys.get(i);
 			
-			BaseWidget widget = this.widgets.get(widget_key);
-			Map widget_data = widgets_data.get(widget_key);
+			BaseWidget widget = this.widgets.get(widget_name);
+			Map widget_data = widgets_data.get(widget_name);
 			
 			if (widget == null)
 			{
 				string class_name = widget_data.get("__class_name__");
+				string widget_name = widget_data.get("widget_name");
 				widget = rtl::newInstance(class_name, [{
-					"layout": this.layout,
+					"parent_widget": this,
+					"widget_name": widget_name,
 				}]);
-				this.addWidget(widget);
 			}
 			
 			widget.importData(widget_data);

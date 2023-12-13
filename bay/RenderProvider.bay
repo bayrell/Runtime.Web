@@ -89,6 +89,10 @@ class RenderProvider extends BaseProvider
 		/* Create layout */
 		this.layout = Vue.reactive(this.container.layout);
 		
+		#ifcode JAVASCRIPT then
+		if (window) window["app_layout"] = this.layout;
+		#endif
+		
 		/* Get props */
 		var component = rtl::find_class(classof AppComponent);
 		Dict props = {
@@ -116,11 +120,6 @@ class RenderProvider extends BaseProvider
 		/* Mount app */
 		string app_selector = render_settings.get("app");
 		this.vue.mount(app_selector, true);
-		
-		#ifcode JAVASCRIPT then
-		if (window) window["app_layout"] = this.layout;
-		if (window) window["render_provider"] = this;
-		#endif
 	}
 }
 

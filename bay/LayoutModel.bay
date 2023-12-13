@@ -130,11 +130,9 @@ class LayoutModel extends BaseWidget
 	{
 		/* Create page model */
 		PageModel page_model = rtl::newInstance(class_name, [{
-			"layout": this.layout,
+			"parent_widget": this,
+			"widget_name": class_name,
 		}]);
-		
-		/* Add page model to layout */
-		this.addWidget(page_model);
 		this.current_page_model = page_model::getClassName();
 	}
 	
