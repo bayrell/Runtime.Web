@@ -29,6 +29,7 @@ use Runtime.Web.RouteList;
 
 class BaseWidget extends BaseModel
 {
+	BaseModel parent_widget = null;
 	LayoutModel layout = null;
 	string component = "";
 	string widget_name = "";
@@ -52,6 +53,7 @@ class BaseWidget extends BaseModel
 			{
 				BaseWidget parent_widget = params.get("parent_widget");
 				this.layout = parent_widget.layout;
+				this.parent_widget = parent_widget;
 				this.model_path = parent_widget.model_path.concat(["widgets", this.widget_name]);
 				parent_widget.widgets.set(this.widget_name, this);
 			}
@@ -100,7 +102,6 @@ class BaseWidget extends BaseModel
 	 */
 	void importData(Map import_data)
 	{
-		this.importWidgets(import_data.get("widgets"));
 	}
 	
 	
@@ -128,6 +129,7 @@ class BaseWidget extends BaseModel
 			}
 			
 			widget.importData(widget_data);
+			widget.importWidgets(widget_data.get("widgets"));
 		}
 	}
 	

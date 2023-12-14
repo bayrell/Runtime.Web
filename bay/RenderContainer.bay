@@ -85,6 +85,7 @@ class RenderContainer extends BaseObject
 		
 		/* Load data */
 		this.layout.importData(data.get("layout"));
+		this.layout.importWidgets(data.get("layout").get("widgets"));
 		
 		/* Call hook */
 		@.callHook(AppHook::IMPORT_DATA_AFTER, {
