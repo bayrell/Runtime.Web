@@ -35,7 +35,6 @@ class BaseWidget extends BaseModel
 	string widget_name = "";
 	Map widgets = {};
 	Vector<string> model_path = [];
-	Vector<string> render_list = [];
 	
 	
 	/**
@@ -58,15 +57,6 @@ class BaseWidget extends BaseModel
 				parent_widget.widgets.set(this.widget_name, this);
 			}
 		}
-	}
-	
-	
-	/**
-	 * Add render
-	 */
-	void addRender(string widget_name)
-	{
-		this.render_list.push(widget_name);
 	}
 	
 	
