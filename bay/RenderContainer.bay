@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Callback;
+use Runtime.Serializer;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
@@ -27,6 +28,7 @@ use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.WidgetSerializer;
 use Runtime.Web.Hooks.AppHook;
 
 
@@ -59,8 +61,15 @@ class RenderContainer extends BaseObject
 			"entry_point": "",
 			"modules": [],
 			"environments": this.frontend_env,
-			"layout": this.layout.exportData(),
 		};
+		
+		/* Create serializer */
+		Serializer serializer = new WidgetSerializer();
+		serializer.setCallback("processFrontendData");
+		serializer.setFlag(Serializer::EXPORT);
+		
+		/* Export data */
+		serializer.process(this, "layout", data);
 		
 		/* Call hook */
 		@.callHook(AppHook::EXPORT_DATA, {
@@ -83,9 +92,13 @@ class RenderContainer extends BaseObject
 			"data": data,
 		});
 		
+		/* Create serializer */
+		Serializer serializer = new WidgetSerializer();
+		serializer.setCallback("processFrontendData");
+		serializer.setFlag(Serializer::IMPORT);
+		
 		/* Load data */
-		this.layout.importData(data.get("layout"));
-		this.layout.importWidgets(data.get("layout").get("widgets"));
+		this.layout.processFrontendData(serializer, data.get("layout"));
 		
 		/* Call hook */
 		@.callHook(AppHook::IMPORT_DATA_AFTER, {

@@ -15,6 +15,7 @@
 		"RenderHelper.bay",
 		"RenderProvider.bay",
 		"RouteInfo.bay",
+		"WidgetSerializer.bay",
 		"Hooks/AppHook.bay",
 		"AppComponent.bay",
 		"ModuleDescription.bay"

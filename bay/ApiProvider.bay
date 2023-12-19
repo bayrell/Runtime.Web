@@ -143,7 +143,7 @@ class ApiProvider extends BaseProvider
 	 */
 	async Api findApi(Dict params)
 	{
-		string api_name = params["class"] |> default string "";
+		string api_name = params["api_name"] |> default string "";
 		string method_name = params["method"] |> default string "";
 		
 		/* Get annotation by api name */
@@ -228,7 +228,7 @@ class ApiProvider extends BaseProvider
 	async ApiResult sendApi(Dict params)
 	{
 		string service = params["service"] |> default string "app";
-		string api_name = params["class"] |> default string "";
+		string api_name = params["api_name"] |> default string "";
 		string method_name = params["method"] |> default string "";
 		Dict data = params["data"] |> default Dict null;
 		

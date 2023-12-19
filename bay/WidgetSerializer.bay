@@ -1,0 +1,67 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.BaseObject;
+use Runtime.Serializer;
+use Runtime.Web.BaseWidget;
+
+
+class WidgetSerializer extends Serializer
+{
+	Vector<BaseWidget> parent_widgets = [];
+	
+	
+	/**
+	 * Import data
+	 */
+	void import(BaseObject object, string field_name, Map data)
+	{
+		this.parent_widgets.push(object);
+		parent(object, field_name, data);
+		this.parent_widgets.pop();
+	}
+	
+	
+	/**
+	 * New instance
+	 */
+	BaseObject newInstance(string class_name, Dict value)
+	{
+		/* Create widget if does not exists */
+		if (rtl::is_instanceof(class_name, "Runtime.Web.BaseWidget"))
+		{
+			string widget_name = value.get("widget_name");
+			
+			/* Find widget by name */
+			BaseWidget parent_widget = this.parent_widgets.last();
+			BaseWidget widget = parent_widget.widgets.get(widget_name);
+			if (widget != null)
+			{
+				return widget;
+			}
+			
+			return rtl::newInstance(class_name, [{
+				"parent_widget": parent_widget,
+				"widget_name": widget_name,
+			}]);
+		}
+		return parent(class_name, value);
+	}
+}

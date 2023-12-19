@@ -54,5 +54,4 @@ class BaseApi extends BaseObject
 	async void onActionAfter()
 	{
 	}
-	
 }

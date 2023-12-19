@@ -52,7 +52,7 @@ class ApiRoute extends BaseRoute
 	{
 		/* Decode data */
 		var post_data = this.container.request.payload["data"];
-		post_data = rtl::json_decode(post_data, false);
+		post_data = rtl::json_decode(post_data);
 		
 		if (post_data == null or not (post_data instanceof Dict))
 		{
@@ -67,7 +67,7 @@ class ApiRoute extends BaseRoute
 		ApiProvider provider = @.provider(classof ApiProvider);
 		ApiResult api = await provider.callApi({
 			"service": service,
-			"class": api_name,
+			"api_name": api_name,
 			"method": method_name,
 			"data": post_data,
 			"backend_storage": this.layout.backend_storage,

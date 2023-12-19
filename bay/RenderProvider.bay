@@ -75,9 +75,13 @@ class RenderProvider extends BaseProvider
 		
 		var Vue = window["Vue"];
 		
-		/* Import data */
+		/* Get data */
 		var app_data = window["app_data"];
-		app_data = Serializer::toPrimitive(app_data, Serializer::ALLOW_CLASS_NAME);
+		Serializer serializer = new Serializer();
+		serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
+		app_data = serializer.toPrimitive(app_data, Serializer::ALLOW_CLASS_NAME);
+		
+		/* Import data */
 		this.container.importData(app_data);
 		
 		/* Get render settings */

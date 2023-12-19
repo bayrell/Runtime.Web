@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.Callback;
+use Runtime.Serializer;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseWidget;
@@ -68,43 +69,22 @@ class LayoutModel extends BaseWidget
 	
 	
 	/**
-	 * Import data
+	 * Process frontend data
 	 */
-	void importData(Map import_data)
+	void processFrontendData(Serializer serializer, Map data)
 	{
-		parent::importData(import_data);
-		this.title = import_data.get("title");
-		this.layout_name = import_data.get("layout_name");
-		this.current_page_model = import_data.get("current_page_model");
-		this.current_page = import_data.get("current_page");
-		this.f_inc = import_data.get("f_inc");
-		this.route = import_data.get("route");
-		this.request_full_uri = import_data.get("request_full_uri");
-		this.request_uri = import_data.get("request_uri");
-		this.request_query = import_data.get("request_query");
-		this.components = import_data.get("components");
-		this.routes = import_data.get("routes");
-	}
-	
-	
-	/**
-	 * Export data
-	 */
-	Map exportData()
-	{
-		Map data = parent::exportData();
-		data.set("title", this.title);
-		data.set("layout_name", this.layout_name);
-		data.set("current_page_model", this.current_page_model);
-		data.set("current_page", this.current_page);
-		data.set("f_inc", this.f_inc);
-		data.set("route", this.route);
-		data.set("request_full_uri", this.request_full_uri);
-		data.set("request_uri", this.request_uri);
-		data.set("request_query", this.request_query);
-		data.set("components", this.components);
-		data.set("routes", this.routes);
-		return data;
+		serializer.process(this, "title", data);
+		serializer.process(this, "layout_name", data);
+		serializer.process(this, "current_page_model", data);
+		serializer.process(this, "current_page", data);
+		serializer.process(this, "f_inc", data);
+		serializer.process(this, "route", data);
+		serializer.process(this, "request_full_uri", data);
+		serializer.process(this, "request_uri", data);
+		serializer.process(this, "request_query", data);
+		serializer.process(this, "components", data);
+		serializer.process(this, "routes", data);
+		parent(serializer, data);
 	}
 	
 	
