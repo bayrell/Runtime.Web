@@ -19,15 +19,14 @@
 namespace Runtime.Web;
 
 use Runtime.lib;
-use Runtime.Web.BaseWidget;
-use Runtime.Web.LayoutModel;
+use Runtime.Web.BaseModel;
 
 
-class PageModel extends BaseWidget
+class PageModel extends BaseModel
 {
-	void constructor(LayoutModel layout)
+	void constructor(Dict params = null)
 	{
-		parent(layout);
+		parent(params);
 		this.widget_name = static::getClassName();
 		this.model_path = ["widgets", this.widget_name];
 	}

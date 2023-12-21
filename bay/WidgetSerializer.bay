@@ -20,12 +20,12 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Serializer;
-use Runtime.Web.BaseWidget;
+use Runtime.Web.BaseModel;
 
 
 class WidgetSerializer extends Serializer
 {
-	Vector<BaseWidget> parent_widgets = [];
+	Vector<BaseModel> parent_widgets = [];
 	
 	
 	/**
@@ -45,13 +45,13 @@ class WidgetSerializer extends Serializer
 	BaseObject newInstance(string class_name, Dict value)
 	{
 		/* Create widget if does not exists */
-		if (rtl::is_instanceof(class_name, "Runtime.Web.BaseWidget"))
+		if (rtl::is_instanceof(class_name, "Runtime.Web.BaseModel"))
 		{
 			string widget_name = value.get("widget_name");
 			
 			/* Find widget by name */
-			BaseWidget parent_widget = this.parent_widgets.last();
-			BaseWidget widget = parent_widget.widgets.get(widget_name);
+			BaseModel parent_widget = this.parent_widgets.last();
+			BaseModel widget = parent_widget.widgets.get(widget_name);
 			if (widget != null)
 			{
 				return widget;

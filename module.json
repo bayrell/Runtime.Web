@@ -6,7 +6,6 @@
 		"ApiResult.bay",
 		"BaseApp.bay",
 		"BaseModel.bay",
-		"BaseWidget.bay",
 		"Component.bay",
 		"Events.bay",
 		"LayoutModel.bay",

@@ -49,6 +49,7 @@ var renderSlot(string slot_name)
 	#case ifcode JAVASCRIPT then
 	
 	let f = this.$slots[slot_name];
+	if (f == null || f == undefined) return null;
 	return f();
 	
 	#endswitch

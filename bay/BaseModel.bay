@@ -21,16 +21,69 @@ namespace Runtime.Web;
 use Runtime.lib;
 use Runtime.BaseObject;
 use Runtime.Serializer;
+use Runtime.Web.BaseModel;
+use Runtime.Web.LayoutModel;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteList;
 
 
 class BaseModel extends BaseObject
 {
+	BaseModel parent_widget = null;
+	LayoutModel layout = null;
+	string component = "";
+	string widget_name = "";
+	Map widgets = {};
+	Vector<string> model_path = [];
+	
+	
 	/**
 	 * Create model
 	 */
 	void constructor(Dict params = null)
 	{
 		parent();
+		if (params)
+		{
+			if (params.has("layout")) this.layout = params.get("layout");
+			if (params.has("component")) this.component = params.get("component");
+			if (params.has("widget_name")) this.widget_name = params.get("widget_name");
+			if (params.has("parent_widget"))
+			{
+				BaseModel parent_widget = params.get("parent_widget");
+				this.layout = parent_widget.layout;
+				this.parent_widget = parent_widget;
+				this.model_path = parent_widget.model_path.concat(["widgets", this.widget_name]);
+				parent_widget.widgets.set(this.widget_name, this);
+			}
+		}
+	}
+	
+	
+	/**
+	 * Returns widget by name
+	 */
+	BaseModel getWidget(string widget_name) => this.widgets.get(widget_name);
+	
+	
+	/**
+	 * Returns widget name
+	 */
+	BaseModel getWidgetName() => this.widget_name;
+	
+	
+	/**
+	 * Load data
+	 */
+	async void loadData()
+	{
+		Collection widgets_keys = this.widgets.keys();
+		for (int i=0; i<widgets_keys.count(); i++)
+		{
+			string widget_key = widgets_keys.get(i);
+			BaseModel widget = this.widgets.get(widget_key);
+			await widget.loadData();
+		}
 	}
 	
 	
@@ -39,9 +92,40 @@ class BaseModel extends BaseObject
 	 */
 	void processFrontendData(Serializer serializer, Map data)
 	{
+		serializer.process(this, "widget_name", data);
+		serializer.process(this, "widgets", data);
 		if (serializer.isExport())
 		{
 			data.set("__class_name__", static::getClassName());
 		}
+	}
+	
+	
+	/**
+	 * Returns url
+	 */
+	string url(string route_name, Dict route_params = null)
+	{
+		if (not this.layout.routes.has(route_name)) return null;
+		
+		string url = this.layout.routes.get(route_name);
+		if (route_params == null) return url;
+		
+		route_params.each(
+			void (string value, string key) use (url)
+			{
+				int pos = rs::indexOf(url, "{" ~ key ~ "}");
+				if (pos >= 0)
+				{
+					url = rs::replace("{" ~ key ~ "}", value, url);
+				}
+				else
+				{
+					url = rs::url_get_add(url, key, value);
+				}
+			}
+		);
+		
+		return url;
 	}
 }
