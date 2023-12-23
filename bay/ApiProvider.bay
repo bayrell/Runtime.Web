@@ -206,7 +206,7 @@ class ApiProvider extends BaseProvider
 		{
 			api_instance.result.fail(e.getPreviousException());
 		}
-		catch (var e)
+		catch (AbstractException e)
 		{
 			api_instance.result = new ApiResult();
 			api_instance.result.exception(e);
