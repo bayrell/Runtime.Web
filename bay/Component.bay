@@ -57,6 +57,20 @@ var renderSlot(string slot_name)
 
 
 /**
+ * Parent component
+ */
+var getParent()
+{
+	#switch
+	#case ifcode PHP then
+	return $this->_parent_component;
+	#case ifcode JAVASCRIPT then
+	return this.$parent;
+	#endswitch
+}
+
+
+/**
  * Returns model for component
  */
 var _model(var obj = null, bool is_global = false)
@@ -217,6 +231,7 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	$component = \Runtime\rtl::newInstance($component_name);
 	$component->container = $this->container;
 	$component->layout = $this->layout;
+	$component->_parent_component = $this;
 	$component->_slots = \Runtime\Dict::from([
 		"default" => $content
 	]);

@@ -57,6 +57,10 @@ class BaseModel extends BaseObject
 				parent_widget.widgets.set(this.widget_name, this);
 			}
 		}
+		if (this.layout != null and this.component != "")
+		{
+			this.layout.addComponent(this.component);
+		}
 	}
 	
 	

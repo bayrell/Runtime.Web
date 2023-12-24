@@ -67,6 +67,12 @@ class BaseApp extends BaseObject
 	/**
 	 * Create render container
 	 */
+	LayoutModel createLayout() => new LayoutModel();
+	
+	
+	/**
+	 * Create render container
+	 */
 	RenderContainer createRenderContainer()
 	{
 		RenderContainer container = new RenderContainer();
@@ -75,7 +81,7 @@ class BaseApp extends BaseObject
 		container.request = this.createRequest();
 		
 		/* Create layout */
-		container.layout = new LayoutModel();
+		container.layout = this.createLayout();
 		
 		/* Create layout */
 		@.callHook(AppHook::CREATE_CONTAINER, {
