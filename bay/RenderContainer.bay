@@ -113,6 +113,7 @@ class RenderContainer extends BaseObject
 	 */
 	void render(string class_name = "")
 	{
+		this.layout.addComponent(class_name);
 		this.layout.setCurrentPage(class_name);
 		this.response = new RenderResponse();
 		this.response.class_name = class_name;

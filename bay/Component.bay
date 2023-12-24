@@ -160,6 +160,7 @@ void _t(var parent_elem, var content = null)
 	
 	#case ifcode JAVASCRIPT then
 	
+	if (content instanceof Array && content.length == 0) return;
 	if (Runtime.rtl.isScalarValue(content)) content = "" + content;
 	this._parent_elem_push(parent_elem, content);
 	
@@ -205,7 +206,7 @@ var _e(var parent_elem, string elem_name = null, var attrs = null, var content =
 	}
 	
 	$elem->push("</" . $elem_name . ">");
-	$parent_elem->appendItems($elem);
+	$parent_elem->append($elem->join(""));
 	
 	#case ifcode JAVASCRIPT then
 	
@@ -340,7 +341,7 @@ void _parent_elem_push(var parent_elem, var elem)
 /**
  * Flatten elements
  */
-void _flatten(var arr)
+void _flatten(var arr, bool detect_multiblock = true)
 {
 	#switch
 	#case ifcode PHP then
@@ -348,8 +349,11 @@ void _flatten(var arr)
 	if ($arr->count() == 0) return "";
 	if ($arr->count() == 1) return \Runtime\rtl::toString($arr->get(0));
 	
-	$arr->insert(0, "<!--[-->");
-	$arr->push("<!--]-->");
+	if ($detect_multiblock)
+	{
+		$arr->insert(0, "<!--[-->");
+		$arr->push("<!--]-->");
+	}
 	
 	return $arr->join("");
 	
