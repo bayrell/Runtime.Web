@@ -88,6 +88,7 @@ class RenderProvider extends BaseProvider
 		Map render_settings = @.callHook(AppHook::RENDER_PROVIDER_SETTINGS, {
 			"app": "#core_ui_root",
 			"ssr": true,
+			"break": false,
 		});
 		
 		/* Create layout */
@@ -102,6 +103,12 @@ class RenderProvider extends BaseProvider
 		Dict props = {
 			"model": this.layout,
 		};
+		
+		bool is_break = render_settings.get("break");
+		if (is_break)
+		{
+			return;
+		}
 		
 		/* Create vue app */
 		bool is_ssr = render_settings.get("ssr");
