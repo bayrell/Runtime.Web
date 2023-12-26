@@ -71,6 +71,84 @@ var getParent()
 
 
 /**
+ * Returns ref
+ */
+var getRef(string name)
+{
+	#switch
+	#case ifcode PHP then
+	return null;
+	#case ifcode JAVASCRIPT then
+	return this.$refs[name];
+	#endswitch
+}
+
+
+/**
+ * Before create
+ */
+static void onBeforeCreate()
+{
+}
+
+
+/**
+ * Created
+ */
+void onCreated()
+{
+}
+
+
+/**
+ * Before mount
+ */
+void onBeforeMount()
+{
+}
+
+
+/**
+ * Mounted
+ */
+void onMounted()
+{
+}
+
+
+/**
+ * Before update
+ */
+void onBeforeUpdate()
+{
+}
+
+
+/**
+ * Updated
+ */
+void onUpdated()
+{
+}
+
+
+/**
+ * Before Unmount
+ */
+void onBeforeUnmount()
+{
+}
+
+
+/**
+ * Unmounted
+ */
+void onUnmounted()
+{
+}
+
+
+/**
  * Returns model for component
  */
 var _model(var obj = null, bool is_global = false)

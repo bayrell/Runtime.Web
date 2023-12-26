@@ -144,4 +144,36 @@ Runtime.Web.Component.computed = {
 		return this.$layout;
 	}
 }
+Runtime.Web.Component.beforeCreate = function ()
+{
+	return this.$options.onBeforeCreate();
+}
+Runtime.Web.Component.created = function ()
+{
+	return this.onCreated();
+}
+Runtime.Web.Component.beforeMount = function ()
+{
+	return this.onBeforeMount();
+}
+Runtime.Web.Component.mounted = function ()
+{
+	return this.onMounted();
+}
+Runtime.Web.Component.beforeUpdate = function ()
+{
+	return this.onBeforeUpdate();
+}
+Runtime.Web.Component.updated = function ()
+{
+	return this.onUpdated();
+}
+Runtime.Web.Component.beforeUnmount = function ()
+{
+	return this.onBeforeUnmount();
+}
+Runtime.Web.Component.unmounted = function ()
+{
+	return this.onUnmounted();
+}
 #endif
