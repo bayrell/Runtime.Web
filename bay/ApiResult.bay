@@ -31,6 +31,7 @@ class ApiResult extends BaseObject
 	string error_name = null;
 	string error_file = "";
 	string error_line = "";
+	int error_pos = 0;
 	Collection<string> error_trace = null;
 	bool is_exception = false;
 	
@@ -70,16 +71,19 @@ class ApiResult extends BaseObject
 	 */
 	Map getContent()
 	{
-		return {
+		Map res = {
 			"code": this.code,
 			"message": this.message,
-			"ob_content": this.ob_content,
-			"error_name": this.error_name,
-			"error_file": this.error_file,
-			"error_line": this.error_line,
-			"error_trace": this.error_trace,
 			"data": this.data,
 		};
+		
+		if (this.error_name != "") res.set("error_name", this.error_name);
+		if (this.error_file != "") res.set("error_file", this.error_file);
+		if (this.error_line != "") res.set("error_line", this.error_line);
+		if (this.error_pos != "") res.set("error_pos", this.error_pos);
+		if (this.error_trace != "") res.set("error_trace", this.error_trace);
+		
+		return res;
 	}
 	
 	
@@ -95,6 +99,7 @@ class ApiResult extends BaseObject
 		this.error_name = content.get("error_name", "");
 		this.error_file = content.get("error_file", "");
 		this.error_line = content.get("error_line", "");
+		this.error_pos = content.get("error_pos", "");
 	}
 	
 	
@@ -147,6 +152,9 @@ class ApiResult extends BaseObject
 		this.code = e.getErrorCode();
 		this.message = e.getErrorMessage();
 		this.error_name = e::getClassName();
+		this.error_file = e.getFileName();
+		this.error_line = e.getErrorLine();
+		this.error_pos = e.getErrorPos();
 		this.is_exception = true;
 	}
 	

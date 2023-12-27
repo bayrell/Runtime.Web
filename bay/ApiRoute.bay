@@ -77,10 +77,10 @@ class ApiRoute extends BaseRoute
 		this.container.setResponse( new JsonResponse(api.getContent()) );
 		
 		/* HTTP error if exception */
-		if (api.isException())
+		/*if (api.isException())
 		{
 			this.container.response.http_code = 500;
-		}
+		}*/
 	}
 	
 }
