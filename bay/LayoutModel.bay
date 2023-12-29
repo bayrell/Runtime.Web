@@ -69,6 +69,14 @@ class LayoutModel extends BaseModel
 	
 	
 	/**
+	 * Init layout
+	 */
+	void init()
+	{
+	}
+	
+	
+	/**
 	 * Process frontend data
 	 */
 	void processFrontendData(Serializer serializer, Map data)

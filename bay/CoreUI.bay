@@ -104,7 +104,6 @@
 			%render static::renderFooter();
 			<script>
 			window.addEventListener('load', function() {
-				console.log('window load');
 				window.$onReady.forEach( function(f){ f(); } );
 			});
 			</script>

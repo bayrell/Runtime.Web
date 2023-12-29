@@ -135,6 +135,9 @@ class BaseApp extends BaseObject
 			"container": container,
 			"layout": container.layout,
 		});
+		
+		/* Init layout */
+		await container.layout.init();
 	}
 	
 	
@@ -293,9 +296,11 @@ class BaseApp extends BaseObject
 		}
 		if ($post != null)
 		{
+			$serializer = new \Runtime\Serializer();
+			$serializer->removeFlag(\Runtime\Serializer::ALLOW_CLASS_NAME);
 			foreach ($post as $key => $val)
 			{
-				$payload->set($key, \Runtime\Serializer::toPrimitive($val, false));
+				$payload->set($key, $serializer->toPrimitive($val, false));
 			}
 		}
 		
