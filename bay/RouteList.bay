@@ -1,7 +1,7 @@
 /*!
  *  Bayrell Runtime Library
  *
- *  (c) Copyright 2016-2023 "Ildar Bikmamatov" <support@bayrell.org>
+ *  (c) Copyright 2016-2024 "Ildar Bikmamatov" <support@bayrell.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.re;
 use Runtime.BaseProvider;
 use Runtime.Callback;
+use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteInfo;
@@ -58,7 +59,10 @@ class RouteList extends BaseProvider
 			
 			/* Get method getRoutes */
 			Callback getRoutes = new Callback(info.name, "getRoutes");
-			if (not getRoutes.exists()) continue;
+			if (not getRoutes.exists())
+			{
+				throw new ItemNotFound(info.name, "Route");
+			}
 			
 			/* Create routes */
 			Collection<RouteInfo> routes_info = rtl::apply(getRoutes);
