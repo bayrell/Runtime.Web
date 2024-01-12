@@ -32,6 +32,7 @@
 
 props var model = null;
 props var data = null;
+Map render_cache = new Map;
 
 
 /**
@@ -80,6 +81,18 @@ var getRef(string name)
 	return null;
 	#case ifcode JAVASCRIPT then
 	return this.$refs[name];
+	#endswitch
+}
+
+
+/**
+ * Emit message
+ */
+var emit(string event, var obj=null)
+{
+	#switch
+	#case ifcode JAVASCRIPT then
+	return this.$emit(event, obj);
 	#endswitch
 }
 
