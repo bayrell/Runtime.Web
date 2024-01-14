@@ -92,7 +92,7 @@ var emit(string event, var obj=null)
 {
 	#switch
 	#case ifcode JAVASCRIPT then
-	return this.$emit(event, obj);
+	return this.$emit.apply(this, arguments);
 	#endswitch
 }
 
