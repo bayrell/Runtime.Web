@@ -32,6 +32,7 @@ use Runtime.Web.Hooks.AppHook;
 class LayoutModel extends BaseModel
 {
 	string title = "";
+	string lang = "";
 	string layout_name = "default";
 	string current_page_model = "";
 	string current_page = "";
