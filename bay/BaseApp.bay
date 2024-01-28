@@ -137,7 +137,7 @@ class BaseApp extends BaseObject
 		});
 		
 		/* Init layout */
-		await container.layout.init();
+		await container.layout.init(container);
 	}
 	
 	

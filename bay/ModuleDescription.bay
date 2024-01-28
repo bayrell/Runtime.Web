@@ -57,15 +57,15 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		new Provider(classof ApiProvider, new ApiProvider),
+		new Provider("Runtime.Web.ApiProvider"),
 		
 		#ifdef FRONTEND then
-		new Provider(classof RenderProvider, new RenderProvider),
+		new Provider("Runtime.Web.RenderProvider"),
 		#endif
 		
 		#ifdef BACKEND then
 		new Hook("Runtime.Web.Hooks.ResponseHook"),
-		new Provider(classof RouteList, new RouteList),
+		new Provider("Runtime.Web.RouteList"),
 		new Route("Runtime.Web.ApiRoute"),
 		#endif
 	];

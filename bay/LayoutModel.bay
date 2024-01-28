@@ -25,6 +25,7 @@ use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
 use Runtime.Web.PageModel;
+use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.Hooks.AppHook;
 
@@ -72,7 +73,7 @@ class LayoutModel extends BaseModel
 	/**
 	 * Init layout
 	 */
-	void init()
+	async void init(RenderContainer container)
 	{
 	}
 	

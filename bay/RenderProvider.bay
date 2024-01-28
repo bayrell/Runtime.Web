@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseProvider;
 use Runtime.Serializer;
+use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.AppComponent;
 use Runtime.Web.BaseApp;
 use Runtime.Web.RenderContainer;
@@ -30,6 +31,12 @@ use Runtime.Web.Hooks.AppHook;
 class RenderProvider extends BaseProvider
 {
 	var vue = null;
+	string layout_data = "app_data";
+	string layout_name = "app_layout";
+	string selector = "#core_ui_root";
+	bool break_start = false;
+	bool enable_ssr = true;
+	
 	
 	/**
 	 * Constructor
@@ -37,6 +44,14 @@ class RenderProvider extends BaseProvider
 	void constructor(Dict params = null)
 	{
 		parent(params);
+		if (params)
+		{
+			if (params.has("layout_data")) this.layout_data = params.get("layout_data");
+			if (params.has("layout_name")) this.layout_name = params.get("layout_name");
+			if (params.has("selector")) this.selector = params.get("selector");
+			if (params.has("enable_ssr")) this.enable_ssr = params.get("enable_ssr");
+			if (params.has("break_start")) this.break_start = params.get("break_start");
+		}
 	}
 	
 	
@@ -54,16 +69,55 @@ class RenderProvider extends BaseProvider
 	
 	
 	/**
-	 * Start provider
+	 * Returns app data
 	 */
-	async void start()
+	var getAppData()
 	{
-		await parent::start();
+		var app_data = window[this.layout_data];
+		if (!rtl::exists(app_data))
+		{
+			throw new ItemNotFound(this.layout_data, "App data");
+		}
 		
-		fn createLayout = null;
+		Serializer serializer = new Serializer();
+		serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
+		app_data = serializer.toPrimitive(app_data, Serializer::ALLOW_CLASS_NAME);
+		return app_data;
+	}
+	
+	
+	/**
+	 * Load layout
+	 */
+	void loadLayout()
+	{
+		var Vue = window["Vue"];
+		
+		/* Get data */
+		var app_data = this.getAppData();
+		
+		/* Import data */
+		this.container.importData(app_data);
+		
+		/* Create layout */
+		this.layout = Vue.reactive(this.container.layout);
 		
 		#ifcode JAVASCRIPT then
-		createLayout = (layout) =>
+		if (window) window[this.layout_name] = this.layout;
+		#endif
+	}
+	
+	
+	/**
+	 * Start Vue App
+	 */
+	void startVueApp()
+	{
+		var Vue = window["Vue"];
+		fn registerLayout = null;
+		
+		#ifcode JAVASCRIPT then
+		registerLayout = (layout) =>
 		{
 			return {
 				install: () => {
@@ -73,46 +127,14 @@ class RenderProvider extends BaseProvider
 		};
 		#endif
 		
-		var Vue = window["Vue"];
-		
-		/* Get data */
-		var app_data = window["app_data"];
-		Serializer serializer = new Serializer();
-		serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
-		app_data = serializer.toPrimitive(app_data, Serializer::ALLOW_CLASS_NAME);
-		
-		/* Import data */
-		this.container.importData(app_data);
-		
-		/* Get render settings */
-		Map render_settings = @.callHook(AppHook::RENDER_PROVIDER_SETTINGS, {
-			"app": "#core_ui_root",
-			"ssr": true,
-			"break": false,
-		});
-		
-		/* Create layout */
-		this.layout = Vue.reactive(this.container.layout);
-		
-		#ifcode JAVASCRIPT then
-		if (window) window["app_layout"] = this.layout;
-		#endif
-		
 		/* Get props */
 		var component = rtl::find_class(classof AppComponent);
 		Dict props = {
 			"model": this.layout,
 		};
 		
-		bool is_break = render_settings.get("break");
-		if (is_break)
-		{
-			return;
-		}
-		
 		/* Create vue app */
-		bool is_ssr = render_settings.get("ssr");
-		if (is_ssr)
+		if (this.enable_ssr)
 		{
 			this.vue = Vue.createSSRApp(component, props.toObject());
 		}
@@ -121,16 +143,36 @@ class RenderProvider extends BaseProvider
 			this.vue = Vue.createApp(component, props.toObject());
 		}
 		
-		/* Add modules */
-		this.vue.use(createLayout(this.layout));
+		/* Register layout  */
+		this.vue.use(registerLayout(this.layout));
 		
+		/* Register other modules */
 		await @.callHookAsync(AppHook::VUE_MODULES, {
+			"render_provider": this,
 			"vue": this.vue,
 		});
 		
 		/* Mount app */
-		string app_selector = render_settings.get("app");
-		this.vue.mount(app_selector, true);
+		this.vue.mount(this.selector, true);
+	}
+	
+	
+	/**
+	 * Start provider
+	 */
+	async void start()
+	{
+		await parent::start();
+		
+		/* Load layout */
+		this.loadLayout();
+		if (this.break_start)
+		{
+			return;
+		}
+		
+		/* Start Vue App */
+		this.startVueApp();
 	}
 }
 

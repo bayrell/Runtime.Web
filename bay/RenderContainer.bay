@@ -53,14 +53,33 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
+	 * Returns frontend environments
+	 */
+	Map getFrontendEnvironments()
+	{
+		Map environments = this.frontend_env.copy();
+		
+		/* Setup environments */
+		Collection arr = ["CLOUD_ENV", "DEBUG"];
+		for (int i=0; i<arr.count(); i++)
+		{
+			string name = arr.get(i);
+			environments.set(name, @.env(name));
+		}
+		
+		return environments;
+	}
+	
+	
+	/**
 	 * Export data
 	 */
 	Map exportData()
 	{
 		Map data = {
-			"entry_point": "",
-			"modules": [],
-			"environments": this.frontend_env,
+			"entry_point": @.entry_point,
+			"modules": @.start_modules,
+			"environments": this.getFrontendEnvironments(),
 		};
 		
 		/* Create serializer */
@@ -72,7 +91,7 @@ class RenderContainer extends BaseObject
 		serializer.process(this, "layout", data);
 		
 		/* Call hook */
-		@.callHook(AppHook::EXPORT_DATA, {
+		@.callHook(AppHook::EXPORT_CONTAINER_DATA, {
 			"container": this,
 			"data": data,
 		});
@@ -87,7 +106,7 @@ class RenderContainer extends BaseObject
 	void importData(Map data)
 	{
 		/* Call hook */
-		@.callHook(AppHook::IMPORT_DATA, {
+		@.callHook(AppHook::IMPORT_CONTAINER_DATA_BEFORE, {
 			"container": this,
 			"data": data,
 		});
@@ -101,7 +120,7 @@ class RenderContainer extends BaseObject
 		this.layout.processFrontendData(serializer, data.get("layout"));
 		
 		/* Call hook */
-		@.callHook(AppHook::IMPORT_DATA_AFTER, {
+		@.callHook(AppHook::IMPORT_CONTAINER_DATA_AFTER, {
 			"container": this,
 			"data": data,
 		});
