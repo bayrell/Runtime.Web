@@ -37,7 +37,6 @@ class LayoutModel extends BaseModel
 	string lang = "";
 	string layout_name = "default";
 	string current_page_model = "";
-	string current_page = "";
 	
 	/* Current route */
 	RouteInfo route = null;
@@ -87,7 +86,6 @@ class LayoutModel extends BaseModel
 		serializer.process(this, "title", data);
 		serializer.process(this, "layout_name", data);
 		serializer.process(this, "current_page_model", data);
-		serializer.process(this, "current_page", data);
 		serializer.process(this, "f_inc", data);
 		serializer.process(this, "route", data);
 		serializer.process(this, "request_full_uri", data);
@@ -115,6 +113,16 @@ class LayoutModel extends BaseModel
 	
 	
 	/**
+	 * Returns page class name
+	 */
+	string getPageClassName()
+	{
+		PageModel page_model = this.getPageModel();
+		return page_model.component;
+	}
+	
+	
+	/**
 	 * Set current page model
 	 */
 	void setPageModel(string class_name)
@@ -125,15 +133,6 @@ class LayoutModel extends BaseModel
 			"widget_name": class_name,
 		}]);
 		this.current_page_model = page_model::getClassName();
-	}
-	
-	
-	/**
-	 * Set current page
-	 */
-	void setCurrentPage(string current_page)
-	{
-		this.current_page = current_page;
 	}
 	
 	

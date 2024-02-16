@@ -22,6 +22,7 @@ use Runtime.BaseObject;
 use Runtime.Callback;
 use Runtime.Serializer;
 use Runtime.Web.ApiResult;
+use Runtime.Web.BaseModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderResponse;
@@ -124,18 +125,6 @@ class RenderContainer extends BaseObject
 			"container": this,
 			"data": data,
 		});
-	}
-	
-	
-	/**
-	 * Render page and setup response
-	 */
-	void render(string class_name = "")
-	{
-		this.layout.addComponent(class_name);
-		this.layout.setCurrentPage(class_name);
-		this.response = new RenderResponse();
-		this.response.class_name = class_name;
 	}
 	
 	

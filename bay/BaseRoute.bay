@@ -22,6 +22,7 @@ use Runtime.BaseObject;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.PageModel;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderResponse;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RouteList;
 
@@ -91,6 +92,7 @@ class BaseRoute extends BaseObject
 	 */
 	async void onActionAfter()
 	{
+		this.renderPage();
 	}
 	
 	
@@ -115,9 +117,14 @@ class BaseRoute extends BaseObject
 	/**
 	 * Render page and setup response
 	 */
-	void render(string class_name = "")
+	void renderPage()
 	{
-		this.container.render(class_name);
+		if (this.container.response == null)
+		{
+			string page_class_name = this.container.layout.getPageClassName();
+			this.container.response = new RenderResponse();
+			this.container.response.class_name = page_class_name;
+		}
 	}
 	
 	
