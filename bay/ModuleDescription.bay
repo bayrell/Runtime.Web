@@ -58,10 +58,7 @@ static class ModuleDescription
 	pure Collection<Dict> entities() => 
 	[
 		new Provider("Runtime.Web.ApiProvider"),
-		
-		#ifdef FRONTEND then
 		new Provider("Runtime.Web.RenderProvider"),
-		#endif
 		
 		#ifdef BACKEND then
 		new Hook("Runtime.Web.Hooks.ResponseHook"),

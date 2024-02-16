@@ -21,10 +21,11 @@
 <use name="Runtime.rtl" />
 <use name="Runtime.Exceptions.RuntimeException" />
 <use name="Runtime.Web.AppComponent" />
+<use name="Runtime.Web.RenderProvider" />
 <use name="Runtime.Web.Hooks.AppHook" />
 
 
-<template name="renderHead">
+<template name="renderHeadComponents">
 	%var Dict d = @.callHook(AppHook::RENDER_HEAD, { "components": [] });
 	%var Collection<string> components = d["components"];
 	%for (int i=0; i<components.count(); i++)
@@ -35,7 +36,20 @@
 </template>
 
 
-<template name="renderBody">
+<template name="renderCSS">
+	%set Collection components = this.layout.getComponents();
+	%set string css = this.layout::getCss(components);
+	<style>@raw{{ css }}</style>
+</template>
+
+
+<template name="renderHead">
+	%render static::renderHeadComponents();
+	%render static::renderCSS();
+</template>
+
+
+<template name="renderBodyComponents">
 	%var Dict d = @.callHook(AppHook::RENDER_BODY, { "components": [] });
 	%var Collection<string> components = d["components"];
 	%for (int i=0; i<components.count(); i++)
@@ -46,17 +60,19 @@
 </template>
 
 
+<template name="renderBody">
+	%render static::renderBodyComponents();
+</template>
+
+
 <template name="renderApp">
 	
-	%set Map render_settings = @.callHook(AppHook::RENDER_PROVIDER_SETTINGS, {
-		"app": "#core_ui_root",
-		"ssr": true,
-	});
+	%set RenderProvider render_provider = @.provider(classof RenderProvider);
 	
-	<div id="core_ui_root">
+	<div id={{ render_provider.selector }}>
 		<AppComponent @model=[] />
 	</div>
-	<div class="teleports">@raw{ render_settings["ssr"] ? this.container.teleports.join("") : "" }</div>
+	<div class="teleports">@raw{ render_provider.enable_ssr ? this.container.teleports.join("") : "" }</div>
 	
 	<script>
 		window["app_data"] = @json{{ this.container.exportData() }};
@@ -69,7 +85,8 @@
 				app_data["modules"],
 				Runtime.Map.from({
 					"environments": Runtime.Map.from(app_data["environments"]),
-					"tz": @json{ @.tz }
+					"tz": @json{ @.tz },
+					"tz_offset": @json{ 0 }
 				})
 			);
 		});
@@ -78,7 +95,7 @@
 </template>
 
 
-<template name="renderFooter">
+<template name="renderFooterComponents">
 	%var Dict d = @.callHook(AppHook::RENDER_FOOTER, { "components": [] });
 	%var Collection<string> components = d["components"];
 	%for (int i=0; i<components.count(); i++)
@@ -86,6 +103,11 @@
 		%var string class_name = components[i];
 		<{class_name} />
 	}
+</template>
+
+
+<template name="renderFooter">
+	%render static::renderFooterComponents();
 </template>
 
 

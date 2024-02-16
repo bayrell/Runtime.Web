@@ -51,12 +51,7 @@ class ResponseHook extends AppHook
 		if (not (response instanceof RenderResponse)) return;
 		if (response.content != null) return;
 		
-		/* Get class name core ui */
-		Map res = @.callHook(AppHook::CORE_UI, {
-			"class_name": classof CoreUI,
-		});
-		
-		string class_name = res.get("class_name");
+		string class_name = container.layout.getCoreUI();
 		if (class_name == null)
 		{
 			throw new RuntimeException("Class name is null");

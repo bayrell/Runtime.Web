@@ -24,6 +24,7 @@ use Runtime.Serializer;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
+use Runtime.Web.CoreUI;
 use Runtime.Web.PageModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
@@ -168,6 +169,12 @@ class LayoutModel extends BaseModel
 		
 		return params["class_name"];
 	}
+	
+	
+	/**
+	 * Returns Core UI
+	 */
+	string getCoreUI() => classof CoreUI;
 	
 	
 	/**

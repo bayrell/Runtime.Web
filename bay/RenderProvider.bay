@@ -31,9 +31,11 @@ use Runtime.Web.Hooks.AppHook;
 class RenderProvider extends BaseProvider
 {
 	var vue = null;
+	var layout = null;
+	var element = null;
 	string layout_data = "app_data";
 	string layout_name = "app_layout";
-	string selector = "#core_ui_root";
+	string selector = "core_ui_root";
 	bool break_start = false;
 	bool enable_ssr = true;
 	
@@ -46,6 +48,8 @@ class RenderProvider extends BaseProvider
 		parent(params);
 		if (params)
 		{
+			if (params.has("element")) this.element = params.get("element");
+			if (params.has("layout")) this.layout = params.get("layout");
 			if (params.has("layout_data")) this.layout_data = params.get("layout_data");
 			if (params.has("layout_name")) this.layout_name = params.get("layout_name");
 			if (params.has("selector")) this.selector = params.get("selector");
@@ -56,15 +60,25 @@ class RenderProvider extends BaseProvider
 	
 	
 	/**
+	 * Returns root element
+	 */
+	var getRootElement() => this.element ? this.element : document.getElementById(this.selector);
+	
+	
+	/**
 	 * Init provider
 	 */
 	async void init()
 	{
 		await parent::init();
 		
+		#ifdef FRONTEND then
+		
 		/* Create render container */
 		BaseApp app = @.getApp();
 		this.container = app.createRenderContainer();
+		
+		#endif
 	}
 	
 	
@@ -91,6 +105,8 @@ class RenderProvider extends BaseProvider
 	 */
 	void loadLayout()
 	{
+		if (this.layout != null) return;
+		
 		var Vue = window["Vue"];
 		
 		/* Get data */
@@ -109,9 +125,9 @@ class RenderProvider extends BaseProvider
 	
 	
 	/**
-	 * Start Vue App
+	 * Start App
 	 */
-	void startVueApp()
+	void startApp()
 	{
 		var Vue = window["Vue"];
 		fn registerLayout = null;
@@ -153,7 +169,7 @@ class RenderProvider extends BaseProvider
 		});
 		
 		/* Mount app */
-		this.vue.mount(this.selector, true);
+		this.vue.mount(this.getRootElement(), true);
 	}
 	
 	
@@ -164,6 +180,8 @@ class RenderProvider extends BaseProvider
 	{
 		await parent::start();
 		
+		#ifdef FRONTEND then
+		
 		/* Load layout */
 		this.loadLayout();
 		if (this.break_start)
@@ -171,8 +189,10 @@ class RenderProvider extends BaseProvider
 			return;
 		}
 		
-		/* Start Vue App */
-		this.startVueApp();
+		/* Start App */
+		this.startApp();
+		
+		#endif
 	}
 }
 
