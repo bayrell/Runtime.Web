@@ -1,4 +1,4 @@
-/*!
+<!--
  *  Bayrell Runtime Library
  *
  *  (c) Copyright 2016-2024 "Ildar Bikmamatov" <support@bayrell.org>
@@ -14,20 +14,27 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- */
+-->
 
-namespace Runtime.Web;
-
-use Runtime.lib;
-use Runtime.Web.BaseModel;
+<class name="Runtime.Web.DefaultLayout">
 
 
-class PageModel extends BaseModel
-{
-	void constructor(Dict params = null)
+<style>
+</style>
+
+
+<template>
+	%var string current_page = this.layout.getPageClassName();
+	%var string current_page_model = this.layout.current_page_model;
+	%if (current_page and current_page_model)
 	{
-		parent(params);
-		this.widget_name = static::getClassName();
-		this.model_path = ["widgets", this.widget_name];
+		<{current_page} @model=[ "widgets", current_page_model ] />
 	}
-}
+</template>
+
+
+<script>
+</script>
+
+
+</class>

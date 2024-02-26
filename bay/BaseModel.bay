@@ -22,6 +22,7 @@ use Runtime.lib;
 use Runtime.BaseObject;
 use Runtime.Serializer;
 use Runtime.Web.BaseModel;
+use Runtime.Web.BaseRoute;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteList;
@@ -77,6 +78,22 @@ class BaseModel extends BaseObject
 	
 	
 	/**
+	 * Route before
+	 */
+	async void onRouteBefore(BaseRoute route)
+	{
+	}
+	
+	
+	/**
+	 * Route after
+	 */
+	async void onRouteAfter(BaseRoute route)
+	{
+	}
+	
+	
+	/**
 	 * Load data
 	 */
 	async void loadData()
@@ -96,6 +113,7 @@ class BaseModel extends BaseObject
 	 */
 	void processFrontendData(Serializer serializer, Map data)
 	{
+		serializer.process(this, "component", data);
 		serializer.process(this, "widget_name", data);
 		serializer.process(this, "widgets", data);
 		if (serializer.isExport())

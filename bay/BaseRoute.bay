@@ -20,7 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Web.LayoutModel;
-use Runtime.Web.PageModel;
+use Runtime.Web.BasePageModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderResponse;
 use Runtime.Web.RouteInfo;
@@ -79,10 +79,11 @@ class BaseRoute extends BaseObject
 		}
 		
 		/* Setup page model */
-		string page_model_name = this.getPageModelName();
-		if (page_model_name)
+		string page_model_name = this.container.route.model;
+		if (page_model_name == "") page_model_name = this.getPageModelName();
+		if (page_model_name != "")
 		{
-			this.layout.setPageModel(page_model_name);
+			await this.initPageModel(page_model_name);
 		}
 	}
 	
@@ -92,7 +93,32 @@ class BaseRoute extends BaseObject
 	 */
 	async void onActionAfter()
 	{
+		BasePageModel page_model = this.layout.getPageModel();
+		if (page_model)
+		{
+			/* Load widget data */
+			await page_model.loadData();
+			
+			/* Call route after */
+			await page_model.onRouteAfter(this);
+		}
+		
+		/* Render page */
 		this.renderPage();
+	}
+	
+	
+	/**
+	 * Init page model
+	 */
+	async void initPageModel(string class_name)
+	{
+		/* Set page model */
+		this.layout.setPageModel(class_name);
+		
+		/* Route before */
+		BasePageModel page_model = this.layout.getPageModel();
+		await page_model.onRouteBefore(this);
 	}
 	
 	
@@ -121,6 +147,10 @@ class BaseRoute extends BaseObject
 	{
 		if (this.container.response == null)
 		{
+			/* Add layout class name */
+			this.container.layout.addComponent( this.container.layout.getLayoutClassName() );
+			
+			/* Create response */
 			string page_class_name = this.container.layout.getPageClassName();
 			this.container.response = new RenderResponse();
 			this.container.response.class_name = page_class_name;

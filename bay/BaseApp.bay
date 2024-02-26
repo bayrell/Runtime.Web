@@ -223,8 +223,11 @@ class BaseApp extends BaseObject
 		await container.base_route.onActionBefore();
 		
 		/* Call route */
-		Callback route = new Callback(container.base_route, method_name);
-		await rtl::apply(route);
+		if (method_name != "")
+		{
+			Callback route = new Callback(container.base_route, method_name);
+			await rtl::apply(route);
+		}
 		
 		/* Action after */
 		if (not container.base_route.isCancelRoute())

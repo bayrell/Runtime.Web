@@ -25,13 +25,14 @@ use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
 use Runtime.Web.CoreUI;
+use Runtime.Web.DefaultLayout;
 use Runtime.Web.PageModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.Hooks.AppHook;
 
 
-class LayoutModel extends BaseModel
+class BaseLayoutModel extends BaseModel
 {
 	string title = "";
 	string lang = "";
@@ -118,21 +119,30 @@ class LayoutModel extends BaseModel
 	string getPageClassName()
 	{
 		PageModel page_model = this.getPageModel();
-		return page_model.component;
+		return page_model ? page_model.component : "";
 	}
 	
 	
 	/**
 	 * Set current page model
 	 */
-	void setPageModel(string class_name)
+	PageModel setPageModel(string class_name)
 	{
+		PageModel page_model = this.getWidget(class_name);
+		
 		/* Create page model */
-		PageModel page_model = rtl::newInstance(class_name, [{
-			"parent_widget": this,
-			"widget_name": class_name,
-		}]);
-		this.current_page_model = page_model::getClassName();
+		if (page_model == null)
+		{
+			PageModel page_model = rtl::newInstance(class_name, [{
+				"parent_widget": this,
+				"widget_name": class_name,
+			}]);
+		}
+		
+		/* Change current page model */
+		this.current_page_model = class_name;
+		
+		return page_model;
 	}
 	
 	
@@ -159,7 +169,7 @@ class LayoutModel extends BaseModel
 	 */
 	string getLayoutClassName()
 	{
-		string layout_name = this.layout_name;
+		if (this.layout_name == "default") return classof DefaultLayout;
 		
 		Dict params = @.callHook(AppHook::LAYOUT_CLASS_NAME, {
 			"layout_name": this.layout_name,
@@ -196,7 +206,10 @@ class LayoutModel extends BaseModel
 	 */
 	void addComponent(string class_name)
 	{
-		this.components.push(class_name);
+		if (this.components.indexOf(class_name) == -1)
+		{
+			this.components.push(class_name);
+		}
 	}
 	
 	

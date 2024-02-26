@@ -25,6 +25,11 @@
 <use name="Runtime.Web.Hooks.AppHook" />
 
 
+<template name="renderSEO">
+	<title>{{ this.layout.title }}</title>
+</template>
+
+
 <template name="renderHeadComponents">
 	%var Dict d = @.callHook(AppHook::RENDER_HEAD, { "components": [] });
 	%var Collection<string> components = d["components"];
@@ -43,9 +48,15 @@
 </template>
 
 
+<template name="renderHeadAfter">
+</template>
+
+
 <template name="renderHead">
+	%render static::renderSEO();
 	%render static::renderHeadComponents();
 	%render static::renderCSS();
+	%render static::renderHeadAfter();
 </template>
 
 
@@ -60,8 +71,13 @@
 </template>
 
 
+<template name="renderBodyAfter">
+</template>
+
+
 <template name="renderBody">
 	%render static::renderBodyComponents();
+	%render static::renderBodyAfter();
 </template>
 
 
@@ -72,7 +88,9 @@
 	<div id={{ render_provider.selector }}>
 		<AppComponent @model=[] />
 	</div>
-	<div class="teleports">@raw{ render_provider.enable_ssr ? this.container.teleports.join("") : "" }</div>
+	<div class="teleports">@raw{
+		render_provider.enable_ssr ? this.container.teleports.join("") : ""
+	}</div>
 	
 	<script>
 		window["app_data"] = @json{{ this.container.exportData() }};
@@ -95,6 +113,10 @@
 </template>
 
 
+<template name="renderFooterAfter">
+</template>
+
+
 <template name="renderFooterComponents">
 	%var Dict d = @.callHook(AppHook::RENDER_FOOTER, { "components": [] });
 	%var Collection<string> components = d["components"];
@@ -108,17 +130,15 @@
 
 <template name="renderFooter">
 	%render static::renderFooterComponents();
+	%render static::renderFooterAfter();
 </template>
 
 
 <template>
 	<html lang={{ this.layout.lang }}>
 		<head>
-			<script>
-			window.$onReady=[];
-			function onReady(f){ window.$onReady.push(f) };
-			</script>
 			%render static::renderHead();
+			<script>window.$onReady=[];function onReady(f){ window.$onReady.push(f) };</script>
 		</head>
 		<body>
 			%render static::renderBody();
