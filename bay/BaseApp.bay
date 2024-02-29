@@ -21,8 +21,8 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.BaseProvider;
 use Runtime.Callback;
+use Runtime.Web.BaseLayoutModel;
 use Runtime.Web.Layout;
-use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteInfo;
@@ -67,7 +67,7 @@ class BaseApp extends BaseObject
 	/**
 	 * Create render container
 	 */
-	LayoutModel createLayout() => new LayoutModel();
+	BaseLayoutModel createLayout() => new BaseLayoutModel();
 	
 	
 	/**
