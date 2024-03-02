@@ -38,6 +38,8 @@ class RenderProvider extends BaseProvider
 	string selector = "core_ui_root";
 	bool break_start = false;
 	bool enable_ssr = true;
+	Map components = {};
+	Map listeners = {};
 	
 	
 	/**
@@ -56,6 +58,10 @@ class RenderProvider extends BaseProvider
 			if (params.has("enable_ssr")) this.enable_ssr = params.get("enable_ssr");
 			if (params.has("break_start")) this.break_start = params.get("break_start");
 		}
+		
+		/* Add events */
+		this.registerListener("onMounted", method this.registerWidget);
+		this.registerListener("onUnmounted", method this.cancelWidget);
 	}
 	
 	
@@ -194,6 +200,63 @@ class RenderProvider extends BaseProvider
 		
 		#endif
 	}
+	
+	
+	/**
+	 * Register listener
+	 */
+	void registerListener(string event_name, var listener)
+	{
+		if (not this.listeners.has(event_name))
+		{
+			this.listeners.set(event_name, []);
+		}
+		Vector events = this.listeners.get(event_name);
+		events.push(listener);
+	}
+	
+	
+	/**
+	 * Global event
+	 */
+	void event(string event_name, var component)
+	{
+		if (not this.listeners.has(event_name))
+			return;
+		
+		Vector events = this.listeners.get(event_name);
+		for (int i=0; i<events.count(); i++)
+		{
+			fn callback = events.get(i);
+			rtl::apply(callback, [component]);
+		}
+	}
+	
+	
+	/**
+	 * Register widget
+	 */
+	void registerWidget(var component)
+	{
+		string model_path = rs::join("|", component.model.model_path);
+		if (model_path)
+		{
+			this.components.set(model_path, component);
+		}
+	}
+	
+	
+	/**
+	 * Cancel widget
+	 */
+	void cancelWidget(var component)
+	{
+		string model_path = rs::join("|", component.model.model_path);
+		if (model_path)
+		{
+			this.components.remove(model_path);
+		}
+	}
 }
 
 #ifcode ES6 then
@@ -212,30 +275,51 @@ Runtime.Web.Component.beforeCreate = function ()
 }
 Runtime.Web.Component.created = function ()
 {
-	return this.onCreated();
+	var provider = global_context.provider("Runtime.Web.RenderProvider");
+	provider.event("onCreatedBefore", this);
+	this.onCreated();
+	provider.event("onCreated", this);
 }
 Runtime.Web.Component.beforeMount = function ()
 {
-	return this.onBeforeMount();
+	var provider = global_context.provider("Runtime.Web.RenderProvider");
+	provider.event("onBeforeMountBefore", this);
+	this.onBeforeMount();
+	provider.event("onBeforeMount", this);
 }
 Runtime.Web.Component.mounted = function ()
 {
-	return this.onMounted();
+	var provider = global_context.provider("Runtime.Web.RenderProvider");
+	provider.event("onMountedBefore", this);
+	this.onMounted();
+	provider.event("onMounted", this);
 }
 Runtime.Web.Component.beforeUpdate = function ()
 {
-	return this.onBeforeUpdate();
+	var provider = global_context.provider("Runtime.Web.RenderProvider");
+	provider.event("onBeforeUpdateBefore", this);
+	this.onBeforeUpdate();
+	provider.event("onBeforeUpdate", this);
 }
 Runtime.Web.Component.updated = function ()
 {
-	return this.onUpdated();
+	var provider = global_context.provider("Runtime.Web.RenderProvider");
+	provider.event("onUpdatedBefore", this);
+	this.onUpdated();
+	provider.event("onUpdated", this);
 }
 Runtime.Web.Component.beforeUnmount = function ()
 {
-	return this.onBeforeUnmount();
+	var provider = global_context.provider("Runtime.Web.RenderProvider");
+	provider.event("onBeforeUnmountBefore", this);
+	this.onBeforeUnmount();
+	provider.event("onBeforeUnmount", this);
 }
 Runtime.Web.Component.unmounted = function ()
 {
-	return this.onUnmounted();
+	var provider = global_context.provider("Runtime.Web.RenderProvider");
+	provider.event("onUnmountedBefore", this);
+	this.onUnmounted();
+	provider.event("onUnmounted", this);
 }
 #endif
