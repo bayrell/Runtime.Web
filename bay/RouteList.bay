@@ -172,7 +172,7 @@ class RouteList extends BaseProvider
 		if (matches)
 		{
 			matches = matches.get(0, null);
-			matches.removeItem(0);
+			matches.remove(0);
 		}
 		
 		/* Call hook */

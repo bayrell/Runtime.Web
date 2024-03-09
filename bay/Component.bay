@@ -100,11 +100,23 @@ var getRef(string name)
 /**
  * Emit message
  */
-var emit(string event, var obj=null)
+void emit(string event, var obj=null)
 {
 	#switch
 	#case ifcode JAVASCRIPT then
-	return this.$emit.apply(this, arguments);
+	this.$emit.apply(this, arguments);
+	#endswitch
+}
+
+
+/**
+ * Reload component
+ */
+void reload(string event, var obj=null)
+{
+	#switch
+	#case ifcode JAVASCRIPT then
+	this.$forceUpdate();
 	#endswitch
 }
 

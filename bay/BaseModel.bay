@@ -23,8 +23,10 @@ use Runtime.BaseObject;
 use Runtime.Serializer;
 use Runtime.Web.BaseModel;
 use Runtime.Web.BaseRoute;
+use Runtime.Web.Component;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
 
@@ -62,6 +64,41 @@ class BaseModel extends BaseObject
 		{
 			this.layout.addComponent(this.component);
 		}
+	}
+	
+	
+	/**
+	 * Get component
+	 */
+	void getComponent()
+	{
+		RenderProvider provider = @.provider(classof RenderProvider);
+		string model_path = rs::join("|", this.model_path);
+		Component component = provider.components.get(model_path);
+		return component;
+	}
+	
+	
+	/**
+	 * Reload component
+	 */
+	void reloadComponent()
+	{
+		Component component = this.getComponent();
+		if (component)
+		{
+			component.reload();
+		}
+	}
+	
+	
+	/**
+	 * Remove widget
+	 */
+	void removeWidget(BaseModel widget)
+	{
+		string widget_name = widget.widget_name;
+		this.widgets.remove(widget_name);
 	}
 	
 	
