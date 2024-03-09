@@ -23,6 +23,7 @@ use Runtime.Serializer;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.AppComponent;
 use Runtime.Web.BaseApp;
+use Runtime.Web.Events;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.Hooks.AppHook;
@@ -39,7 +40,7 @@ class RenderProvider extends BaseProvider
 	bool break_start = false;
 	bool enable_ssr = true;
 	Map components = {};
-	Map listeners = {};
+	Events events = new Events;
 	
 	
 	/**
@@ -60,8 +61,8 @@ class RenderProvider extends BaseProvider
 		}
 		
 		/* Add events */
-		this.registerListener("onMounted", method this.registerWidget);
-		this.registerListener("onUnmounted", method this.cancelWidget);
+		this.events.add("onMounted", method this.registerWidget);
+		this.events.add("onUnmounted", method this.cancelWidget);
 	}
 	
 	
@@ -203,37 +204,6 @@ class RenderProvider extends BaseProvider
 	
 	
 	/**
-	 * Register listener
-	 */
-	void registerListener(string event_name, var listener)
-	{
-		if (not this.listeners.has(event_name))
-		{
-			this.listeners.set(event_name, []);
-		}
-		Vector events = this.listeners.get(event_name);
-		events.push(listener);
-	}
-	
-	
-	/**
-	 * Global event
-	 */
-	void event(string event_name, var component)
-	{
-		if (not this.listeners.has(event_name))
-			return;
-		
-		Vector events = this.listeners.get(event_name);
-		for (int i=0; i<events.count(); i++)
-		{
-			fn callback = events.get(i);
-			rtl::apply(callback, [component]);
-		}
-	}
-	
-	
-	/**
 	 * Register widget
 	 */
 	void registerWidget(var component)
@@ -276,50 +246,50 @@ Runtime.Web.Component.beforeCreate = function ()
 Runtime.Web.Component.created = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
-	provider.event("onCreatedBefore", this);
+	provider.events.emit("onCreatedBefore", [this]);
 	this.onCreated();
-	provider.event("onCreated", this);
+	provider.events.emit("onCreated", [this]);
 }
 Runtime.Web.Component.beforeMount = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
-	provider.event("onBeforeMountBefore", this);
+	provider.events.emit("onBeforeMountBefore", [this]);
 	this.onBeforeMount();
-	provider.event("onBeforeMount", this);
+	provider.events.emit("onBeforeMount", [this]);
 }
 Runtime.Web.Component.mounted = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
-	provider.event("onMountedBefore", this);
+	provider.events.emit("onMountedBefore", [this]);
 	this.onMounted();
-	provider.event("onMounted", this);
+	provider.events.emit("onMounted", [this]);
 }
 Runtime.Web.Component.beforeUpdate = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
-	provider.event("onBeforeUpdateBefore", this);
+	provider.events.emit("onBeforeUpdateBefore", [this]);
 	this.onBeforeUpdate();
-	provider.event("onBeforeUpdate", this);
+	provider.events.emit("onBeforeUpdate", [this]);
 }
 Runtime.Web.Component.updated = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
-	provider.event("onUpdatedBefore", this);
+	provider.events.emit("onUpdatedBefore", [this]);
 	this.onUpdated();
-	provider.event("onUpdated", this);
+	provider.events.emit("onUpdated", [this]);
 }
 Runtime.Web.Component.beforeUnmount = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
-	provider.event("onBeforeUnmountBefore", this);
+	provider.events.emit("onBeforeUnmountBefore", [this]);
 	this.onBeforeUnmount();
-	provider.event("onBeforeUnmount", this);
+	provider.events.emit("onBeforeUnmount", [this]);
 }
 Runtime.Web.Component.unmounted = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
-	provider.event("onUnmountedBefore", this);
+	provider.events.emit("onUnmountedBefore", [this]);
 	this.onUnmounted();
-	provider.event("onUnmounted", this);
+	provider.events.emit("onUnmounted", [this]);
 }
 #endif

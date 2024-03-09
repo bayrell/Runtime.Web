@@ -25,6 +25,18 @@
 <use name="Runtime.Web.RouteList" />
 
 
+<template name="renderWidget" args="BaseModel widget">
+	%if (widget)
+	{
+		%set string component = widget.component;
+		%if (component)
+		{
+			<{component} @model={{ widget }} />
+		}
+	}
+</template>
+
+
 <template></template>
 
 

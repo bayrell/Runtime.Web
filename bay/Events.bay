@@ -35,7 +35,7 @@ class Events extends BaseObject
 	void add(string event_name, Callback f)
 	{
 		if (not this.items.has(event_name)) this.items.set(event_name, []);
-		if (f.exists())
+		if (rtl::isCallable(f))
 		{
 			this.items.get(event_name).append(f);
 		}
@@ -43,9 +43,9 @@ class Events extends BaseObject
 	
 	
 	/**
-	 * Emmit event
+	 * Emit event
 	 */
-	void emmit(string event_name, Collection attrs = null)
+	void emit(string event_name, Collection attrs = null)
 	{
 		if (not this.items.has(event_name)) return;
 		Vector<Callback> events = this.items.get(event_name);
