@@ -68,6 +68,7 @@ class BaseLayoutModel extends BaseModel
 	{
 		parent(params);
 		this.layout = this;
+		this.model_path = ["layout"].toCollection();
 	}
 	
 	

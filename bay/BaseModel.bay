@@ -56,7 +56,9 @@ class BaseModel extends BaseObject
 				BaseModel parent_widget = params.get("parent_widget");
 				this.layout = parent_widget.layout;
 				this.parent_widget = parent_widget;
-				this.model_path = parent_widget.model_path.concat(["widgets", this.widget_name]);
+				this.model_path = parent_widget
+					.model_path.concat(["widgets", this.widget_name]).toCollection()
+				;
 				parent_widget.widgets.set(this.widget_name, this);
 			}
 		}
@@ -70,13 +72,26 @@ class BaseModel extends BaseObject
 	/**
 	 * Get component
 	 */
-	void getComponent()
+	void getComponent(string model_path = "")
 	{
 		RenderProvider provider = @.provider(classof RenderProvider);
-		string model_path = rs::join("|", this.model_path);
+		if (model_path == "") model_path = this.getModelPathStr();
 		Component component = provider.components.get(model_path);
 		return component;
 	}
+	
+	
+	/**
+	 * Returns model path
+	 */
+	Collection getModelPath() => this.model_path.slice();
+	
+	
+	/**
+	 * Returns model path
+	 */
+	string getModelPathStr() => rs::join("|", this.model_path);
+	string getModelPathString() => rs::join("|", this.model_path);
 	
 	
 	/**

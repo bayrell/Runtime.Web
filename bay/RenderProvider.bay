@@ -61,8 +61,9 @@ class RenderProvider extends BaseProvider
 		}
 		
 		/* Add events */
-		this.events.add("onMounted", method this.registerWidget);
-		this.events.add("onUnmounted", method this.cancelWidget);
+		this.events.add("onBeforeUpdate", method this.updateWidget);
+		this.events.add("onMounted", method this.addWidget);
+		this.events.add("onUnmount", method this.removeWidget);
 	}
 	
 	
@@ -204,27 +205,58 @@ class RenderProvider extends BaseProvider
 	
 	
 	/**
-	 * Register widget
+	 * Add widget
 	 */
-	void registerWidget(var component)
+	void addWidget(var component)
 	{
-		string model_path = rs::join("|", component.model.model_path);
-		if (model_path)
-		{
-			this.components.set(model_path, component);
-		}
+		string model_path = component.model.getModelPathString();
+		this.components.set(model_path, component);
+		component._model_path = model_path;
+		/*log("add", model_path);*/
 	}
 	
 	
 	/**
-	 * Cancel widget
+	 * Remove widget
 	 */
-	void cancelWidget(var component)
+	void removeWidget(var component)
 	{
-		string model_path = rs::join("|", component.model.model_path);
-		if (model_path)
+		if (not rtl::exists(component._model_path)) return;
+		/*log("remove", component._model_path);*/
+		this.components.remove(component._model_path);
+		component._model_path = null;
+	}
+	
+	
+	/**
+	 * Update widget
+	 */
+	void updateWidget(var component)
+	{
+		var old_component = null;
+		string model_path_old = component._model_path;
+		string model_path_new = component.model.getModelPathString();
+		
+		if (model_path_new != model_path_old)
 		{
-			this.components.remove(model_path);
+			/* Remove old component */
+			old_component = model_path_old ? this.components.get(model_path_old) : null;
+			if (old_component)
+			{
+				this.removeWidget(old_component);
+			}
+			
+			/* Remove new component */
+			old_component = model_path_new ? this.components.get(model_path_new) : null;
+			if (old_component)
+			{
+				this.removeWidget(old_component);
+			}
+			
+			/* Add new component */
+			this.addWidget(component);
+			
+			/*log("update", model_path_old, "->", model_path_new);*/
 		}
 	}
 }
@@ -288,8 +320,8 @@ Runtime.Web.Component.beforeUnmount = function ()
 Runtime.Web.Component.unmounted = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
-	provider.events.emit("onUnmountedBefore", [this]);
-	this.onUnmounted();
-	provider.events.emit("onUnmounted", [this]);
+	provider.events.emit("onUnmountBefore", [this]);
+	this.onUnmount();
+	provider.events.emit("onUnmount", [this]);
 }
 #endif
