@@ -221,6 +221,7 @@ class RenderProvider extends BaseProvider
 	 */
 	void removeWidget(var component)
 	{
+		if (not rtl::exists(component)) return;
 		if (not rtl::exists(component._model_path)) return;
 		/*log("remove", component._model_path);*/
 		this.components.remove(component._model_path);

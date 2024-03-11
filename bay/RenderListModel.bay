@@ -1,0 +1,124 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2024 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.Serializer;
+use Runtime.Web.BaseModel;
+use Runtime.Web.RenderList;
+
+
+class RenderListModel extends BaseModel
+{
+	string widget_name = "render_list";
+	string component = classof RenderList;
+	Vector<string> items = [];
+	
+	
+	/**
+	 * Find widget position
+	 */
+	int findWidget(BaseModel widget) => widget ? this.items.find
+	(
+		bool (Collection item) use (widget)
+		{
+			string item_path = rs::join("|", item);
+			string widget_path = rs::join("|", widget.model_path);
+			return item_path == widget_path;
+		}
+	) : -1;
+	
+	
+	/**
+	 * Add widget item to render
+	 */
+	BaseModel addItem(BaseModel new_widget, BaseModel widget = null)
+	{
+		int pos = this.findWidget(widget);
+		if (pos == -1)
+		{
+			this.items.push(new_widget.model_path.copy());
+		}
+		else
+		{
+			this.items.insert(pos + 1, new_widget.model_path.copy());
+		}
+		return new_widget;
+	}
+	
+	
+	/**
+	 * Remove widget item
+	 */
+	void removeItem(BaseModel widget)
+	{
+		int pos = this.items.find
+		(
+			bool (BaseModel item) use (widget)
+			{
+				string item_path = rs::join("|", item);
+				string widget_path = rs::join("|", widget.model_path);
+				return item_path == widget_path;
+			}
+		);
+		this.items.remove(pos);
+	}
+	
+	
+	/**
+	 * Remove widget
+	 */
+	void removeWidget(BaseModel widget)
+	{
+		parent(widget);
+		this.removeItem(widget);
+	}
+	
+	
+	/**
+	 * Add widgets
+	 */
+	void addItems(Collection items)
+	{
+		if (items == null) return;
+		
+		for (int i=0; i<items.count(); i++)
+		{
+			/* Get item */
+			Map item = items.get(i).copy();
+			item.set("parent_widget", this);
+			
+			/* Create widget */
+			string class_name = item.get("class_name");
+			BaseModel widget = rtl::newInstance(class_name, [item]);
+			
+			/* Load sub items */
+			if (widget instanceof RenderListModel)
+			{
+				Collection childs = item.get("items");
+				if (childs)
+				{
+					widget.addItems(childs);
+				}
+			}
+			
+			/* Add widget to list */
+			this.addItem(widget);
+		}
+	}
+}
