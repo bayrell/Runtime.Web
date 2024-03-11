@@ -135,7 +135,7 @@ class RenderProvider extends BaseProvider
 	/**
 	 * Start App
 	 */
-	void startApp()
+	void startApp(Dict options)
 	{
 		var Vue = window["Vue"];
 		fn registerLayout = null;
@@ -152,13 +152,12 @@ class RenderProvider extends BaseProvider
 		#endif
 		
 		/* Get props */
-		var component = rtl::find_class(classof AppComponent);
-		Dict props = {
-			"model": this.layout,
-		};
+		var component = rtl::find_class(options.get("component"));
+		Dict props = options.get("props");
 		
 		/* Create vue app */
-		if (this.enable_ssr)
+		bool enable_ssr = options.get("enable_ssr", false);
+		if (enable_ssr)
 		{
 			this.vue = Vue.createSSRApp(component, props.toObject());
 		}
@@ -177,7 +176,7 @@ class RenderProvider extends BaseProvider
 		});
 		
 		/* Mount app */
-		this.vue.mount(this.getRootElement(), true);
+		this.vue.mount(options.get("element"), true);
 	}
 	
 	
@@ -198,9 +197,26 @@ class RenderProvider extends BaseProvider
 		}
 		
 		/* Start App */
-		this.startApp();
+		this.startApp({
+			"element": this.getRootElement(),
+			"component": classof AppComponent
+			"enable_ssr": this.enable_ssr,
+			"props": {
+				"model": this.layout,
+			},
+		});
 		
 		#endif
+	}
+	
+	
+	/**
+	 * Next tick
+	 */
+	static async void nextTick(fn f)
+	{
+		var Vue = window["Vue"];
+		await Vue.nextTick(f);
 	}
 	
 	
