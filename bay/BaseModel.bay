@@ -114,6 +114,7 @@ class BaseModel extends BaseObject
 	{
 		string widget_name = widget.widget_name;
 		this.widgets.set(widget_name, widget);
+		widget.parent_widget = this;
 	}
 	
 	
@@ -124,6 +125,7 @@ class BaseModel extends BaseObject
 	{
 		string widget_name = widget.widget_name;
 		this.widgets.remove(widget_name);
+		widget.parent_widget = null;
 	}
 	
 	
