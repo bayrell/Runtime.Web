@@ -24,8 +24,7 @@
 <template name="renderItems">
 	%for (int i=0; i<this.model.items.count(); i++)
 	{
-		%set Collection<string> model_path = this.model.items.get(i);
-		%set BaseModel widget = this.layout.model(model_path);
+		%set BaseModel widget = this.model.items.get(i);
 		%render this.renderWidget(widget);
 	}
 </template>

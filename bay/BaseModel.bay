@@ -108,6 +108,16 @@ class BaseModel extends BaseObject
 	
 	
 	/**
+	 * Add widget
+	 */
+	void addWidget(BaseModel widget)
+	{
+		string widget_name = widget.widget_name;
+		this.widgets.set(widget_name, widget);
+	}
+	
+	
+	/**
 	 * Remove widget
 	 */
 	void removeWidget(BaseModel widget)

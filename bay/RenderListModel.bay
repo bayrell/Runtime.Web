@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.lib;
 use Runtime.Serializer;
 use Runtime.Web.BaseModel;
 use Runtime.Web.RenderList;
@@ -27,37 +28,54 @@ class RenderListModel extends BaseModel
 {
 	string widget_name = "render_list";
 	string component = classof RenderList;
-	Vector<string> items = [];
+	Vector<BaseModel> items = [];
 	
 	
 	/**
 	 * Find widget position
 	 */
-	int findWidget(BaseModel widget) => widget ? this.items.find
-	(
-		bool (Collection item) use (widget)
-		{
-			string item_path = rs::join("|", item);
-			string widget_path = rs::join("|", widget.model_path);
-			return item_path == widget_path;
-		}
-	) : -1;
+	int findWidget(BaseModel widget) =>
+		widget ? this.items.find(lib::equal(widget)) : -1;
 	
 	
 	/**
 	 * Add widget item to render
 	 */
-	BaseModel addItem(BaseModel new_widget, BaseModel widget = null)
+	BaseModel addItem(BaseModel new_widget)
+	{
+		this.items.push(new_widget);
+		return new_widget;
+	}
+	
+	
+	/**
+	 * Insert item
+	 */
+	BaseModel insertItem(BaseModel new_widget, int pos)
+	{
+		this.items.insert(pos, new_widget);
+		return new_widget;
+	}
+	
+	
+	/**
+	 * Add widget item after
+	 */
+	BaseModel addItemAfter(BaseModel new_widget, BaseModel widget)
 	{
 		int pos = this.findWidget(widget);
-		if (pos == -1)
-		{
-			this.items.push(new_widget.model_path.copy());
-		}
-		else
-		{
-			this.items.insert(pos + 1, new_widget.model_path.copy());
-		}
+		this.items.insert(pos + 1, new_widget);
+		return new_widget;
+	}
+	
+	
+	/**
+	 * Add widget item before
+	 */
+	BaseModel addItemBefore(BaseModel new_widget, BaseModel widget)
+	{
+		int pos = this.findWidget(widget);
+		this.items.insert(pos, new_widget);
 		return new_widget;
 	}
 	
@@ -67,15 +85,7 @@ class RenderListModel extends BaseModel
 	 */
 	void removeItem(BaseModel widget)
 	{
-		int pos = this.items.find
-		(
-			bool (BaseModel item) use (widget)
-			{
-				string item_path = rs::join("|", item);
-				string widget_path = rs::join("|", widget.model_path);
-				return item_path == widget_path;
-			}
-		);
+		int pos = this.findWidget(widget);
 		this.items.remove(pos);
 	}
 	

@@ -23,6 +23,7 @@ use Runtime.Serializer;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.AppComponent;
 use Runtime.Web.BaseApp;
+use Runtime.Web.BaseModel;
 use Runtime.Web.Events;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
@@ -41,6 +42,12 @@ class RenderProvider extends BaseProvider
 	bool enable_ssr = true;
 	Map components = {};
 	Events events = new Events;
+	
+	
+	/**
+	 * Returns instance
+	 */
+	static RenderProvider instance() => @.provider(classof RenderProvider);
 	
 	
 	/**
@@ -137,6 +144,7 @@ class RenderProvider extends BaseProvider
 	 */
 	void startApp(Dict options)
 	{
+		var vue_app = null;
 		var Vue = window["Vue"];
 		fn registerLayout = null;
 		
@@ -145,7 +153,7 @@ class RenderProvider extends BaseProvider
 		{
 			return {
 				install: () => {
-					this.vue.config.globalProperties.$layout = layout;
+					vue_app.config.globalProperties.$layout = layout;
 				},
 			};
 		};
@@ -159,24 +167,26 @@ class RenderProvider extends BaseProvider
 		bool enable_ssr = options.get("enable_ssr", false);
 		if (enable_ssr)
 		{
-			this.vue = Vue.createSSRApp(component, props.toObject());
+			vue_app = Vue.createSSRApp(component, props.toObject());
 		}
 		else
 		{
-			this.vue = Vue.createApp(component, props.toObject());
+			vue_app = Vue.createApp(component, props.toObject());
 		}
 		
 		/* Register layout  */
-		this.vue.use(registerLayout(this.layout));
+		vue_app.use(registerLayout(this.layout));
 		
 		/* Register other modules */
 		await @.callHookAsync(AppHook::VUE_MODULES, {
 			"render_provider": this,
-			"vue": this.vue,
+			"vue": vue_app,
 		});
 		
 		/* Mount app */
-		this.vue.mount(options.get("element"), true);
+		vue_app.mount(options.get("element"), true);
+		
+		return vue_app;
 	}
 	
 	
@@ -197,7 +207,7 @@ class RenderProvider extends BaseProvider
 		}
 		
 		/* Start App */
-		this.startApp({
+		this.vue = this.startApp({
 			"element": this.getRootElement(),
 			"component": classof AppComponent
 			"enable_ssr": this.enable_ssr,
@@ -275,6 +285,28 @@ class RenderProvider extends BaseProvider
 			
 			/*log("update", model_path_old, "->", model_path_new);*/
 		}
+	}
+	
+	
+	/**
+	 * Update model path
+	 */
+	static void updateModelPath(BaseModel widget, Collection new_model_path)
+	{
+		widget.model_path = new_model_path.slice();
+		
+		/* Update widgets */
+		widget.widgets.each(
+			void (BaseModel item) use (widget)
+			{
+				RenderProvider::updateModelPath(
+					item,
+					widget.model_path.concat(
+						["widgets", item.widget_name]
+					)
+				);
+			}
+		);
 	}
 }
 
