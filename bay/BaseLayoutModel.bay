@@ -170,11 +170,12 @@ class BaseLayoutModel extends BaseModel
 	 */
 	string getLayoutClassName()
 	{
-		if (this.layout_name == "default") return classof DefaultLayout;
+		string class_name = "";
+		if (this.layout_name == "default") class_name = classof DefaultLayout;
 		
 		Dict params = @.callHook(AppHook::LAYOUT_CLASS_NAME, {
 			"layout_name": this.layout_name,
-			"class_name": "",
+			"class_name": class_name,
 		});
 		
 		return params["class_name"];

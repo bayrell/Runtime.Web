@@ -44,6 +44,7 @@ class AppHook extends BaseHook
 	static const string RENDER_PROVIDER_SETTINGS = "runtime.web.app::render_provider_settings";
 	static const string RESPONSE = "runtime.web.app::response";
 	static const string ROUTES_INIT = "runtime.web.app::routes_init";
+	static const string ROUTE_AFTER = "runtime.web.app::route_after";
 	static const string ROUTE_BEFORE = "runtime.web.app::route_before";
 	static const string VUE_MODULES = "runtime.web.app::vue_modules";
 	
@@ -73,6 +74,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::RENDER_PROVIDER_SETTINGS) return "render_provider_settings";
 		if (hook_name == static::RESPONSE) return "response";
 		if (hook_name == static::ROUTES_INIT) return "routes_init";
+		if (hook_name == static::ROUTE_AFTER) return "route_after";
 		if (hook_name == static::ROUTE_BEFORE) return "route_before";
 		if (hook_name == static::VUE_MODULES) return "vue_modules";
 		return "";
@@ -197,6 +199,12 @@ class AppHook extends BaseHook
 	 * Routes init
 	 */
 	async void routes_init(Map params){}
+	
+	
+	/**
+	 * Route after
+	 */
+	async void route_after(Map params){}
 	
 	
 	/**

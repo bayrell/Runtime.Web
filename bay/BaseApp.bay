@@ -22,6 +22,7 @@ use Runtime.BaseObject;
 use Runtime.BaseProvider;
 use Runtime.Callback;
 use Runtime.Web.BaseLayoutModel;
+use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
@@ -191,7 +192,7 @@ class BaseApp extends BaseObject
 		await this.callRoute(container);
 		
 		/* Call route after */
-		await @.callHookAsync(AppHook::RESPONSE, {
+		await @.callHookAsync(AppHook::ROUTE_AFTER, {
 			"container": container,
 		});
 	}
@@ -209,12 +210,21 @@ class BaseApp extends BaseObject
 		}
 		if (container.route == null) return;
 		if (container.response != null) return;
-		if (container.route.method == null) return;
-		if (not (container.route.method instanceof Collection)) return;
-		if (container.route.method.count() != 2) return;
+		if (container.route.method == null and container.route.model == null) return;
 		
-		string class_name = container.route.method.get(0);
-		string method_name = container.route.method.get(1);
+		/* Setup route */
+		string class_name = classof BaseRoute;
+		string method_name = "actionIndex";
+		
+		if (
+			container.route.method != null and
+			container.route.method instanceof Collection and
+			container.route.method.count() == 2
+		)
+		{
+			class_name = container.route.method.get(0);
+			method_name = container.route.method.get(1);
+		}
 		
 		/* Create route */
 		container.base_route = rtl::newInstance(class_name, [container]);
@@ -346,6 +356,11 @@ class BaseApp extends BaseObject
 	 */
 	async void responseBackend(RenderContainer container)
 	{
+		/* Call response */
+		await @.callHookAsync(AppHook::RESPONSE, {
+			"container": container,
+		});
+		
 		#ifcode PHP then
 		
 		$response = $container->response;
