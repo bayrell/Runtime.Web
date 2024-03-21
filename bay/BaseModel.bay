@@ -37,7 +37,7 @@ class BaseModel extends BaseObject
 	string component = "";
 	string widget_name = "";
 	Map widgets = {};
-	Vector<string> model_path = [];
+	Vector<string> model_path = null;
 	bool is_data_loaded = false;
 	
 	
@@ -47,22 +47,13 @@ class BaseModel extends BaseObject
 	void constructor(Dict params = null)
 	{
 		parent();
-		if (params)
-		{
-			if (params.has("layout")) this.layout = params.get("layout");
-			if (params.has("component")) this.component = params.get("component");
-			if (params.has("widget_name")) this.widget_name = params.get("widget_name");
-			if (params.has("parent_widget"))
-			{
-				BaseModel parent_widget = params.get("parent_widget");
-				this.layout = parent_widget.layout;
-				this.parent_widget = parent_widget;
-				this.model_path = parent_widget
-					.model_path.concat(["widgets", this.widget_name]).toCollection()
-				;
-				parent_widget.widgets.set(this.widget_name, this);
-			}
-		}
+		
+		/* Setup widget params */
+		this.setup(params);
+		
+		/* Init widget settings */
+		this.initWidget();
+		
 		if (this.layout != null and this.component != "")
 		{
 			this.layout.addComponent(this.component);
@@ -71,14 +62,32 @@ class BaseModel extends BaseObject
 	
 	
 	/**
-	 * Get component
+	 * Setup widget params
 	 */
-	void getComponent(string model_path = "")
+	void setup(Dict params)
 	{
-		RenderProvider provider = @.provider(classof RenderProvider);
-		if (model_path == "") model_path = this.getModelPathStr();
-		Component component = provider.components.get(model_path);
-		return component;
+		if (params == null) return;
+		if (params.has("layout")) this.layout = params.get("layout");
+		if (params.has("component")) this.component = params.get("component");
+		if (params.has("widget_name")) this.widget_name = params.get("widget_name");
+		if (params.has("parent_widget"))
+		{
+			BaseModel parent_widget = params.get("parent_widget");
+			this.layout = parent_widget.layout;
+			this.parent_widget = parent_widget;
+			this.model_path = parent_widget.model_path
+				.concat(["widgets", this.widget_name]).toCollection()
+			;
+			parent_widget.widgets.set(this.widget_name, this);
+		}
+	}
+	
+	
+	/**
+	 * Init widget settings
+	 */
+	void initWidget()
+	{
 	}
 	
 	
@@ -91,42 +100,18 @@ class BaseModel extends BaseObject
 	/**
 	 * Returns model path
 	 */
-	string getModelPathStr() => rs::join("|", this.model_path);
-	string getModelPathString() => rs::join("|", this.model_path);
-	
-	
-	/**
-	 * Reload component
-	 */
-	void reloadComponent()
-	{
-		Component component = this.getComponent();
-		if (component)
-		{
-			component.reload();
-		}
-	}
+	string getModelPathString() => this.model_path ? rs::join("|", this.model_path) : "";
 	
 	
 	/**
 	 * Add widget
 	 */
-	void addWidget(BaseModel widget)
+	BaseModel addWidget(string class_name, Map params = null)
 	{
-		string widget_name = widget.widget_name;
-		this.widgets.set(widget_name, widget);
-		widget.parent_widget = this;
-	}
-	
-	
-	/**
-	 * Remove widget
-	 */
-	void removeWidget(BaseModel widget)
-	{
-		string widget_name = widget.widget_name;
-		this.widgets.remove(widget_name);
-		widget.parent_widget = null;
+		if (params == null) params = {};
+		params.set("parent_widget", this);
+		BaseModel widget = rtl::newInstance(class_name, [params]);
+		return widget;
 	}
 	
 	

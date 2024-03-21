@@ -32,103 +32,34 @@ class RenderListModel extends BaseModel
 	
 	
 	/**
-	 * Find widget position
+	 * Add widget
 	 */
-	int findWidget(BaseModel widget) =>
-		widget ? this.items.find(lib::equal(widget)) : -1;
-	
-	
-	/**
-	 * Add widget item to render
-	 */
-	BaseModel addItem(BaseModel new_widget)
+	BaseModel addWidget(string class_name, Map params = null)
 	{
-		this.items.push(new_widget);
-		return new_widget;
+		BaseModel widget = parent(class_name, params);
+		this.addItem(widget);
+		return widget;
 	}
 	
 	
 	/**
-	 * Insert item
+	 * Add item
 	 */
-	BaseModel insertItem(BaseModel new_widget, int pos)
+	BaseModel addItem(BaseModel widget)
 	{
-		this.items.insert(pos, new_widget);
-		return new_widget;
+		this.items.push(widget);
+		return widget;
 	}
 	
 	
 	/**
-	 * Add widget item after
+	 * Returns button by index
 	 */
-	BaseModel addItemAfter(BaseModel new_widget, BaseModel widget)
-	{
-		int pos = this.findWidget(widget);
-		this.items.insert(pos + 1, new_widget);
-		return new_widget;
-	}
+	BaseModel get(int index) => this.items.get(index);
 	
 	
 	/**
-	 * Add widget item before
+	 * Returns items count
 	 */
-	BaseModel addItemBefore(BaseModel new_widget, BaseModel widget)
-	{
-		int pos = this.findWidget(widget);
-		this.items.insert(pos, new_widget);
-		return new_widget;
-	}
-	
-	
-	/**
-	 * Remove widget item
-	 */
-	void removeItem(BaseModel widget)
-	{
-		int pos = this.findWidget(widget);
-		this.items.remove(pos);
-	}
-	
-	
-	/**
-	 * Remove widget
-	 */
-	void removeWidget(BaseModel widget)
-	{
-		parent(widget);
-		this.removeItem(widget);
-	}
-	
-	
-	/**
-	 * Add widgets
-	 */
-	void addItems(Collection items)
-	{
-		if (items == null) return;
-		
-		for (int i=0; i<items.count(); i++)
-		{
-			/* Get item */
-			Map item = items.get(i).copy();
-			item.set("parent_widget", this);
-			
-			/* Create widget */
-			string class_name = item.get("class_name");
-			BaseModel widget = rtl::newInstance(class_name, [item]);
-			
-			/* Load sub items */
-			if (widget instanceof RenderListModel)
-			{
-				Collection childs = item.get("items");
-				if (childs)
-				{
-					widget.addItems(childs);
-				}
-			}
-			
-			/* Add widget to list */
-			this.addItem(widget);
-		}
-	}
+	int count() => this.items.count();
 }

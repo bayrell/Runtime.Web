@@ -68,9 +68,9 @@ class RenderProvider extends BaseProvider
 		}
 		
 		/* Add events */
-		this.events.add("onBeforeUpdate", method this.updateWidget);
+		/*this.events.add("onBeforeUpdate", method this.updateWidget);
 		this.events.add("onMounted", method this.addWidget);
-		this.events.add("onUnmount", method this.removeWidget);
+		this.events.add("onUnmount", method this.removeWidget);*/
 	}
 	
 	

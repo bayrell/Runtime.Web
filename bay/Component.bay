@@ -25,13 +25,13 @@
 <use name="Runtime.Web.RouteList" />
 
 
-<template name="renderWidget" args="BaseModel widget">
+<template name="renderWidget" args="BaseModel widget, Dict props = null">
 	%if (widget)
 	{
 		%set string component = widget.component;
 		%if (component)
 		{
-			<{component} @model={{ widget }} />
+			<{component} @model={{ widget }} ...props />
 		}
 	}
 </template>
@@ -232,6 +232,8 @@ string _class_name(var names)
  */
 var _merge_attrs(var attr1, var attr2)
 {
+	if (attr2 == null) return attr1;
+	
 	#switch
 	
 	#case ifcode PHP then

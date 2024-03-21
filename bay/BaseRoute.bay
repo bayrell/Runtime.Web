@@ -41,12 +41,6 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
-	 * Returns page model name
-	 */
-	string getPageModelName() => "";
-	
-	
-	/**
 	 * Constructor
 	 */
 	void constructor(RenderContainer container)
@@ -67,20 +61,6 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
-	 * Init page model
-	 */
-	async void initPageModel(string class_name)
-	{
-		/* Set page model */
-		this.layout.setPageModel(class_name);
-		
-		/* Route before */
-		BasePageModel page_model = this.layout.getPageModel();
-		await page_model.onRouteBefore(this);
-	}
-	
-	
-	/**
 	 * Before route
 	 */
 	async void onActionBefore()
@@ -91,14 +71,6 @@ class BaseRoute extends BaseObject
 		{
 			this.layout.setLayoutName(layout_name);
 		}
-		
-		/* Setup page model */
-		string page_model_name = this.getPageModelName();
-		if (page_model_name == "") page_model_name = this.container.route.model;
-		if (page_model_name != "" and rtl::class_exists(page_model_name))
-		{
-			await this.initPageModel(page_model_name);
-		}
 	}
 	
 	
@@ -107,10 +79,28 @@ class BaseRoute extends BaseObject
 	 */
 	async void onActionAfter()
 	{
-		BasePageModel page_model = this.layout.getPageModel();
+	}
+	
+	
+	/**
+	 * Action index
+	 */
+	async void actionIndex()
+	{
+		/* Setup page model */
+		string page_model_name = this.container.route.model;
+		if (page_model_name != "" and rtl::class_exists(page_model_name))
+		{
+			this.layout.setPageModel(page_model_name);
+		}
 		
+		/* Get page model */
+		BasePageModel page_model = this.layout.getPageModel();
 		if (page_model)
 		{
+			/* Call route before */
+			await page_model.onRouteBefore(this);
+			
 			/* Load widget data */
 			await page_model.loadData();
 			
@@ -120,14 +110,6 @@ class BaseRoute extends BaseObject
 		
 		/* Render page */
 		this.renderPage();
-	}
-	
-	
-	/**
-	 * Action index
-	 */
-	async void actionIndex()
-	{
 	}
 	
 	

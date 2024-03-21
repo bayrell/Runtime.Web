@@ -134,10 +134,12 @@ class BaseLayoutModel extends BaseModel
 		/* Create page model */
 		if (page_model == null)
 		{
-			PageModel page_model = rtl::newInstance(class_name, [{
-				"parent_widget": this,
-				"widget_name": class_name,
-			}]);
+			page_model = this.addWidget(
+				class_name,
+				{
+					"widget_name": class_name,
+				}
+			);
 		}
 		
 		/* Change current page model */
