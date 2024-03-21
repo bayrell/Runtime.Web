@@ -18,7 +18,7 @@
 
 namespace Runtime.Web.Annotations;
 
-use Runtime.Entity;
+use Runtime.Entity.Entity;
 
 
 class Api extends Entity
