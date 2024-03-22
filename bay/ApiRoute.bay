@@ -69,7 +69,7 @@ class ApiRoute extends BaseRoute
 		ApiResult api = await provider.callApi({
 			"service": service,
 			"api_name": api_name,
-			"method": method_name,
+			"method_name": method_name,
 			"data": post_data,
 			"backend_storage": this.layout.backend_storage,
 		});

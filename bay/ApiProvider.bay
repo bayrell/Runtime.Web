@@ -24,6 +24,7 @@ use Runtime.BaseProvider;
 use Runtime.Bus;
 use Runtime.Callback;
 use Runtime.Curl;
+use Runtime.Serializer;
 use Runtime.Exceptions.AbstractException;
 use Runtime.Exceptions.ApiError;
 use Runtime.Exceptions.CurlException;
@@ -32,6 +33,7 @@ use Runtime.Web.ApiResult;
 use Runtime.Web.BaseApi;
 use Runtime.Web.Annotations.Api;
 use Runtime.Web.Annotations.ApiMethod;
+use Runtime.Web.Hooks.AppHook;
 
 
 class ApiProvider extends BaseProvider
@@ -144,7 +146,7 @@ class ApiProvider extends BaseProvider
 	async Api findApi(Dict params)
 	{
 		string api_name = params["api_name"] |> default string "";
-		string method_name = params["method"] |> default string "";
+		string method_name = params["method_name"] |> default string "";
 		
 		/* Get annotation by api name */
 		Api annotation = this.api_list.get(api_name);
@@ -184,7 +186,7 @@ class ApiProvider extends BaseProvider
 	 */
 	async ApiResult callAnnotation(Api annotation, Dict params)
 	{
-		string method_name = params["method"] |> default string "";
+		string method_name = params["method_name"] |> default string "";
 		Dict data = params["data"] |> default Dict null;
 		Dict backend_storage = params["backend_storage"];
 		
@@ -229,7 +231,7 @@ class ApiProvider extends BaseProvider
 	{
 		string service = params["service"] |> default string "app";
 		string api_name = params["api_name"] |> default string "";
-		string method_name = params["method"] |> default string "";
+		string method_name = params["method_name"] |> default string "";
 		Dict data = params["data"] |> default Dict null;
 		
 		string locale_code = "";
@@ -253,6 +255,21 @@ class ApiProvider extends BaseProvider
 				"method_name": method_name,
 				"data": data,
 			};
+			
+			/* Call api before hook */
+			Dict d = @.callHook(AppHook::CALL_API_BEFORE, {
+				"api_url": api_url,
+				"post_data": post_data,
+			});
+			api_url = d.get("api_url");
+			post_data = d.get("post_data");
+			
+			/* Encode data to string */
+			var serializer = new Serializer();
+			serializer.removeFlag(Serializer::ALLOW_CLASS_NAME);
+			var data = post_data.get("data");
+			data = serializer.json_encode(data);
+			post_data.set("data", data);
 			
 			/* Send curl */
 			Curl curl = new Curl(api_url, {

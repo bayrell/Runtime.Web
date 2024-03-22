@@ -25,7 +25,7 @@
 	%for (int i=0; i<this.model.items.count(); i++)
 	{
 		%set BaseModel widget = this.model.items.get(i);
-		%render this.renderWidget(widget);
+		%render this.renderWidget(widget, { "data": this.data });
 	}
 </template>
 

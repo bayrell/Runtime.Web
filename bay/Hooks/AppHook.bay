@@ -24,6 +24,7 @@ use Runtime.Web.Layout;
 
 class AppHook extends BaseHook
 {
+	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
 	static const string COMPONENTS = "runtime.web.app::components";
 	static const string CORE_UI = "runtime.web.app::core_ui";
 	static const string CREATE_CONTAINER = "runtime.web.app::create_container";
@@ -36,8 +37,6 @@ class AppHook extends BaseHook
 	static const string INIT_LAYOUT = "runtime.web.app::init_layout";
 	static const string LAYOUT_CLASS_NAME = "runtime.web.app::layout_class_name";
 	static const string MATCH_ROUTE = "runtime.web.app::match_route";
-	static const string MIDDLEWARE_AFTER = "runtime.web.app::middleware_after";
-	static const string MIDDLEWARE_BEFORE = "runtime.web.app::middleware_before";
 	static const string RENDER_BODY = "runtime.web.app::render_body";
 	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
 	static const string RENDER_HEAD = "runtime.web.app::render_head";
@@ -45,6 +44,7 @@ class AppHook extends BaseHook
 	static const string RESPONSE = "runtime.web.app::response";
 	static const string ROUTES_INIT = "runtime.web.app::routes_init";
 	static const string ROUTE_AFTER = "runtime.web.app::route_after";
+	static const string ROUTE_MIDDLEWARE = "runtime.web.app::route_middleware";
 	static const string ROUTE_BEFORE = "runtime.web.app::route_before";
 	static const string VUE_MODULES = "runtime.web.app::vue_modules";
 	
@@ -54,6 +54,7 @@ class AppHook extends BaseHook
 	 */
 	string getMethodName(string hook_name)
 	{
+		if (hook_name == static::CALL_API_BEFORE) return "call_api_before";
 		if (hook_name == static::COMPONENTS) return "components";
 		if (hook_name == static::CORE_UI) return "core_ui";
 		if (hook_name == static::CREATE_CONTAINER) return "create_container";
@@ -66,8 +67,6 @@ class AppHook extends BaseHook
 		if (hook_name == static::INIT_LAYOUT) return "init_layout";
 		if (hook_name == static::LAYOUT_CLASS_NAME) return "layout_class_name";
 		if (hook_name == static::MATCH_ROUTE) return "match_route";
-		if (hook_name == static::MIDDLEWARE_AFTER) return "middleware_after";
-		if (hook_name == static::MIDDLEWARE_BEFORE) return "middleware_before";
 		if (hook_name == static::RENDER_BODY) return "render_body";
 		if (hook_name == static::RENDER_FOOTER) return "render_footer";
 		if (hook_name == static::RENDER_HEAD) return "render_head";
@@ -75,6 +74,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::RESPONSE) return "response";
 		if (hook_name == static::ROUTES_INIT) return "routes_init";
 		if (hook_name == static::ROUTE_AFTER) return "route_after";
+		if (hook_name == static::ROUTE_MIDDLEWARE) return "route_middleware";
 		if (hook_name == static::ROUTE_BEFORE) return "route_before";
 		if (hook_name == static::VUE_MODULES) return "vue_modules";
 		return "";
@@ -85,6 +85,12 @@ class AppHook extends BaseHook
 	 * Register hooks
 	 */
 	void register_hooks(){}
+	
+	
+	/**
+	 * Call api before
+	 */
+	void call_api_before(Dict d){}
 	
 	
 	/**
@@ -160,18 +166,6 @@ class AppHook extends BaseHook
 	
 	
 	/**
-	 * Middleware before
-	 */
-	async void middleware_before(Map params){}
-	
-	
-	/**
-	 * Middleware after
-	 */
-	async void middleware_after(Map params){}
-	
-	
-	/**
 	 * Render body
 	 */
 	void render_body(Map params){}
@@ -211,6 +205,12 @@ class AppHook extends BaseHook
 	 * Route before
 	 */
 	async void route_before(Map params){}
+
+
+	/**
+	 * Route middleware
+	 */
+	async void route_middleware(Map params){}
 
 
 	/**

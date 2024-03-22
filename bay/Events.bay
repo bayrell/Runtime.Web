@@ -30,6 +30,22 @@ class Events extends BaseObject
 	
 	
 	/**
+	 * Setup widget params
+	 */
+	void setup(Dict params)
+	{
+		if (params == null) return;
+		
+		params.each(
+			void (Callback f, string event_name)
+			{
+				this.add(event_name, f);
+			}
+		);
+	}
+	
+	
+	/**
 	 * Add event
 	 */
 	void add(string event_name, Callback f)
@@ -55,5 +71,4 @@ class Events extends BaseObject
 			rtl::apply(f, attrs);
 		}
 	}
-	
 }

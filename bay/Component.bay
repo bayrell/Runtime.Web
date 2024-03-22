@@ -186,6 +186,16 @@ void onUnmount()
 
 
 /**
+ * Next tick
+ */
+async void nextTick(fn f)
+{
+	var Vue = window["Vue"];
+	await Vue.nextTick(f);
+}
+
+
+/**
  * Returns model for component
  */
 var _model(var obj = null, bool is_global = false)

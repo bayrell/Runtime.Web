@@ -55,10 +55,18 @@ class BaseApp extends BaseObject
 	async int main()
 	{
 		#ifdef BACKEND then
+		
+		/* Create container */
 		RenderContainer container = this.createRenderContainer();
+		await this.initLayout(container);
+		
+		/* Resolve route */
 		this.findRoute(container);
 		await this.resolveRoute(container);
+		
+		/* Send reponse */
 		await this.responseBackend(container);
+		
 		#endif
 		
 		return 0;
@@ -125,12 +133,6 @@ class BaseApp extends BaseObject
 	 */
 	async void initLayout(RenderContainer container)
 	{
-		/* Setup layout */
-		this.initLayoutRequest(container);
-		
-		/* Setup urls */
-		this.initLayoutRoutes(container);
-		
 		/* Call route before */
 		await @.callHookAsync(AppHook::INIT_LAYOUT, {
 			"container": container,
@@ -143,9 +145,9 @@ class BaseApp extends BaseObject
 	
 	
 	/**
-	 * Init layout request
+	 * Setup layout request
 	 */
-	void initLayoutRequest(RenderContainer container)
+	void setupLayoutRequest(RenderContainer container)
 	{
 		container.layout.route = container.route;
 		container.layout.request_host = container.request.host;
@@ -156,9 +158,9 @@ class BaseApp extends BaseObject
 	
 	
 	/**
-	 * Init layout routes
+	 * Setup layout routes
 	 */
-	void initLayoutRoutes(RenderContainer container)
+	void setupLayoutRoutes(RenderContainer container)
 	{
 		container.layout.routes = {};
 		RouteList routes = @.provider(classof RouteList);
@@ -178,7 +180,10 @@ class BaseApp extends BaseObject
 	async void resolveRoute(RenderContainer container)
 	{
 		/* Setup layout */
-		await this.initLayout(container);
+		this.setupLayoutRequest(container);
+		
+		/* Setup urls */
+		this.setupLayoutRoutes(container);
 		
 		/* Call route before */
 		await @.callHookAsync(AppHook::ROUTE_BEFORE, {
@@ -252,11 +257,6 @@ class BaseApp extends BaseObject
 	 */
 	async void callRouteMiddleware(RenderContainer container)
 	{
-		/* Call hook middleware */
-		await @.callHook(AppHook::MIDDLEWARE_BEFORE, {
-			"container": container,
-		});
-		
 		if (container.route and container.route.middleware)
 		{
 			for (int i = 0; i<container.route.middleware.count(); i++)
@@ -267,9 +267,39 @@ class BaseApp extends BaseObject
 		}
 		
 		/* Call hook middleware */
-		await @.callHook(AppHook::MIDDLEWARE_AFTER, {
+		await @.callHook(AppHook::ROUTE_MIDDLEWARE, {
 			"container": container,
 		});
+	}
+	
+	
+	/**
+	 * Read post
+	 */
+	Map readPost()
+	{
+		Map post = null;
+		
+		#ifcode PHP then
+		
+		$method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : "";
+		$content_type = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : "";
+		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
+		{
+			$json = file_get_contents("php://input");
+			$post = @json_decode($json);
+		}
+		else
+		{
+			if ($method == "POST")
+			{
+				$post = $_POST;
+			}
+		}
+		
+		#endif
+		
+		return post;
 	}
 	
 	
@@ -294,26 +324,12 @@ class BaseApp extends BaseObject
 		foreach ($_GET as $key => $val) $query->set($key, $val);
 		
 		/* Read POST */
-		$post = null;
-		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
-		{
-			$json = file_get_contents("php://input");
-			$post = @json_decode($json);
-		}
-		else
-		{
-			if ($method == "POST")
-			{
-				$post = $_POST;
-			}
-		}
+		$post = $this->readPost();
 		if ($post != null)
 		{
-			$serializer = new \Runtime\Serializer();
-			$serializer->removeFlag(\Runtime\Serializer::ALLOW_CLASS_NAME);
 			foreach ($post as $key => $val)
 			{
-				$payload->set($key, $serializer->toPrimitive($val, false));
+				$payload->set($key, $val);
 			}
 		}
 		
