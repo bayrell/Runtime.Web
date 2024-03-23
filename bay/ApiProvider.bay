@@ -278,7 +278,9 @@ class ApiProvider extends BaseProvider
 			string response = await curl.send();
 			
 			/* Get answer */
-			Dict answer = rtl::json_decode(response);
+			var serializer = new Serializer();
+			serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
+			Dict answer = serializer.json_decode(response);
 			if (answer and answer instanceof Dict)
 			{
 				res.importContent(answer);
