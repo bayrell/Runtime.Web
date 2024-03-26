@@ -59,6 +59,32 @@ class Events extends BaseObject
 	
 	
 	/**
+	 * Clear events
+	 */
+	void clear(string event_name)
+	{
+		if (this.items.has(event_name))
+		{
+			this.items.set(event_name, []);
+		}
+	}
+	
+	
+	/**
+	 * Clear all
+	 */
+	void clearAll()
+	{
+		this.items.each(
+			void (string event_name)
+			{
+				this.clear(event_name);
+			}
+		);
+	}
+	
+	
+	/**
 	 * Emit event
 	 */
 	void emit(string event_name, Collection attrs = null)
