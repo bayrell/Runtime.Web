@@ -19,17 +19,18 @@
 <class name="Runtime.Web.DefaultLayout">
 
 
-<style>
-</style>
-
-
-<template>
+<template name="renderCurrentPage">
 	%var string current_page = this.layout.getPageClassName();
 	%var string current_page_model = this.layout.current_page_model;
 	%if (current_page and current_page_model)
 	{
 		<{current_page} @model=[ "widgets", current_page_model ] />
 	}
+</template>
+
+
+<template>
+	%render this.renderCurrentPage();
 </template>
 
 

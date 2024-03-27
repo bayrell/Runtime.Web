@@ -205,4 +205,10 @@ class BaseModel extends BaseObject
 		
 		return url;
 	}
+	
+	
+	/**
+	 * Returns assets
+	 */
+	string assets(string path) => path;
 }

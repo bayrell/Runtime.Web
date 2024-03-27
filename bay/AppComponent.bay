@@ -19,7 +19,7 @@
 <class name="Runtime.Web.AppComponent">
 
 <template>
-	%var string class_name = this.layout.getLayoutClassName();
+	%var string class_name = this.layout.getLayoutComponentName();
 	<{class_name} @model=[] />
 </template>
 

@@ -76,7 +76,13 @@ class BaseApp extends BaseObject
 	/**
 	 * Create render container
 	 */
-	BaseLayoutModel createLayout() => new BaseLayoutModel();
+	BaseLayoutModel createLayout()
+	{
+		Dict params = @.callHook(AppHook::LAYOUT_MODEL_NAME, {
+			"class_name": classof BaseLayoutModel,
+		});
+		return rtl::newInstance(params.get("class_name"));
+	}
 	
 	
 	/**
@@ -110,19 +116,19 @@ class BaseApp extends BaseObject
 	void findRoute(RenderContainer container)
 	{
 		/* Call hook find route */
-		@.callHook(AppHook::FIND_ROUTE, {
+		@.callHook(AppHook::FIND_ROUTE_BEFORE, {
 			"container": container,
 		});
 		
 		/* Find route */
-		if (container.route == null)
+		if (container.route == null and container.response == null)
 		{
 			RouteList routes = @.provider(classof RouteList);
 			container.route = routes.findRoute(container);
 		}
 		
 		/* Call hook found route */
-		await @.callHook(AppHook::FIND_ROUTE_AFTER, {
+		await @.callHook(AppHook::FIND_ROUTE, {
 			"container": container,
 		});
 	}
@@ -231,24 +237,7 @@ class BaseApp extends BaseObject
 			method_name = container.route.method.get(1);
 		}
 		
-		/* Create route */
-		container.base_route = rtl::newInstance(class_name, [container]);
-		
-		/* Action before */
-		await container.base_route.onActionBefore();
-		
-		/* Call route */
-		if (method_name != "")
-		{
-			Callback route = new Callback(container.base_route, method_name);
-			await rtl::apply(route);
-		}
-		
-		/* Action after */
-		if (not container.base_route.isCancelRoute())
-		{
-			await container.base_route.onActionAfter();
-		}
+		await container.callRoute(class_name, method_name);
 	}
 	
 	
@@ -386,9 +375,9 @@ class BaseApp extends BaseObject
 			http_response_code($response->http_code);
 			
 			/* Setup cookies */
-			if ($response->cookies != null)
+			if ($container->cookies != null)
 			{
-				$response->cookies->each(
+				$container->cookies->each(
 					function (Cookie $cookie)
 					{
 						if ($cookie == null) return;
@@ -416,7 +405,7 @@ class BaseApp extends BaseObject
 			}
 			
 			/* Redirect */
-			if ($response instanceof RedirectResponse)
+			if ($response instanceof \Runtime\Web\RedirectResponse)
 			{
 				header("Location:" . $response->redirect);
 			}

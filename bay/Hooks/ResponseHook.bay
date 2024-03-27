@@ -36,7 +36,7 @@ class ResponseHook extends AppHook
 	 */
 	void register_hooks()
 	{
-		this.register( static::RESPONSE, 9999 );
+		this.register(static::RESPONSE, 9999);
 	}
 	
 	

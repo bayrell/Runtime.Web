@@ -88,10 +88,13 @@ class BaseRoute extends BaseObject
 	async void actionIndex()
 	{
 		/* Setup page model */
-		string page_model_name = this.container.route.model;
-		if (page_model_name != "" and rtl::class_exists(page_model_name))
+		if (this.container.route)
 		{
-			this.layout.setPageModel(page_model_name);
+			string page_model_name = this.container.route.model;
+			if (page_model_name != "" and rtl::class_exists(page_model_name))
+			{
+				this.layout.setPageModel(page_model_name);
+			}
 		}
 		
 		/* Get page model */
@@ -103,13 +106,34 @@ class BaseRoute extends BaseObject
 			
 			/* Load widget data */
 			await page_model.loadData();
-			
-			/* Call route after */
-			await page_model.onRouteAfter(this);
 		}
 		
 		/* Render page */
 		this.renderPage();
+		
+		/* Call route after */
+		if (page_model)
+		{
+			await page_model.onRouteAfter(this);
+		}
+	}
+	
+	
+	/**
+	 * Render page and setup response
+	 */
+	void renderPage()
+	{
+		if (this.container.response == null)
+		{
+			/* Create response */
+			string page_class_name = this.container.layout.getPageClassName();
+			if (page_class_name != "")
+			{
+				this.container.response = new RenderResponse();
+				this.container.response.class_name = page_class_name;
+			}
+		}
 	}
 	
 	
@@ -128,27 +152,6 @@ class BaseRoute extends BaseObject
 	void isCancelRoute()
 	{
 		return this.is_cancel_route;
-	}
-	
-	
-	/**
-	 * Render page and setup response
-	 */
-	void renderPage()
-	{
-		if (this.container.response == null)
-		{
-			/* Add layout class name */
-			this.container.layout.addComponent( this.container.layout.getLayoutClassName() );
-			
-			/* Create response */
-			string page_class_name = this.container.layout.getPageClassName();
-			if (page_class_name != "")
-			{
-				this.container.response = new RenderResponse();
-				this.container.response.class_name = page_class_name;
-			}
-		}
 	}
 	
 	

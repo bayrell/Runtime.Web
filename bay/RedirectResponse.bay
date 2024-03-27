@@ -15,26 +15,24 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
- 
+
 namespace Runtime.Web;
 
-use Runtime.BaseObject;
-use Runtime.Web.Cookie;
+use Runtime.Web.Response;
 
 
-class Response extends BaseObject
+class RedirectResponse extends Response
 {
-	public int http_code = 200;
-	public string ob_content = "";
-	public string content = "";
-	public Dict<string> headers = {};
-	
-	
-	/**
-	 * Returns content
+    string redirect = "";
+    
+    
+    /**
+	 * Constructor
 	 */
-	string getContent()
+	void constructor(string redirect, int http_code = 301)
 	{
-		return this.content;
+		parent();
+		this.redirect = redirect;
+        this.http_code = http_code
 	}
 }

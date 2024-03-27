@@ -85,16 +85,17 @@ class BaseLayoutModel extends BaseModel
 	 */
 	void processFrontendData(Serializer serializer, Map data)
 	{
-		serializer.process(this, "title", data);
-		serializer.process(this, "layout_name", data);
+		serializer.process(this, "components", data);
 		serializer.process(this, "current_page_model", data);
 		serializer.process(this, "f_inc", data);
-		serializer.process(this, "route", data);
+		serializer.process(this, "lang", data);
+		serializer.process(this, "layout_name", data);
 		serializer.process(this, "request_full_uri", data);
-		serializer.process(this, "request_uri", data);
 		serializer.process(this, "request_query", data);
-		serializer.process(this, "components", data);
+		serializer.process(this, "request_uri", data);
+		serializer.process(this, "route", data);
 		serializer.process(this, "routes", data);
+		serializer.process(this, "title", data);
 		parent(serializer, data);
 	}
 	
@@ -168,14 +169,14 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
-	 * Returns layout class name
+	 * Returns layout component name
 	 */
-	string getLayoutClassName()
+	string getLayoutComponentName()
 	{
 		string class_name = "";
 		if (this.layout_name == "default") class_name = classof DefaultLayout;
 		
-		Dict params = @.callHook(AppHook::LAYOUT_CLASS_NAME, {
+		Dict params = @.callHook(AppHook::LAYOUT_COMPONENT_NAME, {
 			"layout_name": this.layout_name,
 			"class_name": class_name,
 		});
@@ -229,7 +230,7 @@ class BaseLayoutModel extends BaseModel
 		Map<string> cache = new Map();
 		
 		components = components.concat(this.components);
-		components.push(this.getLayoutClassName());
+		components.push(this.getLayoutComponentName());
 		
 		/* Call hook */
 		Map d = @.callHook(AppHook::COMPONENTS, {

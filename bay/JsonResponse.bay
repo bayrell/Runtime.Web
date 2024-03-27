@@ -18,25 +18,24 @@
 
 namespace Runtime.Web;
 
-use Runtime.BaseObject;
-use Runtime.Web.Cookie;
+use Runtime.Web.Response;
 
 
-class JsonResponse extends BaseObject
+class JsonResponse extends Response
 {
 	Map data = {};
 	
-    
-    /**
-     * Constructor
-     */
-    void constructor(Map data)
-    {
-        parent();
-        this.data = data;
-    }
-    
-    
+	
+	/**
+	 * Constructor
+	 */
+	void constructor(Map data)
+	{
+		parent();
+		this.data = data;
+	}
+	
+	
 	/**
 	 * Returns content
 	 */

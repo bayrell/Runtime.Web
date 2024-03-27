@@ -24,6 +24,7 @@ use Runtime.Serializer;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
 use Runtime.Web.BaseRoute;
+use Runtime.Web.Cookie;
 use Runtime.Web.Layout;
 use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
@@ -42,6 +43,7 @@ class RenderContainer extends BaseObject
 	public Layout layout = null;
 	public Map frontend_env = {};
 	public Vector teleports = [];
+	public Dict<Cookie> cookies = {};
 	
 	
 	/**
@@ -134,5 +136,51 @@ class RenderContainer extends BaseObject
 	void setResponse(Response response)
 	{
 		this.response = response;
+	}
+	
+	
+	/**
+	 * Add cookie
+	 */
+	Response addCookie(Cookie cookie)
+	{
+		this.cookies.set(cookie.name, cookie);
+	}
+	
+	
+	/**
+	 * Call route
+	 */
+	async void callRoute(string class_name, string method_name)
+	{
+		/* Create route */
+		this.base_route = rtl::newInstance(class_name, [this]);
+		
+		/* Action before */
+		await this.base_route.onActionBefore();
+		
+		/* Call route */
+		if (method_name != "")
+		{
+			Callback route = new Callback(this.base_route, method_name);
+			await rtl::apply(route);
+		}
+		
+		/* Action after */
+		if (not this.base_route.isCancelRoute())
+		{
+			await this.base_route.onActionAfter();
+		}
+	}
+	
+	
+	/**
+	 * Call base route
+	 */
+	async void callBaseRoute()
+	{
+		string class_name = classof BaseRoute;
+		string method_name = "actionIndex";
+		await this.callRoute(class_name, method_name);
 	}
 }
