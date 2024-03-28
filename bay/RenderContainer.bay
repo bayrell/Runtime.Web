@@ -41,7 +41,6 @@ class RenderContainer extends BaseObject
 	public Response response = null;
 	public RouteInfo route = null;
 	public Layout layout = null;
-	public Map frontend_env = {};
 	public Vector teleports = [];
 	public Dict<Cookie> cookies = {};
 	
@@ -60,10 +59,22 @@ class RenderContainer extends BaseObject
 	 */
 	Map getFrontendEnvironments()
 	{
-		Map environments = this.frontend_env.copy();
+		Map environments = {};
 		
 		/* Setup environments */
-		Collection arr = ["CLOUD_ENV", "DEBUG"];
+		Collection arr = ["CLOUD_ENV", "DEBUG", "LOCALE", "TZ", "TZ_OFFSET"];
+		
+		/* Call hook */
+		Dict params = @.callHook(AppHook::ENVIRONMENTS, {
+			"arr": arr,
+			"environments": environments,
+		});
+		
+		/* Get result */
+		arr = params.get("arr");
+		environments = params.get("environments");
+		
+		/* Copy environments */
 		for (int i=0; i<arr.count(); i++)
 		{
 			string name = arr.get(i);
