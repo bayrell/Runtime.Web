@@ -429,6 +429,14 @@ void _parent_elem_push(var parent_elem, var elem)
 			}
 			for (let i=0; i<elem.length; i++) parent_elem.children.push(elem[i]);
 		}
+		else if (elem instanceof Runtime.RawString)
+		{
+			if (parent_elem.props == undefined || parent_elem.props == null)
+			{
+				parent_elem.props = {};
+			}
+			parent_elem.props["innerHTML"] = elem.toString();
+		}
 		else if (typeof elem == "string")
 		{
 			if (parent_elem.children == null)

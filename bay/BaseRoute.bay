@@ -35,12 +35,6 @@ class BaseRoute extends BaseObject
 	
 	
 	/**
-	 * Returns layout name
-	 */
-	string getLayoutName() => "default";
-	
-	
-	/**
 	 * Constructor
 	 */
 	void constructor(RenderContainer container)
@@ -65,12 +59,6 @@ class BaseRoute extends BaseObject
 	 */
 	async void onActionBefore()
 	{
-		/* Setup layout */
-		string layout_name = this.getLayoutName();
-		if (layout_name)
-		{
-			this.layout.setLayoutName(layout_name);
-		}
 	}
 	
 	
@@ -87,25 +75,15 @@ class BaseRoute extends BaseObject
 	 */
 	async void actionIndex()
 	{
-		/* Setup page model */
-		if (this.container.route)
-		{
-			string page_model_name = this.container.route.model;
-			if (page_model_name != "" and rtl::class_exists(page_model_name))
-			{
-				this.layout.setPageModel(page_model_name);
-			}
-		}
-		
 		/* Get page model */
 		BasePageModel page_model = this.layout.getPageModel();
 		if (page_model)
 		{
 			/* Call route before */
-			await page_model.onRouteBefore(this);
+			await page_model.onRouteBefore(this.container);
 			
 			/* Load widget data */
-			await page_model.loadData();
+			await page_model.loadData(this.container);
 		}
 		
 		/* Render page */
@@ -114,7 +92,7 @@ class BaseRoute extends BaseObject
 		/* Call route after */
 		if (page_model)
 		{
-			await page_model.onRouteAfter(this);
+			await page_model.onRouteAfter(this.container);
 		}
 	}
 	

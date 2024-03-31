@@ -38,6 +38,7 @@ class AppHook extends BaseHook
 	static const string INIT_LAYOUT = "runtime.web.app::init_layout";
 	static const string LAYOUT_MODEL_NAME = "runtime.web.app::layout_model_name";
 	static const string LAYOUT_COMPONENT_NAME = "runtime.web.app::layout_component_name";
+	static const string MAKE_URL = "runtime.web.app::make_url";
 	static const string MATCH_ROUTE = "runtime.web.app::match_route";
 	static const string RENDER_BODY = "runtime.web.app::render_body";
 	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
@@ -70,6 +71,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::INIT_LAYOUT) return "init_layout";
 		if (hook_name == static::LAYOUT_MODEL_NAME) return "layout_model_name";
 		if (hook_name == static::LAYOUT_COMPONENT_NAME) return "layout_component_name";
+		if (hook_name == static::MAKE_URL) return "make_url";
 		if (hook_name == static::MATCH_ROUTE) return "match_route";
 		if (hook_name == static::RENDER_BODY) return "render_body";
 		if (hook_name == static::RENDER_FOOTER) return "render_footer";
@@ -173,6 +175,12 @@ class AppHook extends BaseHook
 	 * Layout component name
 	 */
 	void layout_component_name(Map params){}
+	
+	
+	/**
+	 * Make url
+	 */
+	void make_url(Map params){}
 	
 	
 	/**

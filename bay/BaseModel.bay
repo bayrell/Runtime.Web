@@ -130,7 +130,7 @@ class BaseModel extends BaseObject
 	/**
 	 * Route before
 	 */
-	async void onRouteBefore(BaseRoute route)
+	async void onRouteBefore(RenderContainer container)
 	{
 	}
 	
@@ -138,7 +138,7 @@ class BaseModel extends BaseObject
 	/**
 	 * Route after
 	 */
-	async void onRouteAfter(BaseRoute route)
+	async void onRouteAfter(RenderContainer container)
 	{
 	}
 	
@@ -146,7 +146,7 @@ class BaseModel extends BaseObject
 	/**
 	 * Load data
 	 */
-	async void loadData()
+	async void loadData(RenderContainer container)
 	{
 		if (this.is_data_loaded) return;
 		
@@ -155,7 +155,7 @@ class BaseModel extends BaseObject
 		{
 			string widget_key = widgets_keys.get(i);
 			BaseModel widget = this.widgets.get(widget_key);
-			await widget.loadData();
+			await widget.loadData(container);
 		}
 		
 		this.is_data_loaded = true;
@@ -176,39 +176,4 @@ class BaseModel extends BaseObject
 			data.set("__class_name__", static::getClassName());
 		}
 	}
-	
-	
-	/**
-	 * Returns url
-	 */
-	string url(string route_name, Dict route_params = null)
-	{
-		if (not this.layout.routes.has(route_name)) return null;
-		
-		string url = this.layout.routes.get(route_name);
-		if (route_params == null) return url;
-		
-		route_params.each(
-			void (string value, string key) use (url)
-			{
-				int pos = rs::indexOf(url, "{" ~ key ~ "}");
-				if (pos >= 0)
-				{
-					url = rs::replace("{" ~ key ~ "}", value, url);
-				}
-				else
-				{
-					url = rs::url_get_add(url, key, value);
-				}
-			}
-		);
-		
-		return url;
-	}
-	
-	
-	/**
-	 * Returns assets
-	 */
-	string assets(string path) => path;
 }

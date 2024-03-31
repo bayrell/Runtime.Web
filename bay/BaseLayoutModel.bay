@@ -48,7 +48,7 @@ class BaseLayoutModel extends BaseModel
 	
 	/* Components list */
 	Vector<string> components = [];
-	Map<string> routes = {};
+	Map<Dict> routes = {};
 	
 	/* Increment assets */
 	string f_inc = "1";
@@ -91,6 +91,7 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "lang", data);
 		serializer.process(this, "layout_name", data);
 		serializer.process(this, "request_full_uri", data);
+		serializer.process(this, "request_host", data);
 		serializer.process(this, "request_query", data);
 		serializer.process(this, "request_uri", data);
 		serializer.process(this, "route", data);
@@ -317,5 +318,61 @@ class BaseLayoutModel extends BaseModel
 		;
 		
 		return rs::trim( rs::join("\n", css) );
+	}
+	
+	
+	/**
+	 * Returns assets
+	 */
+	string assets(string path) => path;
+	
+	
+	/**
+	 * Returns url
+	 */
+	string url(string route_name, Dict route_params = null)
+	{
+		if (not this.routes.has(route_name)) return null;
+		
+		Dict route = this.routes.get(route_name);
+		string domain = route.get("domain");
+		string url = route.get("uri");
+		if (route_params != null)
+		{
+			route_params.each(
+				void (string value, string key) use (url)
+				{
+					int pos = rs::indexOf(url, "{" ~ key ~ "}");
+					if (pos >= 0)
+					{
+						url = rs::replace("{" ~ key ~ "}", value, url);
+					}
+					else
+					{
+						url = rs::url_get_add(url, key, value);
+					}
+				}
+			);
+		}
+		
+		/* Add domain */
+		string url_with_domain = url;
+		if (domain != "")
+		{
+			url_with_domain = "//" ~ domain ~ url;
+		}
+		
+		/* Make url */
+		Dict res = @.callHook(AppHook::MAKE_URL, {
+			"domain": domain,
+			"layout": this,
+			"route": route,
+			"route_name": route_name,
+			"route_params": route_params,
+			"url": url,
+			"url_with_domain": url_with_domain,
+		});
+		
+		return res.get("url_with_domain");
 	}
 }

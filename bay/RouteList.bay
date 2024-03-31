@@ -71,8 +71,8 @@ class RouteList extends BaseProvider
 			for (int j=0; j<routes_info.count(); j++)
 			{
 				RouteInfo route = routes_info.get(j);
-				if (route.method == "") route <= method <= "actionIndex";
-				route <= method <= new Collection(info.name, route.method);
+				if (route.action == "") route <= action <= "actionIndex";
+				route <= action <= new Collection(info.name, route.action);
 				this.addRoute(route);
 			}
 		}
@@ -169,7 +169,7 @@ class RouteList extends BaseProvider
 		if (route.domain != "" and route.domain != request.host) return null;
 		
 		/* Get matches */
-		Vector<string> matches = re::matchAll( route.uri_match, request.uri );
+		Vector<string> matches = re::matchAll(route.uri_match, request.uri);
 		if (matches)
 		{
 			matches = matches.get(0, null);

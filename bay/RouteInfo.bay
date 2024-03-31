@@ -30,7 +30,7 @@ struct RouteInfo extends BaseStruct
 	string uri_match = "";
 	string domain = "";
 	string model = "";
-	string method = "";
+	string action = "";
 	Dict data = null;
 	Collection<Callback> middleware = [];
 	Collection<string> params = [];

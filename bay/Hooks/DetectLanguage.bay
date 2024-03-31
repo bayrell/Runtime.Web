@@ -18,67 +18,50 @@
 
 namespace Runtime.Web.Hooks;
 
+use Runtime.re;
 use Runtime.lib;
+use Runtime.Web.BaseLayoutModel;
 use Runtime.Web.RedirectResponse;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.Request;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.Hooks.AppHook as BaseAppHook;
 
 
 class DetectLanguage extends BaseAppHook
 {
-    string default_language = "";
-    
-    
-    /**
-     * Setup
-     */
-    void setup(Dict params)
-    {
+	string default_language = "";
+	Vector<string> allowed_languages = [];
+
+
+	/**
+	 * Setup
+	 */
+	void setup(Dict params)
+	{
 		parent(params);
 		
-        if (params == null) return;
-        if (params.has("default_language")) this.default_language = params.get("default_language");
-    }
-    
-    
+		if (params == null) return;
+		if (params.has("allowed_languages")) this.allowed_languages = params.get("allowed_languages");
+		if (params.has("default_language")) this.default_language = params.get("default_language");
+	}
+
+
 	/**
 	 * Register hooks
 	 */
 	void register_hooks()
 	{
 		#ifdef BACKEND then
-		this.register(static::CREATE_CONTAINER, "setupLanguage");
 		this.register(static::FIND_ROUTE_BEFORE, "redirect");
+		this.register(static::MAKE_URL);
+		this.register(static::MATCH_ROUTE);
+		this.register(static::ROUTE_BEFORE);
 		#endif
 	}
 	
 	
 	#ifdef BACKEND then
-	
-	
-	/**
-	 * Setup language
-	 */
-	void setupLanguage(Map params)
-	{
-		RenderContainer container = params.get("container");
-		Vector arr = rs::split("/", container.request.uri)
-			.filter(lib::equalNot(""))
-		;
-		if (arr.count() > 0)
-		{
-			container.layout.lang = arr.get(0);
-			container.request.uri = rs::substr(
-				container.request.uri,
-				rs::strlen(container.layout.lang) + 1
-			);
-		}
-		else
-		{
-			container.request.uri = "/";
-		}
-	}
 	
 	
 	/**
@@ -88,9 +71,115 @@ class DetectLanguage extends BaseAppHook
 	{
 		RenderContainer container = params.get("container");
 		if (container.response) return;
-		if (container.request.uri == "")
+		
+		/* Detect language */
+		Request request = container.request;
+		Dict res = this.getLanguage(request);
+		
+		string language = res.get("lang");
+		string uri = res.get("uri");
+		
+		if (uri == "")
 		{
-			container.response = new RedirectResponse("/" ~ this.default_language ~ "/");
+			container.response = new RedirectResponse("/" ~ language ~ "/");
+		}
+	}
+	
+	
+	/**
+	 * Returns language
+	 */
+	void getLanguage(Request request)
+	{
+		string lang = "";
+		string uri = request.uri;
+		
+		Vector arr = rs::split("/", request.uri)
+			.filter(lib::equalNot(""))
+		;
+		if (arr.count() > 0)
+		{
+			lang = arr.get(0);
+			uri = rs::substr(request.uri, rs::strlen(lang) + 1);
+		}
+		else
+		{
+			uri = "/";
+		}
+		
+		return {
+			"lang": lang,
+			"uri": uri,
+		};
+	}
+	
+	
+	/**
+	 * Match route
+	 */
+	void match_route(Map params)
+	{
+		RenderContainer container = params.get("container");
+		Request request = container.request;
+		RouteInfo route = params.get("route");
+		
+		if (not route.enable_locale) return;
+		
+		/* Detect language */
+		Dict res = this.getLanguage(request);
+		
+		string language = res.get("lang");
+		string uri = res.get("uri");
+		
+		/* Check if language is correct */
+		if (this.allowed_languages.indexOf(language) == -1) return;
+		
+		/* Get matches */
+		Vector<string> matches = re::matchAll(route.uri_match, uri);
+		if (matches)
+		{
+			matches = matches.get(0, null);
+			matches.remove(0);
+			
+			/* Set result */
+			params.set("matches", matches);
+			
+			/* Set current language */
+			container.layout.lang = language;
+		}
+	}
+	
+	
+	/**
+	 * Route before
+	 */
+	void route_before(Map params)
+	{
+		RenderContainer container = params.get("container");
+		if (container.layout.lang == "")
+		{
+			container.layout.lang = this.default_language;
+		}
+	}
+	
+	
+	/**
+	 * Make url
+	 */
+	void make_url(Map params)
+	{
+		BaseLayoutModel layout = params.get("layout");
+		string domain = params.get("domain");
+		string url = params.get("url");
+		
+		/* Add language */
+		url = "/" ~ layout.lang ~ url;
+		params.set("url", url);
+		
+		/* Add domain */
+		if (domain != "")
+		{
+			params.set("url_with_domain", "//" ~ domain ~ url);
 		}
 	}
 	

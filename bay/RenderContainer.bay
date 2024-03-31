@@ -194,4 +194,14 @@ class RenderContainer extends BaseObject
 		string method_name = "actionIndex";
 		await this.callRoute(class_name, method_name);
 	}
+	
+	
+	/**
+	 * Call page model
+	 */
+	async void callPageModel(string page_model)
+	{
+		this.layout.setPageModel(page_model);
+		await this.callBaseRoute();
+	}
 }
