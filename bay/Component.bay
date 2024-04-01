@@ -320,20 +320,27 @@ var _e(var parent_elem, string elem_name = null, var attrs = null, var content =
 		$attrs_str = " " . implode(" ", $attrs);
 	}
 	
-	$elem = new \Runtime\Vector();
-	$elem->push("<" . $elem_name . $attrs_str . ">");
-	
-	if ($content instanceof \Runtime\Collection)
+	if ($elem_name == "br")
 	{
-		$elem->appendItems($content);
+		$parent_elem->append("<br/>");
 	}
-	else if (is_string($content) or $content instanceof \Runtime\RawString)
+	else
 	{
-		$elem->push($content);
+		$elem = new \Runtime\Vector();
+		$elem->push("<" . $elem_name . $attrs_str . ">");
+		
+		if ($content instanceof \Runtime\Collection)
+		{
+			$elem->appendItems($content);
+		}
+		else if (is_string($content) or $content instanceof \Runtime\RawString)
+		{
+			$elem->push($content);
+		}
+		
+		$elem->push("</" . $elem_name . ">");
+		$parent_elem->append($elem->join(""));
 	}
-	
-	$elem->push("</" . $elem_name . ">");
-	$parent_elem->append($elem->join(""));
 	
 	#case ifcode JAVASCRIPT then
 	

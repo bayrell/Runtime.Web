@@ -85,7 +85,7 @@
 	
 	%set RenderProvider render_provider = @.provider(classof RenderProvider);
 	
-	<div id={{ render_provider.selector }}>
+	<div class={{ render_provider.selector }}>
 		<AppComponent @model=[] />
 	</div>
 	<div class="teleports">@raw{

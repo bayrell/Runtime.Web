@@ -20,7 +20,10 @@
 
 <template>
 	%var string class_name = this.layout.getLayoutComponentName();
-	<{class_name} @model=[] />
+	%if (class_name)
+	{
+		<{class_name} @model=[] />
+	}
 </template>
 
 </class>

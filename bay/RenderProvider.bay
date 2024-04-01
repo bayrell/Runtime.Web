@@ -77,7 +77,7 @@ class RenderProvider extends BaseProvider
 	/**
 	 * Returns root element
 	 */
-	var getRootElement() => this.element ? this.element : document.getElementById(this.selector);
+	var getRootElement() => this.element ? this.element : document.querySelector("." ~ this.selector);
 	
 	
 	/**
