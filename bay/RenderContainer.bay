@@ -164,23 +164,31 @@ class RenderContainer extends BaseObject
 	 */
 	async void callRoute(string class_name, string method_name)
 	{
+		/* Cancel previous route */
+		if (this.base_route != null)
+		{
+			this.base_route.cancelRoute();
+			this.base_route = null;
+		}
+		
 		/* Create route */
-		this.base_route = rtl::newInstance(class_name, [this]);
+		BaseRoute base_route = rtl::newInstance(class_name, [this]);
+		this.base_route = base_route;
 		
 		/* Action before */
-		await this.base_route.onActionBefore();
+		await base_route.onActionBefore();
 		
 		/* Call route */
 		if (method_name != "")
 		{
-			Callback route = new Callback(this.base_route, method_name);
+			Callback route = new Callback(base_route, method_name);
 			await rtl::apply(route);
 		}
 		
 		/* Action after */
-		if (not this.base_route.isCancelRoute())
+		if (not base_route.isCancelRoute())
 		{
-			await this.base_route.onActionAfter();
+			await base_route.onActionAfter();
 		}
 	}
 	

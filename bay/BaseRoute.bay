@@ -83,14 +83,20 @@ class BaseRoute extends BaseObject
 			await page_model.onRouteBefore(this.container);
 			
 			/* Load widget data */
-			await page_model.loadData(this.container);
+			if (not this.isCancelRoute())
+			{
+				await page_model.loadData(this.container);
+			}
 		}
 		
 		/* Render page */
-		this.renderPage();
+		if (not this.isCancelRoute())
+		{
+			this.renderPage();
+		}
 		
 		/* Call route after */
-		if (page_model)
+		if (page_model and not this.isCancelRoute())
 		{
 			await page_model.onRouteAfter(this.container);
 		}

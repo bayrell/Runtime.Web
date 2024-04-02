@@ -226,11 +226,6 @@ class BaseApp extends BaseObject
 	 */
 	async void callRoute(RenderContainer container)
 	{
-		if (container.base_route != null)
-		{
-			container.base_route.cancelRoute();
-			container.base_route = null;
-		}
 		if (container.route == null) return;
 		if (container.response != null) return;
 		if (container.route.action == null and container.route.model == null) return;

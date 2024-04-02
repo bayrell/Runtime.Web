@@ -170,6 +170,12 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
+	 * Returns full page title
+	 */
+	string getFullTitle() => this.title;
+	
+	
+	/**
 	 * Returns layout component name
 	 */
 	string getLayoutComponentName()
