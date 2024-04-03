@@ -52,9 +52,10 @@ class DetectLanguage extends BaseAppHook
 	 */
 	void register_hooks()
 	{
+		this.register(static::MAKE_URL);
+		
 		#ifdef BACKEND then
 		this.register(static::FIND_ROUTE_BEFORE, "redirect");
-		this.register(static::MAKE_URL);
 		this.register(static::MATCH_ROUTE);
 		this.register(static::ROUTE_BEFORE);
 		#endif
@@ -162,6 +163,8 @@ class DetectLanguage extends BaseAppHook
 		}
 	}
 	
+	#endif
+	
 	
 	/**
 	 * Make url
@@ -175,6 +178,7 @@ class DetectLanguage extends BaseAppHook
 		/* Add language */
 		url = "/" ~ layout.lang ~ url;
 		params.set("url", url);
+		params.set("url_with_domain", url);
 		
 		/* Add domain */
 		if (domain != "")
@@ -182,6 +186,4 @@ class DetectLanguage extends BaseAppHook
 			params.set("url_with_domain", "//" ~ domain ~ url);
 		}
 	}
-	
-	#endif
 }

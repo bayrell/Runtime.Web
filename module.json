@@ -18,6 +18,7 @@
 		"RouteInfo.bay",
 		"WidgetSerializer.bay",
 		"Hooks/AppHook.bay",
+		"Hooks/DetectLanguage.bay",
 		"Hooks/SetupLayout.bay",
 		"AppComponent.bay",
 		"BasePage.bay",

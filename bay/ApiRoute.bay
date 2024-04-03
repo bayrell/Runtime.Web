@@ -39,7 +39,7 @@ class ApiRoute extends BaseRoute
 			{
 				"uri": "/api/{service}/{api_name}/{method_name}/",
 				"name": "runtime:web:api",
-				"method": "actionIndex",
+				"action": "actionIndex",
 				"pos": 1000,
 			},
 		];

@@ -26,5 +26,4 @@ use Runtime.Web.Response;
 
 class RenderResponse extends Response
 {
-	string class_name = "";
 }

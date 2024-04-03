@@ -151,49 +151,10 @@ class BaseApp extends BaseObject
 	
 	
 	/**
-	 * Setup layout request
-	 */
-	void setupLayoutRequest(RenderContainer container)
-	{
-		container.layout.route = container.route;
-		container.layout.request_host = container.request.host;
-		container.layout.request_uri = container.request.uri;
-		container.layout.request_full_uri = container.request.full_uri;
-		container.layout.request_query = container.request.query;
-	}
-	
-	
-	/**
-	 * Setup layout routes
-	 */
-	void setupLayoutRoutes(RenderContainer container)
-	{
-		container.layout.routes = {};
-		RouteList routes = @.provider(classof RouteList);
-		Collection<string> routes_list = routes.routes_list;
-		for (int i=0; i<routes_list.count(); i++)
-		{
-			RouteInfo route = routes_list.get(i);
-			if (route.is_backend) continue;
-			container.layout.routes.set(route.name, {
-				"uri": route.uri,
-				"domain": route.domain,
-			});
-		}
-	}
-	
-	
-	/**
 	 * Resolve route
 	 */
 	async void resolveRoute(RenderContainer container)
 	{
-		/* Setup layout */
-		this.setupLayoutRequest(container);
-		
-		/* Setup urls */
-		this.setupLayoutRoutes(container);
-		
 		/* Call route before */
 		await @.callHookAsync(AppHook::ROUTE_BEFORE, {
 			"container": container,

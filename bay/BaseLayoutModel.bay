@@ -37,6 +37,7 @@ class BaseLayoutModel extends BaseModel
 	string title = "";
 	string lang = "";
 	string layout_name = "default";
+	string current_page_class = "";
 	string current_page_model = "";
 	
 	/* Current route */
@@ -86,6 +87,7 @@ class BaseLayoutModel extends BaseModel
 	void processFrontendData(Serializer serializer, Map data)
 	{
 		serializer.process(this, "components", data);
+		serializer.process(this, "current_page_class", data);
 		serializer.process(this, "current_page_model", data);
 		serializer.process(this, "f_inc", data);
 		serializer.process(this, "lang", data);
@@ -122,7 +124,7 @@ class BaseLayoutModel extends BaseModel
 	string getPageClassName()
 	{
 		PageModel page_model = this.getPageModel();
-		return page_model ? page_model.component : "";
+		return page_model ? page_model.component : this.current_page_class;
 	}
 	
 	

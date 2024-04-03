@@ -90,7 +90,7 @@ class BaseRoute extends BaseObject
 		}
 		
 		/* Render page */
-		if (not this.isCancelRoute())
+		if (this.container.response == null and not this.isCancelRoute())
 		{
 			this.renderPage();
 		}
@@ -106,18 +106,9 @@ class BaseRoute extends BaseObject
 	/**
 	 * Render page and setup response
 	 */
-	void renderPage()
+	void renderPage(string page_class_name = "")
 	{
-		if (this.container.response == null)
-		{
-			/* Create response */
-			string page_class_name = this.container.layout.getPageClassName();
-			if (page_class_name != "")
-			{
-				this.container.response = new RenderResponse();
-				this.container.response.class_name = page_class_name;
-			}
-		}
+		this.container.renderPage(page_class_name);
 	}
 	
 	

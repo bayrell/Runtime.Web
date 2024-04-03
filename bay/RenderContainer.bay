@@ -151,6 +151,29 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
+	 * Render page and setup response
+	 */
+	void renderPage(string page_class_name)
+	{
+		this.response = new RenderResponse();
+		this.layout.current_page_class = page_class_name;
+		if (page_class_name != "")
+		{
+			this.layout.addComponent(page_class_name);
+		}
+	}
+	
+	
+	/**
+	 * Cancel route
+	 */
+	void cancelRoute()
+	{
+		if (this.base_route) this.base_route.cancelRoute();
+	}
+	
+	
+	/**
 	 * Add cookie
 	 */
 	Response addCookie(Cookie cookie)
