@@ -71,8 +71,10 @@ class RouteList extends BaseProvider
 			for (int j=0; j<routes_info.count(); j++)
 			{
 				RouteInfo route = routes_info.get(j);
-				if (route.action == "") route <= action <= "actionIndex";
-				route <= action <= new Collection(info.name, route.action);
+				if (route.action)
+				{
+					route <= action <= new Collection(info.name, route.action);
+				}
 				this.addRoute(route);
 			}
 		}

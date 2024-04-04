@@ -189,13 +189,28 @@ class BaseApp extends BaseObject
 	{
 		if (container.route == null) return;
 		if (container.response != null) return;
-		if (container.route.action == null and container.route.model == null) return;
+		if (
+			container.route.action == null and
+			container.route.model == null and
+			container.route.component == null
+		) return;
 		
 		/* Setup page model */
 		string page_model_name = container.route.model;
 		if (page_model_name != "" and rtl::class_exists(page_model_name))
 		{
 			container.layout.setPageModel(page_model_name);
+		}
+		
+		/* Setup component */
+		else if (container.route.component != "")
+		{
+			container.renderPage(container.route.component);
+			if (container.route.data)
+			{
+				string title = container.route.data.get("title");
+				container.layout.setPageTitle(title);
+			}
 		}
 		
 		/* Setup route */

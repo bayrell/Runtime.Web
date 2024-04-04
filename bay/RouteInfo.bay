@@ -29,8 +29,9 @@ struct RouteInfo extends BaseStruct
 	string uri = "";
 	string uri_match = "";
 	string domain = "";
-	string model = "";
-	string action = "";
+	string action = null;
+	string component = null;
+	string model = null;
 	Dict data = null;
 	Collection<Callback> middleware = [];
 	Collection<string> params = [];
