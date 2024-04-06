@@ -29,6 +29,7 @@ struct RouteInfo extends BaseStruct
 	string uri = "";
 	string uri_match = "";
 	string domain = "";
+	string label = "";
 	string action = null;
 	string component = null;
 	string model = null;

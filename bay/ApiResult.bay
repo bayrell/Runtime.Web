@@ -27,6 +27,8 @@ class ApiResult extends BaseObject
 	int code = 0;
 	string message = "";
 	Map data = {};
+	string api_name = "";
+	string method_name = "";
 	string ob_content = "";
 	string error_name = null;
 	string error_file = "";
@@ -72,6 +74,8 @@ class ApiResult extends BaseObject
 	Map getContent()
 	{
 		Map res = {
+			"api_name": this.api_name,
+			"method_name": this.method_name,
 			"code": this.code,
 			"message": this.message,
 			"data": this.data,
@@ -92,6 +96,8 @@ class ApiResult extends BaseObject
 	 */
 	void importContent(Map content)
 	{
+		this.api_name = content.get("api_name", "");
+		this.method_name = content.get("method_name", "");
 		this.data = content.get("data", null);
 		this.code = content.get("code", -1);
 		this.message = content.get("message", "Unknown error");
@@ -196,5 +202,4 @@ class ApiResult extends BaseObject
 			this.message = "Error";
 		}
 	}
-	
 }

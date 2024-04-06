@@ -45,27 +45,35 @@ class ApiProvider extends BaseProvider
 	{
 		#ifdef BACKEND then
 		
+		ApiResult result = new ApiResult();
+		
+		string api_name = params["api_name"] |> default string "";
+		string method_name = params["method_name"] |> default string "";
 		string service = params["service"] |> default string "app";
 		if (service != "app")
 		{
-			ApiResult result = new ApiResult();
-			return result.fail({
+			result.fail({
 				"message": "Service must be app"
 			});
 		}
+		else
+		{
+			try
+			{
+				Api annotation = this.findApi(params);
+				result = await this.callAnnotation(annotation, params);
+			}
+			catch (ApiError e)
+			{
+				result = new ApiResult();
+				result.fail(e.getPreviousException());
+			}
+		}
 		
-		try
-		{
-			Api annotation = this.findApi(params);
-			ApiResult result = await this.callAnnotation(annotation, params);
-			return result;
-		}
-		catch (ApiError e)
-		{
-			ApiResult result = new ApiResult();
-			result.fail(e.getPreviousException());
-			return result;
-		}
+		/* Set api name */
+		result.api_name = api_name;
+		result.method_name = method_name;
+		return result;
 		
 		#endif
 		
