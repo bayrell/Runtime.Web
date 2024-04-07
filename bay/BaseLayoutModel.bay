@@ -352,7 +352,7 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Returns url
 	 */
-	string url(string route_name, Dict route_params = null, Dict params = null)
+	string url(string route_name, Dict route_params = null, Dict url_params = null)
 	{
 		if (not this.routes.has(route_name)) return null;
 		
@@ -382,7 +382,7 @@ class BaseLayoutModel extends BaseModel
 		
 		/* Add domain */
 		string url_with_domain = url;
-		if (domain != "")
+		if (domain)
 		{
 			url_with_domain = "//" ~ domain ~ url;
 		}
@@ -396,9 +396,10 @@ class BaseLayoutModel extends BaseModel
 			"route_params": route_params,
 			"url": url,
 			"url_with_domain": url_with_domain,
+			"url_params": url_params ? url_params : {},
 		});
 		
-		bool is_domain = params ? params.get("domain", true) : true;
+		bool is_domain = url_params ? url_params.get("domain", true) : true;
 		return is_domain ? res.get("url_with_domain") : res.get("url");
 	}
 }

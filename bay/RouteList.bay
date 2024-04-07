@@ -168,7 +168,7 @@ class RouteList extends BaseProvider
 		if (route == null) return null;
 		
 		Request request = container.request;
-		if (route.domain != "" and route.domain != request.host) return null;
+		if (route.domain and route.domain != request.host) return null;
 		
 		/* Get matches */
 		Vector<string> matches = re::matchAll(route.uri_match, request.uri);
