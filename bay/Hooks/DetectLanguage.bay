@@ -52,6 +52,7 @@ class DetectLanguage extends BaseAppHook
 	 */
 	void register_hooks()
 	{
+		this.register(static::CALL_API_BEFORE);
 		this.register(static::MAKE_URL);
 		
 		#ifdef BACKEND then
@@ -63,28 +64,6 @@ class DetectLanguage extends BaseAppHook
 	
 	
 	#ifdef BACKEND then
-	
-	
-	/**
-	 * Redirect
-	 */
-	void redirect(Map params)
-	{
-		RenderContainer container = params.get("container");
-		if (container.response) return;
-		
-		/* Detect language */
-		Request request = container.request;
-		Dict res = this.getLanguage(request);
-		
-		string language = res.get("lang");
-		string uri = res.get("uri");
-		
-		if (uri == "")
-		{
-			container.response = new RedirectResponse("/" ~ language ~ "/");
-		}
-	}
 	
 	
 	/**
@@ -219,6 +198,35 @@ class DetectLanguage extends BaseAppHook
 	}
 	
 	#endif
+	
+	
+	/**
+	 * Call api before
+	 */
+	void call_api_before(Map params)
+	{
+		Map api_params = params.get("params");
+		BaseLayoutModel layout = api_params.get("layout");
+		
+		/* Get api params */
+		string service = api_params["service"] |> default string "app";
+		string api_name = api_params["api_name"] |> default string "";
+		string method_name = api_params["method_name"] |> default string "";
+		
+		/* Build api url */
+		Vector api_url_arr = [
+			layout.lang,
+			"api",
+			service,
+			api_name,
+			method_name,
+		];
+		api_url_arr = api_url_arr.filter( bool (string s) => s != "" );
+		string api_url = "/" ~ api_url_arr.join("/") ~ "/";
+		
+		/* Set api url */
+		params.set("api_url", api_url);
+	}
 	
 	
 	/**

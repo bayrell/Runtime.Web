@@ -223,6 +223,10 @@ class BaseLayoutModel extends BaseModel
 		params.set("backend_storage", this.backend_storage);
 		#endif
 		
+		/* Set layout */
+		params.set("layout", this);
+		
+		/* Call api */
 		ApiProvider provider = @.provider(classof ApiProvider);
 		ApiResult api = await provider.callApi(params);
 		return api;

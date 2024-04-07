@@ -242,10 +242,7 @@ class ApiProvider extends BaseProvider
 		string method_name = params["method_name"] |> default string "";
 		Dict data = params["data"] |> default Dict null;
 		
-		string locale_code = "";
-		
 		Vector api_url_arr = [
-			locale_code,
 			"api",
 			service,
 			api_name,
@@ -268,6 +265,7 @@ class ApiProvider extends BaseProvider
 			Dict d = @.callHook(AppHook::CALL_API_BEFORE, {
 				"api_url": api_url,
 				"post_data": post_data,
+				"params": params,
 			});
 			api_url = d.get("api_url");
 			post_data = d.get("post_data");
