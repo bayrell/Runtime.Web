@@ -16,7 +16,7 @@
  *  limitations under the License.
 -->
 
-<class name="Runtime.Web.Hooks.SeoWidget">
+<class name="Runtime.Web.SeoWidget">
 
 
 <template>

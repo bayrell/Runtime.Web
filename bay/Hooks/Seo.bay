@@ -18,42 +18,40 @@
 
 namespace Runtime.Web.Hooks;
 
-use Runtime.BaseObject;
-use Runtime.Serializer;
 use Runtime.Web.BaseModel;
-use Runtime.Web.Hooks.SeoWidget;
+use Runtime.Web.SeoModel;
+use Runtime.Web.Hooks.AppHook as BaseAppHook;
 
 
-class SeoModel extends BaseModel
+class Seo extends BaseAppHook
 {
-	string component = classof SeoWidget;
-	string widget_name = "seo";
-	string canonical_url = "";
-	string description = "";
-	string favicon = "";
-	string article_published_time = "";
-	string article_modified_time = "";
-	Collection<string> robots = ["follow", "index"];
-	Collection<string> tags = null;
-	
-	
 	/**
-	 * Setup widget params
+	 * Register hooks
 	 */
-	void setup(Dict params)
+	void register_hooks()
 	{
-		parent(params);
-		
-		if (params == null) return;
+		this.register(static::INIT_LAYOUT);
+		this.register(static::RENDER_HEAD);
 	}
 	
 	
 	/**
-	 * Process frontend data
+	 * Init layout
 	 */
-	void processFrontendData(Serializer serializer, Map data)
+	async void init_layout(Map params)
 	{
-		serializer.process(this, "canonical_url", data)
-		parent(serializer, data);
+		BaseModel layout = params.get("layout");
+		layout.addWidget(classof SeoModel);
+	}
+	
+	
+	/**
+	 * Render head
+	 */
+	void render_head(Map params)
+	{
+		BaseModel layout = params.get("layout");
+		SeoModel seo = layout.getWidget("seo");
+		if (seo) params.get("components").push(seo);
 	}
 }
