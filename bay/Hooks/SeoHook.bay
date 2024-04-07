@@ -1,0 +1,57 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2024 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web.Hooks;
+
+use Runtime.Web.BaseModel;
+use Runtime.Web.Hooks.AppHook as BaseAppHook;
+use Runtime.Web.Hooks.SeoModel;
+
+
+class SeoHook extends BaseAppHook
+{
+	/**
+	 * Register hooks
+	 */
+	void register_hooks()
+	{
+		this.register(static::INIT_LAYOUT);
+		this.register(static::RENDER_HEAD);
+	}
+	
+	
+	/**
+	 * Init layout
+	 */
+	async void init_layout(Map params)
+	{
+		BaseModel layout = params.get("layout");
+		layout.addWidget(classof SeoModel);
+	}
+	
+	
+	/**
+	 * Render head
+	 */
+	void render_head(Map params)
+	{
+		BaseModel layout = params.get("layout");
+		SeoModel seo = layout.getWidget("seo");
+		if (seo) params.get("components").push(seo);
+	}
+}

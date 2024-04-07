@@ -25,11 +25,11 @@ use Runtime.Callback;
 
 struct RouteInfo extends BaseStruct
 {
-	string name = "";
-	string uri = "";
-	string uri_match = "";
-	string domain = "";
-	string label = "";
+	string name = null;
+	string uri = null;
+	string uri_match = null;
+	string domain = null;
+	string label = null;
 	string action = null;
 	string component = null;
 	string model = null;

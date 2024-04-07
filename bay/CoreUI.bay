@@ -21,22 +21,51 @@
 <use name="Runtime.rtl" />
 <use name="Runtime.Exceptions.RuntimeException" />
 <use name="Runtime.Web.AppComponent" />
+<use name="Runtime.Web.BaseModel" />
 <use name="Runtime.Web.RenderProvider" />
 <use name="Runtime.Web.Hooks.AppHook" />
 
 
+<template name="renderWidget" args="BaseModel widget, Dict props = null">
+	%if (widget)
+	{
+		%if (rtl::is_instanceof(widget, classof BaseModel))
+		{
+			%set string component = widget.component;
+			%if (component)
+			{
+				<{component} @model={{ widget }} ...props />
+			}
+		}
+		%else
+		{
+			<{widget} @model=[] />
+		}
+	}
+</template>
+
+
 <template name="renderSEO">
 	<title>{{ this.layout.getFullTitle() }}</title>
+	%if (this.layout.content_type)
+	{
+		<meta charset={{ this.layout.content_type }} />
+		<meta http-equiv="Content-Type" content={{ "text/html; " ~ this.layout.content_type }} />
+	}
+	%if (this.layout.lang)
+	{
+		<meta http-equiv="Content-Language" content={{ this.layout.lang }} />
+	}
 </template>
 
 
 <template name="renderHeadComponents">
-	%var Dict d = @.callHook(AppHook::RENDER_HEAD, { "components": [] });
+	%var Dict d = @.callHook(AppHook::RENDER_HEAD, { "components": [], "layout": this.layout });
 	%var Collection<string> components = d["components"];
 	%for (int i=0; i<components.count(); i++)
 	{
-		%var string class_name = components[i];
-		<{class_name} @model=[] />
+		%set var widget = components.get(i);
+		%render this.renderWidget(widget);
 	}
 </template>
 
@@ -61,12 +90,12 @@
 
 
 <template name="renderBodyComponents">
-	%var Dict d = @.callHook(AppHook::RENDER_BODY, { "components": [] });
+	%var Dict d = @.callHook(AppHook::RENDER_BODY, { "components": [], "layout": this.layout });
 	%var Collection<string> components = d["components"];
 	%for (int i=0; i<components.count(); i++)
 	{
-		%var string class_name = components[i];
-		<{class_name} />
+		%set var widget = components.get(i);
+		%render this.renderWidget(widget);
 	}
 </template>
 
@@ -118,12 +147,12 @@
 
 
 <template name="renderFooterComponents">
-	%var Dict d = @.callHook(AppHook::RENDER_FOOTER, { "components": [] });
+	%var Dict d = @.callHook(AppHook::RENDER_FOOTER, { "components": [], "layout": this.layout });
 	%var Collection<string> components = d["components"];
 	%for (int i=0; i<components.count(); i++)
 	{
-		%var string class_name = components[i];
-		<{class_name} />
+		%set var widget = components.get(i);
+		%render this.renderWidget(widget);
 	}
 </template>
 

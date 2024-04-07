@@ -39,6 +39,7 @@ class BaseLayoutModel extends BaseModel
 	string layout_name = "default";
 	string current_page_class = "";
 	string current_page_model = "";
+	string content_type = "UTF-8";
 	
 	/* Current route */
 	RouteInfo route = null;
@@ -89,6 +90,7 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "components", data);
 		serializer.process(this, "current_page_class", data);
 		serializer.process(this, "current_page_model", data);
+		serializer.process(this, "content_type", data);
 		serializer.process(this, "f_inc", data);
 		serializer.process(this, "lang", data);
 		serializer.process(this, "layout_name", data);
@@ -175,6 +177,18 @@ class BaseLayoutModel extends BaseModel
 	 * Returns full page title
 	 */
 	string getFullTitle() => this.title;
+	
+	
+	/**
+	 * Returns locale
+	 */
+	string getLocale() => this.lang;
+	
+	
+	/**
+	 * Returns site name
+	 */
+	string getSiteName() => "";
 	
 	
 	/**
@@ -338,14 +352,14 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Returns url
 	 */
-	string url(string route_name, Dict route_params = null)
+	string url(string route_name, Dict route_params = null, Dict params = null)
 	{
 		if (not this.routes.has(route_name)) return null;
 		
 		Dict route = this.routes.get(route_name);
 		string domain = route.get("domain");
 		string url = route.get("uri");
-		if (route_params != null)
+		if (route_params != null and url != null)
 		{
 			route_params.each(
 				void (string value, string key) use (url)
@@ -362,6 +376,9 @@ class BaseLayoutModel extends BaseModel
 				}
 			);
 		}
+		
+		/* Set url */
+		if (url == null) url = "";
 		
 		/* Add domain */
 		string url_with_domain = url;
@@ -381,6 +398,7 @@ class BaseLayoutModel extends BaseModel
 			"url_with_domain": url_with_domain,
 		});
 		
-		return res.get("url_with_domain");
+		bool is_domain = params ? params.get("domain", true) : true;
+		return is_domain ? res.get("url_with_domain") : res.get("url");
 	}
 }
