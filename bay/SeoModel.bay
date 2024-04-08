@@ -53,7 +53,13 @@ class SeoModel extends BaseModel
 	 */
 	void processFrontendData(Serializer serializer, Map data)
 	{
-		serializer.process(this, "canonical_url", data)
+		serializer.process(this, "article_modified_time", data);
+		serializer.process(this, "article_published_time", data);
+		serializer.process(this, "canonical_url", data);
+		serializer.process(this, "description", data);
+		serializer.process(this, "favicon", data);
+		serializer.process(this, "robots", data);
+		serializer.process(this, "tags", data);
 		parent(serializer, data);
 	}
 }

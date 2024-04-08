@@ -153,7 +153,7 @@ class RenderContainer extends BaseObject
 	/**
 	 * Render page and setup response
 	 */
-	void renderPage(string page_class_name)
+	void renderPage(string page_class_name = "")
 	{
 		this.response = new RenderResponse();
 		this.layout.current_page_class = page_class_name;

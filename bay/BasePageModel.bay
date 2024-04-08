@@ -18,11 +18,40 @@
 
 namespace Runtime.Web;
 
+use Runtime.Web.BaseModel;
 use Runtime.Web.BasePage;
-use Runtime.Web.RenderListModel;
+use Runtime.Web.BaseRoute;
+use Runtime.Web.RenderContainer;
 
 
-class BasePageModel extends RenderListModel
+class BasePageModel extends BaseModel
 {
 	string component = classof BasePage;
+	
+	
+	/**
+	 * Action index
+	 */
+	async void actionIndex(RenderContainer container)
+	{
+		/* Load page data */
+		BaseRoute base_route = container.base_route;
+		await this.loadData(container);
+		
+		if (base_route.isCancelRoute()) return;
+		
+		/* Create response */
+		container.renderPage();
+		
+		/* Build title */
+		this.buildTitle(container);
+	}
+	
+	
+	/**
+	 * Build title
+	 */
+	void buildTitle(RenderContainer container)
+	{
+	}
 }

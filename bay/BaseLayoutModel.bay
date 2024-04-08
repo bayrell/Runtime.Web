@@ -83,6 +83,22 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
+	 * Route before
+	 */
+	async void onRouteBefore(RenderContainer container)
+	{
+	}
+	
+	
+	/**
+	 * Route after
+	 */
+	async void onRouteAfter(RenderContainer container)
+	{
+	}
+	
+	
+	/**
 	 * Process frontend data
 	 */
 	void processFrontendData(Serializer serializer, Map data)

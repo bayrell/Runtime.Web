@@ -128,22 +128,6 @@ class BaseModel extends BaseObject
 	
 	
 	/**
-	 * Route before
-	 */
-	async void onRouteBefore(RenderContainer container)
-	{
-	}
-	
-	
-	/**
-	 * Route after
-	 */
-	async void onRouteAfter(RenderContainer container)
-	{
-	}
-	
-	
-	/**
 	 * Load data
 	 */
 	async void loadData(RenderContainer container)

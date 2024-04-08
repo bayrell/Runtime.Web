@@ -79,19 +79,8 @@ class BaseRoute extends BaseObject
 		BasePageModel page_model = this.layout.getPageModel();
 		if (not page_model) return;
 		
-		/* Call route before */
-		await page_model.onRouteBefore(this.container);
-		if (this.isCancelRoute()) return;
-		
 		/* Load widget data */
-		await page_model.loadData(this.container);
-		if (this.isCancelRoute()) return;
-		
-		/* Render page */
-		this.renderPage();
-		
-		/* Call route after */
-		await page_model.onRouteAfter(this.container);
+		await page_model.actionIndex(this.container);
 	}
 	
 	

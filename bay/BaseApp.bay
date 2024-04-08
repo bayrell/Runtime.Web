@@ -211,6 +211,7 @@ class BaseApp extends BaseObject
 				string title = container.route.data.get("title");
 				container.layout.setPageTitle(title);
 			}
+			return;
 		}
 		
 		/* Setup route */
