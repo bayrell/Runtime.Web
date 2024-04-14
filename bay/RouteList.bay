@@ -71,7 +71,7 @@ class RouteList extends BaseProvider
 			for (int j=0; j<routes_info.count(); j++)
 			{
 				RouteInfo route = routes_info.get(j);
-				if (route.action)
+				if (route.action and rtl::isString(route.action))
 				{
 					route <= action <= new Collection(info.name, route.action);
 				}
