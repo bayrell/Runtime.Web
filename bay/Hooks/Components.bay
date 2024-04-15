@@ -47,6 +47,7 @@ class Components extends BaseAppHook
 	{
 		#ifdef BACKEND then
 		this.register(static::RENDER_HEAD);
+		this.register(static::RENDER_FOOTER);
 		#endif
 	}
 	
