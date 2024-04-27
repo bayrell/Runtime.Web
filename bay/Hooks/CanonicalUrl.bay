@@ -63,7 +63,9 @@ class CanonicalUrl extends BaseAppHook
 		if (layout.route.uri == null) return;
 		
 		/* Build canonical url */
-		seo.canonical_url = layout.url(layout.route.name, layout.route.matches, {"domain": false});
+		string canonical_url = layout.url(
+			layout.route.name, layout.route.matches, {"domain": false}
+		);
 		
 		/* Add get parameters */
 		Collection<string> keys = layout.request_query.keys().sort();
@@ -74,11 +76,14 @@ class CanonicalUrl extends BaseAppHook
 			if (this.query.get(key).indexOf(layout.route.name) == -1) continue;
 			
 			string value = layout.request_query.get(key);
-			seo.canonical_url = rs::url_get_add(
-				seo.canonical_url,
+			canonical_url = rs::url_get_add(
+				canonical_url,
 				key,
 				value
 			);
 		}
+		
+		/* Set canonical url */
+		seo.setCanonicalUrl(canonical_url);
 	}
 }

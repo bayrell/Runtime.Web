@@ -45,6 +45,7 @@ class BaseLayoutModel extends BaseModel
 	RouteInfo route = null;
 	string request_full_uri = "";
 	string request_host = "";
+	string request_https = "";
 	string request_uri = "";
 	Dict<string> request_query = null;
 	
@@ -112,6 +113,7 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "layout_name", data);
 		serializer.process(this, "request_full_uri", data);
 		serializer.process(this, "request_host", data);
+		serializer.process(this, "request_https", data);
 		serializer.process(this, "request_query", data);
 		serializer.process(this, "request_uri", data);
 		serializer.process(this, "route", data);

@@ -62,4 +62,21 @@ class SeoModel extends BaseModel
 		serializer.process(this, "tags", data);
 		parent(serializer, data);
 	}
+	
+	
+	/**
+	 * Set canonical url
+	 */
+	void setCanonicalUrl(string canonical_url)
+	{
+		/* Add domain */
+		if (this.layout.request_host)
+		{
+			canonical_url = "//" ~ this.layout.request_host ~ canonical_url;
+			if (this.layout.request_https) canonical_url = "https:" ~ canonical_url;
+			else canonical_url = "http:" ~ canonical_url;
+		}
+		
+		this.canonical_url = canonical_url;
+	}
 }

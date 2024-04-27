@@ -338,8 +338,19 @@ class BaseApp extends BaseObject
 		
 		/* Setup uri */
 		$request->initUri($uri);
-		$request->protocol = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ?
-			$_SERVER['HTTP_X_FORWARDED_PROTO'] : "http";
+		
+		/* Setup protocol */
+		$request->protocol = "http";
+		if (isset($_SERVER['REQUEST_SCHEME']))
+		{
+			$request->protocol = $_SERVER['REQUEST_SCHEME'];
+		}
+		if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']))
+		{
+			$request->protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+		}
+		
+		$request->is_https = $request->protocol == "https";
 		
 		/* Setup request */
 		$request->host = $host;

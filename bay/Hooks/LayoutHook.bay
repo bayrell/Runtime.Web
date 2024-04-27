@@ -71,6 +71,7 @@ class LayoutHook extends BaseAppHook
 	void setupLayoutRequest(RenderContainer container)
 	{
 		container.layout.route = container.route;
+		container.layout.request_https = container.request.is_https;
 		container.layout.request_host = container.request.host;
 		container.layout.request_uri = container.request.uri;
 		container.layout.request_full_uri = container.request.full_uri;
