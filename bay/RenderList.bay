@@ -22,10 +22,16 @@
 
 
 <template name="renderItems">
-	%for (int i=0; i<this.model.items.count(); i++)
+	%set int items_count = this.model.items.count();
+	%for (int i=0; i<items_count; i++)
 	{
 		%set BaseModel widget = this.model.items.get(i);
-		%render this.renderWidget(widget, { "data": this.data });
+		%render this.renderWidget(widget, { "data": this.data, "render_list": {
+			"position": i,
+			"count": items_count,
+			"first": i == 0,
+			"last": i == (items_count - 1),
+		} });
 	}
 </template>
 

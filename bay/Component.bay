@@ -44,7 +44,64 @@
 
 props var model = null;
 props var data = null;
+props var render_list = null;
 Map render_cache = new Map;
+
+
+/**
+ * Returns true if first in render list
+ */
+bool isFirstInRenderList() =>
+	(this.render_list != null and this.render_list.has("first"))
+	? this.render_list.get("first")
+	: false
+;
+
+
+/**
+ * Returns false if first in render list
+ */
+bool isLastInRenderList() =>
+	(this.render_list != null and this.render_list.has("last"))
+	? this.render_list.get("last")
+	: false
+;
+
+
+/**
+ * Returns position in render list
+ */
+int positionInRenderList() =>
+	(this.render_list != null and this.render_list.has("position"))
+	? this.render_list.get("position")
+	: -1
+;
+
+
+/**
+ * Returns class name for render list item
+ */
+string renderListClass()
+{
+	if (this.render_list == null) return;
+	
+	Vector<string> class_name = [];
+	
+	if (this.render_list.has("position"))
+	{
+		class_name.push("item--" ~ this.render_list.get("position"));
+	}
+	if (this.render_list.has("first") and this.render_list.get("first"))
+	{
+		class_name.push("item--first");
+	}
+	if (this.render_list.has("last") and this.render_list.get("last"))
+	{
+		class_name.push("item--last");
+	}
+	
+	return rs::join(" ", class_name);
+}
 
 
 /**
