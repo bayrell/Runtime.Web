@@ -52,7 +52,7 @@ class BaseModel extends BaseObject
 		this.setup(params);
 		
 		/* Init widget settings */
-		this.initWidget();
+		this.initWidget(params);
 		
 		if (this.layout != null and this.component != "")
 		{
@@ -86,7 +86,7 @@ class BaseModel extends BaseObject
 	/**
 	 * Init widget settings
 	 */
-	void initWidget()
+	void initWidget(Dict params)
 	{
 	}
 	
