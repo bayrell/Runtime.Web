@@ -32,6 +32,7 @@ class BaseRoute extends BaseObject
 	protected bool is_cancel_route = false;
 	protected RenderContainer container;
 	protected LayoutModel layout;
+	protected Dict post_data = null;
 	
 	
 	/**

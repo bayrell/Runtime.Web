@@ -276,7 +276,7 @@ class BaseApp extends BaseObject
 		if (substr($content_type, 0, strlen('application/json')) == 'application/json')
 		{
 			$json = file_get_contents("php://input");
-			$post = @json_decode($json);
+			$post = \Runtime\rtl::json_decode($json);
 		}
 		else
 		{
@@ -316,9 +316,16 @@ class BaseApp extends BaseObject
 		$post = $this->readPost();
 		if ($post != null)
 		{
-			foreach ($post as $key => $val)
+			if ($post instanceof \Runtime\Dict)
 			{
-				$payload->set($key, $val);
+				$payload = $post;
+			}
+			else
+			{
+				foreach ($post as $key => $val)
+				{
+					$payload->set($key, $val);
+				}
 			}
 		}
 		

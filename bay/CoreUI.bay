@@ -122,7 +122,9 @@
 	}</div>
 	
 	<script>
-		window["app_data"] = @json{{ this.container.exportData() }};
+		window["app_data"] = @raw{{ rtl::json_encode(
+			this.container.exportData(), rtl::ALLOW_CLASS_NAME
+		) }};
 	</script>
 	
 	<script>

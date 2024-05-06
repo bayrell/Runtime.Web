@@ -99,6 +99,7 @@ class RenderContainer extends BaseObject
 		/* Create serializer */
 		Serializer serializer = new WidgetSerializer();
 		serializer.setCallback("processFrontendData");
+		serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
 		serializer.setFlag(Serializer::EXPORT);
 		
 		/* Export data */
@@ -128,6 +129,7 @@ class RenderContainer extends BaseObject
 		/* Create serializer */
 		Serializer serializer = new WidgetSerializer();
 		serializer.setCallback("processFrontendData");
+		serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
 		serializer.setFlag(Serializer::IMPORT);
 		
 		/* Load data */
@@ -197,6 +199,7 @@ class RenderContainer extends BaseObject
 		/* Create route */
 		BaseRoute base_route = rtl::newInstance(class_name, [this]);
 		this.base_route = base_route;
+		this.base_route.post_data = this.request.payload;
 		
 		/* Action before */
 		await base_route.onActionBefore();

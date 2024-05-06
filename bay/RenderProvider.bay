@@ -110,7 +110,7 @@ class RenderProvider extends BaseProvider
 		
 		Serializer serializer = new Serializer();
 		serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
-		app_data = serializer.toPrimitive(app_data, Serializer::ALLOW_CLASS_NAME);
+		app_data = serializer.toPrimitive(app_data);
 		return app_data;
 	}
 	

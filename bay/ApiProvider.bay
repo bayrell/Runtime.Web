@@ -271,10 +271,8 @@ class ApiProvider extends BaseProvider
 			post_data = d.get("post_data");
 			
 			/* Encode data to string */
-			var serializer = new Serializer();
-			serializer.removeFlag(Serializer::ALLOW_CLASS_NAME);
 			var data = post_data.get("data");
-			data = serializer.json_encode(data);
+			data = rtl::json_encode(data);
 			post_data.set("data", data);
 			
 			/* Send curl */
@@ -284,9 +282,7 @@ class ApiProvider extends BaseProvider
 			string response = await curl.send();
 			
 			/* Get answer */
-			var serializer = new Serializer();
-			serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
-			Dict answer = serializer.json_decode(response);
+			Dict answer = rtl::json_decode(response, rtl::ALLOW_CLASS_NAME);
 			if (answer and answer instanceof Dict)
 			{
 				res.importContent(answer);
