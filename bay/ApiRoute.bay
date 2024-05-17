@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.Exceptions.AbstractException;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
@@ -65,17 +66,26 @@ class ApiRoute extends BaseRoute
 		string api_name = this.container.route.matches["api_name"];
 		string method_name = this.container.route.matches["method_name"];
 		
+		ApiResult api_result = null;
 		ApiProvider provider = @.provider(classof ApiProvider);
-		ApiResult api = await provider.callApi({
-			"service": service,
-			"api_name": api_name,
-			"method_name": method_name,
-			"data": post_data,
-			"backend_storage": this.layout.backend_storage,
-		});
+		try
+		{
+			api_result = await provider.callApi({
+				"service": service,
+				"api_name": api_name,
+				"method_name": method_name,
+				"data": post_data,
+				"backend_storage": this.layout.backend_storage,
+			});
+		}
+		catch (AbstractException e)
+		{
+			api_result = new ApiResult();
+			api_result.exception(e);
+		}
 		
 		/* Create response */
-		this.container.setResponse( new JsonResponse(api.getContent()) );
+		this.container.setResponse( new JsonResponse(api_result.getContent()) );
 		
 		/* HTTP error if exception */
 		/*if (api.isException())

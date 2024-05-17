@@ -29,6 +29,9 @@
 		"BasePageModel.bay",
 		"ModuleDescription.bay"
 	],
+	"groups": [
+		"runtime"
+	],
 	"src": "./bay",
 	"dest":
 	{
