@@ -1,0 +1,140 @@
+/*!
+ *  Bayrell Runtime Library
+ *
+ *  (c) Copyright 2016-2024 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web.Hooks;
+
+use Runtime.Callback;
+use Runtime.Web.BaseModel;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.Hooks.AppHook as BaseAppHook;
+
+
+class WidgetModelFactory extends BaseAppHook
+{
+	string model_name = "";
+	
+	
+	/**
+	 * Setup
+	 */
+	void setup(Dict params)
+	{
+		parent(params);
+		
+		if (params == null) return;
+		if (params.has("model_name")) this.model_name = params.get("model_name");
+	}
+	
+	
+	/**
+	 * Register hooks
+	 */
+	void register_hooks()
+	{
+		#ifdef BACKEND then
+		this.register(static::ROUTE_BEFORE);
+		#endif
+	}
+	
+	
+	/**
+	 * Returns true if is created
+	 */
+	bool isCreated(RenderContainer container)
+	{
+		Map backend_storage = container.layout.backend_storage;
+		if (not backend_storage.has(classof WidgetModelFactory)) return false;
+		
+		Map flags = backend_storage.get(classof WidgetModelFactory);
+		if (not flags.get(this.model_name)) return false;
+		
+		return true;
+	}
+	
+	
+	/**
+	 * Setup is created
+	 */
+	void setIsCreated(RenderContainer container)
+	{
+		Map backend_storage = container.layout.backend_storage;
+		if (not backend_storage.has(classof WidgetModelFactory))
+		{
+			backend_storage.set(classof WidgetModelFactory, {});
+		}
+		
+		Map flags = backend_storage.get(classof WidgetModelFactory);
+		flags.set(this.model_name, true);
+	}
+	
+	
+	/**
+	 * Add widget
+	 */
+	BaseModel addWidget(RenderContainer container)
+	{
+		if (this.isCreated(container)) return null;
+		
+		/* Get model layout names */
+		Callback layoutNames = new Callback(this.model_name, "layoutNames");
+		if (not layoutNames.exists()) return null;
+		
+		/* Check layout name in layout names */
+		Collection<string> layout_names = layoutNames.apply();
+		string layout_name = container.layout.layout_name;
+		if (layout_names.indexOf(layout_name) == -1) return null;
+		
+		/* Add widget to layout */
+		BaseModel widget = container.layout.addWidget(this.model_name);
+		
+		/* Set widget is created */
+		this.setIsCreated(container);
+		
+		return widget;
+	}
+	
+	
+	/**
+	 * Route before
+	 */
+	void route_before(Map params)
+	{
+		RenderContainer container = params.get("container");
+		if (container.response != null) return;
+		
+		/* Add widget */
+		this.addWidget(container);
+	}
+	
+	
+	/**
+	 * Route after
+	 */
+	async void route_after(Map params)
+	{
+		RenderContainer container = params.get("container");
+		if (container.response != null) return;
+		
+		/* Add widget */
+		BaseModel widget = this.addWidget(container);
+		if (widget)
+		{
+			await widget.loadData(container);
+		}
+	}
+}

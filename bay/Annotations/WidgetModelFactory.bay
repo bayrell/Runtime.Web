@@ -19,18 +19,18 @@
 namespace Runtime.Web.Annotations;
 
 use Runtime.Entity.Hook;
-use Runtime.Web.Hooks.Components;
+use Runtime.Web.Hooks.WidgetModelFactory as WidgetModelFactoryHook;
 
 
-class HeaderComponents extends Hook
+struct WidgetModelFactory extends Hook
 {
 	/**
 	 * Constructor
 	 */
-	void constructor(Collection components)
+	void constructor(string model_name)
 	{
-		parent(classof Components, {
-			"header": components,
+		parent(classof WidgetModelFactoryHook, {
+			"model_name": model_name
 		});
 	}
 }

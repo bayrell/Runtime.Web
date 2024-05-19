@@ -33,6 +33,7 @@ class BaseRoute extends BaseObject
 	protected RenderContainer container;
 	protected LayoutModel layout;
 	protected Dict post_data = null;
+	protected RouteInfo route = null;
 	
 	
 	/**
@@ -43,6 +44,7 @@ class BaseRoute extends BaseObject
 		parent();
 		this.container = container;
 		this.layout = container.layout;
+		this.route = container.route;
 	}
 	
 	
@@ -76,12 +78,30 @@ class BaseRoute extends BaseObject
 	 */
 	async void actionIndex()
 	{
-		/* Get page model */
-		BasePageModel page_model = this.layout.getPageModel();
-		if (not page_model) return;
+		/* Setup page model */
+		string page_model_name = this.route.model;
+		if (page_model_name != "" and rtl::class_exists(page_model_name))
+		{
+			this.layout.setPageModel(page_model_name);
+			
+			/* Get page model */
+			BasePageModel page_model = this.layout.getPageModel();
+			if (page_model)
+			{
+				await page_model.actionIndex(this.container);
+			}
+		}
 		
-		/* Load widget data */
-		await page_model.actionIndex(this.container);
+		/* Setup component */
+		else if (this.route.component != "")
+		{
+			this.renderPage(this.route.component);
+			if (this.route.data)
+			{
+				string title = this.route.data.get("title");
+				this.layout.setPageTitle(title);
+			}
+		}
 	}
 	
 	

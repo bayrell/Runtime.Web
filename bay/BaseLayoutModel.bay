@@ -86,7 +86,7 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Route before
 	 */
-	async void onRouteBefore(RenderContainer container)
+	async void onActionBefore(RenderContainer container)
 	{
 	}
 	
@@ -94,7 +94,7 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Route after
 	 */
-	async void onRouteAfter(RenderContainer container)
+	async void onActionAfter(RenderContainer container)
 	{
 	}
 	

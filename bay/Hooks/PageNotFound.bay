@@ -19,6 +19,7 @@
 namespace Runtime.Web.Hooks;
 
 use Runtime.lib;
+use Runtime.Web.BasePageModel;
 use Runtime.Web.RedirectResponse;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
@@ -64,7 +65,9 @@ class PageNotFound extends BaseAppHook
 		if (container.response) return;
 		
 		container.layout.setPageModel(this.model);
-		await container.callBaseRoute();
+		
+		BasePageModel page_model = container.layout.getPageModel();
+		await page_model.actionIndex(container);
 	}
 	
 	#endif

@@ -155,6 +155,9 @@ class BaseApp extends BaseObject
 	 */
 	async void resolveRoute(RenderContainer container)
 	{
+		/* Setup layout name */
+		this.setupLayoutName(container);
+		
 		/* Call route before */
 		await @.callHookAsync(AppHook::ROUTE_BEFORE, {
 			"container": container,
@@ -163,17 +166,8 @@ class BaseApp extends BaseObject
 		/* Call middleware */
 		await this.callRouteMiddleware(container);
 		
-		/* Call layout route before */
-		await container.layout.onRouteBefore(container);
-		
-		/* Load layout data */
-		await container.layout.loadData(container);
-		
 		/* Call route */
 		await this.callRoute(container);
-		
-		/* Call layout route after */
-		await container.layout.onRouteAfter(container);
 		
 		/* Call route after */
 		await @.callHookAsync(AppHook::ROUTE_AFTER, {
@@ -183,61 +177,75 @@ class BaseApp extends BaseObject
 	
 	
 	/**
+	 * Setup layout name
+	 */
+	void setupLayoutName(RenderContainer container)
+	{
+		if (container.route == null) return;
+		
+		/* Get function */
+		Callback getLayoutName = new Callback(container.route.route_class, "getLayoutName");
+		if (not getLayoutName.exists()) return;
+		
+		/* Set layout name */
+		string layout_name = getLayoutName.apply();
+		container.layout.setLayoutName(layout_name);
+	}
+	
+	
+	/**
 	 * Call route
 	 */
 	async void callRoute(RenderContainer container)
 	{
-		if (container.route == null) return;
 		if (container.response != null) return;
+		
+		/* Call layout route before */
+		await container.layout.onActionBefore(container);
+		
+		/* Load layout data */
+		await container.layout.loadData(container);
+		
+		/* Call route */
 		if (
-			container.route.action == null and
-			container.route.model == null and
-			container.route.component == null
-		) return;
-		
-		/* Setup page model */
-		string page_model_name = container.route.model;
-		if (page_model_name != "" and rtl::class_exists(page_model_name))
-		{
-			container.layout.setPageModel(page_model_name);
-		}
-		
-		/* Setup component */
-		else if (container.route.component != "")
-		{
-			container.renderPage(container.route.component);
-			if (container.route.data)
-			{
-				string title = container.route.data.get("title");
-				container.layout.setPageTitle(title);
-			}
-		}
-		
-		/* If callable */
-		if (rtl::isCallable(container.route.action))
-		{
-			fn f = container.route.action;
-			await f(container);
-		}
-		else
-		{
-			/* Setup route */
-			string class_name = classof BaseRoute;
-			string method_name = "actionIndex";
-			
-			if (
-				container.route.action != null and
-				container.route.action instanceof Collection and
-				container.route.action.count() == 2
+			container.route != null and
+			(
+				container.route.action != null or
+				container.route.model != null or
+				container.route.component != null
 			)
+		)
+		{
+			/* If route action is callable */
+			if (rtl::isCallable(container.route.action))
 			{
-				class_name = container.route.action.get(0);
-				method_name = container.route.action.get(1);
+				fn f = container.route.action;
+				await f(container);
 			}
 			
-			/* Call route */
-			await container.callRoute(class_name, method_name);
+			/* Route action is Collection */
+			else
+			{
+				string class_name = classof BaseRoute;
+				string method_name = "actionIndex";
+				
+				if (
+					container.route.action != null and
+					container.route.action instanceof Collection and
+					container.route.action.count() == 2
+				)
+				{
+					class_name = container.route.action.get(0);
+					method_name = container.route.action.get(1);
+				}
+				
+				/* Call route */
+				await container.callRoute(class_name, method_name);
+			}
 		}
+		
+		/* Call layout route after */
+		await container.layout.onActionAfter(container);
 	}
 	
 	

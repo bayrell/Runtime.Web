@@ -75,6 +75,7 @@ class RouteList extends BaseProvider
 				{
 					route <= action <= new Collection(info.name, route.action);
 				}
+				route <= route_class <= info.name;
 				this.addRoute(route);
 			}
 		}

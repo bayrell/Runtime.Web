@@ -19,6 +19,7 @@
 		"SeoModel.bay",
 		"SeoWidget.bay",
 		"WidgetSerializer.bay",
+		"Annotations/SetupLayout.bay",
 		"Hooks/AppHook.bay",
 		"Hooks/CanonicalUrl.bay",
 		"Hooks/DetectLanguage.bay",

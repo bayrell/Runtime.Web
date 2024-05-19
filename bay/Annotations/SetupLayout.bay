@@ -19,18 +19,16 @@
 namespace Runtime.Web.Annotations;
 
 use Runtime.Entity.Hook;
-use Runtime.Web.Hooks.Components;
+use Runtime.Web.Hooks.SetupLayout as SetupLayoutHook;
 
 
-class HeaderComponents extends Hook
+struct SetupLayout extends Hook
 {
-	/**
+    /**
 	 * Constructor
 	 */
-	void constructor(Collection components)
+	void constructor(Dict params)
 	{
-		parent(classof Components, {
-			"header": components,
-		});
+		parent(classof SetupLayoutHook, params);
 	}
 }

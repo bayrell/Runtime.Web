@@ -38,7 +38,7 @@ class BasePageModel extends BaseModel
 		BaseRoute base_route = container.base_route;
 		await this.loadData(container);
 		
-		if (base_route.isCancelRoute()) return;
+		if (base_route and base_route.isCancelRoute()) return;
 		
 		/* Create response */
 		container.renderPage();
