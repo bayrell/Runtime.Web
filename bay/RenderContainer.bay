@@ -23,6 +23,7 @@ use Runtime.Callback;
 use Runtime.Serializer;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
+use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Cookie;
 use Runtime.Web.Layout;
@@ -233,9 +234,10 @@ class RenderContainer extends BaseObject
 	/**
 	 * Call page model
 	 */
-	async void callPageModel(string page_model)
+	async void callPageModel(string model_name)
 	{
-		this.layout.setPageModel(page_model);
-		await this.callBaseRoute();
+		this.layout.setPageModel(model_name);
+		BasePageModel page_model = this.layout.getPageModel();
+		await page_model.actionIndex(this);
 	}
 }

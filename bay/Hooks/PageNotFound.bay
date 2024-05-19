@@ -64,10 +64,7 @@ class PageNotFound extends BaseAppHook
 		RenderContainer container = params.get("container");
 		if (container.response) return;
 		
-		container.layout.setPageModel(this.model);
-		
-		BasePageModel page_model = container.layout.getPageModel();
-		await page_model.actionIndex(container);
+		await container.callPageModel(this.model);
 	}
 	
 	#endif
