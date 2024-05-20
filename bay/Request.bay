@@ -71,5 +71,16 @@ class Request extends BaseObject
 		this.query = query;
 		
 		if (this.uri == "") this.uri = "/";
+		
+		/* Route prefix */
+		string route_prefix = @.env("ROUTE_PREFIX");
+		if (route_prefix == null) route_prefix = "";
+		
+		int route_prefix_sz = rs::strlen(route_prefix);
+		if (route_prefix_sz != 0 and rs::substr(this.uri, 0, route_prefix_sz) == route_prefix)
+		{
+			this.uri = rs::substr(this.uri, route_prefix_sz);
+			this.full_uri = rs::substr(this.full_uri, route_prefix_sz);
+		}
 	}
 }

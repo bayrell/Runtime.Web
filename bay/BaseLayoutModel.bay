@@ -368,7 +368,13 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Returns assets
 	 */
-	string assets(string path) => path;
+	string assets(string path)
+	{
+		string route_prefix = @.env("ROUTE_PREFIX");
+		if (route_prefix == null) route_prefix = "";
+		route_prefix ~= "/assets/";
+		return route_prefix ~ path;
+	}
 	
 	
 	/**

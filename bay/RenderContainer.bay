@@ -63,7 +63,7 @@ class RenderContainer extends BaseObject
 		Map environments = {};
 		
 		/* Setup environments */
-		Collection arr = ["CLOUD_ENV", "DEBUG", "LOCALE", "TZ", "TZ_OFFSET"];
+		Collection arr = ["CLOUD_ENV", "DEBUG", "LOCALE", "TZ", "TZ_OFFSET", "ROUTE_PREFIX"];
 		
 		/* Call hook */
 		Dict params = @.callHook(AppHook::ENVIRONMENTS, {

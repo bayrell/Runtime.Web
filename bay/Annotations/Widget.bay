@@ -23,4 +23,10 @@ use Runtime.Entity.Entity;
 
 struct Widget extends Entity
 {
+    void constructor(string widget_name)
+	{
+		parent({
+			"name": widget_name,
+		});
+	}
 }
