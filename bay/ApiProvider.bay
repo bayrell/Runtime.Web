@@ -237,7 +237,11 @@ class ApiProvider extends BaseProvider
 		string method_name = params["method_name"] |> default string "";
 		Dict data = params["data"] |> default Dict null;
 		
+		string route_prefix = @.env("ROUTE_PREFIX");
+		route_prefix = rs::removeFirstSlash(route_prefix);
+		
 		Vector api_url_arr = [
+			route_prefix,
 			"api",
 			service,
 			api_name,

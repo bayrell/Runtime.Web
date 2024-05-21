@@ -29,13 +29,20 @@ class WidgetSerializer extends Serializer
 	
 	
 	/**
-	 * Import data
+	 * Process data
 	 */
-	void import(BaseObject object, string field_name, Map data)
+	void process(BaseObject object, string field_name, Map data)
 	{
-		this.parent_widgets.push(object);
-		parent(object, field_name, data);
-		this.parent_widgets.pop();
+		if (this.isImport())
+		{
+			this.parent_widgets.push(object);
+			parent(object, field_name, data);
+			this.parent_widgets.pop();
+		}
+		else
+		{
+			parent(object, field_name, data);
+		}
 	}
 	
 	

@@ -19,6 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
+use Runtime.Exceptions.AbstractException;
 use Runtime.Web.ApiResult;
 use Runtime.Web.Cookie;
 use Runtime.Web.RenderContainer;
@@ -53,5 +54,32 @@ class BaseApi extends BaseObject
 	 */
 	async void onActionAfter()
 	{
+	}
+	
+	
+	/**
+	 * Set success
+	 */
+	void success(Dict data = null)
+	{
+		this.result.success(data);
+	}
+	
+	
+	/**
+	 * Setup exception
+	 */
+	ApiResult exception(AbstractException e)
+	{
+		this.result.exception(e);
+	}
+	
+	
+	/**
+	 * Setup fail
+	 */
+	ApiResult fail(var data = null)
+	{
+		this.result.fail(data);
 	}
 }
