@@ -98,10 +98,9 @@ class RenderContainer extends BaseObject
 		};
 		
 		/* Create serializer */
-		Serializer serializer = new WidgetSerializer();
-		serializer.setCallback("processFrontendData");
-		serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
-		serializer.setFlag(Serializer::EXPORT);
+		Serializer serializer = new Serializer();
+		serializer.setFlag(Serializer::ALLOW_OBJECTS);
+		serializer.setFlag(Serializer::ENCODE);
 		
 		/* Export data */
 		serializer.process(this, "layout", data);
@@ -128,13 +127,12 @@ class RenderContainer extends BaseObject
 		});
 		
 		/* Create serializer */
-		Serializer serializer = new WidgetSerializer();
-		serializer.setCallback("processFrontendData");
-		serializer.setFlag(Serializer::ALLOW_CLASS_NAME);
-		serializer.setFlag(Serializer::IMPORT);
+		Serializer serializer = new Serializer();
+		serializer.setFlag(Serializer::ALLOW_OBJECTS);
+		serializer.setFlag(Serializer::DECODE);
 		
 		/* Load data */
-		this.layout.processFrontendData(serializer, data.get("layout"));
+		this.layout.serialize(serializer, data.get("layout"));
 		
 		/* Call hook */
 		@.callHook(AppHook::IMPORT_CONTAINER_DATA_AFTER, {

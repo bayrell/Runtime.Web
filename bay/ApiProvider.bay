@@ -228,8 +228,8 @@ class ApiProvider extends BaseProvider
 			
 			/* Encode data to string */
 			var data = post_data.get("data");
-			data = rtl::json_encode(data);
-			post_data.set("data", data);
+			var json_data = rtl::json_encode(data);
+			post_data.set("data", json_data);
 			
 			/* Send curl */
 			Curl curl = new Curl(api_url, {
@@ -238,7 +238,7 @@ class ApiProvider extends BaseProvider
 			string response = await curl.send();
 			
 			/* Get answer */
-			Dict answer = rtl::json_decode(response, rtl::ALLOW_CLASS_NAME);
+			Dict answer = rtl::json_decode(response, rtl::ALLOW_OBJECTS);
 			if (answer and answer instanceof Dict)
 			{
 				res.importContent(answer);
