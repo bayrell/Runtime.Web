@@ -70,7 +70,7 @@ class ApiRoute extends BaseRoute
 		ApiProvider provider = @.provider(classof ApiProvider);
 		try
 		{
-			api_result = await provider.callApi({
+			api_result = await provider.send({
 				"service": service,
 				"api_name": api_name,
 				"method_name": method_name,

@@ -19,34 +19,23 @@
 namespace Runtime.Web;
 
 use Runtime.Web.ApiProvider;
-use Runtime.Web.ApiResult;
+use Runtime.Web.BusHttp;
+use Runtime.Web.BusInterface;
 
 
 class Bus
 {
-	
 	/**
-	 * Call api
+	 * Returns BusInterface
 	 */
-	static async ApiResult callApi(Dict params)
+	BusInterface get(string service, string kind)
 	{
-		ApiProvider provider = @.provider(classof ApiProvider);
-		ApiResult api = await provider.callApi(params);
-		return api;
+		#ifdef BACKEND then
+		return @.provider(classof ApiProvider);
+		#endif
+		
+		#ifdef FRONTEND then
+		return new BusHttp(kind);
+		#endif
 	}
-	
-	
-	#ifdef BACKEND then
-	
-	/**
-	 * Call system
-	 */
-	static async ApiResult callSystem(Dict params)
-	{
-		ApiProvider provider = @.provider(classof ApiProvider);
-		ApiResult api = await provider.callSystem(params);
-		return api;
-	}
-	
-	#endif
 }

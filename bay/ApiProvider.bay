@@ -39,9 +39,9 @@ use Runtime.Web.Hooks.AppHook;
 class ApiProvider extends BaseProvider
 {
 	/**
-	 * Call api
+	 * Send message
 	 */
-	async ApiResult callApi(Dict params)
+	async ApiResult send(Dict params)
 	{
 		#ifdef BACKEND then
 		
@@ -113,42 +113,6 @@ class ApiProvider extends BaseProvider
 	
 	
 	/**
-	 * Returns system backend storage
-	 */
-	Map getSystemBackendStorage() => {};
-	
-	
-	/**
-	 * Call system
-	 */
-	async ApiResult callSystem(Dict params)
-	{
-		string service = params["service"] |> default string "app";
-		if (service != "app")
-		{
-			ApiResult result = new ApiResult();
-			return result.fail({
-				"message": "Service must be app"
-			});
-		}
-		
-		try
-		{
-			Api annotation = this.findSystem(params);
-			params.set("backend_storage", this.getSystemBackendStorage());
-			ApiResult result = await this.callAnnotation(annotation, params);
-			return result;
-		}
-		catch (ApiError e)
-		{
-			ApiResult result = new ApiResult();
-			result.fail(e.getPreviousException());
-			return result;
-		}
-	}
-	
-	
-	/**
 	 * Find local api
 	 */
 	async Api findApi(Dict params)
@@ -205,17 +169,10 @@ class ApiProvider extends BaseProvider
 		api_instance.backend_storage = backend_storage;
 		
 		/* Call api */
-		try
-		{
-			await api_instance.onActionBefore();
-			Callback f = new Callback(api_instance, method_name);
-			await rtl::apply(f);
-			await api_instance.onActionAfter();
-		}
-		catch (ApiError e)
-		{
-			api_instance.result.fail(e.getPreviousException());
-		}
+		await api_instance.onActionBefore();
+		Callback f = new Callback(api_instance, method_name);
+		await rtl::apply(f);
+		await api_instance.onActionAfter();
 		
 		/* Return api result */
 		return api_instance.result;

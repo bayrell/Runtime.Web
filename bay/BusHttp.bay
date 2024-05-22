@@ -18,29 +18,10 @@
 
 namespace Runtime.Web;
 
-use Runtime.Web.Response;
+use Runtime.Web.ApiProvider;
+use Runtime.Web.ApiResult;
 
 
-class JsonResponse extends Response
+class BusHttp
 {
-	Map data = {};
-	
-	
-	/**
-	 * Constructor
-	 */
-	void constructor(Map data)
-	{
-		parent();
-		this.data = data;
-	}
-	
-	
-	/**
-	 * Returns content
-	 */
-	string getContent()
-	{
-		return rtl::json_encode(this.data, rtl::ALLOW_CLASS_NAME);
-	}
 }

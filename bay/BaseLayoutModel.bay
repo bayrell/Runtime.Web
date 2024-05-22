@@ -244,9 +244,15 @@ class BaseLayoutModel extends BaseModel
 		/* Set layout */
 		params.set("layout", this);
 		
+		/* Returns bus */
+		/*
+		BusInterface bus = Bus::get(service, "api");
+		ApiResult api = await bus.send(params);
+		*/
+		
 		/* Call api */
 		ApiProvider provider = @.provider(classof ApiProvider);
-		ApiResult api = await provider.callApi(params);
+		ApiResult api = await provider.send(params);
 		return api;
 	}
 	
