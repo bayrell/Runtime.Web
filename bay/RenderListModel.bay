@@ -58,10 +58,13 @@ class RenderListModel extends BaseModel
 	/**
 	 * Add widget
 	 */
-	BaseModel addWidget(string class_name, Map params = null, string before_item = "")
+	BaseModel addWidget(
+		string class_name, Map params = null,
+		string dest = "", string kind = "before"
+	)
 	{
 		BaseModel widget = parent(class_name, params);
-		this.addItem(widget, before_item);
+		this.addItem(widget, dest, kind);
 		return widget;
 	}
 	
@@ -69,16 +72,18 @@ class RenderListModel extends BaseModel
 	/**
 	 * Add item
 	 */
-	BaseModel addItem(BaseModel widget, string before_item = "")
+	BaseModel addItem(BaseModel widget, string dest = "", string kind = "before")
 	{
 		int pos = -1;
-		if (before_item != "")
+		if (dest != "")
 		{
-			pos = this.findPositionByName(before_item)
+			pos = this.findPositionByName(dest);
 		}
 		if (pos >= 0)
 		{
-			this.items.insert(pos, widget);
+			if (kind == "before") this.items.insert(pos, widget);
+			else if (pos + 1 < this.items.count()) this.items.insert(pos + 1, widget);
+			else this.items.push(widget);
 		}
 		else
 		{
