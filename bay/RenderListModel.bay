@@ -34,7 +34,7 @@ class RenderListModel extends BaseModel
 	/**
 	 * Find widget position
 	 */
-	int findPosition(BaseModel widget) =>
+	int find(BaseModel widget) =>
 		widget ? this.items.find(lib::equal(widget)) : -1
 	;
 	
@@ -42,7 +42,7 @@ class RenderListModel extends BaseModel
 	/**
 	 * Find widget position by name
 	 */
-	int findPositionByName(string widget_name) =>
+	int findByName(string widget_name) =>
 		this.items.find(lib::equalAttr("widget_name", widget_name))
 	;
 	
@@ -60,7 +60,7 @@ class RenderListModel extends BaseModel
 	 */
 	BaseModel addWidget(
 		string class_name, Map params = null,
-		string dest = "", string kind = "before"
+		string dest = "", string kind = "after"
 	)
 	{
 		BaseModel widget = parent(class_name, params);
@@ -72,22 +72,22 @@ class RenderListModel extends BaseModel
 	/**
 	 * Add item
 	 */
-	BaseModel addItem(BaseModel widget, string dest = "", string kind = "before")
+	BaseModel addItem(BaseModel widget, string dest = "", string kind = "after")
 	{
 		int pos = -1;
 		if (dest != "")
 		{
-			pos = this.findPositionByName(dest);
+			pos = this.findByName(dest);
 		}
 		if (pos >= 0)
 		{
 			if (kind == "before") this.items.insert(pos, widget);
-			else if (pos + 1 < this.items.count()) this.items.insert(pos + 1, widget);
-			else this.items.push(widget);
+			else this.items.insert(pos + 1, widget);
 		}
 		else
 		{
-			this.items.push(widget);
+			if (kind == "before") this.items.prepend(widget);
+			else this.items.push(widget);
 		}
 		return widget;
 	}
@@ -98,7 +98,7 @@ class RenderListModel extends BaseModel
 	 */
 	void removeItem(BaseModel widget)
 	{
-		int pos = this.findPosition(widget);
+		int pos = this.find(widget);
 		this.items.remove(pos);
 	}
 	
@@ -108,7 +108,7 @@ class RenderListModel extends BaseModel
 	 */
 	void removeItemByName(string widget_name)
 	{
-		int pos = this.findPositionByName(widget_name);
+		int pos = this.findByName(widget_name);
 		this.items.remove(pos);
 	}
 	
