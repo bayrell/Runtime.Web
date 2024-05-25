@@ -424,9 +424,8 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	$component->container = $this->container;
 	$component->layout = $this->layout;
 	$component->_parent_component = $this;
-	$component->_slots = \Runtime\Dict::from([
-		"default" => $content
-	]);
+	if ($content instanceof \Runtime\Dict) $component->_slots = $content;
+	else $component->_slots = \Runtime\Dict::from([ "default" => $content ]);
 	if ($attrs != null)
 	{
 		foreach ($attrs as $key => $value)
