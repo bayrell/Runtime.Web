@@ -41,7 +41,6 @@ class RenderProvider extends BaseProvider
 	string selector = "core_ui_root";
 	bool break_start = false;
 	bool enable_ssr = true;
-	Map components = {};
 	Events events = new Events;
 	
 	
@@ -88,6 +87,7 @@ class RenderProvider extends BaseProvider
 		/* Create render container */
 		BaseApp app = @.getApp();
 		this.container = app.createRenderContainer();
+		this.container.createLayout();
 		
 		#endif
 	}

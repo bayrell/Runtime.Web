@@ -42,8 +42,9 @@
 
 <script>
 
-props var model = null;
 props var data = null;
+props var data_widget_path = null;
+props var model = null;
 props var render_list = null;
 Map render_cache = new Map;
 
@@ -166,6 +167,20 @@ var getRef(string name)
 	return null;
 	#case ifcode JAVASCRIPT then
 	return this.$refs[name];
+	#endswitch
+}
+
+
+/**
+ * Returns props
+ */
+var getProps()
+{
+	#switch
+	#case ifcode PHP then
+	return $this->_props;
+	#case ifcode JAVASCRIPT then
+	return this.$props;
 	#endswitch
 }
 
@@ -440,6 +455,7 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	$component->container = $this->container;
 	$component->layout = $this->layout;
 	$component->_parent_component = $this;
+	$component->_props = $attrs;
 	if ($content instanceof \Runtime\Dict) $component->_slots = $content;
 	else $component->_slots = \Runtime\Dict::from([ "default" => $content ]);
 	if ($attrs != null)
