@@ -41,31 +41,31 @@ class LayoutHook extends BaseAppHook
 	 * Route before
 	 */
 	async void route_before(Map params)
-    {
-        RenderContainer container = params.get("container");
-        
-        /* Setup client ip */
+	{
+		RenderContainer container = params.get("container");
+		
+		/* Setup client ip */
 		this.setupClientIP(container);
-        
-        /* Setup layout */
+		
+		/* Setup layout */
 		this.setupLayoutRequest(container);
 		
 		/* Setup urls */
 		this.setupLayoutRoutes(container);
-    }
-    
-    
-    /**
-     * Setup client ip
-     */
-    void setupClientIP(RenderContainer container)
-    {
-        string client_ip = container.request.getClientIp();
-        container.layout.backend_storage.set("client_ip", client_ip);
-    }
-    
-    
-    /**
+	}
+	
+	
+	/**
+	 * Setup client ip
+	 */
+	void setupClientIP(RenderContainer container)
+	{
+		string client_ip = container.request.getClientIp();
+		container.layout.backend_storage.set("client_ip", client_ip);
+	}
+	
+	
+	/**
 	 * Setup layout request
 	 */
 	void setupLayoutRequest(RenderContainer container)

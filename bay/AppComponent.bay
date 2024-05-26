@@ -22,7 +22,7 @@
 	%var string class_name = this.layout.getLayoutComponentName();
 	%if (class_name)
 	{
-		<{class_name} @model=[] />
+		<{class_name} @model=[] key="app" />
 	}
 </template>
 

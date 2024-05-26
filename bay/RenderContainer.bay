@@ -22,6 +22,7 @@ use Runtime.BaseObject;
 use Runtime.Callback;
 use Runtime.Serializer;
 use Runtime.Web.ApiResult;
+use Runtime.Web.BaseLayoutModel;
 use Runtime.Web.BaseModel;
 use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
@@ -31,7 +32,7 @@ use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.RouteInfo;
-use Runtime.Web.WidgetSerializer;
+use Runtime.Web.RouteList;
 use Runtime.Web.Hooks.AppHook;
 
 
@@ -47,11 +48,218 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
-	 * Call api
+	 * Create layout
 	 */
-	ApiResult callApi(Map params)
+	void createLayout()
 	{
-		return null;
+		/* Get layout class name */
+		Dict params = @.callHook(AppHook::LAYOUT_MODEL_NAME, {
+			"class_name": classof BaseLayoutModel,
+		});
+		
+		/* Create layout */
+		this.layout = rtl::newInstance(params.get("class_name"));
+		
+		/* Call route before */
+		await @.callHookAsync(AppHook::CREATE_LAYOUT, {
+			"container": this,
+		});
+	}
+	
+	
+	/**
+	 * Find route
+	 */
+	void findRoute()
+	{
+		/* Call hook find route */
+		@.callHook(AppHook::FIND_ROUTE_BEFORE, {
+			"container": this,
+		});
+		
+		/* Find route */
+		if (this.route == null and this.response == null)
+		{
+			RouteList routes = @.provider(classof RouteList);
+			this.route = routes.findRoute(this);
+		}
+		
+		/* Call hook found route */
+		await @.callHook(AppHook::FIND_ROUTE, {
+			"container": this,
+		});
+	}
+	
+	
+	/**
+	 * Setup default layout name from route
+	 */
+	void setupLayoutName()
+	{
+		if (this.route == null) return;
+		
+		/* Get function */
+		Callback getLayoutName = new Callback(this.route.route_class, "getLayoutName");
+		if (not getLayoutName.exists()) return;
+		
+		/* Set layout name */
+		string layout_name = getLayoutName.apply();
+		this.layout.setLayoutName(layout_name);
+	}
+	
+	
+	/**
+	 * Resolve route
+	 */
+	async void resolveRoute()
+	{
+		/* Setup layout name */
+		this.setupLayoutName();
+		
+		/* Call route before */
+		await @.callHookAsync(AppHook::ROUTE_BEFORE, {
+			"container": this,
+		});
+		
+		/* Call middleware */
+		await this.callRouteMiddleware();
+		
+		/* Call route */
+		if (this.response == null)
+		{
+			/* Call layout route before */
+			await this.layout.onActionBefore(this);
+			
+			/* Load layout data */
+			await this.layout.loadData(this);
+			
+			/* Run route */
+			if (this.route != null)
+			{
+				await this.route.resolve(this);
+			}
+			
+			/* Call layout route after */
+			await this.layout.onActionAfter(this);
+		}
+		
+		/* Call route after */
+		await @.callHookAsync(AppHook::ROUTE_AFTER, {
+			"container": this,
+		});
+	}
+	
+	
+	/**
+	 * Call route middleware
+	 */
+	async void callRouteMiddleware()
+	{
+		if (this.route and this.route.middleware)
+		{
+			for (int i = 0; i<this.route.middleware.count(); i++)
+			{
+				Callback middleware = this.route.middleware.get(i);
+				await rtl::apply(middleware, [this]);
+			}
+		}
+		
+		/* Call hook middleware */
+		await @.callHook(AppHook::ROUTE_MIDDLEWARE, {
+			"container": this,
+		});
+	}
+	
+	
+	/**
+	 * Call route
+	 */
+	async void callRoute(string class_name, string method_name)
+	{
+		if (this.response != null) return;
+		
+		/* Cancel previous route */
+		if (this.base_route != null)
+		{
+			this.base_route.cancelRoute();
+			this.base_route = null;
+		}
+		
+		/* Create route */
+		BaseRoute base_route = rtl::newInstance(class_name, [this]);
+		this.base_route = base_route;
+		this.base_route.post_data = this.request.payload;
+		
+		/* Action before */
+		await base_route.onActionBefore();
+		
+		/* Call route */
+		if (method_name != "")
+		{
+			Callback route = new Callback(base_route, method_name);
+			await rtl::apply(route);
+		}
+		
+		/* Action after */
+		if (not base_route.isCancelRoute())
+		{
+			await base_route.onActionAfter();
+		}
+	}
+	
+	
+	/**
+	 * Call page model
+	 */
+	async void callPageModel(string model_name)
+	{
+		this.layout.setPageModel(model_name);
+		BasePageModel page_model = this.layout.getPageModel();
+		if (page_model)
+		{
+			await page_model.actionIndex(this);
+		}
+	}
+	
+	
+	/**
+	 * Set response
+	 */
+	void setResponse(Response response)
+	{
+		this.response = response;
+	}
+	
+	
+	/**
+	 * Render page and setup response
+	 */
+	void renderPage(string page_class_name = "")
+	{
+		this.response = new RenderResponse();
+		this.layout.current_page_class = page_class_name;
+		if (page_class_name != "")
+		{
+			this.layout.addComponent(page_class_name);
+		}
+	}
+	
+	
+	/**
+	 * Cancel route
+	 */
+	void cancelRoute()
+	{
+		if (this.base_route) this.base_route.cancelRoute();
+	}
+	
+	
+	/**
+	 * Add cookie
+	 */
+	Response addCookie(Cookie cookie)
+	{
+		this.cookies.set(cookie.name, cookie);
 	}
 	
 	
@@ -139,103 +347,5 @@ class RenderContainer extends BaseObject
 			"container": this,
 			"data": data,
 		});
-	}
-	
-	
-	/**
-	 * Set response
-	 */
-	void setResponse(Response response)
-	{
-		this.response = response;
-	}
-	
-	
-	/**
-	 * Render page and setup response
-	 */
-	void renderPage(string page_class_name = "")
-	{
-		this.response = new RenderResponse();
-		this.layout.current_page_class = page_class_name;
-		if (page_class_name != "")
-		{
-			this.layout.addComponent(page_class_name);
-		}
-	}
-	
-	
-	/**
-	 * Cancel route
-	 */
-	void cancelRoute()
-	{
-		if (this.base_route) this.base_route.cancelRoute();
-	}
-	
-	
-	/**
-	 * Add cookie
-	 */
-	Response addCookie(Cookie cookie)
-	{
-		this.cookies.set(cookie.name, cookie);
-	}
-	
-	
-	/**
-	 * Call route
-	 */
-	async void callRoute(string class_name, string method_name)
-	{
-		/* Cancel previous route */
-		if (this.base_route != null)
-		{
-			this.base_route.cancelRoute();
-			this.base_route = null;
-		}
-		
-		/* Create route */
-		BaseRoute base_route = rtl::newInstance(class_name, [this]);
-		this.base_route = base_route;
-		this.base_route.post_data = this.request.payload;
-		
-		/* Action before */
-		await base_route.onActionBefore();
-		
-		/* Call route */
-		if (method_name != "")
-		{
-			Callback route = new Callback(base_route, method_name);
-			await rtl::apply(route);
-		}
-		
-		/* Action after */
-		if (not base_route.isCancelRoute())
-		{
-			await base_route.onActionAfter();
-		}
-	}
-	
-	
-	/**
-	 * Call base route
-	 */
-	async void callBaseRoute()
-	{
-		string class_name = classof BaseRoute;
-		string method_name = "actionIndex";
-		await this.callRoute(class_name, method_name);
-	}
-	
-	
-	/**
-	 * Call page model
-	 */
-	async void callPageModel(string model_name)
-	{
-		this.layout.setPageModel(model_name);
-		BasePageModel page_model = this.layout.getPageModel();
-		await page_model.actionIndex(this);
 	}
 }

@@ -27,7 +27,7 @@ class AppHook extends BaseHook
 	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
 	static const string COMPONENTS = "runtime.web.app::components";
 	static const string CORE_UI = "runtime.web.app::core_ui";
-	static const string CREATE_CONTAINER = "runtime.web.app::create_container";
+	static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
 	static const string CSS_VARS = "runtime.web.app::css_vars";
 	static const string ENVIRONMENTS = "runtime.web.app::environments";
 	static const string EXPORT_CONTAINER_DATA = "runtime.web.app::export_container_data";
@@ -35,7 +35,6 @@ class AppHook extends BaseHook
 	static const string FIND_ROUTE = "runtime.web.app::find_route";
 	static const string IMPORT_CONTAINER_DATA_BEFORE = "runtime.web.app::import_container_data_before";
 	static const string IMPORT_CONTAINER_DATA_AFTER = "runtime.web.app::import_container_data_after";
-	static const string INIT_LAYOUT = "runtime.web.app::init_layout";
 	static const string LAYOUT_MODEL_NAME = "runtime.web.app::layout_model_name";
 	static const string LAYOUT_COMPONENT_NAME = "runtime.web.app::layout_component_name";
 	static const string MAKE_URL = "runtime.web.app::make_url";
@@ -60,7 +59,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::CALL_API_BEFORE) return "call_api_before";
 		if (hook_name == static::COMPONENTS) return "components";
 		if (hook_name == static::CORE_UI) return "core_ui";
-		if (hook_name == static::CREATE_CONTAINER) return "create_container";
+		if (hook_name == static::CREATE_LAYOUT) return "create_layout";
 		if (hook_name == static::CSS_VARS) return "css_vars";
 		if (hook_name == static::ENVIRONMENTS) return "environments";
 		if (hook_name == static::EXPORT_CONTAINER_DATA) return "export_container_data";
@@ -68,7 +67,6 @@ class AppHook extends BaseHook
 		if (hook_name == static::FIND_ROUTE) return "find_route";
 		if (hook_name == static::IMPORT_CONTAINER_DATA_BEFORE) return "import_container_data_before";
 		if (hook_name == static::IMPORT_CONTAINER_DATA_AFTER) return "import_container_data_after";
-		if (hook_name == static::INIT_LAYOUT) return "init_layout";
 		if (hook_name == static::LAYOUT_MODEL_NAME) return "layout_model_name";
 		if (hook_name == static::LAYOUT_COMPONENT_NAME) return "layout_component_name";
 		if (hook_name == static::MAKE_URL) return "make_url";
@@ -112,9 +110,9 @@ class AppHook extends BaseHook
 	
 	
 	/**
-	 * Create container
+	 * Create layout
 	 */
-	void create_container(Map params){}
+	void create_layout(Map params){}
 	
 	
 	/**
@@ -157,12 +155,6 @@ class AppHook extends BaseHook
 	 * Find route after
 	 */
 	void find_route(Map params){}
-	
-	
-	/**
-	 * Init layout
-	 */
-	async void init_layout(Map params){}
 	
 	
 	/**

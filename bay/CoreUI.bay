@@ -52,9 +52,9 @@
 		<meta charset={{ this.layout.content_type }} />
 		<meta http-equiv="Content-Type" content={{ "text/html; " ~ this.layout.content_type }} />
 	}
-	%if (this.layout.lang)
+	%if (this.layout.getLocale())
 	{
-		<meta http-equiv="Content-Language" content={{ this.layout.lang }} />
+		<meta http-equiv="Content-Language" content={{ this.layout.getLocale() }} />
 	}
 </template>
 
@@ -166,7 +166,7 @@
 
 
 <template>
-	<html lang={{ this.layout.lang }}>
+	<html lang={{ this.layout.getLocale() }}>
 		<head>
 			%render static::renderHead();
 			<script>window.$onReady=[];function onReady(f){ window.$onReady.push(f) };</script>

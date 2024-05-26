@@ -21,6 +21,9 @@ namespace Runtime.Web;
 use Runtime.re;
 use Runtime.BaseStruct;
 use Runtime.Callback;
+use Runtime.Web.BasePageModel;
+use Runtime.Web.BaseRoute;
+use Runtime.Web.RenderContainer;
 
 
 struct RouteInfo extends BaseStruct
@@ -101,5 +104,57 @@ struct RouteInfo extends BaseStruct
 		return this.clone{
 			"matches": new_matches,
 		};
+	}
+	
+	
+	/**
+	 * Resolve route
+	 */
+	async void resolve(RenderContainer container)
+	{
+		/* If route action is callable */
+		if (this.action != null and rtl::isCallable(this.action))
+		{
+			fn f = this.action;
+			await f(container);
+			return;
+		}
+		
+		/* Setup page model */
+		string page_model_name = this.model;
+		if (page_model_name != "" and rtl::class_exists(page_model_name))
+		{
+			await container.callPageModel(page_model_name);
+			return;
+		}
+		
+		/* Setup component */
+		if (this.component != "")
+		{
+			container.renderPage(this.component);
+			if (this.data)
+			{
+				string title = this.data.get("title");
+				container.layout.setPageTitle(title);
+			}
+			return;
+		}
+		
+		/* Call BaseRoute */
+		string class_name = classof BaseRoute;
+		string method_name = "actionIndex";
+		
+		if (
+			this.action != null and
+			this.action instanceof Collection and
+			this.action.count() == 2
+		)
+		{
+			class_name = this.action.get(0);
+			method_name = this.action.get(1);
+		}
+		
+		/* Call route */
+		await container.callRoute(class_name, method_name);
 	}
 }

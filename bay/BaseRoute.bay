@@ -78,39 +78,6 @@ class BaseRoute extends BaseObject
 	 */
 	async void actionIndex()
 	{
-		/* Setup page model */
-		string page_model_name = this.route.model;
-		if (page_model_name != "" and rtl::class_exists(page_model_name))
-		{
-			this.layout.setPageModel(page_model_name);
-			
-			/* Get page model */
-			BasePageModel page_model = this.layout.getPageModel();
-			if (page_model)
-			{
-				await page_model.actionIndex(this.container);
-			}
-		}
-		
-		/* Setup component */
-		else if (this.route.component != "")
-		{
-			this.renderPage(this.route.component);
-			if (this.route.data)
-			{
-				string title = this.route.data.get("title");
-				this.layout.setPageTitle(title);
-			}
-		}
-	}
-	
-	
-	/**
-	 * Render page and setup response
-	 */
-	void renderPage(string page_class_name = "")
-	{
-		this.container.renderPage(page_class_name);
 	}
 	
 	
@@ -129,15 +96,5 @@ class BaseRoute extends BaseObject
 	void isCancelRoute()
 	{
 		return this.is_cancel_route;
-	}
-	
-	
-	/**
-	 * Returns url
-	 */
-	static string url(string route_name, Dict route_params = null)
-	{
-		RouteList routes = @.provider(classof RouteList);
-		return routes.url(route_name, route_params);
 	}
 }

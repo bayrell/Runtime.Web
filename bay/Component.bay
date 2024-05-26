@@ -127,6 +127,22 @@ var renderSlot(string slot_name)
 
 
 /**
+ * Returns component key path
+ */
+Collection<string> getKeyPath()
+{
+	Vector<string> result = [];
+	var component = this;
+	while (component != null)
+	{
+		result.push(this.key);
+		component = component.getParent();
+	}
+	return result;
+}
+
+
+/**
  * Parent component
  */
 var getParent()

@@ -35,7 +35,7 @@ use Runtime.Web.Hooks.AppHook;
 class BaseLayoutModel extends BaseModel
 {
 	string title = "";
-	string lang = "";
+	string locale = @.env("LOCALE");
 	string layout_name = "default";
 	string current_page_class = "";
 	string current_page_model = "";
@@ -76,14 +76,6 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
-	 * Init layout
-	 */
-	async void init(RenderContainer container)
-	{
-	}
-	
-	
-	/**
 	 * Route before
 	 */
 	async void onActionBefore(RenderContainer container)
@@ -109,7 +101,7 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "current_page_model", data);
 		serializer.process(this, "content_type", data);
 		serializer.process(this, "f_inc", data);
-		serializer.process(this, "lang", data);
+		serializer.process(this, "locale", data);
 		serializer.process(this, "layout_name", data);
 		serializer.process(this, "request_full_uri", data);
 		serializer.process(this, "request_host", data);
@@ -200,7 +192,7 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Returns locale
 	 */
-	string getLocale() => this.lang;
+	string getLocale() => this.locale;
 	
 	
 	/**
