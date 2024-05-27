@@ -371,7 +371,7 @@ class BaseLayoutModel extends BaseModel
 		string route_prefix = @.env("ROUTE_PREFIX");
 		if (route_prefix == null) route_prefix = "";
 		route_prefix ~= "/assets/";
-		return route_prefix ~ path;
+		return route_prefix ~ rs::removeFirstSlash(path);
 	}
 	
 	
