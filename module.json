@@ -17,6 +17,7 @@
 		"RenderProvider.bay",
 		"RouteInfo.bay",
 		"Annotations/SetupLayout.bay",
+		"Annotations/Widget.bay",
 		"Hooks/AppHook.bay",
 		"Hooks/CanonicalUrl.bay",
 		"Hooks/DetectLanguage.bay",
