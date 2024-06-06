@@ -23,5 +23,5 @@ use Runtime.Entity.Entity;
 
 struct Param extends Entity
 {
-	var value = null;
+	Dict props = null;
 }
