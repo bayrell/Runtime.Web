@@ -16,6 +16,7 @@
 		"RenderListModel.bay",
 		"RenderProvider.bay",
 		"RouteInfo.bay",
+		"Annotations/Param.bay",
 		"Annotations/SetupLayout.bay",
 		"Annotations/Widget.bay",
 		"Hooks/AppHook.bay",
