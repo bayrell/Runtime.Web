@@ -37,7 +37,9 @@
 </template>
 
 
-<template></template>
+<template>
+	%render this.renderSlot("default");
+</template>
 
 
 <script>
@@ -451,6 +453,14 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	#switch
 	#case ifcode PHP then
 	
+	if (
+		$component_name == "KeepAlive" or
+		$component_name == "Transition" or
+		$component_name == "TransitionGroup"
+	)
+	{
+		$component_name = "Runtime.Web.Component";
+	}
 	$component = \Runtime\rtl::newInstance($component_name);
 	$component->container = $this->container;
 	$component->layout = $this->layout;
@@ -469,9 +479,9 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	
 	if ($elem instanceof \Runtime\Collection)
 	{
-		$parent_elem->push("<!--[-->");
+		/*$parent_elem->push("<!--[-->");*/
 		$parent_elem->appendItems($elem);
-		$parent_elem->push("<!--]-->");
+		/*$parent_elem->push("<!--]-->");*/
 	}
 	else if (is_string($elem) or $elem instanceof \Runtime\RawString)
 	{
@@ -480,8 +490,11 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	
 	#case ifcode JAVASCRIPT then
 	
-	let component = use(component_name);
-	if (component == undefined)
+	let component = null;
+	if (component_name == "Transition") component = Vue.Transition;
+	else if (component_name == "TransitionGroup") component = Vue.TransitionGroup;
+	else component = use(component_name);
+	if (!component)
 	{
 		throw new Runtime.Exceptions.ItemNotFound(component_name);
 	}
