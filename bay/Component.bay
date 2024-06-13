@@ -347,6 +347,35 @@ var _merge_attrs(var attr1, var attr2)
 
 
 /**
+ * Filter attrs
+ */
+var _filter_attrs(var attrs)
+{
+	#switch
+	
+	#case ifcode PHP then
+	return null;
+	
+	#case ifcode JAVASCRIPT then
+	var new_attrs = {};
+	Object.entries(attrs).forEach((arr)=>{
+		var key = arr[0];
+		var value = arr[1];
+		if (key == "@key_debug" && new_attrs["key"] == undefined)
+		{
+			new_attrs["key"] = value;
+			return;
+		}
+		if (key.charAt(0) == "@") return;
+		new_attrs[key] = value;
+	});
+	return new_attrs;
+	
+	#endswitch
+}
+
+
+/**
  * Escape html
  */
 string _escape(var s)
@@ -434,6 +463,7 @@ var _e(var parent_elem, string elem_name = null, var attrs = null, var content =
 	
 	#case ifcode JAVASCRIPT then
 	
+	attrs = this._filter_attrs(attrs);
 	elem = Vue.h(elem_name, attrs);
 	this._parent_elem_push(parent_elem, elem);
 	
@@ -499,6 +529,7 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 		throw new Runtime.Exceptions.ItemNotFound(component_name);
 	}
 	
+	attrs = this._filter_attrs(attrs);
 	elem = Vue.h(component, attrs, content);
 	this._parent_elem_push(parent_elem, elem);
 	
