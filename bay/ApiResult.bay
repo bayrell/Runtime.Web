@@ -136,12 +136,9 @@ class ApiResult extends BaseObject
 	 */
 	void success(Dict data = null)
 	{
-		if (data == null)
-		{
-			this.code = rtl::ERROR_OK;
-			this.message = "Ok";
-			return;
-		}
+		this.code = rtl::ERROR_OK;
+		this.message = "Ok";
+		if (not data) return;
 		
 		/* Set code */
 		if (data.has("code")) this.code = data["code"];
@@ -176,6 +173,9 @@ class ApiResult extends BaseObject
 	 */
 	ApiResult fail(var data = null)
 	{
+		this.code = rtl::ERROR_UNKNOWN;
+		this.message = "Unknown error";
+		
 		if (data instanceof AbstractException)
 		{
 			this.code = data.getErrorCode();

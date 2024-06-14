@@ -44,6 +44,7 @@
 
 <script>
 
+props string class = "";
 props var data = null;
 props var data_widget_path = null;
 props var model = null;
