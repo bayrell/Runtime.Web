@@ -245,6 +245,7 @@ Runtime.Web.Component.created = function ()
 {
 	var provider = global_context.provider("Runtime.Web.RenderProvider");
 	provider.events.emit("onCreatedBefore", [this]);
+	this.initWidget();
 	this.onCreated();
 	provider.events.emit("onCreated", [this]);
 }

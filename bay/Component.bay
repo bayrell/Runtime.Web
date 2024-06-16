@@ -213,6 +213,24 @@ void reload(string event, var obj=null)
 
 
 /**
+ * Constructor
+ */
+void constructor()
+{
+	parent();
+	this.initWidget();
+}
+
+
+/**
+ * Init widget settings
+ */
+void initWidget()
+{
+}
+
+
+/**
  * Before create
  */
 static void onBeforeCreate()

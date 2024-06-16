@@ -76,9 +76,12 @@ class BaseModel extends BaseObject implements SerializeInterface
 			BaseModel parent_widget = params.get("parent_widget");
 			this.layout = parent_widget.layout;
 			this.parent_widget = parent_widget;
-			this.model_path = parent_widget.model_path
-				.concat(["widgets", this.widget_name]).toCollection()
-			;
+			if (parent_widget.model_path)
+			{
+				this.model_path = parent_widget.model_path
+					.concat(["widgets", this.widget_name]).toCollection()
+				;
+			}
 			parent_widget.widgets.set(this.widget_name, this);
 		}
 	}
