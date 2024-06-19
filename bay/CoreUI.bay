@@ -78,6 +78,15 @@
 
 
 <template name="renderHeadAfter">
+	%set string route_prefix = @.env("ROUTE_PREFIX");
+	%if (route_prefix)
+	{
+		<base href={{ rs::addLastSlash(route_prefix) }} />
+	}
+	%else
+	{
+		<base href="/" />
+	}
 </template>
 
 
