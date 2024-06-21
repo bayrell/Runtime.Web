@@ -172,9 +172,9 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
-	 * Call route
+	 * Render route
 	 */
-	async void callRoute(string class_name, string method_name)
+	async void renderRoute(string class_name, string method_name)
 	{
 		if (this.response != null) return;
 		
@@ -209,9 +209,9 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
-	 * Call page model
+	 * Render page model
 	 */
-	async void callPageModel(string model_name)
+	async void renderPageModel(string model_name)
 	{
 		this.layout.setPageModel(model_name);
 		BasePageModel page_model = this.layout.getPageModel();

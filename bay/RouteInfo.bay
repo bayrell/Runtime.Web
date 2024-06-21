@@ -124,7 +124,7 @@ struct RouteInfo extends BaseStruct
 		string page_model_name = this.model;
 		if (page_model_name != "" and rtl::class_exists(page_model_name))
 		{
-			await container.callPageModel(page_model_name);
+			await container.renderPageModel(page_model_name);
 			return;
 		}
 		
@@ -154,7 +154,7 @@ struct RouteInfo extends BaseStruct
 			method_name = this.action.get(1);
 		}
 		
-		/* Call route */
-		await container.callRoute(class_name, method_name);
+		/* Render route */
+		await container.renderRoute(class_name, method_name);
 	}
 }
