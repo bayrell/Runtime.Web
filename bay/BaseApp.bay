@@ -81,9 +81,19 @@ class BaseApp extends BaseObject
 	/**
 	 * Create render container
 	 */
-	RenderContainer createRenderContainer() => new RenderContainer();
-	
+	RenderContainer createRenderContainer()
+	{
+		RenderContainer container = new RenderContainer();
 		
+		/* Create layout */
+		@.callHook(AppHook::CREATE_CONTAINER, {
+			"container": container,
+		});
+		
+		return container;
+	}
+	
+	
 	#ifdef BACKEND then
 	
 	/**

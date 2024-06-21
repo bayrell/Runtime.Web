@@ -27,6 +27,7 @@ class AppHook extends BaseHook
 	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
 	static const string COMPONENTS = "runtime.web.app::components";
 	static const string CORE_UI = "runtime.web.app::core_ui";
+	static const string CREATE_CONTAINER = "runtime.web.app::create_container";
 	static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
 	static const string CSS_VARS = "runtime.web.app::css_vars";
 	static const string ENVIRONMENTS = "runtime.web.app::environments";
@@ -59,6 +60,7 @@ class AppHook extends BaseHook
 		if (hook_name == static::CALL_API_BEFORE) return "call_api_before";
 		if (hook_name == static::COMPONENTS) return "components";
 		if (hook_name == static::CORE_UI) return "core_ui";
+		if (hook_name == static::CREATE_CONTAINER) return "create_container";
 		if (hook_name == static::CREATE_LAYOUT) return "create_layout";
 		if (hook_name == static::CSS_VARS) return "css_vars";
 		if (hook_name == static::ENVIRONMENTS) return "environments";
@@ -107,6 +109,12 @@ class AppHook extends BaseHook
 	 * Core ui
 	 */
 	void core_ui(Map params){}
+	
+	
+	/**
+	 * Create container
+	 */
+	void create_container(Map params){}
 	
 	
 	/**

@@ -29,6 +29,7 @@ class SetupLayout extends BaseAppHook
 {
 	string model = "";
 	Dict names = null;
+	Collection components = [];
 	
 	
 	/**
@@ -39,6 +40,7 @@ class SetupLayout extends BaseAppHook
 		parent(params);
 		
 		if (params == null) return;
+		if (params.has("components")) this.components = params.get("components");
 		if (params.has("model")) this.model = params.get("model");
 		if (params.has("names")) this.names = params.get("names");
 	}
@@ -49,8 +51,18 @@ class SetupLayout extends BaseAppHook
 	 */
 	void register_hooks()
 	{
-		this.register(static::LAYOUT_MODEL_NAME);
+		this.register(static::COMPONENTS, "registerComponents");
 		this.register(static::LAYOUT_COMPONENT_NAME);
+		this.register(static::LAYOUT_MODEL_NAME);
+	}
+	
+	
+	/**
+	 * Components
+	 */
+	void registerComponents(Map params)
+	{
+		params["components"].appendItems(this.components);
 	}
 	
 	

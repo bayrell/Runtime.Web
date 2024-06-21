@@ -50,7 +50,7 @@ class RenderContainer extends BaseObject
 	/**
 	 * Create layout
 	 */
-	void createLayout()
+	async void createLayout()
 	{
 		/* Get layout class name */
 		Dict params = @.callHook(AppHook::LAYOUT_MODEL_NAME, {
