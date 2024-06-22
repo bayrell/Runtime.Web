@@ -24,4 +24,7 @@ use Runtime.Entity.Entity;
 struct Param extends Entity
 {
 	Dict props = null;
+	string label = "";
+	string name = "";
+	string tab = "params";
 }

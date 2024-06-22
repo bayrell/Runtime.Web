@@ -73,7 +73,7 @@
 <template name="renderCSS">
 	%set Collection components = this.layout.getComponents();
 	%set string css = this.layout::getCss(components);
-	<style>@raw{{ css }}</style>
+	<style class="components">@raw{{ css }}</style>
 </template>
 
 
