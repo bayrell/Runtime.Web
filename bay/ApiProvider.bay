@@ -169,10 +169,17 @@ class ApiProvider extends BaseProvider
 		api_instance.backend_storage = backend_storage;
 		
 		/* Call api */
-		await api_instance.onActionBefore();
-		Callback f = new Callback(api_instance, method_name);
-		await rtl::apply(f);
-		await api_instance.onActionAfter();
+		try
+		{
+			await api_instance.onActionBefore();
+			Callback f = new Callback(api_instance, method_name);
+			await rtl::apply(f);
+			await api_instance.onActionAfter();
+		}
+		catch (ApiError e)
+		{
+			api_instance.result.fail(e.getPreviousException());
+		}
 		
 		/* Return api result */
 		return api_instance.result;
