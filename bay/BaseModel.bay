@@ -37,8 +37,8 @@ class BaseModel extends BaseObject implements SerializeInterface
 	LayoutModel layout = null;
 	string component = "";
 	string widget_name = "";
+	Map listeners = {};
 	Map widgets = {};
-	Vector<string> model_path = null;
 	bool is_data_loaded = false;
 	
 	
@@ -71,17 +71,21 @@ class BaseModel extends BaseObject implements SerializeInterface
 		if (params.has("layout")) this.layout = params.get("layout");
 		if (params.has("component")) this.component = params.get("component");
 		if (params.has("widget_name")) this.widget_name = params.get("widget_name");
+		if (params.has("listeners"))
+		{
+			Collection listeners = params.get("listeners");
+			listeners.each(
+				void (Callback f, string message_name)
+				{
+					this.addListener(message_name, f);
+				}
+			);
+		}
 		if (params.has("parent_widget"))
 		{
 			BaseModel parent_widget = params.get("parent_widget");
 			this.layout = parent_widget.layout;
 			this.parent_widget = parent_widget;
-			if (parent_widget.model_path)
-			{
-				this.model_path = parent_widget.model_path
-					.concat(["widgets", this.widget_name]).toCollection()
-				;
-			}
 			parent_widget.widgets.set(this.widget_name, this);
 		}
 	}
@@ -90,21 +94,9 @@ class BaseModel extends BaseObject implements SerializeInterface
 	/**
 	 * Init widget settings
 	 */
-	void initWidget(Dict params)
+	void init(Dict params)
 	{
 	}
-	
-	
-	/**
-	 * Returns model path
-	 */
-	Collection getModelPath() => this.model_path.slice();
-	
-	
-	/**
-	 * Returns model path
-	 */
-	string getModelPathString() => this.model_path ? rs::join("|", this.model_path) : "";
 	
 	
 	/**
@@ -129,6 +121,35 @@ class BaseModel extends BaseObject implements SerializeInterface
 	 * Returns widget name
 	 */
 	BaseModel getWidgetName() => this.widget_name;
+	
+	
+	/**
+	 * Add listener
+	 */
+	void addListener(string message_name, fn f)
+	{
+		if (not this.listeners.has(message_name)) this.listeners.set(message_name, []);
+		if (rtl::isCallable(f))
+		{
+			this.listeners.get(message_name).append(f);
+		}
+	}
+	
+	
+	/**
+	 * Emit message
+	 */
+	void emit(Message message)
+	{
+		string message_name = message::getClassName();
+		if (not this.listeners.has(message_name)) return;
+		Vector<Callback> listeners = this.listeners.get(message_name);
+		for (int i=0; i<listeners.count(); i++)
+		{
+			Callback f = listeners.get(i);
+			rtl::apply(f, [message]);
+		}
+	}
 	
 	
 	/**
