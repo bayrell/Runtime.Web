@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.BaseObject;
+use Runtime.Callback;
 use Runtime.SerializeInterface;
 use Runtime.Serializer;
 use Runtime.Web.BaseModel;
@@ -29,6 +30,7 @@ use Runtime.Web.LayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
+use Runtime.Web.Messages.Message;
 
 
 class BaseModel extends BaseObject implements SerializeInterface
@@ -53,7 +55,7 @@ class BaseModel extends BaseObject implements SerializeInterface
 		this.setup(params);
 		
 		/* Init widget settings */
-		this.initWidget(params);
+		this.init(params);
 		
 		if (this.layout != null and this.component != "")
 		{
@@ -124,6 +126,15 @@ class BaseModel extends BaseObject implements SerializeInterface
 	
 	
 	/**
+	 * Clear listeners
+	 */
+	void clearListener(string message_name)
+	{
+		this.listeners.set(message_name, []);
+	}
+	
+	
+	/**
 	 * Add listener
 	 */
 	void addListener(string message_name, fn f)
@@ -141,7 +152,16 @@ class BaseModel extends BaseObject implements SerializeInterface
 	 */
 	void emit(Message message)
 	{
-		string message_name = message::getClassName();
+		this.emitMessage(message::getClassName());
+		this.emitMessage(message.name);
+	}
+	
+	
+	/**
+	 * Emit message
+	 */
+	void emitMessage(string message_name, Message message)
+	{
 		if (not this.listeners.has(message_name)) return;
 		Vector<Callback> listeners = this.listeners.get(message_name);
 		for (int i=0; i<listeners.count(); i++)

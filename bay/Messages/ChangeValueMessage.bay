@@ -18,11 +18,23 @@
 
 namespace Runtime.Web.Messages;
 
-use Runtime.Web.Messages.BaseMessage;
+use Runtime.Web.Messages.Message;
 
 
-class ChangeValueMessage extends BaseMessage
+class ChangeValueMessage extends Message
 {
 	var value = null;
 	var old_value = null;
+	
+	
+	/**
+	 * Create message
+	 */
+	void constructor(Dict params = null)
+	{
+		parent(params);
+		
+		/* Set message name */
+		this.name = "change_value";
+	}
 }

@@ -21,9 +21,10 @@ namespace Runtime.Web.Messages;
 use Runtime.BaseObject;
 
 
-class BaseMessage extends BaseObject
+class Message extends BaseObject
 {
 	var data = null;
+	string name = "";
 	
 	
 	/**

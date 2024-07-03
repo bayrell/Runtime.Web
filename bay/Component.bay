@@ -684,6 +684,20 @@ void _teleport(var parent_elem, var attrs = null, var content = null)
 
 
 /**
+ * Returns styles
+ */
+static string getStyles(Collection styles) => styles
+	.map(
+		string (string item) =>
+			rs::charAt(item, 0) != "@"
+				? "widget_button--" ~ item
+				: rs::substr(item, 1)
+	)
+	.join(" ")
+;
+
+
+/**
  * Returns components
  */
 static Vector components()

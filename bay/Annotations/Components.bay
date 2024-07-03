@@ -16,21 +16,20 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Messages;
+namespace Runtime.Web.Annotations;
 
-use Runtime.Web.Messages.Message;
+use Runtime.Entity.Hook;
 
 
-class ClickMessage extends Message
+class Components extends Hook
 {
 	/**
-	 * Create message
+	 * Constructor
 	 */
-	void constructor(Dict params = null)
+	void constructor(Collection components)
 	{
-		parent(params);
-		
-		/* Set message name */
-		this.name = "click";
+		parent("Runtime.Web.Hooks.Components", {
+			"items": components,
+		});
 	}
 }
