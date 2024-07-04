@@ -152,8 +152,8 @@ class BaseModel extends BaseObject implements SerializeInterface
 	 */
 	void emit(Message message)
 	{
-		this.emitMessage(message::getClassName());
-		this.emitMessage(message.name);
+		this.emitMessage(message::getClassName(), message);
+		this.emitMessage(message.name, message);
 	}
 	
 	
