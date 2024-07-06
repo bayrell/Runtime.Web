@@ -73,10 +73,10 @@ class BaseModel extends BaseObject implements SerializeInterface
 		if (params.has("layout")) this.layout = params.get("layout");
 		if (params.has("component")) this.component = params.get("component");
 		if (params.has("widget_name")) this.widget_name = params.get("widget_name");
-		if (params.has("listeners"))
+		if (params.has("events"))
 		{
-			Collection listeners = params.get("listeners");
-			listeners.each(
+			Collection events = params.get("events");
+			events.each(
 				void (Callback f, string message_name)
 				{
 					this.addListener(message_name, f);

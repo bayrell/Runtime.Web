@@ -686,11 +686,11 @@ void _teleport(var parent_elem, var attrs = null, var content = null)
 /**
  * Returns styles
  */
-static string getStyles(Collection styles) => styles
+static string getStyles(string class_name, Collection styles) => styles
 	.map(
-		string (string item) =>
+		string (string item) use (class_name) =>
 			rs::charAt(item, 0) != "@"
-				? "widget_button--" ~ item
+				? class_name ~ "--" ~ item
 				: rs::substr(item, 1)
 	)
 	.join(" ")
