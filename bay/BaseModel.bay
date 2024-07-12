@@ -52,10 +52,10 @@ class BaseModel extends BaseObject implements SerializeInterface
 		parent();
 		
 		/* Setup widget params */
-		this.setup(params);
+		this.initParams(params);
 		
 		/* Init widget settings */
-		this.init(params);
+		this.initWidget(params);
 		
 		if (this.layout != null and this.component != "")
 		{
@@ -65,9 +65,9 @@ class BaseModel extends BaseObject implements SerializeInterface
 	
 	
 	/**
-	 * Setup widget params
+	 * Init widget params
 	 */
-	void setup(Dict params)
+	void initParams(Dict params)
 	{
 		if (params == null) return;
 		if (params.has("layout")) this.layout = params.get("layout");
@@ -96,7 +96,7 @@ class BaseModel extends BaseObject implements SerializeInterface
 	/**
 	 * Init widget settings
 	 */
-	void init(Dict params)
+	void initWidget(Dict params)
 	{
 	}
 	
