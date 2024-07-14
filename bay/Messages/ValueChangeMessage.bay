@@ -21,7 +21,7 @@ namespace Runtime.Web.Messages;
 use Runtime.Web.Messages.Message;
 
 
-class ChangeValueMessage extends Message
+class ValueChangeMessage extends Message
 {
 	var value = null;
 	var old_value = null;
@@ -35,6 +35,6 @@ class ChangeValueMessage extends Message
 		parent(params);
 		
 		/* Set message name */
-		this.name = "change_value";
+		this.name = "valueChange";
 	}
 }

@@ -25,7 +25,7 @@
 		"Hooks/DetectLanguage.bay",
 		"Hooks/SetupLayout.bay",
 		"Messages/Message.bay",
-		"Messages/ChangeValueMessage.bay",
+		"Messages/ValueChangeMessage.bay",
 		"Messages/ClickMessage.bay",
 		"AppComponent.bay",
 		"BasePage.bay",

@@ -109,6 +109,26 @@ string renderListClass()
 
 
 /**
+ * Returns true slot if is exists
+ */
+var checkSlot(string slot_name)
+{
+	#switch
+	
+	#case ifcode PHP then
+	return $this->_slots->has($slot_name);
+	
+	#case ifcode JAVASCRIPT then
+	
+	let f = this.$slots[slot_name];
+	if (f == null || f == undefined) return false;
+	return true;
+	
+	#endswitch
+}
+
+
+/**
  * Render slot
  */
 var renderSlot(string slot_name)
