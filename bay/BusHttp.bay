@@ -18,10 +18,102 @@
 
 namespace Runtime.Web;
 
+use Runtime.io;
+use Runtime.BaseObject;
+use Runtime.Curl;
+use Runtime.Exceptions.AbstractException;
+use Runtime.Exceptions.CurlException;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
+use Runtime.Web.BusInterface;
+use Runtime.Web.Hooks.AppHook;
 
 
-class BusHttp
+class BusHttp extends BaseObject implements BusInterface
 {
+	string kind = "api";
+	
+	
+	/**
+	 * Send api to frontend
+	 */
+	async ApiResult send(Dict params)
+	{
+		string service = params["service"] |> default string "app";
+		string api_name = params["api_name"] |> default string "";
+		string method_name = params["method_name"] |> default string "";
+		Dict data = params["data"] |> default Dict null;
+		
+		string route_prefix = @.env("ROUTE_PREFIX");
+		route_prefix = rs::removeFirstSlash(route_prefix);
+		
+		Vector api_url_arr = [
+			route_prefix,
+			this.kind,
+			service,
+			api_name,
+			method_name,
+		];
+		api_url_arr = api_url_arr.filter( bool (string s) => s != "" );
+		string api_url = "/" ~ api_url_arr.join("/") ~ "/";
+		
+		ApiResult res = new ApiResult();
+		try
+		{
+			Dict post_data = {
+				"service": service,
+				"api_name": api_name,
+				"method_name": method_name,
+				"data": data,
+			};
+			
+			/* Call api before hook */
+			Dict d = @.callHook(AppHook::CALL_API_BEFORE, {
+				"api_url": api_url,
+				"post_data": post_data,
+				"params": params,
+			});
+			api_url = d.get("api_url");
+			post_data = d.get("post_data");
+			
+			/* Encode data to string */
+			var data = post_data.get("data");
+			var json_data = rtl::json_encode(data);
+			post_data.set("data", json_data);
+			
+			/* Send curl */
+			Curl curl = new Curl(api_url, {
+				"post": post_data,
+			});
+			string response = await curl.send();
+			
+			/* Get answer */
+			Dict answer = rtl::json_decode(response, rtl::ALLOW_OBJECTS);
+			if (answer and answer instanceof Dict)
+			{
+				res.importContent(answer);
+			}
+			
+			/* Response error */
+			else
+			{
+				res.exception( new AbstractException("Api response error") );
+			}
+		}
+		catch (CurlException e)
+		{
+			res.exception(e);
+			res.ob_content = e.http_content;
+			if (@.env("DEBUG"))
+			{
+				io::print_error(e.http_content);
+			}
+		}
+		catch (var e)
+		{
+			throw e;
+		}
+		
+		return res;
+	}
 }

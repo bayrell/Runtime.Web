@@ -18,9 +18,9 @@
 
 namespace Runtime.Web;
 
-use Runtime.Web.ApiProvider;
 use Runtime.Web.BusHttp;
 use Runtime.Web.BusInterface;
+use Runtime.Web.BusLocal;
 
 
 class Bus
@@ -28,14 +28,14 @@ class Bus
 	/**
 	 * Returns BusInterface
 	 */
-	BusInterface get(string service, string kind)
+	static BusInterface getApi(string service)
 	{
 		#ifdef BACKEND then
-		return @.provider(classof ApiProvider);
+		return @.provider(classof BusLocal);
 		#endif
 		
 		#ifdef FRONTEND then
-		return new BusHttp(kind);
+		return new BusHttp();
 		#endif
 	}
 }

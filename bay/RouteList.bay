@@ -21,7 +21,9 @@ namespace Runtime.Web;
 use Runtime.re;
 use Runtime.BaseProvider;
 use Runtime.Callback;
+use Runtime.Entity.Factory;
 use Runtime.Exceptions.ItemNotFound;
+use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteInfo;
@@ -64,16 +66,24 @@ class RouteList extends BaseProvider
 				throw new ItemNotFound(info.name, "Route");
 			}
 			
-			/* Create routes */
-			Collection<RouteInfo> routes_info = rtl::apply(getRoutes);
-			if (not routes_info) continue;
+			/* Get routes */
+			Collection<RouteInfo> routes_list = rtl::apply(getRoutes);
+			if (not routes_list) continue;
 			
-			for (int j=0; j<routes_info.count(); j++)
+			/* Register routes */
+			for (int j=0; j<routes_list.count(); j++)
 			{
-				RouteInfo route = routes_info.get(j);
+				RouteInfo route = routes_list.get(j);
 				if (route.action and rtl::isString(route.action))
 				{
-					route <= action <= new Collection(info.name, route.action);
+					if (rtl::method_exists(info.name, route.action))
+					{
+						route <= action <= new Callback(info.name, route.action);
+					}
+					else
+					{
+						route <= action <= new Factory(info.name, {"action": route.action});
+					}
 				}
 				route <= route_class <= info.name;
 				this.addRoute(route);

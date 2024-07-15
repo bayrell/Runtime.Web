@@ -57,12 +57,12 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		new Provider("Runtime.Web.ApiProvider"),
 		new Provider("Runtime.Web.RenderProvider"),
 		
 		#ifdef BACKEND then
 		new Hook("Runtime.Web.Hooks.LayoutHook"),
 		new Hook("Runtime.Web.Hooks.ResponseHook"),
+		new Provider("Runtime.Web.BusLocal"),
 		new Provider("Runtime.Web.RouteList"),
 		new Route("Runtime.Web.ApiRoute"),
 		#endif

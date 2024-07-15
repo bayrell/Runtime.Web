@@ -24,6 +24,8 @@ use Runtime.Serializer;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
+use Runtime.Web.Bus;
+use Runtime.Web.BusInterface;
 use Runtime.Web.CoreUI;
 use Runtime.Web.DefaultLayout;
 use Runtime.Web.PageModel;
@@ -206,8 +208,7 @@ class BaseLayoutModel extends BaseModel
 	 */
 	string getLayoutComponentName()
 	{
-		string class_name = "";
-		if (this.layout_name == "default") class_name = classof DefaultLayout;
+		string class_name = classof DefaultLayout;
 		
 		Dict params = @.callHook(AppHook::LAYOUT_COMPONENT_NAME, {
 			"layout_name": this.layout_name,
@@ -233,18 +234,10 @@ class BaseLayoutModel extends BaseModel
 		params.set("backend_storage", this.backend_storage);
 		#endif
 		
-		/* Set layout */
-		params.set("layout", this);
-		
 		/* Returns bus */
-		/*
-		BusInterface bus = Bus::get(service, "api");
+		BusInterface bus = Bus::getApi(params.get("service", "app"));
 		ApiResult api = await bus.send(params);
-		*/
 		
-		/* Call api */
-		ApiProvider provider = @.provider(classof ApiProvider);
-		ApiResult api = await provider.send(params);
 		return api;
 	}
 	

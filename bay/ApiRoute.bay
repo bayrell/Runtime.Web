@@ -23,7 +23,9 @@ use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Bus;
+use Runtime.Web.BusLocal;
 use Runtime.Web.JsonResponse;
+use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 
 
@@ -32,7 +34,7 @@ class ApiRoute extends BaseRoute
 	/**
 	 * Returns routes
 	 */
-	pure Collection<RouteInfo> getRoutes()
+	static Collection<RouteInfo> getRoutes()
 	{
 		return
 		[
@@ -50,10 +52,10 @@ class ApiRoute extends BaseRoute
 	/**
 	 * Action index
 	 */
-	async void actionIndex()
+	async static void actionIndex(RenderContainer container)
 	{
 		/* Decode data */
-		var post_data = this.container.request.payload["data"];
+		var post_data = container.request.payload["data"];
 		post_data = rtl::json_decode(post_data);
 		
 		if (post_data == null or not (post_data instanceof Dict))
@@ -62,20 +64,20 @@ class ApiRoute extends BaseRoute
 		}
 		
 		/* Call api */
-		string service = this.container.route.matches["service"];
-		string api_name = this.container.route.matches["api_name"];
-		string method_name = this.container.route.matches["method_name"];
+		string service = container.route.matches["service"];
+		string api_name = container.route.matches["api_name"];
+		string method_name = container.route.matches["method_name"];
 		
 		ApiResult api_result = null;
-		ApiProvider provider = @.provider(classof ApiProvider);
+		BusLocal bus = @.provider(classof BusLocal);
 		try
 		{
-			api_result = await provider.send({
+			api_result = await bus.send({
 				"service": service,
 				"api_name": api_name,
 				"method_name": method_name,
 				"data": post_data,
-				"backend_storage": this.layout.backend_storage,
+				"backend_storage": container.layout.backend_storage,
 			});
 		}
 		catch (AbstractException e)
@@ -85,12 +87,12 @@ class ApiRoute extends BaseRoute
 		}
 		
 		/* Create response */
-		this.container.setResponse( new JsonResponse(api_result.getContent()) );
+		container.setResponse( new JsonResponse(api_result.getContent()) );
 		
 		/* HTTP error if exception */
 		/*if (api.isException())
 		{
-			this.container.response.http_code = 500;
+			container.response.http_code = 500;
 		}*/
 	}
 }

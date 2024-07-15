@@ -29,23 +29,23 @@ use Runtime.Web.RouteList;
 
 class BaseRoute extends BaseObject
 {
-	protected bool is_cancel_route = false;
-	protected RenderContainer container;
-	protected LayoutModel layout;
-	protected Dict post_data = null;
-	protected RouteInfo route = null;
+	string action = "";
 	
 	
 	/**
 	 * Constructor
 	 */
-	void constructor(RenderContainer container)
+	void constructor(Dict params)
 	{
 		parent();
-		this.container = container;
-		this.layout = container.layout;
-		this.route = container.route;
+		this._assign_values(params);
 	}
+	
+	
+	/**
+	 * Returns layout name
+	 */
+	static string getLayoutName() => "default";
 	
 	
 	/**
@@ -54,47 +54,5 @@ class BaseRoute extends BaseObject
 	static Collection<RouteInfo> getRoutes()
 	{
 		return [];
-	}
-	
-	
-	/**
-	 * Before route
-	 */
-	async void onActionBefore()
-	{
-	}
-	
-	
-	/**
-	 * After route
-	 */
-	async void onActionAfter()
-	{
-	}
-	
-	
-	/**
-	 * Action index
-	 */
-	async void actionIndex()
-	{
-	}
-	
-	
-	/**
-	 * Cancel route
-	 */
-	void cancelRoute()
-	{
-		this.is_cancel_route = true;
-	}
-	
-	
-	/**
-	 * Returns true if current route is canceled
-	 */
-	void isCancelRoute()
-	{
-		return this.is_cancel_route;
 	}
 }

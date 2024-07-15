@@ -16,24 +16,15 @@
  *  limitations under the License.
  */
 
-namespace Runtime.Web.Annotations;
+namespace Runtime.Web;
 
-use Runtime.Entity.Entity;
+use Runtime.Web.ApiResult;
 
 
-struct Route extends Entity
+interface BusInterface
 {
-	Dict params = null;
-	
-	
-	/**
-	 * Create route
+    /**
+	 * Send request
 	 */
-	void constructor(string name, Dict params = null)
-	{
-		parent({
-			"name": name,
-			"params": params,
-		});
-	}
+	async ApiResult send(Dict params);
 }

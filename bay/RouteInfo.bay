@@ -21,9 +21,11 @@ namespace Runtime.Web;
 use Runtime.re;
 use Runtime.BaseStruct;
 use Runtime.Callback;
+use Runtime.Entity.Factory;
 use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteList;
 
 
 struct RouteInfo extends BaseStruct
@@ -36,7 +38,7 @@ struct RouteInfo extends BaseStruct
 	string action = null;
 	string component = null;
 	string model = null;
-	string route_class = null;
+	string layout = null;
 	Dict data = null;
 	Collection<Callback> middleware = [];
 	Collection<string> params = [];
@@ -113,10 +115,22 @@ struct RouteInfo extends BaseStruct
 	async void resolve(RenderContainer container)
 	{
 		/* If route action is callable */
-		if (this.action != null and rtl::isCallable(this.action))
+		if (this.action != null)
 		{
-			fn f = this.action;
-			await f(container);
+			if (rtl::isCallable(this.action))
+			{
+				fn f = this.action;
+				await rtl::apply(f, [container]);
+			}
+			else if (this.action instanceof Factory)
+			{
+				BaseRoute base_route = this.action.factory();
+				Callback action = new Callback(base_route, base_route.action)
+				if (action.exists())
+				{
+					await rtl::apply(action, [container]);
+				}
+			}
 		}
 		
 		/* If response is exists */
@@ -144,22 +158,5 @@ struct RouteInfo extends BaseStruct
 			}
 			return;
 		}
-		
-		/* Call BaseRoute */
-		string class_name = classof BaseRoute;
-		string method_name = "actionIndex";
-		
-		if (
-			this.action != null and
-			this.action instanceof Collection and
-			this.action.count() == 2
-		)
-		{
-			class_name = this.action.get(0);
-			method_name = this.action.get(1);
-		}
-		
-		/* Render route */
-		await container.renderRoute(class_name, method_name);
 	}
 }

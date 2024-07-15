@@ -152,6 +152,10 @@ class BaseModel extends BaseObject implements SerializeInterface
 	 */
 	void emit(Message message)
 	{
+		if (message.widget == null)
+		{
+			message.widget = this;
+		}
 		this.emitMessage(message::getClassName(), message);
 		this.emitMessage(message.name, message);
 	}

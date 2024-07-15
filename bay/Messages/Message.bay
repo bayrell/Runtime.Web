@@ -19,12 +19,14 @@
 namespace Runtime.Web.Messages;
 
 use Runtime.BaseObject;
+use Runtime.Web.BaseModel;
 
 
 class Message extends BaseObject
 {
 	var data = null;
 	string name = "";
+	BaseModel widget = null;
 	
 	
 	/**

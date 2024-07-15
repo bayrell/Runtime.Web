@@ -16,13 +16,10 @@
  *  limitations under the License.
 -->
 
-<class name="Runtime.Web.BasePage" extends="Runtime.Web.RenderList">
-
-<use name="Runtime.Web.BaseModel" />
+<class name="Runtime.Web.BasePage">
 
 <template>
-	<div class="widget_page" @ref="widget">
-		%render this.renderItems();
+	<div class="widget_page">
 	</div>
 </template>
 

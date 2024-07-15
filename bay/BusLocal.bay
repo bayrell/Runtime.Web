@@ -1,0 +1,193 @@
+/*!
+ *  BayLang Technology
+ *
+ *  (c) Copyright 2016-2024 "Ildar Bikmamatov" <support@bayrell.org>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+namespace Runtime.Web;
+
+use Runtime.lib;
+use Runtime.BaseProvider;
+use Runtime.Callback;
+use Runtime.Exceptions.ApiError;
+use Runtime.Exceptions.ItemNotFound;
+use Runtime.Web.ApiResult;
+use Runtime.Web.BaseApi;
+use Runtime.Web.BusInterface;
+use Runtime.Web.Annotations.Api;
+use Runtime.Web.Annotations.ApiMethod;
+
+
+class BusLocal extends BaseProvider implements BusInterface
+{
+	Map api_list = {};
+	
+	
+	/**
+	 * Init providers
+	 */
+	async void init()
+	{
+		await parent::init();
+		
+		this.api_list = {};
+		
+		Collection<Api> api_list = @.getEntities(classof Api);
+		for (int i=0; i<api_list.count(); i++)
+		{
+			Api api = api_list.get(i);
+			string class_name = api.name;
+			Callback getApiName = new Callback(class_name, "getApiName");
+			
+			/* Save api */
+			string api_name = rtl::apply(getApiName);
+			this.api_list.set(api_name, api);
+		}
+	}
+	
+	
+	/**
+	 * Send api to frontend
+	 */
+	async ApiResult send(Dict params)
+	{
+		ApiResult result;
+		
+		string api_name = params["api_name"] |> default string "";
+		string method_name = params["method_name"] |> default string "";
+		string service = params["service"] |> default string "app";
+		if (service != "app")
+		{
+			result = new ApiResult();
+			return result.fail({
+				"message": "Service must be app"
+			});
+		}
+		
+		/* Call local api */
+		try
+		{
+			ApiMethod annotation = this.findApi(params);
+			result = await this.callAnnotation(annotation, params);
+		}
+		catch (ApiError e)
+		{
+			result = new ApiResult();
+			result.fail(e.getPreviousException());
+		}
+		
+		/* Set api name */
+		result.api_name = api_name;
+		result.method_name = method_name;
+		return result;
+	}
+	
+	
+	/**
+	 * Find local api
+	 */
+	async ApiMethod findApi(Dict params)
+	{
+		string api_name = params["api_name"] |> default string "";
+		string method_name = params["method_name"] |> default string "";
+		
+		/* Get annotation by api name */
+		Api annotation = this.api_list.get(api_name);
+		
+		/* Annotation not found */
+		if (annotation == null)
+		{
+			throw new ApiError( new ItemNotFound(api_name, "Api annotation") );
+		}
+		
+		/* Find method */
+		Callback getMethodInfoByName = new Callback(annotation.name, "getMethodInfoByName");
+		Dict method_info = getMethodInfoByName.apply([method_name]);
+		
+		/* Method not found */
+		if (method_info == null)
+		{
+			throw new ApiError( new ItemNotFound(method_name ~ " in " ~ api_name, "Api method") );
+		}
+		
+		/* Check if method is api */
+		ApiMethod api_method = method_info
+			.get("annotations")
+			.findItem( lib::isInstance(classof ApiMethod) )
+		;
+		if (api_method == null)
+		{
+			throw new ApiError( new ItemNotFound(method_name ~ " in " ~ api_name, "Api method") );
+		}
+		
+		/* Set props */
+		Dict result = {
+			"api_method": api_method,
+			"api_name": api_name,
+			"class_name": annotation.name,
+			"method_info": method_info,
+			"method_name": method_name,
+		};
+		return result;
+	}
+	
+	
+	/**
+	 * Call annotation
+	 */
+	async ApiResult callAnnotation(Dict annotation, Dict params)
+	{
+		Dict data = params["data"] |> default Dict null;
+		Dict backend_storage = params["backend_storage"];
+		
+		string class_name = annotation.get("class_name");
+		string method_name = annotation.get("method_name");
+		BaseApi api_instance = null;
+		Callback callback = null;
+		
+		/* Create api instance */
+		if (rtl::method_exists(class_name, method_name))
+		{
+			api_instance = new BaseApi;
+			callback = new Callback(class_name, method_name);
+		}
+		else
+		{
+			api_instance = rtl::newInstance(class_name);
+			callback = new Callback(api_instance, method_name);
+		}
+		
+		/* Set api instance */
+		api_instance.action = method_name;
+		api_instance.post_data = data;
+		api_instance.backend_storage = backend_storage;
+		api_instance.result = new ApiResult;
+		
+		/* Call api */
+		try
+		{
+			await api_instance.onActionBefore();
+			await callback.apply([api_instance]);
+			await api_instance.onActionAfter();
+		}
+		catch (ApiError e)
+		{
+			api_instance.result.fail(e.getPreviousException());
+		}
+		
+		/* Return api result */
+		return api_instance.result;
+	}
+}

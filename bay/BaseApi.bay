@@ -27,20 +27,20 @@ use Runtime.Web.RenderContainer;
 
 class BaseApi extends BaseObject
 {
-    Dict post_data = null;
-	ApiResult result = new ApiResult;
-    string action = "";
-    
-    /* Backend storage */
+	string action = "";
+	Dict post_data = null;
+	ApiResult result = null;
+	
+	/* Backend storage */
 	public Dict backend_storage = null;
-    
-    
-    /**
+	
+	
+	/**
 	 * Returns api name
 	 */
 	pure string getApiName() => "";
-    
-    
+	
+	
 	/**
 	 * Before route
 	 */
