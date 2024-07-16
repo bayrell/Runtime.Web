@@ -158,22 +158,22 @@ class BusLocal extends BaseProvider implements BusInterface
 		Callback callback = null;
 		
 		/* Create api instance */
+		api_instance = rtl::newInstance(class_name);
+		api_instance.action = method_name;
+		api_instance.backend_storage = backend_storage;
+		api_instance.post_data = data;
+		api_instance.result = new ApiResult;
+		api_instance.init();
+		
+		/* Get callback */
 		if (rtl::method_exists(class_name, method_name))
 		{
-			api_instance = new BaseApi;
 			callback = new Callback(class_name, method_name);
 		}
 		else
 		{
-			api_instance = rtl::newInstance(class_name);
 			callback = new Callback(api_instance, method_name);
 		}
-		
-		/* Set api instance */
-		api_instance.action = method_name;
-		api_instance.post_data = data;
-		api_instance.backend_storage = backend_storage;
-		api_instance.result = new ApiResult;
 		
 		/* Call api */
 		try

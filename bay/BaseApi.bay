@@ -42,6 +42,14 @@ class BaseApi extends BaseObject
 	
 	
 	/**
+	 * Init api
+	 */
+	void init()
+	{
+	}
+	
+	
+	/**
 	 * Before route
 	 */
 	async void onActionBefore()
