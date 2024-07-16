@@ -27,6 +27,7 @@ use Runtime.Web.BaseModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Component;
 use Runtime.Web.LayoutModel;
+use Runtime.Web.ModelFactory;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
@@ -98,6 +99,19 @@ class BaseModel extends BaseObject implements SerializeInterface
 	 */
 	void initWidget(Dict params)
 	{
+	}
+	
+	
+	/**
+	 * Create model
+	 */
+	BaseModel createModel(BaseObject model)
+	{
+		if (model instanceof ModelFactory)
+		{
+			model = model.factory(this);
+		}
+		return model;
 	}
 	
 	
