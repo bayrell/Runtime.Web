@@ -58,7 +58,7 @@ class DetectLanguage extends BaseAppHook
 		#ifdef BACKEND then
 		this.register(static::FIND_ROUTE_BEFORE);
 		this.register(static::MATCH_ROUTE);
-		this.register(static::ROUTE_BEFORE);
+		this.register(static::FIND_ROUTE_AFTER);
 		#endif
 	}
 	
@@ -112,21 +112,12 @@ class DetectLanguage extends BaseAppHook
 		if (this.allowed_languages.indexOf(language) == -1) wrong_language = true;
 		
 		/* Set detected language */
-		container.layout.backend_storage.set("detect_language", {
-			"lang": language,
-			"wrong": wrong_language,
+		container.backend_storage.set("detect_language", {
+			"lang": (not wrong_language) ? language : this.default_language,
 			"uri": uri,
+			"uri_lang": language,
+			"wrong": wrong_language,
 		});
-		
-		/* Setup language */
-		if (not wrong_language)
-		{
-			container.layout.lang = language;
-		}
-		else
-		{
-			container.layout.lang = this.default_language;
-		}
 	}
 	
 	
@@ -142,7 +133,7 @@ class DetectLanguage extends BaseAppHook
 		if (not route.enable_locale) return;
 		
 		/* Get detected language */
-		Map detect_language = container.layout.backend_storage.get("detect_language");
+		Map detect_language = container.backend_storage.get("detect_language");
 		bool wrong_language = detect_language.get("wrong");
 		string language = detect_language.get("lang");
 		string uri = detect_language.get("uri");
@@ -170,16 +161,16 @@ class DetectLanguage extends BaseAppHook
 	
 	
 	/**
-	 * Route before
+	 * Find route after
 	 */
-	void route_before(Map params)
+	void find_route_after(Map params)
 	{
 		RenderContainer container = params.get("container");
 		
 		/* Get detected language */
-		Map detect_language = container.layout.backend_storage.get("detect_language");
+		Map detect_language = container.backend_storage.get("detect_language");
 		bool wrong_language = detect_language.get("wrong");
-		string language = detect_language.get("lang");
+		string language = detect_language.get("uri_lang");
 		string uri = detect_language.get("uri");
 		
 		/* Redirect if wrong language and route not found */

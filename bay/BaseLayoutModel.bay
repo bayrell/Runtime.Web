@@ -36,6 +36,7 @@ use Runtime.Web.Hooks.AppHook;
 
 class BaseLayoutModel extends BaseModel
 {
+	string component = classof DefaultLayout;
 	string title = "";
 	string locale = @.env("LOCALE");
 	string layout_name = "default";
@@ -67,13 +68,14 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
-	 * Create model
+	 * Init widget params
 	 */
-	void constructor(Dict params = null)
+	void initParams(Dict params)
 	{
-		parent(params);
 		this.layout = this;
-		this.model_path = ["layout"].toCollection();
+		if (params == null) return;
+		if (params.has("backend_storage")) this.backend_storage = params.get("backend_storage");
+		if (params.has("route")) this.route = params.get("route");
 	}
 	
 	
@@ -115,12 +117,6 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "title", data);
 		parent(serializer, data);
 	}
-	
-	
-	/**
-	 * Returns model
-	 */
-	var model(Collection<string> model_path) => rtl::attr(this, model_path);
 	
 	
 	/**
@@ -208,9 +204,10 @@ class BaseLayoutModel extends BaseModel
 	 */
 	string getLayoutComponentName()
 	{
-		string class_name = classof DefaultLayout;
+		string class_name = this.component;
 		
 		Dict params = @.callHook(AppHook::LAYOUT_COMPONENT_NAME, {
+			"layout": this,
 			"layout_name": this.layout_name,
 			"class_name": class_name,
 		});

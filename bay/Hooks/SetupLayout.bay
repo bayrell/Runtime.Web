@@ -28,7 +28,7 @@ use Runtime.Web.Hooks.AppHook as BaseAppHook;
 class SetupLayout extends BaseAppHook
 {
 	string model = "";
-	Dict names = null;
+	Dict<Dict> names = null;
 	Collection components = [];
 	
 	
@@ -71,9 +71,21 @@ class SetupLayout extends BaseAppHook
 	 */
 	void layout_model_name(Map params)
 	{
+		/* Setup default model */
 		if (this.model)
 		{
 			params.set("class_name", this.model);
+		}
+		
+		/* Setup custom model */
+		string layout_name = params.get("layout_name");
+		if (
+			this.names and
+			this.names.has(layout_name) and
+			this.names.get(layout_name).has("model")
+		)
+		{
+			params.set("class_name", this.names.get(layout_name).get("model"));
 		}
 	}
 	
@@ -84,9 +96,13 @@ class SetupLayout extends BaseAppHook
 	void layout_component_name(Map params)
 	{
 		string layout_name = params.get("layout_name");
-		if (this.names and this.names.has(layout_name))
+		if (
+			this.names and
+			this.names.has(layout_name) and
+			this.names.get(layout_name).has("component")
+		)
 		{
-			params.set("class_name", this.names.get(layout_name));
+			params.set("class_name", this.names.get(layout_name).get("component"));
 		}
 	}
 }

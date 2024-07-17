@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.Callback;
 use Runtime.Serializer;
+use Runtime.SerializerNative;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseLayoutModel;
 use Runtime.Web.BaseModel;
@@ -46,24 +47,63 @@ class RenderContainer extends BaseObject
 	public Vector teleports = [];
 	public Dict<Cookie> cookies = {};
 	
+	/* Backend storage */
+	public Map backend_storage = {};
+	
 	
 	/**
 	 * Create layout
 	 */
-	async void createLayout()
+	void createLayout()
 	{
+		string layout_name = this.getLayoutName();
+		
 		/* Get layout class name */
 		Dict params = @.callHook(AppHook::LAYOUT_MODEL_NAME, {
 			"class_name": classof BaseLayoutModel,
+			"layout_name": layout_name,
 		});
 		
 		/* Create layout */
-		this.layout = rtl::newInstance(params.get("class_name"));
+		this.layout = rtl::newInstance(params.get("class_name"), [{
+			"backend_storage": this.backend_storage,
+			"route": this.route,
+		}]);
+		this.layout.setLayoutName(layout_name);
 		
-		/* Call route before */
-		await @.callHookAsync(AppHook::CREATE_LAYOUT, {
+		/* Call create layout */
+		@.callHookAsync(AppHook::CREATE_LAYOUT, {
 			"container": this,
 		});
+	}
+	
+	
+	/**
+	 * Returns layout name
+	 */
+	string getLayoutName()
+	{
+		string layout_name = "default"
+		if (this.route == null) return layout_name;
+		
+		/* Set layout name from route */
+		if (this.route.layout)
+		{
+			layout_name = this.route.layout;
+		}
+		
+		/* Set layout name from route class */
+		else if (this.route.route_class)
+		{
+			Callback getLayoutName = new Callback(this.route.route_class, "getLayoutName");
+			if (getLayoutName.exists())
+			{
+				layout_name = getLayoutName.apply();
+			}
+		}
+		
+		/* Set layout name */
+		return layout_name;
 	}
 	
 	
@@ -85,26 +125,12 @@ class RenderContainer extends BaseObject
 		}
 		
 		/* Call hook found route */
-		await @.callHook(AppHook::FIND_ROUTE, {
+		await @.callHook(AppHook::FIND_ROUTE_AFTER, {
 			"container": this,
 		});
-	}
-	
-	
-	/**
-	 * Setup default layout name from route
-	 */
-	void setupLayoutName()
-	{
-		if (this.route == null) return;
 		
-		/* Get function */
-		Callback getLayoutName = new Callback(this.route.route_class, "getLayoutName");
-		if (not getLayoutName.exists()) return;
-		
-		/* Set layout name */
-		string layout_name = getLayoutName.apply();
-		this.layout.setLayoutName(layout_name);
+		/* Call middleware */
+		await this.callRouteMiddleware();
 	}
 	
 	
@@ -113,35 +139,30 @@ class RenderContainer extends BaseObject
 	 */
 	async void resolveRoute()
 	{
-		/* Setup layout name */
-		this.setupLayoutName();
+		if (this.response) return;
+		
+		/* Create layout */
+		this.createLayout();
 		
 		/* Call route before */
 		await @.callHookAsync(AppHook::ROUTE_BEFORE, {
 			"container": this,
 		});
 		
-		/* Call middleware */
-		await this.callRouteMiddleware();
+		/* Call layout route before */
+		await this.layout.onActionBefore(this);
 		
-		/* Call route */
-		if (this.response == null)
+		/* Load layout data */
+		await this.layout.loadData(this);
+		
+		/* Run route */
+		if (this.route != null)
 		{
-			/* Call layout route before */
-			await this.layout.onActionBefore(this);
-			
-			/* Load layout data */
-			await this.layout.loadData(this);
-			
-			/* Run route */
-			if (this.route != null)
-			{
-				await this.route.resolve(this);
-			}
-			
-			/* Call layout route after */
-			await this.layout.onActionAfter(this);
+			await this.route.resolve(this);
 		}
+		
+		/* Call layout route after */
+		await this.layout.onActionAfter(this);
 		
 		/* Call route after */
 		await @.callHookAsync(AppHook::ROUTE_AFTER, {
@@ -298,11 +319,17 @@ class RenderContainer extends BaseObject
 		});
 		
 		/* Create serializer */
-		Serializer serializer = new Serializer();
+		Serializer serializer = new SerializerNative();
 		serializer.setFlag(Serializer::ALLOW_OBJECTS);
-		serializer.setFlag(Serializer::DECODE);
+		
+		/* Get route */
+		this.route = serializer.decode(data.get("layout").get("route"));
+		
+		/* Create layout */
+		this.createLayout();
 		
 		/* Load data */
+		serializer.setFlag(Serializer::DECODE);
 		this.layout.serialize(serializer, data.get("layout"));
 		
 		/* Call hook */

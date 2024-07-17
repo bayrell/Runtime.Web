@@ -87,7 +87,6 @@ class RenderProvider extends BaseProvider
 		/* Create render container */
 		BaseApp app = @.getApp();
 		this.container = app.createRenderContainer();
-		this.container.createLayout();
 		
 		#endif
 	}

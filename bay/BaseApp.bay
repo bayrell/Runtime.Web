@@ -62,9 +62,6 @@ class BaseApp extends BaseObject
 		/* Create request */
 		container.request = this.createRequest();
 		
-		/* Create layout */
-		BaseLayoutModel layout = container.createLayout();
-		
 		/* Resolve route */
 		container.findRoute();
 		await container.resolveRoute();
