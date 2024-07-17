@@ -35,10 +35,6 @@ class BasePageModel extends BaseModel
 	async void actionIndex(RenderContainer container)
 	{
 		/* Load page data */
-		BaseRoute base_route = container.base_route;
-		if (base_route and base_route.isCancelRoute()) return;
-		
-		/* Load page data */
 		await this.loadData(container);
 		
 		/* Create response */
