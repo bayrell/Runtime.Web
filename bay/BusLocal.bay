@@ -150,8 +150,6 @@ class BusLocal extends BaseProvider implements BusInterface
 	async ApiResult callAnnotation(Dict annotation, Dict params)
 	{
 		Dict data = params["data"] |> default Dict null;
-		Dict backend_storage = params["backend_storage"];
-		
 		string class_name = annotation.get("class_name");
 		string method_name = annotation.get("method_name");
 		BaseApi api_instance = null;
@@ -160,7 +158,7 @@ class BusLocal extends BaseProvider implements BusInterface
 		/* Create api instance */
 		api_instance = rtl::newInstance(class_name);
 		api_instance.action = method_name;
-		api_instance.backend_storage = backend_storage;
+		api_instance.backend_storage = params["backend_storage"];
 		api_instance.post_data = data;
 		api_instance.result = new ApiResult;
 		api_instance.init();

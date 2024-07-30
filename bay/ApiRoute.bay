@@ -24,6 +24,7 @@ use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Bus;
 use Runtime.Web.BusLocal;
+use Runtime.Web.Cookie;
 use Runtime.Web.JsonResponse;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
@@ -57,10 +58,9 @@ class ApiRoute extends BaseRoute
 		/* Decode data */
 		var post_data = container.request.payload["data"];
 		post_data = rtl::json_decode(post_data);
-		
 		if (post_data == null or not (post_data instanceof Dict))
 		{
-			return;
+			post_data = {};
 		}
 		
 		/* Call api */
@@ -78,6 +78,7 @@ class ApiRoute extends BaseRoute
 				"method_name": method_name,
 				"data": post_data,
 				"backend_storage": container.layout.backend_storage,
+				"container": container,
 			});
 		}
 		catch (AbstractException e)
@@ -88,6 +89,14 @@ class ApiRoute extends BaseRoute
 		
 		/* Create response */
 		container.setResponse( new JsonResponse(api_result.getContent()) );
+		
+		/* Set cookie */
+		api_result.cookies.each(
+			void (Cookie cookie) use (container)
+			{
+				container.addCookie(cookie);
+			}
+		);
 		
 		/* HTTP error if exception */
 		/*if (api.isException())

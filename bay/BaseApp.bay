@@ -161,17 +161,9 @@ class BaseApp extends BaseObject
 		}
 		
 		/* Read Cookie */
-		foreach ($_COOKIE as $key => $val)
+		foreach ($_COOKIE as $key => $value)
 		{
-			$cookies->set(
-				$key,
-				new \Runtime\Web\Cookie(
-					\Runtime\Dict::from([
-						'name' => $key,
-						'value' => $val,
-					])
-				)
-			);
+			$cookies->set($key, $value);
 		}
 		
 		/* Setup uri */
@@ -236,7 +228,7 @@ class BaseApp extends BaseObject
 						(
 							$cookie->name,
 							$cookie->value,
-							$cookie->getOptions()
+							$cookie->getOptions()->_map
 						);
 					}
 				);

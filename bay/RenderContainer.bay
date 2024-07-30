@@ -54,10 +54,8 @@ class RenderContainer extends BaseObject
 	/**
 	 * Create layout
 	 */
-	void createLayout()
+	void createLayout(string layout_name)
 	{
-		string layout_name = this.getLayoutName();
-		
 		/* Get layout class name */
 		Dict params = @.callHook(AppHook::LAYOUT_MODEL_NAME, {
 			"class_name": classof BaseLayoutModel,
@@ -142,7 +140,8 @@ class RenderContainer extends BaseObject
 		if (this.response) return;
 		
 		/* Create layout */
-		this.createLayout();
+		string layout_name = this.getLayoutName();
+		this.createLayout(layout_name);
 		
 		/* Call route before */
 		await @.callHookAsync(AppHook::ROUTE_BEFORE, {

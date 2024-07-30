@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Exceptions.AbstractException;
+use Runtime.Web.Cookie;
 
 
 class ApiResult extends BaseObject
@@ -36,6 +37,21 @@ class ApiResult extends BaseObject
 	int error_pos = 0;
 	Collection<string> error_trace = null;
 	bool is_exception = false;
+	
+	
+	#ifdef BACKEND then
+	
+	public Dict<Cookie> cookies = {};
+
+	/**
+	 * Add cookie
+	 */
+	void addCookie(Cookie cookie)
+	{
+		this.cookies.set(cookie.name, cookie);
+	}
+
+	#endif
 	
 	
 	/**

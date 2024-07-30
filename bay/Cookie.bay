@@ -37,35 +37,12 @@ struct Cookie extends BaseStruct
 	{
 		Map res = new Map();
 		
-		if (this.expires)
-		{
-			res.setValue("expires", this.expires);
-		}
-		
-		if (this.domain)
-		{
-			res.setValue("domain", this.domain);
-		}
-		
-		if (this.path)
-		{
-			res.setValue("path", this.path);
-		}
-		
-		if (this.secure)
-		{
-			res.setValue("secure", this.secure);
-		}
-		
-		if (this.httponly)
-		{
-			res.setValue("httponly", this.httponly);
-		}
-		
-		if (this.samesite)
-		{
-			res.setValue("samesite", this.samesite);
-		}
+		if (this.expires) res.set("expires", this.expires);
+		if (this.domain) res.set("domain", this.domain);
+		if (this.path) res.set("path", this.path);
+		if (this.secure) res.set("secure", this.secure);
+		if (this.httponly) res.set("httponly", this.httponly);
+		if (this.samesite) res.set("samesite", this.samesite);
 		
 		return res.toDict();
 	}
