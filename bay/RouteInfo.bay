@@ -39,6 +39,7 @@ struct RouteInfo extends BaseStruct
 	string component = null;
 	string model = null;
 	string layout = null;
+	string route_class = null;
 	Dict data = null;
 	Collection<Callback> middleware = [];
 	Collection<string> params = [];

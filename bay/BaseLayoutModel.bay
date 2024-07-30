@@ -240,6 +240,24 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
+	 * Returns header components
+	 */
+	Collection<string> getHeaderComponents() => [];
+	
+	
+	/**
+	 * Returns body components
+	 */
+	Collection<string> getBodyComponents() => [];
+	
+	
+	/**
+	 * Returns footer components
+	 */
+	Collection<string> getFooterComponents() => [];
+
+	
+	/**
 	 * Add component
 	 */
 	void addComponent(string class_name)

@@ -29,6 +29,6 @@ struct SetupLayout extends Hook
 	 */
 	void constructor(Dict params)
 	{
-		parent(classof SetupLayoutHook, params);
+		parent(classof SetupLayoutHook, {"names": params});
 	}
 }
