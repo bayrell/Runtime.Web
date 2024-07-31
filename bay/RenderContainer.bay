@@ -63,10 +63,7 @@ class RenderContainer extends BaseObject
 		});
 		
 		/* Create layout */
-		this.layout = rtl::newInstance(params.get("class_name"), [{
-			"backend_storage": this.backend_storage,
-			"route": this.route,
-		}]);
+		this.layout = rtl::newInstance(params.get("class_name"));
 		this.layout.setLayoutName(layout_name);
 		
 		/* Call create layout */
@@ -142,6 +139,10 @@ class RenderContainer extends BaseObject
 		/* Create layout */
 		string layout_name = this.getLayoutName();
 		this.createLayout(layout_name);
+		
+		/* Set layout params */
+		this.layout.backend_storage = this.backend_storage;
+		this.layout.route = this.route;
 		
 		/* Call route before */
 		await @.callHookAsync(AppHook::ROUTE_BEFORE, {
@@ -321,11 +322,9 @@ class RenderContainer extends BaseObject
 		Serializer serializer = new SerializerNative();
 		serializer.setFlag(Serializer::ALLOW_OBJECTS);
 		
-		/* Get route */
-		this.route = serializer.decode(data.get("layout").get("route"));
-		
 		/* Create layout */
-		this.createLayout();
+		string layout_name = data.get("layout").get("layout_name");
+		this.createLayout(layout_name);
 		
 		/* Load data */
 		serializer.setFlag(Serializer::DECODE);

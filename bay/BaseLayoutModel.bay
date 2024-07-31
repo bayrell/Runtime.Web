@@ -74,7 +74,10 @@ class BaseLayoutModel extends BaseModel
 	{
 		this.layout = this;
 		if (params == null) return;
-		if (params.has("backend_storage")) this.backend_storage = params.get("backend_storage");
+		if (params.has("backend_storage"))
+		{
+			this.backend_storage = params.get("backend_storage");
+		}
 		if (params.has("route")) this.route = params.get("route");
 	}
 	
