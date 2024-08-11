@@ -23,6 +23,7 @@ use Runtime.BaseObject;
 use Runtime.Callback;
 use Runtime.SerializeInterface;
 use Runtime.Serializer;
+use Runtime.Entity.Factory;
 use Runtime.Web.BaseModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Component;
@@ -105,12 +106,11 @@ class BaseModel extends BaseObject implements SerializeInterface
 	/**
 	 * Create model
 	 */
-	BaseModel createModel(BaseObject model)
+	BaseModel createModel(var model)
 	{
-		if (model instanceof ModelFactory)
-		{
-			model = model.factory(this);
-		}
+		if (model instanceof ModelFactory) model = model.factory(this);
+		else if (model instanceof Factory) model = model.factory();
+		else if (rtl::isString(model)) model = rtl::newInstance(model, []);
 		return model;
 	}
 	
