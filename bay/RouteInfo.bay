@@ -22,6 +22,7 @@ use Runtime.re;
 use Runtime.BaseStruct;
 use Runtime.Callback;
 use Runtime.Entity.Factory;
+use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
@@ -142,10 +143,14 @@ struct RouteInfo extends BaseStruct
 		
 		/* Setup page model */
 		string page_model_name = this.model;
-		if (page_model_name != "" and rtl::class_exists(page_model_name))
+		if (page_model_name != "")
 		{
-			await container.renderPageModel(page_model_name);
-			return;
+			if (rtl::class_exists(page_model_name))
+			{
+				await container.renderPageModel(page_model_name);
+				return;
+			}
+			throw new ItemNotFound(page_model_name, "Model");
 		}
 		
 		/* Setup component */
