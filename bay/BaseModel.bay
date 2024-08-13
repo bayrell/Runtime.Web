@@ -191,6 +191,41 @@ class BaseModel extends BaseObject implements SerializeInterface
 	
 	
 	/**
+	 * Async emit message
+	 */
+	async void emitAsync(Message message)
+	{
+		if (message.widget == null)
+		{
+			message.widget = this;
+		}
+		await this.emitMessageAsync(message::getClassName(), message);
+		await this.emitMessageAsync(message.name, message);
+	}
+	
+	
+	/**
+	 * Async emit message
+	 */
+	async void emitMessageAsync(string message_name, Message message)
+	{
+		if (not this.listeners.has(message_name)) return;
+		Vector<Callback> listeners = this.listeners.get(message_name);
+		for (int i=0; i<listeners.count(); i++)
+		{
+			Callback f = listeners.get(i);
+			var res = rtl::apply(f, [message]);
+			if (rtl::isPromise(res))
+			{
+				#ifcode JAVASCRIPT then
+				await res;
+				#endif
+			}
+		}
+	}
+	
+	
+	/**
 	 * Load data
 	 */
 	async void loadData(RenderContainer container)
