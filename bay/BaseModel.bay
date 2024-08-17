@@ -151,12 +151,14 @@ class BaseModel extends BaseObject implements SerializeInterface
 	/**
 	 * Add listener
 	 */
-	void addListener(string message_name, fn f)
+	void addListener(string message_name, fn f, int priority = 100)
 	{
 		if (not this.listeners.has(message_name)) this.listeners.set(message_name, []);
 		if (rtl::isCallable(f))
 		{
-			this.listeners.get(message_name).append(f);
+			Collection arr = this.listeners.get(message_name);
+			arr.append({"callback": f, "priority": priority});
+			arr = arr.sort(lib::sortAttr("priority", "asc"));
 		}
 	}
 	
@@ -182,11 +184,8 @@ class BaseModel extends BaseObject implements SerializeInterface
 	{
 		if (not this.listeners.has(message_name)) return;
 		Vector<Callback> listeners = this.listeners.get(message_name);
-		for (int i=0; i<listeners.count(); i++)
-		{
-			Callback f = listeners.get(i);
-			rtl::apply(f, [message]);
-		}
+		listeners = listeners.map(lib::get("callback"));
+		await rtl::applyChain(listeners, [message]);
 	}
 	
 	
@@ -211,17 +210,8 @@ class BaseModel extends BaseObject implements SerializeInterface
 	{
 		if (not this.listeners.has(message_name)) return;
 		Vector<Callback> listeners = this.listeners.get(message_name);
-		for (int i=0; i<listeners.count(); i++)
-		{
-			Callback f = listeners.get(i);
-			var res = rtl::apply(f, [message]);
-			if (rtl::isPromise(res))
-			{
-				#ifcode JAVASCRIPT then
-				await res;
-				#endif
-			}
-		}
+		listeners = listeners.map(lib::get("callback"));
+		await rtl::applyChainAsync(listeners, [message]);
 	}
 	
 	
