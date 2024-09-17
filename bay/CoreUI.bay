@@ -80,7 +80,7 @@
 </template>
 
 
-<template name="renderHeadAfter">
+<template name="renderBasePrefix">
 	%set string route_prefix = @.env("ROUTE_PREFIX");
 	%if (route_prefix)
 	{
@@ -93,7 +93,12 @@
 </template>
 
 
+<template name="renderHeadAfter">
+</template>
+
+
 <template name="renderHead">
+	%render static::renderBasePrefix();
 	%render static::renderSEO();
 	%render static::renderHeadComponents();
 	%render static::renderCSS();
