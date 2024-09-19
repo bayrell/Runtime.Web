@@ -21,7 +21,7 @@
 		"Annotations/SetupLayout.bay",
 		"Annotations/Widget.bay",
 		"Hooks/AppHook.bay",
-		"Hooks/ApiPrefix.bay",
+		"Hooks/AssetsHook.bay",
 		"Hooks/CanonicalUrl.bay",
 		"Hooks/Components.bay",
 		"Hooks/DetectLanguage.bay",

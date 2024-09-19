@@ -18,10 +18,12 @@
 
 <class name="Runtime.Web.Component">
 
+<use name="Runtime.re" />
 <use name="Runtime.rs" />
 <use name="Runtime.lib" />
 <use name="Runtime.BaseObject" />
 <use name="Runtime.RawString" />
+<use name="Runtime.Web.Hooks.AppHook" />
 <use name="Runtime.Web.RouteList" />
 
 
@@ -723,6 +725,18 @@ static string getStyles(string class_name, Collection styles) => styles
 static Vector components()
 {
 	return [];
+}
+
+
+/**
+ * Returns assets
+ */
+pure string assets(string path)
+{
+	Dict params = {};
+	@.callHook(AppHook::ASSETS, params);
+	string path = rs::join_path([params.get("assets_path", ""), path])
+	return rs::addFirstSlash(path);
 }
 
 

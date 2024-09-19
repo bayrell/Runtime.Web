@@ -26,6 +26,7 @@ use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
 use Runtime.Web.Bus;
 use Runtime.Web.BusInterface;
+use Runtime.Web.Component;
 use Runtime.Web.CoreUI;
 use Runtime.Web.DefaultLayout;
 use Runtime.Web.PageModel;
@@ -377,7 +378,7 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Returns assets
 	 */
-	string assets(string path) => rs::removeFirstSlash(path);
+	string assets(string path) => Component::assets(path);
 	
 	
 	/**

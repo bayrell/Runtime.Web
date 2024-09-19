@@ -57,6 +57,7 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
+		new Hook("Runtime.Web.Hooks.AssetsHook"),
 		new Provider("Runtime.Web.RenderProvider"),
 		
 		#ifdef BACKEND then

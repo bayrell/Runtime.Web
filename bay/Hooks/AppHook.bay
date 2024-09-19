@@ -24,6 +24,7 @@ use Runtime.Web.Layout;
 
 class AppHook extends BaseHook
 {
+	static const string ASSETS = "runtime.web.app::assets";
 	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
 	static const string COMPONENTS = "runtime.web.app::components";
 	static const string CORE_UI = "runtime.web.app::core_ui";
@@ -57,6 +58,7 @@ class AppHook extends BaseHook
 	 */
 	string getMethodName(string hook_name)
 	{
+		if (hook_name == static::ASSETS) return "assets";
 		if (hook_name == static::CALL_API_BEFORE) return "call_api_before";
 		if (hook_name == static::COMPONENTS) return "components";
 		if (hook_name == static::CORE_UI) return "core_ui";
@@ -97,6 +99,12 @@ class AppHook extends BaseHook
 	 * Call api before
 	 */
 	void call_api_before(Dict d){}
+	
+	
+	/**
+	 * Assets
+	 */
+	void assets(Map params){}
 	
 	
 	/**
