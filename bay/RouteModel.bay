@@ -18,37 +18,37 @@
 
 namespace Runtime.Web;
 
-use Runtime.Web.BaseModel;
-use Runtime.Web.BasePage;
-use Runtime.Web.BaseRoute;
+use Runtime.SerializeInterface;
+use Runtime.Serializer;
+use Runtime.Web.RouteInfo;
 use Runtime.Web.RenderContainer;
 
 
-class BasePageModel extends BaseModel
+class RouteModel extends RouteInfo
 {
-	string component = classof BasePage;
+	string model = null;
 	
 	
 	/**
-	 * Action index
+	 * Process frontend data
 	 */
-	async void actionIndex(RenderContainer container)
+	void serialize(Serializer serializer, Map data)
 	{
-		/* Load page data */
-		await this.loadData(container);
-		
-		/* Create response */
-		container.renderPage(this.component);
-		
-		/* Build title */
-		this.buildTitle(container);
+		serializer.process(this, "model", data);
+		parent(serializer, data);
 	}
 	
 	
 	/**
-	 * Build title
+	 * Render route
 	 */
-	void buildTitle(RenderContainer container)
+	async void render(RenderContainer container)
 	{
+		string page_model_name = this.model;
+		if (page_model_name == "") return;
+		if (not rtl::class_exists(page_model_name)) return;
+		
+		/* Render page model */
+		await container.renderPageModel(page_model_name);
 	}
 }

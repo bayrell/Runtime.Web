@@ -62,12 +62,11 @@ class BaseApp extends BaseObject
 		/* Create request */
 		container.request = this.createRequest();
 		
-		/* Resolve route */
-		container.findRoute();
-		await container.resolveRoute();
+		/* Resolve container */
+		await container.resolve();
 		
 		/* Send reponse */
-		await this.responseBackend(container);
+		await this.sendResponse(container);
 		
 		#endif
 		
@@ -200,7 +199,7 @@ class BaseApp extends BaseObject
 	/**
 	 * Send response
 	 */
-	async void responseBackend(RenderContainer container)
+	async void sendResponse(RenderContainer container)
 	{
 		/* Call response */
 		await @.callHookAsync(AppHook::RESPONSE, {

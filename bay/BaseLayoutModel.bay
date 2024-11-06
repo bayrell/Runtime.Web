@@ -137,8 +137,7 @@ class BaseLayoutModel extends BaseModel
 	 */
 	string getPageClassName()
 	{
-		PageModel page_model = this.getPageModel();
-		return page_model ? page_model.component : this.current_page_class;
+		return this.current_page_class;
 	}
 	
 	

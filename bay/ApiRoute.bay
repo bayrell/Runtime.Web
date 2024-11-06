@@ -27,6 +27,7 @@ use Runtime.Web.BusLocal;
 use Runtime.Web.Cookie;
 use Runtime.Web.JsonResponse;
 use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteAction;
 use Runtime.Web.RouteInfo;
 
 
@@ -39,7 +40,7 @@ class ApiRoute extends BaseRoute
 	{
 		return
 		[
-			new RouteInfo
+			new RouteAction
 			{
 				"uri": "/api/{service}/{api_name}/{method_name}/",
 				"name": "runtime:web:api",

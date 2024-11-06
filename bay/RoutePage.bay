@@ -18,37 +18,37 @@
 
 namespace Runtime.Web;
 
-use Runtime.Web.BaseModel;
-use Runtime.Web.BasePage;
-use Runtime.Web.BaseRoute;
+use Runtime.SerializeInterface;
+use Runtime.Serializer;
+use Runtime.Web.RouteInfo;
 use Runtime.Web.RenderContainer;
 
 
-class BasePageModel extends BaseModel
+class RoutePage extends RouteInfo
 {
-	string component = classof BasePage;
+	string page = "";
 	
 	
 	/**
-	 * Action index
+	 * Process frontend data
 	 */
-	async void actionIndex(RenderContainer container)
+	void serialize(Serializer serializer, Map data)
 	{
-		/* Load page data */
-		await this.loadData(container);
-		
-		/* Create response */
-		container.renderPage(this.component);
-		
-		/* Build title */
-		this.buildTitle(container);
+		serializer.process(this, "page", data);
+		parent(serializer, data);
 	}
 	
 	
 	/**
-	 * Build title
+	 * Render route
 	 */
-	void buildTitle(RenderContainer container)
+	async void render(RenderContainer container)
 	{
+		container.renderPage(this.page);
+		if (this.data)
+		{
+			string title = this.data.get("title");
+			container.layout.setPageTitle(title);
+		}
 	}
 }

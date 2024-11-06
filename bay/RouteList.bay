@@ -26,7 +26,10 @@ use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
+use Runtime.Web.RouteAction;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.RouteModel;
+use Runtime.Web.RoutePage;
 use Runtime.Web.Annotations.Route;
 use Runtime.Web.Hooks.AppHook;
 
@@ -74,18 +77,19 @@ class RouteList extends BaseProvider
 			for (int j=0; j<routes_list.count(); j++)
 			{
 				RouteInfo route = routes_list.get(j);
-				if (route.action and rtl::isString(route.action))
+				if (route instanceof RouteAction)
 				{
 					if (rtl::method_exists(info.name, route.action))
 					{
-						route <= action <= new Callback(info.name, route.action);
+						route.action = new Callback(info.name, route.action);
 					}
 					else
 					{
-						route <= action <= new Factory(info.name, {"action": route.action});
+						route.action = new Factory(info.name, {"action": route.action});
 					}
 				}
-				route <= route_class <= info.name;
+				route.route_class = info.name;
+				route.compile();
 				this.addRoute(route);
 			}
 		}
@@ -163,7 +167,8 @@ class RouteList extends BaseProvider
 			Collection<string> matches = this.matchRoute(container, route);
 			if (matches == null) continue;
 			
-			route = route.addMatches(matches);
+			route = route.copy();
+			route.addMatches(matches);
 			return route;
 		}
 		

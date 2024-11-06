@@ -103,21 +103,35 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
-	 * Find route
+	 * Resolve container
 	 */
-	void findRoute()
+	async void resolve()
+	{
+		/* Resolve request */
+		await this.resolveRequest();
+		
+		/* Resolve route */
+		await this.resolveRoute();
+	}
+	
+	
+	/**
+	 * Resolve request and find route
+	 */
+	async void resolveRequest()
 	{
 		/* Call hook find route */
-		@.callHook(AppHook::FIND_ROUTE_BEFORE, {
+		await @.callHook(AppHook::FIND_ROUTE_BEFORE, {
 			"container": this,
 		});
 		
+		/* Exit if route find */
+		if (this.route != null) return;
+		if (this.response != null) return;
+		
 		/* Find route */
-		if (this.route == null and this.response == null)
-		{
-			RouteList routes = @.provider(classof RouteList);
-			this.route = routes.findRoute(this);
-		}
+		RouteList routes = @.provider(classof RouteList);
+		this.route = routes.findRoute(this);
 		
 		/* Call hook found route */
 		await @.callHook(AppHook::FIND_ROUTE_AFTER, {
@@ -125,7 +139,7 @@ class RenderContainer extends BaseObject
 		});
 		
 		/* Call middleware */
-		await this.callRouteMiddleware();
+		await this.callRouteMiddleware(this);
 	}
 	
 	
@@ -155,10 +169,10 @@ class RenderContainer extends BaseObject
 		/* Load layout data */
 		await this.layout.loadData(this);
 		
-		/* Run route */
+		/* Render route */
 		if (this.route != null)
 		{
-			await this.route.resolve(this);
+			await this.route.render(this);
 		}
 		
 		/* Call layout route after */
@@ -193,6 +207,15 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
+	 * Set response
+	 */
+	void setResponse(Response response)
+	{
+		this.response = response;
+	}
+	
+	
+	/**
 	 * Render page model
 	 */
 	async void renderPageModel(string model_name)
@@ -203,15 +226,6 @@ class RenderContainer extends BaseObject
 		{
 			await page_model.actionIndex(this);
 		}
-	}
-	
-	
-	/**
-	 * Set response
-	 */
-	void setResponse(Response response)
-	{
-		this.response = response;
 	}
 	
 	

@@ -19,76 +19,106 @@
 namespace Runtime.Web;
 
 use Runtime.re;
-use Runtime.BaseStruct;
+use Runtime.BaseObject;
 use Runtime.Callback;
+use Runtime.SerializeInterface;
+use Runtime.Serializer;
 use Runtime.Entity.Factory;
 use Runtime.Exceptions.ItemNotFound;
+use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteList;
 
 
-struct RouteInfo extends BaseStruct
+class RouteInfo extends BaseObject implements SerializeInterface
 {
 	string name = null;
 	string uri = null;
 	string uri_match = null;
 	string domain = null;
 	string label = null;
-	string action = null;
-	string component = null;
-	string model = null;
 	string layout = null;
 	string route_class = null;
 	Dict data = null;
-	Collection<Callback> middleware = [];
+	Collection<Callback> middleware = null;
 	Collection<string> params = [];
 	Dict<string> matches = {};
 	bool is_backend = false;
-	bool enable_locale = true;
 	int pos = 100;
 	
 	
 	/**
-	 * Init struct data
+	 * Constructor
 	 */
-	protected void _changes(Map changes)
+	void constructor(Dict params = null)
 	{
-		if (changes.has("uri") and not changes.has("uri_match"))
+		parent();
+		this._assign_values(params);
+	}
+	
+	
+	/**
+	 * Process frontend data
+	 */
+	void serialize(Serializer serializer, Map data)
+	{
+		serializer.process(this, "data", data);
+		serializer.process(this, "domain", data);
+		serializer.process(this, "label", data);
+		serializer.process(this, "layout", data);
+		serializer.process(this, "matches", data);
+		serializer.process(this, "middleware", data);
+		serializer.process(this, "name", data);
+		serializer.process(this, "params", data);
+		serializer.process(this, "pos", data);
+		serializer.process(this, "route_class", data);
+		serializer.process(this, "uri", data);
+		serializer.process(this, "uri_match", data);
+	}
+	
+	
+	/**
+	 * Copy route
+	 */
+	RouteInfo copy()
+	{
+		return Serializer::copy(this);
+	}
+	
+	
+	/**
+	 * Compile route
+	 */
+	void compile()
+	{
+		if (this.uri_match == "")
 		{
-			string uri = changes["uri"];
-			string uri_match = changes["uri_match"];
+			this.uri_match = "^" ~ re::replace("\\/", "\\/", this.uri) ~ "$";
+		}
+		
+		Collection matches = re::matchAll("{(.*?)}", this.uri);
+		if (matches)
+		{
+			Vector<string> params = new Vector();
 			
-			uri_match = re::replace("\\/", "\\/", uri);
-			
-			Collection matches = re::matchAll("{(.*?)}", uri);
-			if (matches)
+			for (int i=0; i<matches.count(); i++)
 			{
-				Vector<string> params = new Vector();
-				
-				for (int i=0; i<matches.count(); i++)
-				{
-					Collection arr = matches[i];
-					string name = arr[1];
-					uri_match = re::replace
-					(
-						"{" ~ name ~ "}", 
-						"([^\\/]*?)", 
-						uri_match
-					);
-					params.push(name);
-				}
-				
-				/* Setup params */
-				changes.set("params", params.toCollection());
+				Collection arr = matches[i];
+				string name = arr[1];
+				this.uri_match = re::replace
+				(
+					"{" ~ name ~ "}",
+					"([^\\/]*?)",
+					this.uri_match
+				);
+				this.params.push(name);
 			}
-			else
-			{
-				changes.set("params", []);
-			}
-			
-			changes.set("uri_match", "^" ~ uri_match ~ "$");
+		}
+		else
+		{
+			this.params = [];
 		}
 	}
 	
@@ -96,62 +126,23 @@ struct RouteInfo extends BaseStruct
 	/**
 	 * Add matches
 	 */
-	RouteInfo addMatches(Collection matches)
+	void addMatches(Collection matches)
 	{
-		Map new_matches = {};
 		for (int i=0; i<this.params.count(); i++)
 		{
 			string param_name = this.params.get(i);
 			string match_value = matches.get(i);
-			new_matches.set(param_name, match_value);
+			this.matches.set(param_name, match_value);
 		}
-		return this.clone{
-			"matches": new_matches,
-		};
 	}
 	
 	
 	/**
-	 * Resolve route
+	 * Render route
 	 */
-	async void resolve(RenderContainer container)
+	async void render(RenderContainer container)
 	{
-		/* If route action is callable */
-		if (this.action != null)
-		{
-			if (rtl::isCallable(this.action))
-			{
-				fn f = this.action;
-				await rtl::apply(f, [container]);
-			}
-			else if (this.action instanceof Factory)
-			{
-				BaseRoute base_route = this.action.factory();
-				Callback action = new Callback(base_route, base_route.action)
-				if (action.exists())
-				{
-					await rtl::apply(action, [container]);
-				}
-			}
-		}
-		
-		/* If response is exists */
-		if (container.response)
-		{
-			return;
-		}
-		
-		/* Setup page model */
-		string page_model_name = this.model;
-		if (page_model_name != "")
-		{
-			if (rtl::class_exists(page_model_name))
-			{
-				await container.renderPageModel(page_model_name);
-				return;
-			}
-			throw new ItemNotFound(page_model_name, "Model");
-		}
+		throw new RuntimeException("RouteInfo is abstract class");
 		
 		/* Setup component */
 		if (this.component != "")
