@@ -143,17 +143,5 @@ class RouteInfo extends BaseObject implements SerializeInterface
 	async void render(RenderContainer container)
 	{
 		throw new RuntimeException("RouteInfo is abstract class");
-		
-		/* Setup component */
-		if (this.component != "")
-		{
-			container.renderPage(this.component);
-			if (this.data)
-			{
-				string title = this.data.get("title");
-				container.layout.setPageTitle(title);
-			}
-			return;
-		}
 	}
 }
