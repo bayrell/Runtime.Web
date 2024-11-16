@@ -44,7 +44,6 @@ class RenderContainer extends BaseObject
 	public Response response = null;
 	public RouteInfo route = null;
 	public Layout layout = null;
-	public Vector teleports = [];
 	public Dict<Cookie> cookies = {};
 	
 	/* Backend storage */

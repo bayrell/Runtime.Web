@@ -53,6 +53,13 @@ props var model = null;
 props var render_list = null;
 Map render_cache = new Map;
 
+#ifdef BACKEND then
+var layout = null;
+var _parent_component = null;
+var _props = null;
+var _slots = null;
+#endif
+
 
 /**
  * Returns true if first in render list
@@ -533,7 +540,6 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 		$component_name = "Runtime.Web.Component";
 	}
 	$component = \Runtime\rtl::newInstance($component_name);
-	$component->container = $this->container;
 	$component->layout = $this->layout;
 	$component->_parent_component = $this;
 	$component->_props = $attrs;
@@ -543,7 +549,10 @@ var _c(var parent_elem, string component_name = null, var attrs = null, var cont
 	{
 		foreach ($attrs as $key => $value)
 		{
-			$component->$key = $value;
+			if (property_exists($component, $key))
+			{
+				$component->$key = $value;
+			}
 		}
 	}
 	$elem = $component->render();
@@ -691,7 +700,7 @@ void _teleport(var parent_elem, var attrs = null, var content = null)
 	#case ifcode PHP then
 	
 	$parent_elem->push("<!--teleport start--><!--teleport end-->");
-	$this->container->teleports->push($content->join(""));
+	$this->layout->teleports->push($content->join(""));
 	
 	#case ifcode JAVASCRIPT then
 	

@@ -19,6 +19,7 @@
 namespace Runtime.Web.Hooks;
 
 use Runtime.lib;
+use Runtime.Entity.Hook;
 use Runtime.Web.RedirectResponse;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
@@ -28,6 +29,15 @@ use Runtime.Web.Hooks.AppHook as BaseAppHook;
 class SetupLayout extends BaseAppHook
 {
 	Dict<Dict> names = null;
+	
+	
+	/**
+	 * Hook factory
+	 */
+	static Hook hook(Dict params)
+	{
+		return new Hook(static::getClassName(), {"names": params});
+	}
 	
 	
 	/**

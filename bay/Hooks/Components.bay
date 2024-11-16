@@ -18,14 +18,35 @@
 
 namespace Runtime.Web.Hooks;
 
+use Runtime.Entity.Hook;
 use Runtime.Web.Hooks.AppHook as BaseAppHook;
 
 
 class Components extends BaseAppHook
 {
-	Collection items = [];
-	Collection header = [];
-	Collection footer = [];
+	Collection items = {
+		"components": [],
+		"footer": [],
+		"header": [],
+	};
+	
+	
+	/**
+	 * Hook factory
+	 */
+	static Hook header(Collection items)
+	{
+		return new Hook(static::getClassName(), {"header": items});
+	}
+	
+	
+	/**
+	 * Hook factory
+	 */
+	static Hook footer(Collection items)
+	{
+		return new Hook(static::getClassName(), {"footer": items});
+	}
 	
 	
 	/**
@@ -34,11 +55,10 @@ class Components extends BaseAppHook
 	void setup(Dict params)
 	{
 		parent(params);
-		
 		if (params == null) return;
-		if (params.has("items")) this.items = params.get("items");
-		if (params.has("header")) this.header = params.get("header");
-		if (params.has("footer")) this.footer = params.get("footer");
+		if (params.has("items")) this.items.set("components", params.get("items"));
+		if (params.has("footer")) this.items.set("components", params.get("footer"));
+		if (params.has("header")) this.items.set("components", params.get("header"));
 	}
 	
 	
@@ -60,7 +80,7 @@ class Components extends BaseAppHook
 	 */
 	void components(Map params)
 	{
-		params.get("components").appendItems(this.items);
+		params.get("components").appendItems(this.items.get("components"));
 	}
 	
 	
@@ -69,7 +89,7 @@ class Components extends BaseAppHook
 	 */
 	void render_head(Map params)
 	{
-		params.get("components").appendItems(this.header);
+		params.get("components").appendItems(this.items.get("header"));
 	}
 	
 	
@@ -78,6 +98,6 @@ class Components extends BaseAppHook
 	 */
 	void render_footer(Map params)
 	{
-		params.get("components").appendItems(this.footer);
+		params.get("components").appendItems(this.items.get("footer"));
 	}
 }

@@ -21,9 +21,15 @@
 <use name="Runtime.rtl" />
 <use name="Runtime.Exceptions.RuntimeException" />
 <use name="Runtime.Web.AppComponent" />
+<use name="Runtime.Web.RenderContainer" />
 <use name="Runtime.Web.BaseModel" />
 <use name="Runtime.Web.RenderProvider" />
 <use name="Runtime.Web.Hooks.AppHook" />
+
+
+<script>
+RenderContainer container = null;
+</script>
 
 
 <template name="renderWidget" args="BaseModel widget, Dict props = null">
@@ -138,7 +144,7 @@
 		<AppComponent @model=[] />
 	</div>
 	<div class="teleports">@raw{
-		render_provider.enable_ssr ? this.container.teleports.join("") : ""
+		render_provider.enable_ssr ? this.layout.teleports.join("") : ""
 	}</div>
 	
 	<script>

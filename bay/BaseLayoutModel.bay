@@ -64,6 +64,7 @@ class BaseLayoutModel extends BaseModel
 	
 	/* Backend storage */
 	public Map backend_storage = {};
+	public Vector teleports = [];
 	
 	#endif
 	
