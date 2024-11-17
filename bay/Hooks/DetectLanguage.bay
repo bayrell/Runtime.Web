@@ -42,8 +42,14 @@ class DetectLanguage extends BaseAppHook
 		parent(params);
 		
 		if (params == null) return;
-		if (params.has("allowed_languages")) this.allowed_languages = params.get("allowed_languages");
-		if (params.has("default_language")) this.default_language = params.get("default_language");
+		if (params.has("allowed_languages"))
+		{
+			this.allowed_languages = params.get("allowed_languages");
+		}
+		if (params.has("default_language"))
+		{
+			this.default_language = params.get("default_language");
+		}
 	}
 
 

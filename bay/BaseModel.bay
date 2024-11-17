@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.lib;
 use Runtime.BaseObject;
 use Runtime.Callback;
+use Runtime.Chain;
 use Runtime.SerializeInterface;
 use Runtime.Serializer;
 use Runtime.Entity.Factory;
@@ -144,7 +145,9 @@ class BaseModel extends BaseObject implements SerializeInterface
 	 */
 	void clearListener(string message_name)
 	{
-		this.listeners.set(message_name, []);
+		Chain chain = new Chain();
+		chain.setReturnValue(false);
+		this.listeners.set(message_name, chain);
 	}
 	
 	
@@ -153,12 +156,15 @@ class BaseModel extends BaseObject implements SerializeInterface
 	 */
 	void addListener(string message_name, fn f, int priority = 100)
 	{
-		if (not this.listeners.has(message_name)) this.listeners.set(message_name, []);
+		if (not this.listeners.has(message_name))
+		{
+			this.clearListener(message_name);
+		}
 		if (rtl::isCallable(f))
 		{
-			Collection arr = this.listeners.get(message_name);
-			arr.append({"callback": f, "priority": priority});
-			arr = arr.sort(lib::sortAttr("priority", "asc"));
+			Chain chain = this.listeners.get(message_name);
+			chain.add(f, priority);
+			chain.sort();
 		}
 	}
 	
@@ -183,9 +189,8 @@ class BaseModel extends BaseObject implements SerializeInterface
 	void emitMessage(string message_name, Message message)
 	{
 		if (not this.listeners.has(message_name)) return;
-		Vector<Callback> listeners = this.listeners.get(message_name);
-		listeners = listeners.map(lib::get("callback"));
-		await rtl::applyChain(listeners, [message]);
+		Chain chain = this.listeners.get(message_name);
+		chain.apply(message);
 	}
 	
 	
@@ -209,9 +214,8 @@ class BaseModel extends BaseObject implements SerializeInterface
 	async void emitMessageAsync(string message_name, Message message)
 	{
 		if (not this.listeners.has(message_name)) return;
-		Vector<Callback> listeners = this.listeners.get(message_name);
-		listeners = listeners.map(lib::get("callback"));
-		await rtl::applyChainAsync(listeners, [message]);
+		Chain chain = this.listeners.get(message_name);
+		await chain.applyAsync(message);
 	}
 	
 	
