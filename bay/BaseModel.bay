@@ -107,11 +107,22 @@ class BaseModel extends BaseObject implements SerializeInterface
 	/**
 	 * Create model
 	 */
-	BaseModel createModel(var model)
+	BaseModel createModel(var params, string default_model = "")
 	{
-		if (model instanceof ModelFactory) model = model.factory(this);
-		else if (model instanceof Factory) model = model.factory();
-		else if (rtl::isString(model)) model = rtl::newInstance(model, []);
+		BaseModel model = null;
+		if (rtl::isString(params)) model = this.addWidget(params);
+		else if (params instanceof BaseModel) model = params;
+		else if (params instanceof ModelFactory) model = params.factory(this);
+		else if (params instanceof Factory) model = params.factory();
+		else if (params instanceof Dict)
+		{
+			if (params.has("factory")) model = this.createModel(params.get("factory"));
+			else
+			{
+				string class_name = params.get("model", default_model);
+				model = this.addWidget(class_name, params);
+			}
+		}
 		return model;
 	}
 	
