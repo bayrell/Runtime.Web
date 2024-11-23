@@ -34,6 +34,15 @@ class Components extends BaseAppHook
 	/**
 	 * Hook factory
 	 */
+	static Hook hook(Collection items)
+	{
+		return new Hook(static::getClassName(), {"components": items});
+	}
+	
+	
+	/**
+	 * Hook factory
+	 */
 	static Hook header(Collection items)
 	{
 		return new Hook(static::getClassName(), {"header": items});
@@ -56,9 +65,9 @@ class Components extends BaseAppHook
 	{
 		parent(params);
 		if (params == null) return;
-		if (params.has("items")) this.items.set("components", params.get("items"));
-		if (params.has("footer")) this.items.set("components", params.get("footer"));
-		if (params.has("header")) this.items.set("components", params.get("header"));
+		if (params.has("components")) this.items.set("components", params.get("components"));
+		if (params.has("footer")) this.items.set("footer", params.get("footer"));
+		if (params.has("header")) this.items.set("header", params.get("header"));
 	}
 	
 	
