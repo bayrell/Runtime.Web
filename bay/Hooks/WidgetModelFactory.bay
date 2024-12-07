@@ -19,6 +19,7 @@
 namespace Runtime.Web.Hooks;
 
 use Runtime.Callback;
+use Runtime.Entity.Hook;
 use Runtime.Web.BaseModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Hooks.AppHook as BaseAppHook;
@@ -27,6 +28,15 @@ use Runtime.Web.Hooks.AppHook as BaseAppHook;
 class WidgetModelFactory extends BaseAppHook
 {
 	string model_name = "";
+	
+	
+	/**
+	 * Create hook
+	 */
+	static Hook hook(string model_name)
+	{
+		return new Hook(static::getClassName(), {"model_name": model_name});
+	}
 	
 	
 	/**
@@ -53,63 +63,6 @@ class WidgetModelFactory extends BaseAppHook
 	
 	
 	/**
-	 * Returns true if is created
-	 */
-	bool isCreated(RenderContainer container)
-	{
-		Map backend_storage = container.layout.backend_storage;
-		if (not backend_storage.has(classof WidgetModelFactory)) return false;
-		
-		Map flags = backend_storage.get(classof WidgetModelFactory);
-		if (not flags.get(this.model_name)) return false;
-		
-		return true;
-	}
-	
-	
-	/**
-	 * Setup is created
-	 */
-	void setIsCreated(RenderContainer container)
-	{
-		Map backend_storage = container.layout.backend_storage;
-		if (not backend_storage.has(classof WidgetModelFactory))
-		{
-			backend_storage.set(classof WidgetModelFactory, {});
-		}
-		
-		Map flags = backend_storage.get(classof WidgetModelFactory);
-		flags.set(this.model_name, true);
-	}
-	
-	
-	/**
-	 * Add widget
-	 */
-	BaseModel addWidget(RenderContainer container)
-	{
-		if (this.isCreated(container)) return null;
-		
-		/* Get model layout names */
-		Callback layoutNames = new Callback(this.model_name, "layoutNames");
-		if (not layoutNames.exists()) return null;
-		
-		/* Check layout name in layout names */
-		Collection<string> layout_names = layoutNames.apply();
-		string layout_name = container.layout.layout_name;
-		if (layout_names.indexOf(layout_name) == -1) return null;
-		
-		/* Add widget to layout */
-		BaseModel widget = container.layout.addWidget(this.model_name);
-		
-		/* Set widget is created */
-		this.setIsCreated(container);
-		
-		return widget;
-	}
-	
-	
-	/**
 	 * Route before
 	 */
 	void route_before(Map params)
@@ -118,23 +71,6 @@ class WidgetModelFactory extends BaseAppHook
 		if (container.response != null) return;
 		
 		/* Add widget */
-		this.addWidget(container);
-	}
-	
-	
-	/**
-	 * Route after
-	 */
-	async void route_after(Map params)
-	{
-		RenderContainer container = params.get("container");
-		if (container.response != null) return;
-		
-		/* Add widget */
-		BaseModel widget = this.addWidget(container);
-		if (widget)
-		{
-			await widget.loadData(container);
-		}
+		container.layout.addWidget(this.model_name)
 	}
 }

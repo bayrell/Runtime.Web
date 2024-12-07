@@ -29,6 +29,7 @@
 		"Hooks/Components.bay",
 		"Hooks/DetectLanguage.bay",
 		"Hooks/SetupLayout.bay",
+		"Hooks/WidgetModelFactory.bay",
 		"Messages/Message.bay",
 		"Messages/ValueChangeMessage.bay",
 		"Messages/ClickMessage.bay",
