@@ -180,6 +180,10 @@ class ApiResult extends BaseObject
 		this.error_file = e.getFileName();
 		this.error_line = e.getErrorLine();
 		this.error_pos = e.getErrorPos();
+		if (@.env("DEBUG"))
+		{
+			this.error_trace = e.getTraceCollection();
+		}
 		this.is_exception = true;
 	}
 	

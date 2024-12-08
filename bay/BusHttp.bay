@@ -39,10 +39,10 @@ class BusHttp extends BaseObject implements BusInterface
 	 */
 	async ApiResult send(Dict params)
 	{
-		string service = params["service"] |> default string "app";
-		string api_name = params["api_name"] |> default string "";
-		string method_name = params["method_name"] |> default string "";
-		Dict data = params["data"] |> default Dict null;
+		string service = params.get("service", "app");
+		string api_name = params.get("api_name", "");
+		string method_name = params.get("method_name", "");
+		Dict data = params.get("data", null);
 		
 		string route_prefix = @.env("ROUTE_PREFIX");
 		route_prefix = rs::removeFirstSlash(route_prefix);
