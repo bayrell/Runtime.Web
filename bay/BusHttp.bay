@@ -76,11 +76,6 @@ class BusHttp extends BaseObject implements BusInterface
 			api_url = d.get("api_url");
 			post_data = d.get("post_data");
 			
-			/* Encode data to string */
-			var data = post_data.get("data");
-			var json_data = rtl::json_encode(data);
-			post_data.set("data", json_data);
-			
 			/* Send curl */
 			Curl curl = new Curl(api_url, {
 				"post": post_data,

@@ -242,7 +242,10 @@ class BaseModel extends BaseObject implements SerializeInterface
 		{
 			string widget_key = widgets_keys.get(i);
 			BaseModel widget = this.widgets.get(widget_key);
-			await widget.loadData(container);
+			if (widget instanceof BaseModel)
+			{
+				await widget.loadData(container);
+			}
 		}
 		
 		this.is_data_loaded = true;

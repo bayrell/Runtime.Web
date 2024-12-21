@@ -123,6 +123,92 @@ class BaseApp extends BaseObject
 	
 	
 	/**
+	 * Build files
+	 */
+	void buildFiles(Collection payload, Collection path, var file)
+	{
+		#ifcode PHP then
+		
+		if (is_string($file["name"]))
+		{
+			$item = new \Runtime\File([
+				"name" => $file["name"],
+				"path" => $file["tmp_name"],
+				"type" => $file["type"],
+				"size" => $file["size"],
+			]);
+			\Runtime\rtl::setAttr($payload, $path, $item);
+		}
+		else if (is_array($file["name"]))
+		{
+			foreach ($file["name"] as $index => $value)
+			{
+				$path->push($index);
+				$this->buildFiles($payload, $path, [
+					"name" => $file["name"][$index],
+					"size" => $file["size"][$index],
+					"tmp_name" => $file["tmp_name"][$index],
+					"type" => $file["type"][$index],
+				]);
+				$path->pop();
+			}
+		}
+		
+		#endif
+	}
+	
+	
+	/**
+	 * Build post files
+	 */
+	Map buildPostFiles(Dict payload)
+	{
+		#ifcode PHP then
+		if (count($_FILES) == 0) return;
+		
+		foreach ($_FILES as $key => $value)
+		{
+			$this->buildFiles($payload, new \Runtime\Vector($key), $value);
+		}
+		
+		#endif
+	}
+	
+	
+	/**
+	 * Build post data
+	 */
+	void buildPostData(Dict payload, Collection path, var post)
+	{
+		#ifcode PHP then
+		if (gettype($post) == "array")
+		{
+			if ($path->count() > 0)
+			{
+				$key = $path->last();
+				if (!$payload->has($key))
+				{
+					$payload->set($key, new \Runtime\Map());
+				}
+				$payload = $payload->get($key);
+			}
+			foreach ($post as $key => $val)
+			{
+				$path->push($key);
+				$this->buildPostData($payload, $path, $val);
+				$path->pop();
+			}
+		}
+		else if ($path->count() > 0)
+		{
+			$key = $path->last();
+			$payload->set($key, $post);
+		}
+		#endif
+	}
+	
+	
+	/**
 	 * Create request
 	 */
 	Request createRequest()
@@ -152,10 +238,8 @@ class BaseApp extends BaseObject
 			}
 			else
 			{
-				foreach ($post as $key => $val)
-				{
-					$payload->set($key, $val);
-				}
+				$this->buildPostData($payload, new \Runtime\Vector(), $post, $files);
+				$this->buildPostFiles($payload);
 			}
 		}
 		
