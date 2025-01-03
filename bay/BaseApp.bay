@@ -238,7 +238,7 @@ class BaseApp extends BaseObject
 			}
 			else
 			{
-				$this->buildPostData($payload, new \Runtime\Vector(), $post, $files);
+				$this->buildPostData($payload, new \Runtime\Vector(), $post);
 				$this->buildPostFiles($payload);
 			}
 		}
