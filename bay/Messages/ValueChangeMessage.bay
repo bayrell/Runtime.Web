@@ -23,18 +23,7 @@ use Runtime.Web.Messages.Message;
 
 class ValueChangeMessage extends Message
 {
+	string name = "valueChange";
 	var value = null;
 	var old_value = null;
-	
-	
-	/**
-	 * Create message
-	 */
-	void constructor(Dict params = null)
-	{
-		parent(params);
-		
-		/* Set message name */
-		this.name = "valueChange";
-	}
 }
