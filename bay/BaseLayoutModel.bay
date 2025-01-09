@@ -284,9 +284,6 @@ class BaseLayoutModel extends BaseModel
 		Vector<string> res = new Vector();
 		Map<string> cache = new Map();
 		
-		components = components.concat(this.components);
-		components.push(this.getLayoutComponentName());
-		
 		/* Call hook */
 		Map d = @.callHook(AppHook::COMPONENTS, {
 			"layout": this,
@@ -295,6 +292,8 @@ class BaseLayoutModel extends BaseModel
 		
 		/* Get new components */
 		components = d.get("components");
+		components = components.concat(this.components);
+		components.push(this.getLayoutComponentName());
 		
 		/* Extends components */
 		static::_getRequiredComponents(res, cache, components);
