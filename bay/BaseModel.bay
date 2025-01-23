@@ -201,7 +201,7 @@ class BaseModel extends BaseObject implements SerializeInterface
 	{
 		if (not this.listeners.has(message_name)) return;
 		Chain chain = this.listeners.get(message_name);
-		chain.apply(message);
+		chain.apply([message]);
 	}
 	
 	
@@ -226,7 +226,7 @@ class BaseModel extends BaseObject implements SerializeInterface
 	{
 		if (not this.listeners.has(message_name)) return;
 		Chain chain = this.listeners.get(message_name);
-		await chain.applyAsync(message);
+		await chain.applyAsync([message]);
 	}
 	
 	
