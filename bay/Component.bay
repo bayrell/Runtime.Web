@@ -715,9 +715,9 @@ void _teleport(var parent_elem, var attrs = null, var content = null)
 
 
 /**
- * Returns styles
+ * Merge styles
  */
-static string getStyles(string class_name, Collection styles) => styles
+static string mergeStyles(string class_name, Collection styles) => styles
 	.map(
 		string (string item) use (class_name) =>
 			rs::charAt(item, 0) != "@"
