@@ -121,7 +121,9 @@ class ApiResult extends BaseObject
 		this.error_name = content.get("error_name", "");
 		this.error_file = content.get("error_file", "");
 		this.error_line = content.get("error_line", "");
+		this.error_trace = content.get("error_trace", []);
 		this.error_pos = content.get("error_pos", "");
+		this.is_exception = this.error_file != "";
 	}
 	
 	

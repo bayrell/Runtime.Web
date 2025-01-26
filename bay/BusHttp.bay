@@ -94,6 +94,22 @@ class BusHttp extends BaseObject implements BusInterface
 			{
 				res.exception( new AbstractException("Api response error") );
 			}
+			
+			/* Print exception */
+			if (@.env("DEBUG") and res.isException() and answer)
+			{
+				Collection arr = [];
+				arr.push(
+					res.error_name ~ " " ~
+					"in file " ~ res.error_file ~ ":" ~ res.error_line
+				);
+				arr.appendItems(
+					res.error_trace.map(
+						string (string value, int pos) => (pos + 1) ~ ") " ~ value
+					)
+				);
+				io::print_error(rs::join("\n", arr));
+			}
 		}
 		catch (CurlException e)
 		{
