@@ -69,8 +69,8 @@ class ApiRoute extends BaseRoute
 				"service": service,
 				"api_name": api_name,
 				"method_name": method_name,
+				"layout": container.layout,
 				"data": container.request.payload.get("data"),
-				"backend_storage": container.layout.backend_storage,
 				"container": container,
 			});
 		}

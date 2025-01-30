@@ -19,11 +19,49 @@
 namespace Runtime.Web;
 
 use Runtime.BaseStruct;
+use Runtime.RawString;
+use Runtime.Web.Component;
 use Runtime.Web.Cookie;
 use Runtime.Web.Layout;
+use Runtime.Web.RenderContainer;
 use Runtime.Web.Response;
 
 
 class RenderResponse extends Response
 {
+	RenderContainer container = null;
+	
+	
+	/**
+	 * Constructor
+	 */
+	void constructor(RenderContainer container)
+	{
+		parent();
+		this.container = container;
+	}
+	
+	
+	/**
+	 * Returns content
+	 */
+	string getContent(bool render_core_ui = true)
+	{
+		if (this.content) return this.content;
+		
+		/* Create component */
+		Component component = rtl::newInstance(this.container.layout.component);
+		component.container = this.container;
+		component.layout = this.container.layout;
+		component.model = this.container.layout;
+		
+		/* Render component */
+		Collection content =
+		[
+			"<!DOCTYPE html>\n",
+			render_core_ui ? component.renderCoreUI() : component.renderApp()
+		];
+		this.content = RawString::normalize(content);
+		return this.content;
+	}
 }

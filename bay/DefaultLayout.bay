@@ -18,19 +18,133 @@
 
 <class name="Runtime.Web.DefaultLayout">
 
+<use name="Runtime.Web.RenderContainer" />
+<use name="Runtime.Web.RenderProvider" />
+<use name="Runtime.Web.Hooks.AppHook" />
+
+
+<template name="renderBasePrefix">
+	%set string route_prefix = @.env("ROUTE_PREFIX");
+	%if (route_prefix)
+	{
+		<base href={{ rs::addLastSlash(route_prefix) }} />
+	}
+	%else
+	{
+		<base href="/" />
+	}
+</template>
+
+
+<template name="renderSEO">
+	<title>{{ this.layout.getFullTitle() }}</title>
+	%if (this.layout.content_type)
+	{
+		<meta charset={{ this.layout.content_type }} />
+		<meta http-equiv="Content-Type" content={{ "text/html; " ~ this.layout.content_type }} />
+	}
+	%if (this.layout.getLocale())
+	{
+		<meta http-equiv="Content-Language" content={{ this.layout.getLocale() }} />
+	}
+</template>
+
+
+<template name="renderHeadComponents">
+	%var Dict d = @.callHook(AppHook::RENDER_HEAD, {
+		"components": this.layout.getHeaderComponents(),
+		"layout": this.layout
+	});
+	%var Collection<string> components = d["components"];
+	%for (int i=0; i<components.count(); i++)
+	{
+		%set var widget = components.get(i);
+		%render this.renderWidget(widget);
+	}
+</template>
+
+
+<template name="renderCSS">
+	%set Collection components = this.layout.getComponents();
+	%set string css = this.layout::getCss(components);
+	<style id="core-css" class="components">@raw{{ css }}</style>
+</template>
+
+
+<template name="renderHeadAfter">
+</template>
+
+
+<template name="renderHead">
+	%render static::renderBasePrefix();
+	%render static::renderSEO();
+	%render static::renderHeadComponents();
+	%render static::renderCSS();
+	%render static::renderHeadAfter();
+</template>
+
+
+<template name="renderBodyComponents">
+	%var Dict d = @.callHook(AppHook::RENDER_BODY, {
+		"components": this.layout.getBodyComponents(),
+		"layout": this.layout
+	});
+	%var Collection<string> components = d["components"];
+	%for (int i=0; i<components.count(); i++)
+	{
+		%set var widget = components.get(i);
+		%render this.renderWidget(widget);
+	}
+</template>
+
+
+<template name="renderBodyAfter">
+</template>
+
+
+<template name="renderBody">
+	%render static::renderBodyComponents();
+	%render static::renderBodyAfter();
+</template>
+
+
+<template name="renderFooterAfter">
+</template>
+
+
+<template name="renderFooterComponents">
+	%var Dict d = @.callHook(AppHook::RENDER_FOOTER, {
+		"components": this.layout.getFooterComponents(),
+		"layout": this.layout
+	});
+	%var Collection<string> components = d["components"];
+	%for (int i=0; i<components.count(); i++)
+	{
+		%set var widget = components.get(i);
+		%render this.renderWidget(widget);
+	}
+</template>
+
+
+<template name="renderFooter">
+	%render static::renderFooterComponents();
+	%render static::renderFooterAfter();
+</template>
+
 
 <template name="renderCurrentPage">
-	%var string current_page = this.layout.getPageClassName();
-	%var string current_page_model = this.layout.current_page_model;
-	%if (current_page)
+	%set Dict current_page_model = this.layout.getPageModel();
+	%if (current_page_model)
 	{
-		%if (current_page_model)
+		%render this.renderWidget(current_page_model, this.layout.current_page_props);
+	}
+	%else
+	{
+		%set string current_page = this.layout.getPageClassName();
+		%if (current_page)
 		{
-			<{current_page} @model=[ "widgets", current_page_model ] />
-		}
-		%else
-		{
-			<{current_page} />
+			%set Dict props = this.layout.current_page_props;
+			<{current_page} ...props />
 		}
 	}
 </template>
@@ -41,7 +155,59 @@
 </template>
 
 
+<template name="renderApp">
+	
+	%set RenderProvider render_provider = @.provider(classof RenderProvider);
+	
+	<div class={{ render_provider.selector }}>
+		%render this.render();
+	</div>
+	
+	<script>
+		window["app_data"] = @raw{{ rtl::json_encode(
+			this.container.exportData(), rtl::ALLOW_OBJECTS
+		) }};
+	</script>
+	
+	<script>
+		onReady(function(){
+			Runtime.rtl.runApp(
+				app_data["entry_point"],
+				app_data["modules"],
+				Runtime.Map.from({
+					"environments": Runtime.Map.from(app_data["environments"]),
+					"tz": @json{ @.tz },
+					"tz_offset": @json{ 0 }
+				})
+			);
+		});
+	</script>
+	
+</template>
+
+
+<template name="renderCoreUI">
+	<html lang={{ this.layout.getLocale() }}>
+		<head>
+			%render static::renderHead();
+			<script>window.$onReady=[];function onReady(f){ window.$onReady.push(f) };</script>
+		</head>
+		<body>
+			%render static::renderBody();
+			%render static::renderApp();
+			%render static::renderFooter();
+			<script>
+			window.addEventListener('load', function() {
+				window.$onReady.forEach( function(f){ f(); } );
+			});
+			</script>
+		</body>
+	</html>
+</template>
+
+
 <script>
+props RenderContainer container = null;
 </script>
 
 

@@ -139,49 +139,50 @@ class RenderProvider extends BaseProvider
 	 */
 	void startApp(Dict options)
 	{
-		var vue_app = null;
 		var Vue = window["Vue"];
 		fn registerLayout = null;
 		
 		#ifcode JAVASCRIPT then
-		registerLayout = (layout) =>
+		registerLayout = (app, layout) =>
 		{
 			return {
 				install: () => {
-					vue_app.config.globalProperties.$layout = layout;
+					app.config.globalProperties.$layout = layout;
 				},
 			};
 		};
 		#endif
 		
 		/* Get props */
-		var component = rtl::find_class(options.get("component"));
-		Dict props = options.get("props");
+		var component = rtl::find_class(this.layout.component);
+		Dict props = {
+			"key": "root",
+			"model": this.layout,
+		};
 		
 		/* Create vue app */
-		bool enable_ssr = options.get("enable_ssr", false);
+		bool enable_ssr = this.enable_ssr;
 		if (enable_ssr)
 		{
-			vue_app = Vue.createSSRApp(component, props.toObject());
+			this.vue = Vue.createSSRApp(component, props.toObject());
 		}
 		else
 		{
-			vue_app = Vue.createApp(component, props.toObject());
+			this.vue = Vue.createApp(component, props.toObject());
 		}
 		
 		/* Register layout  */
-		vue_app.use(registerLayout(this.layout));
+		this.vue.use(registerLayout(this.vue, this.layout));
 		
 		/* Register other modules */
 		await @.callHookAsync(AppHook::VUE_MODULES, {
 			"render_provider": this,
-			"vue": vue_app,
+			"vue": this.vue,
+			"layout": this.layout,
 		});
 		
 		/* Mount app */
-		vue_app.mount(options.get("element"), true);
-		
-		return vue_app;
+		this.vue.mount(this.getRootElement(), true);
 	}
 	
 	
@@ -202,16 +203,7 @@ class RenderProvider extends BaseProvider
 		}
 		
 		/* Start App */
-		this.vue = this.startApp({
-			"element": this.getRootElement(),
-			"component": classof AppComponent
-			"enable_ssr": this.enable_ssr,
-			"props": {
-				"key": "root",
-				"model": this.layout,
-			},
-		});
-		
+		this.startApp();
 		#endif
 	}
 	

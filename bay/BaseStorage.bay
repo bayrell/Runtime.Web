@@ -1,4 +1,4 @@
-<!--
+/*!
  *  BayLang Technology
  *
  *  (c) Copyright 2016-2024 "Ildar Bikmamatov" <support@bayrell.org>
@@ -14,16 +14,26 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
--->
+ */
 
-<class name="Runtime.Web.AppComponent">
+namespace Runtime.Web;
 
-<template>
-	%var string class_name = this.layout.getLayoutComponentName();
-	%if (class_name)
+use Runtime.Serializer;
+use Runtime.Web.BaseModel;
+
+
+class BaseStorage extends BaseModel
+{
+	string widget_name = "storage";
+	Dict backend = {};
+	Dict params = {};
+	
+	
+	/**
+	 * Process frontend data
+	 */
+	void serialize(Serializer serializer, Map data)
 	{
-		<{class_name} @model=[] key="app" />
+		serializer.process(this, "params", data);
 	}
-</template>
-
-</class>
+}

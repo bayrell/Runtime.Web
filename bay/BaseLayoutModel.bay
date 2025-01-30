@@ -24,6 +24,8 @@ use Runtime.Serializer;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseModel;
+use Runtime.Web.BasePageModel;
+use Runtime.Web.BaseStorage;
 use Runtime.Web.Bus;
 use Runtime.Web.BusInterface;
 use Runtime.Web.Component;
@@ -39,11 +41,12 @@ class BaseLayoutModel extends BaseModel
 {
 	string component = classof DefaultLayout;
 	string title = "";
-	string locale = @.env("LOCALE");
+	string content_type = "UTF-8";
 	string layout_name = "default";
+	string locale = @.env("LOCALE");
 	string current_page_class = "";
 	string current_page_model = "";
-	string content_type = "UTF-8";
+	Dict current_page_props = null;
 	
 	/* Current route */
 	RouteInfo route = null;
@@ -57,16 +60,11 @@ class BaseLayoutModel extends BaseModel
 	Vector<string> components = [];
 	Map<Dict> routes = {};
 	
+	/* Storage */
+	BaseStorage storage = null;
+	
 	/* Increment assets */
 	string f_inc = "1";
-	
-	#ifdef BACKEND then
-	
-	/* Backend storage */
-	public Map backend_storage = {};
-	public Vector teleports = [];
-	
-	#endif
 	
 	
 	/**
@@ -76,11 +74,17 @@ class BaseLayoutModel extends BaseModel
 	{
 		this.layout = this;
 		if (params == null) return;
-		if (params.has("backend_storage"))
-		{
-			this.backend_storage = params.get("backend_storage");
-		}
 		if (params.has("route")) this.route = params.get("route");
+	}
+	
+	
+	/**
+	 * Init widget settings
+	 */
+	void initWidget(Dict params)
+	{
+		parent(params);
+		this.storage = this.addWidget(classof BaseStorage);
 	}
 	
 	
@@ -108,6 +112,7 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "components", data);
 		serializer.process(this, "current_page_class", data);
 		serializer.process(this, "current_page_model", data);
+		serializer.process(this, "current_page_props", data);
 		serializer.process(this, "content_type", data);
 		serializer.process(this, "f_inc", data);
 		serializer.process(this, "locale", data);
@@ -138,6 +143,8 @@ class BaseLayoutModel extends BaseModel
 	 */
 	string getPageClassName()
 	{
+		BasePageModel page_model = this.getPageModel();
+		if (page_model) return page_model.component;
 		return this.current_page_class;
 	}
 	
@@ -161,9 +168,35 @@ class BaseLayoutModel extends BaseModel
 		}
 		
 		/* Change current page model */
+		this.current_page_class = "";
 		this.current_page_model = class_name;
+		this.current_page_props = null;
 		
 		return page_model;
+	}
+	
+	
+	/**
+	 * Set page component
+	 */
+	void setPageComponent(string component_name, Dict props = null)
+	{
+		this.current_page_class = component_name;
+		this.current_page_props = props;
+	}
+	
+	
+	/**
+	 * Render page model
+	 */
+	async void renderPageModel(string model_name)
+	{
+		this.setPageModel(model_name);
+		BasePageModel page_model = this.getPageModel();
+		if (page_model)
+		{
+			await page_model.actionIndex(this);
+		}
 	}
 	
 	
@@ -204,36 +237,12 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
-	 * Returns layout component name
-	 */
-	string getLayoutComponentName()
-	{
-		string class_name = this.component;
-		
-		Dict params = @.callHook(AppHook::LAYOUT_COMPONENT_NAME, {
-			"layout": this,
-			"layout_name": this.layout_name,
-			"class_name": class_name,
-		});
-		
-		return params["class_name"];
-	}
-	
-	
-	/**
-	 * Returns Core UI
-	 */
-	string getCoreUI() => classof CoreUI;
-	
-	
-	/**
 	 * Call Api
 	 */
 	async ApiResult callApi(Map params)
 	{
-		#ifdef BACKEND then
-		params.set("backend_storage", this.backend_storage);
-		#endif
+		/* Set layout */
+		params.set("layout", this.layout);
 		
 		/* Returns bus */
 		BusInterface bus = Bus::getApi(params.get("service", "app"));
@@ -293,7 +302,7 @@ class BaseLayoutModel extends BaseModel
 		/* Get new components */
 		components = d.get("components");
 		components = components.concat(this.components);
-		components.push(this.getLayoutComponentName());
+		components.push(this.getPageClassName());
 		
 		/* Extends components */
 		static::_getRequiredComponents(res, cache, components);

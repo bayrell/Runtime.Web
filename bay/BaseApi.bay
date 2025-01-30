@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.Exceptions.AbstractException;
 use Runtime.Web.ApiResult;
+use Runtime.Web.BaseLayoutModel;
 use Runtime.Web.Cookie;
 use Runtime.Web.RenderContainer;
 
@@ -29,11 +30,9 @@ class BaseApi extends BaseObject
 {
 	string action = "";
 	Dict post_data = null;
+	BaseLayoutModel layout = null;
 	ApiResult result = null;
-	
-	/* Backend storage */
-	public Dict backend_storage = null;
-	
+
 	
 	/**
 	 * Returns api name

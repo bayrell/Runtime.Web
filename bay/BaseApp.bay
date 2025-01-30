@@ -285,11 +285,6 @@ class BaseApp extends BaseObject
 	 */
 	async void sendResponse(RenderContainer container)
 	{
-		/* Call response */
-		await @.callHookAsync(AppHook::RESPONSE, {
-			"container": container,
-		});
-		
 		#ifcode PHP then
 		
 		$response = $container->response;

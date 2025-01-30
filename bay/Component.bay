@@ -24,16 +24,24 @@
 <use name="Runtime.BaseObject" />
 <use name="Runtime.RawString" />
 <use name="Runtime.Web.Hooks.AppHook" />
+<use name="Runtime.Web.BaseModel" />
 <use name="Runtime.Web.RouteList" />
 
 
 <template name="renderWidget" args="BaseModel widget, Dict props = null">
 	%if (widget)
 	{
-		%set string component = widget.component;
-		%if (component)
+		%if (widget instanceof BaseModel)
 		{
-			<{component} @model={{ widget }} ...props />
+			%set string component = widget.component;
+			%if (component)
+			{
+				<{component} @model={{ widget }} ...props />
+			}
+		}
+		%else
+		{
+			<{widget} @model=[] />
 		}
 	}
 </template>
@@ -699,8 +707,8 @@ void _teleport(var parent_elem, var attrs = null, var content = null)
 	#switch
 	#case ifcode PHP then
 	
-	$parent_elem->push("<!--teleport start--><!--teleport end-->");
-	$this->layout->teleports->push($content->join(""));
+	/*$parent_elem->push("<!--teleport start--><!--teleport end-->");
+	$this->layout->teleports->push($content->join(""));*/
 	
 	#case ifcode JAVASCRIPT then
 	

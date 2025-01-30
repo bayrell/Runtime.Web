@@ -158,7 +158,7 @@ class BusLocal extends BaseProvider implements BusInterface
 		/* Create api instance */
 		api_instance = rtl::newInstance(class_name);
 		api_instance.action = method_name;
-		api_instance.backend_storage = params["backend_storage"];
+		api_instance.layout = params["layout"];
 		api_instance.post_data = data;
 		api_instance.result = new ApiResult;
 		api_instance.init();

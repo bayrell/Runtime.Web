@@ -6,6 +6,7 @@
 		"BaseApp.bay",
 		"BaseModel.bay",
 		"BaseLayoutModel.bay",
+		"BaseStorage.bay",
 		"Bus.bay",
 		"BusHttp.bay",
 		"BusInterface.bay",
@@ -33,7 +34,6 @@
 		"Messages/Message.bay",
 		"Messages/ValueChangeMessage.bay",
 		"Messages/ClickMessage.bay",
-		"AppComponent.bay",
 		"BasePage.bay",
 		"BasePageModel.bay",
 		"ModuleDescription.bay"

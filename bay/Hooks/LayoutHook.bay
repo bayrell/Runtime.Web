@@ -19,6 +19,7 @@
 namespace Runtime.Web.Hooks;
 
 use Runtime.lib;
+use Runtime.Web.EmailLayout;
 use Runtime.Web.RedirectResponse;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
@@ -33,14 +34,28 @@ class LayoutHook extends BaseAppHook
 	 */
 	void register_hooks()
 	{
-		this.register(static::ROUTE_BEFORE, 0);
+		this.register(static::CREATE_LAYOUT);
+		this.register(static::LAYOUT_MODEL_NAME, 0);
 	}
 	
 	
 	/**
-	 * Route before
+	 * Layout model name
 	 */
-	async void route_before(Map params)
+	void layout_model_name(Map params)
+	{
+		string layout_name = params.get("layout_name");
+		if (layout_name == "email")
+		{
+			params.set("component_name", classof EmailLayout);
+		}
+	}
+	
+	
+	/**
+	 * Create layout
+	 */
+	async void create_layout(Map params)
 	{
 		RenderContainer container = params.get("container");
 		
@@ -60,8 +75,9 @@ class LayoutHook extends BaseAppHook
 	 */
 	void setupClientIP(RenderContainer container)
 	{
+		if (not container.request) return;
 		string client_ip = container.request.getClientIp();
-		container.layout.backend_storage.set("client_ip", client_ip);
+		container.layout.storage.backend.set("client_ip", client_ip);
 	}
 	
 	
@@ -70,6 +86,8 @@ class LayoutHook extends BaseAppHook
 	 */
 	void setupLayoutRequest(RenderContainer container)
 	{
+		if (not container.request) return;
+		if (not container.route) return;
 		container.layout.route = container.route;
 		container.layout.request_https = container.request.is_https;
 		container.layout.request_host = container.request.host;

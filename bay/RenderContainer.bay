@@ -46,24 +46,29 @@ class RenderContainer extends BaseObject
 	public Layout layout = null;
 	public Dict<Cookie> cookies = {};
 	
-	/* Backend storage */
-	public Map backend_storage = {};
-	
 	
 	/**
 	 * Create layout
 	 */
 	void createLayout(string layout_name)
 	{
-		/* Get layout class name */
+		/* Get layout params */
 		Dict params = @.callHook(AppHook::LAYOUT_MODEL_NAME, {
 			"class_name": classof BaseLayoutModel,
 			"layout_name": layout_name,
+			"component_name": "",
 		});
 		
 		/* Create layout */
 		this.layout = rtl::newInstance(params.get("class_name"));
 		this.layout.setLayoutName(layout_name);
+		this.layout.route = this.route;
+		
+		/* Set component name */
+		if (params.get("component_name") != "")
+		{
+			this.layout.component = params.get("component_name");
+		}
 		
 		/* Call create layout */
 		@.callHookAsync(AppHook::CREATE_LAYOUT, {
@@ -106,8 +111,11 @@ class RenderContainer extends BaseObject
 	 */
 	async void resolve()
 	{
-		/* Resolve request */
-		await this.resolveRequest();
+		/* Find route */
+		await this.findRoute();
+		
+		/* Call middleware */
+		await this.callRouteMiddleware(this);
 		
 		/* Resolve route */
 		await this.resolveRoute();
@@ -115,9 +123,9 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
-	 * Resolve request and find route
+	 * Find route
 	 */
-	async void resolveRequest()
+	async void findRoute()
 	{
 		/* Call hook find route */
 		await @.callHook(AppHook::FIND_ROUTE_BEFORE, {
@@ -136,9 +144,6 @@ class RenderContainer extends BaseObject
 		await @.callHook(AppHook::FIND_ROUTE_AFTER, {
 			"container": this,
 		});
-		
-		/* Call middleware */
-		await this.callRouteMiddleware(this);
 	}
 	
 	
@@ -152,10 +157,6 @@ class RenderContainer extends BaseObject
 		/* Create layout */
 		string layout_name = this.getLayoutName();
 		this.createLayout(layout_name);
-		
-		/* Set layout params */
-		this.layout.backend_storage = this.backend_storage;
-		this.layout.route = this.route;
 		
 		/* Call route before */
 		await @.callHookAsync(AppHook::ROUTE_BEFORE, {
@@ -181,6 +182,12 @@ class RenderContainer extends BaseObject
 		await @.callHookAsync(AppHook::ROUTE_AFTER, {
 			"container": this,
 		});
+		
+		/* Set response */
+		if (this.response == null)
+		{
+			this.setResponse(new RenderResponse(this));
+		}
 	}
 	
 	
@@ -211,34 +218,6 @@ class RenderContainer extends BaseObject
 	void setResponse(Response response)
 	{
 		this.response = response;
-	}
-	
-	
-	/**
-	 * Render page model
-	 */
-	async void renderPageModel(string model_name)
-	{
-		this.layout.setPageModel(model_name);
-		BasePageModel page_model = this.layout.getPageModel();
-		if (page_model)
-		{
-			await page_model.actionIndex(this);
-		}
-	}
-	
-	
-	/**
-	 * Render page and setup response
-	 */
-	void renderPage(string page_class_name = "")
-	{
-		this.response = new RenderResponse();
-		this.layout.current_page_class = page_class_name;
-		if (page_class_name != "")
-		{
-			this.layout.addComponent(page_class_name);
-		}
 	}
 	
 	

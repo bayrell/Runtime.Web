@@ -37,8 +37,8 @@ class BasePageModel extends BaseModel
 		/* Load page data */
 		await this.loadData(container);
 		
-		/* Create response */
-		container.renderPage(this.component);
+		/* Set page component */
+		this.layout.setPageComponent(this.component);
 		
 		/* Build title */
 		this.buildTitle(container);
