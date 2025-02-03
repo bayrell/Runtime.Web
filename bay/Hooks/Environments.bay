@@ -18,12 +18,22 @@
 
 namespace Runtime.Web.Hooks;
 
+use Runtime.Entity.Hook;
 use Runtime.Web.Hooks.AppHook as BaseAppHook;
 
 
 class Environments extends BaseAppHook
 {
     Collection frontend = [];
+	
+	
+	/**
+	 * Hook factory
+	 */
+	static Hook create(Collection items)
+	{
+		return new Hook(static::getClassName(), {"frontend": items});
+	}
 	
 	
 	/**

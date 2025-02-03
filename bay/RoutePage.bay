@@ -44,7 +44,7 @@ class RoutePage extends RouteInfo
 	 */
 	async void render(RenderContainer container)
 	{
-		container.renderPage(this.page);
+		container.layout.setPageComponent(this.page);
 		if (this.data)
 		{
 			string title = this.data.get("title");

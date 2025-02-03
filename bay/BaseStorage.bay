@@ -25,8 +25,11 @@ use Runtime.Web.BaseModel;
 class BaseStorage extends BaseModel
 {
 	string widget_name = "storage";
-	Dict backend = {};
 	Dict params = {};
+	
+	#ifdef BACKEND then
+	Dict backend = {};
+	#endif
 	
 	
 	/**
@@ -35,5 +38,6 @@ class BaseStorage extends BaseModel
 	void serialize(Serializer serializer, Map data)
 	{
 		serializer.process(this, "params", data);
+		parent(serializer, data);
 	}
 }

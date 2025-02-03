@@ -34,7 +34,7 @@ class SetupLayout extends BaseAppHook
 	/**
 	 * Hook factory
 	 */
-	static Hook hook(Dict params)
+	static Hook create(Dict params)
 	{
 		return new Hook(static::getClassName(), {"names": params});
 	}

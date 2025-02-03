@@ -34,7 +34,7 @@ class Components extends BaseAppHook
 	/**
 	 * Hook factory
 	 */
-	static Hook hook(Collection items)
+	static Hook create(Collection items)
 	{
 		return new Hook(static::getClassName(), {"components": items});
 	}

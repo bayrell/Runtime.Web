@@ -139,6 +139,15 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
+	 * Returns storage
+	 */
+	BaseStorage getStorage()
+	{
+		return this.widgets.get("storage");
+	}
+	
+	
+	/**
 	 * Returns page class name
 	 */
 	string getPageClassName()
