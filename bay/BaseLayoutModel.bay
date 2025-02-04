@@ -46,6 +46,8 @@ class BaseLayoutModel extends BaseModel
 	string locale = @.env("LOCALE");
 	string current_page_class = "";
 	string current_page_model = "";
+	string site_name = "";
+	bool is_full_title = false;
 	Dict current_page_props = null;
 	
 	/* Current route */
@@ -115,6 +117,7 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "current_page_props", data);
 		serializer.process(this, "content_type", data);
 		serializer.process(this, "f_inc", data);
+		serializer.process(this, "is_full_title", data);
 		serializer.process(this, "locale", data);
 		serializer.process(this, "layout_name", data);
 		serializer.process(this, "request_full_uri", data);
@@ -124,6 +127,7 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "request_uri", data);
 		serializer.process(this, "route", data);
 		serializer.process(this, "routes", data);
+		serializer.process(this, "site_name", data);
 		serializer.process(this, "title", data);
 		parent(serializer, data);
 	}
@@ -196,20 +200,6 @@ class BaseLayoutModel extends BaseModel
 	
 	
 	/**
-	 * Render page model
-	 */
-	async void renderPageModel(string model_name)
-	{
-		this.setPageModel(model_name);
-		BasePageModel page_model = this.getPageModel();
-		if (page_model)
-		{
-			await page_model.actionIndex(this);
-		}
-	}
-	
-	
-	/**
 	 * Set layout name
 	 */
 	void setLayoutName(string layout_name)
@@ -221,16 +211,27 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Set page title
 	 */
-	void setPageTitle(string title)
+	void setPageTitle(string title, bool is_full_title = false)
 	{
 		this.title = title;
+		this.is_full_title = is_full_title;
 	}
 	
 	
 	/**
 	 * Returns full page title
 	 */
-	string getFullTitle() => this.title;
+	string getFullTitle(string ch = "|")
+	{
+		/* Check full title */
+		if (this.is_full_title) return this.title;
+		
+		/* Check site name */
+		string site_name = this.getSiteName();
+		if (site_name == "") return this.title;
+		
+		return this.title ~ " " ~ ch ~ " " ~ site_name;
+	}
 	
 	
 	/**
@@ -242,7 +243,7 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Returns site name
 	 */
-	string getSiteName() => "";
+	string getSiteName() => this.site_name;
 	
 	
 	/**

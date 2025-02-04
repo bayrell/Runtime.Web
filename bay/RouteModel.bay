@@ -49,6 +49,6 @@ class RouteModel extends RouteInfo
 		if (not rtl::class_exists(page_model_name)) return;
 		
 		/* Render page model */
-		await container.layout.renderPageModel(page_model_name);
+		await container.renderPageModel(page_model_name);
 	}
 }

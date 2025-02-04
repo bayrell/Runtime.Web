@@ -21,6 +21,14 @@
 <use name="Runtime.Web.BaseLayoutModel" />
 
 
+<template name="renderTitle">
+	<title>{{ this.layout.title }}</title>
+	<meta charset={{ this.layout.content_type }} />
+	<meta http-equiv="Content-Type" content={{ "text/html; " ~ this.layout.content_type }} />
+	<meta http-equiv="Content-Language" content={{ this.layout.getLocale() }} />
+</template>
+
+
 <template name="renderCSS">
 	%set string css = this.getCSS();
 	%if (css)
@@ -33,7 +41,7 @@
 <template name="renderCoreUI">
 	<html lang={{ this.layout.getLocale() }}>
 		<head>
-			%render static::renderSEO();
+			%render static::renderTitle();
 			%render static::renderCSS();
 		</head>
 		<body>

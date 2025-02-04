@@ -23,33 +23,6 @@
 <use name="Runtime.Web.Hooks.AppHook" />
 
 
-<template name="renderBasePrefix">
-	%set string route_prefix = @.env("ROUTE_PREFIX");
-	%if (route_prefix)
-	{
-		<base href={{ rs::addLastSlash(route_prefix) }} />
-	}
-	%else
-	{
-		<base href="/" />
-	}
-</template>
-
-
-<template name="renderSEO">
-	<title>{{ this.layout.getFullTitle() }}</title>
-	%if (this.layout.content_type)
-	{
-		<meta charset={{ this.layout.content_type }} />
-		<meta http-equiv="Content-Type" content={{ "text/html; " ~ this.layout.content_type }} />
-	}
-	%if (this.layout.getLocale())
-	{
-		<meta http-equiv="Content-Language" content={{ this.layout.getLocale() }} />
-	}
-</template>
-
-
 <template name="renderHeadComponents">
 	%var Dict d = @.callHook(AppHook::RENDER_HEAD, {
 		"components": this.layout.getHeaderComponents(),
@@ -71,16 +44,9 @@
 </template>
 
 
-<template name="renderHeadAfter">
-</template>
-
-
 <template name="renderHead">
-	%render static::renderBasePrefix();
-	%render static::renderSEO();
 	%render static::renderHeadComponents();
 	%render static::renderCSS();
-	%render static::renderHeadAfter();
 </template>
 
 
@@ -98,17 +64,8 @@
 </template>
 
 
-<template name="renderBodyAfter">
-</template>
-
-
 <template name="renderBody">
 	%render static::renderBodyComponents();
-	%render static::renderBodyAfter();
-</template>
-
-
-<template name="renderFooterAfter">
 </template>
 
 
@@ -128,7 +85,6 @@
 
 <template name="renderFooter">
 	%render static::renderFooterComponents();
-	%render static::renderFooterAfter();
 </template>
 
 

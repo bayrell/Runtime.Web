@@ -48,7 +48,8 @@ class RoutePage extends RouteInfo
 		if (this.data)
 		{
 			string title = this.data.get("title");
-			container.layout.setPageTitle(title);
+			bool is_full_title = this.data.get("full_title", false);
+			container.layout.setPageTitle(title, is_full_title);
 		}
 	}
 }
