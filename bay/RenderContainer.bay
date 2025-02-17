@@ -215,13 +215,13 @@ class RenderContainer extends BaseObject
 	/**
 	 * Render page model
 	 */
-	async void renderPageModel(string model_name)
+	async void renderPageModel(string model_name, Dict params = null)
 	{
 		/* Create response */
 		this.setResponse(new RenderResponse(this));
 		
 		/* Set page model */
-		this.layout.setPageModel(model_name);
+		this.layout.setPageModel(model_name, params);
 		
 		/* Action index */
 		BasePageModel page_model = this.layout.getPageModel();

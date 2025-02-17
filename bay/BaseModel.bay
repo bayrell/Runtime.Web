@@ -277,9 +277,7 @@ class BaseModel extends BaseObject implements SerializeInterface
 		{
 			BaseModel widget = this.widgets.get(widget_name);
 			if (widget != null) return widget;
-			return this.addWidget(class_name, {
-				"widget_name": widget_name,
-			});
+			return this.addWidget(class_name, data);
 		}
 		
 		/* Create object */

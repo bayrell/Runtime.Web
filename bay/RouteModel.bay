@@ -20,13 +20,14 @@ namespace Runtime.Web;
 
 use Runtime.SerializeInterface;
 use Runtime.Serializer;
+use Runtime.Entity.Factory;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RenderContainer;
 
 
 class RouteModel extends RouteInfo
 {
-	string model = null;
+	var model = null;
 	
 	
 	/**
@@ -34,7 +35,16 @@ class RouteModel extends RouteInfo
 	 */
 	void serialize(Serializer serializer, Map data)
 	{
-		serializer.process(this, "model", data);
+		serializer.process(this, "model", data, var (Serializer serializer, Map data)
+		{
+			if (rtl::isString(data))
+			{
+				return data;
+			}
+			if (not (data instanceof Dict)) return null;
+			if (not data.get("__class_name__", "Runtime.Entity.Factory")) return null;
+			return new Factory(data.get("name"), data.get("params"));
+		});
 		parent(serializer, data);
 	}
 	
@@ -44,11 +54,25 @@ class RouteModel extends RouteInfo
 	 */
 	async void render(RenderContainer container)
 	{
-		string page_model_name = this.model;
+		string page_model_name = "";
+		Dict params = null;
+		
+		/* Get model params */
+		if (this.model instanceof Factory)
+		{
+			page_model_name = this.model.name;
+			params = Serializer::copy(this.model.params);
+		}
+		else
+		{
+			page_model_name = this.model;
+		}
+		
+		/* Check page model */
 		if (page_model_name == "") return;
 		if (not rtl::class_exists(page_model_name)) return;
 		
 		/* Render page model */
-		await container.renderPageModel(page_model_name);
+		await container.renderPageModel(page_model_name, params);
 	}
 }

@@ -165,19 +165,17 @@ class BaseLayoutModel extends BaseModel
 	/**
 	 * Set current page model
 	 */
-	PageModel setPageModel(string class_name)
+	PageModel setPageModel(string class_name, Dict params = null)
 	{
-		PageModel page_model = this.getWidget(class_name);
+		/* Set params */
+		if (params == null) params = {};
+		params.set("widget_name", class_name);
 		
 		/* Create page model */
+		PageModel page_model = this.getWidget(class_name);
 		if (page_model == null)
 		{
-			page_model = this.addWidget(
-				class_name,
-				{
-					"widget_name": class_name,
-				}
-			);
+			page_model = this.addWidget(class_name, params);
 		}
 		
 		/* Change current page model */
