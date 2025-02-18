@@ -28,6 +28,7 @@ use Runtime.Web.BaseApi;
 use Runtime.Web.BusInterface;
 use Runtime.Web.Annotations.Api;
 use Runtime.Web.Annotations.ApiMethod;
+use Runtime.Web.Hooks.AppHook;
 
 
 class BusLocal extends BaseProvider implements BusInterface
@@ -98,13 +99,20 @@ class BusLocal extends BaseProvider implements BusInterface
 	/**
 	 * Find local api
 	 */
-	async ApiMethod findApi(Dict params)
+	async Dict findApi(Dict params)
 	{
 		string api_name = params["api_name"] |> default string "";
 		string method_name = params["method_name"] |> default string "";
 		
 		/* Get annotation by api name */
 		Api annotation = this.api_list.get(api_name);
+		
+		/* Call find api hook */
+		Dict res = @.callHook(AppHook::FIND_API, {
+			"api_name": api_name,
+			"annotation": annotation,
+		});
+		annotation = res.get("annotation");
 		
 		/* Annotation not found */
 		if (annotation == null)
@@ -134,11 +142,8 @@ class BusLocal extends BaseProvider implements BusInterface
 		
 		/* Set props */
 		Dict result = {
+			"api": annotation,
 			"api_method": api_method,
-			"api_name": api_name,
-			"class_name": annotation.name,
-			"method_info": method_info,
-			"method_name": method_name,
 		};
 		return result;
 	}
@@ -149,35 +154,25 @@ class BusLocal extends BaseProvider implements BusInterface
 	 */
 	async ApiResult callAnnotation(Dict annotation, Dict params)
 	{
-		Dict data = params["data"] |> default Dict null;
-		string class_name = annotation.get("class_name");
-		string method_name = annotation.get("method_name");
-		BaseApi api_instance = null;
-		Callback callback = null;
+		Api api = annotation.get("api");
+		string method_name = params["method_name"] |> default string "";
 		
 		/* Create api instance */
-		api_instance = rtl::newInstance(class_name);
+		BaseApi api_instance = rtl::newInstance(api.name, [api.params]);
 		api_instance.action = method_name;
 		api_instance.layout = params["layout"];
-		api_instance.post_data = data;
+		api_instance.post_data = params["data"] |> default Dict null;
 		api_instance.result = new ApiResult;
 		api_instance.init();
 		
-		/* Get callback */
-		if (rtl::method_exists(class_name, method_name))
-		{
-			callback = new Callback(class_name, method_name);
-		}
-		else
-		{
-			callback = new Callback(api_instance, method_name);
-		}
+		/* Create callback */
+		Callback callback = new Callback(api_instance, method_name);
 		
 		/* Call api */
 		try
 		{
 			await api_instance.onActionBefore();
-			await callback.apply([api_instance]);
+			await callback.apply();
 			await api_instance.onActionAfter();
 		}
 		catch (ApiError e)

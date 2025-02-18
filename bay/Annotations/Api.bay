@@ -21,12 +21,19 @@ namespace Runtime.Web.Annotations;
 use Runtime.Entity.Entity;
 
 
-class Api extends Entity
+struct Api extends Entity
 {
-	void constructor(string api_name)
+	Dict params = null;
+	
+	
+	/**
+	 * Constructor
+	 */
+	void constructor(string api_name, Dict params = null)
 	{
 		parent({
 			"name": api_name,
+			"params": params,
 		});
 	}
 }

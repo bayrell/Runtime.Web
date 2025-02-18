@@ -108,9 +108,16 @@ class RouteList extends BaseProvider
 	 */
 	void addRoute(RouteInfo route)
 	{
+		if (route.uri_match === null) route.compile();
 		this.routes.set(route.name, route);
 		this.routes_list.push(route);
 	}
+	
+	
+	/**
+	 * Returns true if route is exists
+	 */
+	bool hasRoute(string route_name) => this.routes.has(route_name);
 	
 	
 	/**

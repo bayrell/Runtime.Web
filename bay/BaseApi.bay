@@ -35,9 +35,24 @@ class BaseApi extends BaseObject
 
 	
 	/**
-	 * Returns api name
+	 * Create hook
 	 */
-	pure string getApiName() => "";
+	void constructor(Dict params = null)
+	{
+		parent();
+		
+		/* Setup hook params */
+		this.setup(params);
+	}
+	
+	
+	/**
+	 * Setup params
+	 */
+	void setup(Dict params)
+	{
+		if (params == null) return;
+	}
 	
 	
 	/**
@@ -46,6 +61,12 @@ class BaseApi extends BaseObject
 	void init()
 	{
 	}
+	
+	
+	/**
+	 * Returns api name
+	 */
+	pure string getApiName() => "";
 	
 	
 	/**
