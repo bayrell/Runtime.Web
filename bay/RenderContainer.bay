@@ -22,8 +22,10 @@ use Runtime.BaseObject;
 use Runtime.Callback;
 use Runtime.Serializer;
 use Runtime.SerializerNative;
+use Runtime.Entity.Factory;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseLayoutModel;
+use Runtime.Web.BaseMiddleware;
 use Runtime.Web.BaseModel;
 use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
@@ -59,10 +61,28 @@ class RenderContainer extends BaseObject
 			"component_name": "",
 		});
 		
+		/* Save widgets */
+		Dict old_widgets = {};
+		if (this.layout) old_widgets = this.layout.widgets;
+		
 		/* Create layout */
 		this.layout = rtl::newInstance(params.get("class_name"));
 		this.layout.setLayoutName(layout_name);
 		this.layout.route = this.route;
+		
+		/* Assign widgets */
+		Collection keys = old_widgets.keys();
+		for (int i=0; i<keys.count(); i++)
+		{
+			string name = keys.get(i);
+			BaseModel model = old_widgets.get(name);
+			model.parent_widget = this.layout;
+			this.layout.widgets.set(name, model);
+		}
+		if (old_widgets.has("storage"))
+		{
+			this.layout.storage = old_widgets.get("storage");
+		}
 		
 		/* Set component name */
 		if (params.get("component_name") != "")
@@ -71,9 +91,19 @@ class RenderContainer extends BaseObject
 		}
 		
 		/* Call create layout */
-		@.callHookAsync(AppHook::CREATE_LAYOUT, {
+		@.callHook(AppHook::CREATE_LAYOUT, {
 			"container": this,
 		});
+	}
+	
+	
+	/**
+	 * Change layout
+	 */
+	void changeLayout(string layout_name)
+	{
+		if (this.layout_name == layout_name) return;
+		this.createLayout(layout_name);
 	}
 	
 	
@@ -113,9 +143,6 @@ class RenderContainer extends BaseObject
 	{
 		/* Find route */
 		await this.findRoute();
-		
-		/* Call middleware */
-		await this.callRouteMiddleware(this);
 		
 		/* Resolve route */
 		await this.resolveRoute();
@@ -163,6 +190,9 @@ class RenderContainer extends BaseObject
 			"container": this,
 		});
 		
+		/* Call middleware */
+		await this.callRouteMiddleware(this);
+		
 		/* Call layout route before */
 		await this.layout.onActionBefore(this);
 		
@@ -170,7 +200,7 @@ class RenderContainer extends BaseObject
 		await this.layout.loadData(this);
 		
 		/* Render route */
-		if (this.route != null)
+		if (this.route != null and this.response == null)
 		{
 			await this.route.render(this);
 		}
@@ -196,13 +226,9 @@ class RenderContainer extends BaseObject
 	 */
 	async void callRouteMiddleware()
 	{
-		if (this.route and this.route.middleware)
+		if (this.route)
 		{
-			for (int i = 0; i<this.route.middleware.count(); i++)
-			{
-				Callback middleware = this.route.middleware.get(i);
-				await rtl::apply(middleware, [this]);
-			}
+			await this.route.callMiddleware(this);
 		}
 		
 		/* Call hook middleware */

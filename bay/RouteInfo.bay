@@ -26,6 +26,7 @@ use Runtime.Serializer;
 use Runtime.Entity.Factory;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Exceptions.RuntimeException;
+use Runtime.Web.BaseMiddleware;
 use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
@@ -133,6 +134,55 @@ class RouteInfo extends BaseObject implements SerializeInterface
 			string param_name = this.params.get(i);
 			string match_value = matches.get(i);
 			this.matches.set(param_name, match_value);
+		}
+	}
+	
+	
+	/**
+	 * Call middleware
+	 */
+	async void callMiddleware(RenderContainer container)
+	{
+		if (this.middleware)
+		{
+			for (int i = 0; i<this.middleware.count(); i++)
+			{
+				BaseMiddleware middleware = null;
+				var item = this.middleware.get(i);
+				
+				/* Create middleware */
+				if (rtl::isString(item))
+				{
+					middleware = rtl::newInstance(item);
+				}
+				else if (item instanceof Factory)
+				{
+					middleware = item.factory();
+				}
+				else if (item instanceof BaseMiddleware)
+				{
+					middleware = item;
+				}
+				
+				/* Apply middleware */
+				await middleware.apply(container);
+			}
+		}
+		
+		/* Call route class middleware */
+		if (this.route_class)
+		{
+			string class_name = this.route_class;
+			Callback getMiddleware = new Callback(class_name, "getMiddleware");
+			if (getMiddleware.exists())
+			{
+				Collection<BaseMiddleware> items = getMiddleware.apply();
+				for (int i=0; i<items.count(); i++)
+				{
+					BaseMiddleware middleware = items.get(i);
+					await middleware.apply(container);
+				}
+			}
 		}
 	}
 	
