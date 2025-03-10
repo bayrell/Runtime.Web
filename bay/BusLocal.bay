@@ -25,6 +25,7 @@ use Runtime.Exceptions.ApiError;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseApi;
+use Runtime.Web.Bus;
 use Runtime.Web.BusInterface;
 use Runtime.Web.Annotations.Api;
 use Runtime.Web.Annotations.ApiMethod;
@@ -68,14 +69,10 @@ class BusLocal extends BaseProvider implements BusInterface
 		
 		string api_name = params["api_name"] |> default string "";
 		string method_name = params["method_name"] |> default string "";
-		string service = params["service"] |> default string "app";
-		if (service != "app")
-		{
-			result = new ApiResult();
-			return result.fail({
-				"message": "Service must be app"
-			});
-		}
+		
+		/* Get api name */
+		Dict res = Bus::parseName(api_name);
+		api_name = res.get("api_name");
 		
 		/* Call local api */
 		try

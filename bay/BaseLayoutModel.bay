@@ -253,7 +253,7 @@ class BaseLayoutModel extends BaseModel
 		params.set("layout", this.layout);
 		
 		/* Returns bus */
-		BusInterface bus = Bus::getApi(params.get("service", "app"));
+		BusInterface bus = Bus::getApi(params.get("api_name"));
 		ApiResult api = await bus.send(params);
 		
 		return api;

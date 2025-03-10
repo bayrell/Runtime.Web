@@ -38,4 +38,26 @@ class Bus
 		return new BusHttp();
 		#endif
 	}
+	
+	
+	/**
+	 * Parse api name
+	 */
+	static Dict parseName(string api_name)
+	{
+		Collection arr = rs::split("/", api_name);
+		if (arr.count() == 1)
+		{
+			return
+			{
+				"service": "app",
+				"api_name": arr.get(0),
+			}
+		}
+		return
+		{
+			"service": arr.get(0),
+			"api_name": arr.get(1),
+		}
+	}
 }

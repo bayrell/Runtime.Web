@@ -25,6 +25,7 @@ use Runtime.Exceptions.AbstractException;
 use Runtime.Exceptions.CurlException;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
+use Runtime.Web.Bus;
 use Runtime.Web.BusInterface;
 use Runtime.Web.Hooks.AppHook;
 
@@ -39,14 +40,21 @@ class BusHttp extends BaseObject implements BusInterface
 	 */
 	async ApiResult send(Dict params)
 	{
-		string service = params.get("service", "app");
+		string service = "";
 		string api_name = params.get("api_name", "");
 		string method_name = params.get("method_name", "");
 		Dict data = params.get("data", null);
 		
+		/* Get api name */
+		Dict res = Bus::parseName(api_name);
+		service = res.get("service");
+		api_name = res.get("api_name");
+		
+		/* Get route prefix */
 		string route_prefix = @.env("ROUTE_PREFIX");
 		route_prefix = rs::removeFirstSlash(route_prefix);
 		
+		/* Get api url */
 		Vector api_url_arr = [
 			route_prefix,
 			this.kind,
@@ -55,7 +63,7 @@ class BusHttp extends BaseObject implements BusInterface
 			method_name,
 		];
 		api_url_arr = api_url_arr.filter( bool (string s) => s != "" );
-		string api_url = "/" ~ api_url_arr.join("/") ~ "/";
+		string api_url = "/" ~ api_url_arr.join("/");
 		
 		ApiResult res = new ApiResult();
 		try

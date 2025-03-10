@@ -23,6 +23,7 @@ use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Bus;
+use Runtime.Web.BusInterface;
 use Runtime.Web.BusLocal;
 use Runtime.Web.Cookie;
 use Runtime.Web.JsonResponse;
@@ -42,8 +43,15 @@ class ApiRoute extends BaseRoute
 		[
 			new RouteAction
 			{
-				"uri": "/api/{service}/{api_name}/{method_name}/",
+				"uri": "/api/{service}/{api_name}/{method_name}",
 				"name": "runtime:web:api",
+				"action": "actionIndex",
+				"pos": 1000,
+			},
+			new RouteAction
+			{
+				"uri": "/api/{service}/{api_name}/{method_name}/",
+				"name": "runtime:web:api:index",
 				"action": "actionIndex",
 				"pos": 1000,
 			},
@@ -57,16 +65,14 @@ class ApiRoute extends BaseRoute
 	async static void actionIndex(RenderContainer container)
 	{
 		/* Call api */
-		string service = container.route.matches["service"];
 		string api_name = container.route.matches["api_name"];
 		string method_name = container.route.matches["method_name"];
 		
 		ApiResult api_result = null;
-		BusLocal bus = @.provider(classof BusLocal);
+		BusInterface bus = Bus::getApi(api_name);
 		try
 		{
 			api_result = await bus.send({
-				"service": service,
 				"api_name": api_name,
 				"method_name": method_name,
 				"layout": container.layout,
