@@ -26,7 +26,7 @@ use Runtime.Web.RenderProvider;
 use Runtime.Web.RouteList;
 
 
-static class ModuleDescription
+class ModuleDescription
 {
 	/**
 	 * Returns module name
@@ -57,15 +57,16 @@ static class ModuleDescription
 	 */
 	pure Collection<Dict> entities() => 
 	[
-		new Hook("Runtime.Web.Hooks.AssetsHook"),
-		new Provider("Runtime.Web.RenderProvider"),
+		/*new Hook("Runtime.Web.Hooks.AssetsHook"),
+		new Provider("Runtime.Web.RenderProvider"),*/
 		
 		#ifdef BACKEND then
-		new Hook("Runtime.Web.Hooks.LayoutHook"),
+		new Hook("Runtime.Web.Hooks.AppHook"),
+		new Provider("Runtime.Web.RouteProvider"),
+		/*new Hook("Runtime.Web.Hooks.LayoutHook"),
 		new Hook("Runtime.Web.Hooks.ResponseHook"),
 		new Provider("Runtime.Web.BusLocal"),
-		new Provider("Runtime.Web.RouteList"),
-		new Route("Runtime.Web.ApiRoute"),
+		new Route("Runtime.Web.ApiRoute"),*/
 		#endif
 	];
 	

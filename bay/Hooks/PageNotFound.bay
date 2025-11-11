@@ -18,18 +18,29 @@
 
 namespace Runtime.Web.Hooks;
 
-use Runtime.lib;
-use Runtime.Web.BasePageModel;
-use Runtime.Web.RedirectResponse;
+use Runtime.BaseModel;
+use Runtime.Entity.Hook;
+use Runtime.Hooks.RuntimeHook;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
-use Runtime.Web.Hooks.AppHook as BaseAppHook;
+use Runtime.Web.RouteModel;
+use Runtime.Web.Hooks.AppHook;
 
 
-class PageNotFound extends BaseAppHook
+class PageNotFound extends RuntimeHook
 {
     string model = "";
+	string layout_name = "default";
     
+	
+	/**
+	 * Hook factory
+	 */
+	static Hook hook(string model, string layout="default")
+	{
+		return new Hook(static::getClassName(), {"model": model, "layout": layout});
+	}
+	
     
     /**
      * Setup
@@ -48,13 +59,28 @@ class PageNotFound extends BaseAppHook
 	 */
 	void register_hooks()
 	{
-		#ifdef BACKEND then
-		this.register(static::ROUTE_AFTER, "renderPageNotFound");
-		#endif
+		parent();
+		this.register(AppHook::FIND_ROUTE_AFTER, "routeNotFound");
+		/*this.register(AppHook::ROUTE_AFTER, "renderPageNotFound");*/
 	}
 	
 	
-	#ifdef BACKEND then
+	/**
+	 * Route not found
+	 */
+	async void routeNotFound(Map params)
+	{
+		RenderContainer container = params.get("container");
+		if (container.route) return null;
+		
+		/* Set route */
+		container.route = new RouteModel
+		{
+			"model": this.model,
+			"layout": this.layout_name,
+		};
+	}
+	
 	
 	/**
 	 * Render page not found
@@ -63,11 +89,17 @@ class PageNotFound extends BaseAppHook
 	{
 		RenderContainer container = params.get("container");
 		if (container.response) return;
-		if (container.layout.current_page_class != "") return;
-		if (container.layout.current_page_model != "") return;
+		
+		/* Create default layout */
+		if (container.layout == null)
+		{
+			container.createLayout(this.layout_name);
+		}
+		
+		/* Get page model */
+		BaseModel page_model = container.layout.getPageModel();
+		if (page_model) return;
 		
 		await container.renderPageModel(this.model);
 	}
-	
-	#endif
 }

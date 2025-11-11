@@ -259,7 +259,7 @@ class BaseModel extends BaseObject implements SerializeInterface
 	{
 		serializer.process(this, "component", data);
 		serializer.process(this, "widget_name", data);
-		serializer.processItems(this, "widgets", data, method this.serializeCreateWidget);
+		serializer.processItems(this, "widgets", data, new Callback(this, "serializeCreateWidget"));
 		serializer.process(this, "is_data_loaded", data);
 	}
 	

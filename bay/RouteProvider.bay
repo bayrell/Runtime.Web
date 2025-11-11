@@ -20,7 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.re;
 use Runtime.BaseProvider;
-use Runtime.Callback;
+use Runtime.Method;
 use Runtime.Entity.Factory;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.BaseRoute;
@@ -34,7 +34,7 @@ use Runtime.Web.Annotations.Route;
 use Runtime.Web.Hooks.AppHook;
 
 
-class RouteList extends BaseProvider
+class RouteProvider extends BaseProvider
 {
 	public Map routes = {};
 	public Vector routes_list = [];
@@ -46,14 +46,14 @@ class RouteList extends BaseProvider
 	async void init()
 	{
 		await parent::init();
-		this.initRoutes();
+		await this.initRoutes();
 	}
 	
 	
 	/**
 	 * Init routes
 	 */
-	void initRoutes()
+	async void initRoutes()
 	{
 		this.routes = {};
 		Collection<Route> routes = @.getEntities(classof Route);
@@ -63,38 +63,27 @@ class RouteList extends BaseProvider
 			if (not info.name) continue;
 			
 			/* Get method getRoutes */
-			Callback getRoutes = new Callback(info.name, "getRoutes");
+			Method getRoutes = new Method(info.name, "getRoutes");
 			if (not getRoutes.exists())
 			{
 				throw new ItemNotFound(info.name, "Route");
 			}
 			
 			/* Get routes */
-			Collection<RouteInfo> routes_list = rtl::apply(getRoutes);
+			Collection<RouteInfo> routes_list = getRoutes.apply();
 			if (not routes_list) continue;
 			
 			/* Register routes */
 			for (int j=0; j<routes_list.count(); j++)
 			{
 				RouteInfo route = routes_list.get(j);
-				if (route instanceof RouteAction)
-				{
-					if (rtl::method_exists(info.name, route.action))
-					{
-						route.action = new Callback(info.name, route.action);
-					}
-					else
-					{
-						route.action = new Factory(info.name, {"action": route.action});
-					}
-				}
 				route.route_class = info.name;
 				route.compile();
 				this.addRoute(route);
 			}
 		}
 		
-		await @.callHookAsync(AppHook::ROUTES_INIT, {
+		await @.hook(AppHook::ROUTES_INIT, {
 			"routes": this,
 		});
 		
@@ -129,7 +118,7 @@ class RouteList extends BaseProvider
 			list (RouteInfo value, int index) => [ value, index ]
 		);
 		
-		routes_list = routes_list.sort(
+		routes_list.sort(
 			int (list a, list b)
 			{
 				int pos_a = a.get(0).pos;
@@ -162,16 +151,15 @@ class RouteList extends BaseProvider
 	/**
 	 * Find route
 	 */
-	RouteInfo findRoute(RenderContainer container)
+	RouteInfo findRoute(Request request)
 	{
-		Request request = container.request;
 		if (request.uri === null) return null;
 		
 		for (int i=0; i<this.routes_list.count(); i++)
 		{
 			RouteInfo route = this.routes_list.get(i);
 			
-			Collection<string> matches = this.matchRoute(container, route);
+			Collection<string> matches = this.matchRoute(request, route);
 			if (matches == null) continue;
 			
 			route = route.copy();
@@ -186,11 +174,9 @@ class RouteList extends BaseProvider
 	/**
 	 * Match route
 	 */
-	Collection<string> matchRoute(RenderContainer container, RouteInfo route)
+	Collection<string> matchRoute(Request request, RouteInfo route)
 	{
 		if (route == null) return null;
-		
-		Request request = container.request;
 		if (route.domain and route.domain != request.host) return null;
 		
 		/* Get matches */
@@ -202,9 +188,9 @@ class RouteList extends BaseProvider
 		}
 		
 		/* Call hook */
-		Dict d = @.callHook(AppHook::MATCH_ROUTE, {
+		Dict d = @.hook(AppHook::MATCH_ROUTE, {
 			"route": route,
-			"container": container,
+			"request": request,
 			"matches": matches,
 		});
 		matches = d.get("matches");

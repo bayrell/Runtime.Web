@@ -18,249 +18,71 @@
 
 namespace Runtime.Web.Hooks;
 
-use Runtime.BaseHook;
-use Runtime.Web.Layout;
+use Runtime.Hooks.BaseHook;
+use Runtime.Web.BaseLayoutModel;
+use Runtime.Web.RenderContainer;
+use Runtime.Web.RouteInfo;
+use Runtime.Web.RouteProvider;
 
 
 class AppHook extends BaseHook
 {
 	static const string ASSETS = "runtime.web.app::assets";
 	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
-	static const string COMPONENTS = "runtime.web.app::components";
-	static const string CORE_UI = "runtime.web.app::core_ui";
-	static const string CREATE_CONTAINER = "runtime.web.app::create_container";
-	static const string CREATE_LAYOUT = "runtime.web.app::create_layout";
-	static const string CSS_VARS = "runtime.web.app::css_vars";
-	static const string ENVIRONMENTS = "runtime.web.app::environments";
-	static const string EXPORT_CONTAINER_DATA = "runtime.web.app::export_container_data";
 	static const string FIND_API = "runtime.web.app::find_api";
 	static const string FIND_ROUTE_BEFORE = "runtime.web.app::find_route_before";
 	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
-	static const string IMPORT_CONTAINER_DATA_AFTER = "runtime.web.app::import_container_data_after";
-	static const string IMPORT_CONTAINER_DATA_BEFORE = "runtime.web.app::import_container_data_before";
-	static const string LAYOUT_MODEL_NAME = "runtime.web.app::layout_model_name";
-	static const string LAYOUT_COMPONENT_NAME = "runtime.web.app::layout_component_name";
 	static const string MAKE_URL = "runtime.web.app::make_url";
 	static const string MATCH_ROUTE = "runtime.web.app::match_route";
-	static const string RENDER_BODY = "runtime.web.app::render_body";
-	static const string RENDER_FOOTER = "runtime.web.app::render_footer";
-	static const string RENDER_HEAD = "runtime.web.app::render_head";
-	static const string RENDER_PROVIDER_SETTINGS = "runtime.web.app::render_provider_settings";
 	static const string RESPONSE = "runtime.web.app::response";
 	static const string ROUTES_INIT = "runtime.web.app::routes_init";
 	static const string ROUTE_AFTER = "runtime.web.app::route_after";
 	static const string ROUTE_MIDDLEWARE = "runtime.web.app::route_middleware";
 	static const string ROUTE_BEFORE = "runtime.web.app::route_before";
-	static const string VUE_MODULES = "runtime.web.app::vue_modules";
-	
-	
-	/**
-	 * Returns method name by hook name
-	 */
-	string getMethodName(string hook_name)
-	{
-		if (hook_name == static::ASSETS) return "assets";
-		if (hook_name == static::CALL_API_BEFORE) return "call_api_before";
-		if (hook_name == static::COMPONENTS) return "components";
-		if (hook_name == static::CORE_UI) return "core_ui";
-		if (hook_name == static::CREATE_CONTAINER) return "create_container";
-		if (hook_name == static::CREATE_LAYOUT) return "create_layout";
-		if (hook_name == static::CSS_VARS) return "css_vars";
-		if (hook_name == static::ENVIRONMENTS) return "environments";
-		if (hook_name == static::EXPORT_CONTAINER_DATA) return "export_container_data";
-		if (hook_name == static::FIND_API) return "find_api";
-		if (hook_name == static::FIND_ROUTE_BEFORE) return "find_route_before";
-		if (hook_name == static::FIND_ROUTE_AFTER) return "find_route_after";
-		if (hook_name == static::IMPORT_CONTAINER_DATA_BEFORE) return "import_container_data_before";
-		if (hook_name == static::IMPORT_CONTAINER_DATA_AFTER) return "import_container_data_after";
-		if (hook_name == static::LAYOUT_MODEL_NAME) return "layout_model_name";
-		if (hook_name == static::LAYOUT_COMPONENT_NAME) return "layout_component_name";
-		if (hook_name == static::MAKE_URL) return "make_url";
-		if (hook_name == static::MATCH_ROUTE) return "match_route";
-		if (hook_name == static::RENDER_BODY) return "render_body";
-		if (hook_name == static::RENDER_FOOTER) return "render_footer";
-		if (hook_name == static::RENDER_HEAD) return "render_head";
-		if (hook_name == static::RENDER_PROVIDER_SETTINGS) return "render_provider_settings";
-		if (hook_name == static::RESPONSE) return "response";
-		if (hook_name == static::ROUTES_INIT) return "routes_init";
-		if (hook_name == static::ROUTE_AFTER) return "route_after";
-		if (hook_name == static::ROUTE_MIDDLEWARE) return "route_middleware";
-		if (hook_name == static::ROUTE_BEFORE) return "route_before";
-		if (hook_name == static::VUE_MODULES) return "vue_modules";
-		return "";
-	}
 	
 	
 	/**
 	 * Register hooks
 	 */
-	void register_hooks(){}
-	
-	
-	/**
-	 * Call api before
-	 */
-	void call_api_before(Dict d){}
-	
-	
-	/**
-	 * Assets
-	 */
-	void assets(Map params){}
-	
-	
-	/**
-	 * Components
-	 */
-	void components(Map params){}
-	
-	
-	/**
-	 * Core ui
-	 */
-	void core_ui(Map params){}
-	
-	
-	/**
-	 * Create container
-	 */
-	void create_container(Map params){}
-	
-	
-	/**
-	 * Create layout
-	 */
-	void create_layout(Map params){}
-	
-	
-	/**
-	 * CSS Vars
-	 */
-	void css_vars(Map params){}
-	
-	
-	/**
-	 * Environments
-	 */
-	void environments(Map params){}
-	
-	
-	/**
-	 * Export data
-	 */
-	void export_container_data(Map params){}
-	
-	
-	/**
-	 * Import data
-	 */
-	void import_container_data_before(Map params){}
-	
-	
-	/**
-	 * Import data after
-	 */
-	void import_container_data_after(Map params){}
-	
-	
-	/**
-	 * Find api
-	 */
-	void find_api(Map params){}
-	
-	
-	/**
-	 * Find route before
-	 */
-	void find_route_before(Map params){}
-	
-	
-	/**
-	 * Find route after
-	 */
-	void find_route_after(Map params){}
-	
-	
-	/**
-	 * Layout model name
-	 */
-	void layout_model_name(Map params){}
-	
-	
-	/**
-	 * Layout component name
-	 */
-	void layout_component_name(Map params){}
-	
-	
-	/**
-	 * Make url
-	 */
-	void make_url(Map params){}
-	
-	
-	/**
-	 * Match route
-	 */
-	void match_route(Map params){}
-	
-	
-	/**
-	 * Render body
-	 */
-	void render_body(Map params){}
-	
-	
-	/**
-	 * Render footer
-	 */
-	void render_footer(Map params){}
-	
-	
-	/**
-	 * Render head
-	 */
-	void render_head(Map params){}
-	
-	
-	/**
-	 * Render settings
-	 */
-	void render_provider_settings(Map params){}
-	
-	
-	/**
-	 * Routes init
-	 */
-	async void routes_init(Map params){}
+	void register_hooks()
+	{
+		parent();
+		
+		/* Async hooks */
+		this.provider.setAsync([
+			static::FIND_ROUTE_AFTER,
+			static::FIND_ROUTE_BEFORE,
+			static::ROUTES_INIT,
+			static::ROUTE_AFTER,
+			static::ROUTE_MIDDLEWARE,
+			static::ROUTE_BEFORE,
+		]);
+		
+		/* Hooks */
+		this.register(static::ROUTE_AFTER, "setupRoute");
+	}
 	
 	
 	/**
 	 * Route after
 	 */
-	async void route_after(Map params){}
-	
-	
-	/**
-	 * Route before
-	 */
-	async void route_before(Map params){}
-
-
-	/**
-	 * Route middleware
-	 */
-	async void route_middleware(Map params){}
-
-
-	/**
-	 * Response
-	 */
-	async void response(Map params){}
-	
-	
-	/**
-	 * Vue modules
-	 */
-	async void vue_modules(Map params){}
+	async void setupRoute(Map params)
+	{
+		RenderContainer container = params.get("container");
+		BaseLayoutModel layout = container.layout;
+		if (not layout) return;
+		
+		RouteProvider provider = @.provider(classof RouteProvider);
+		layout.route = container.route;
+		layout.routes = {};
+		for (int i=0; i<provider.routes_list.count(); i++)
+		{
+			RouteInfo route = provider.routes_list.get(i);
+			if (route.is_backend) continue;
+			layout.routes.set(route.name, {
+				"uri": route.uri,
+				"domain": route.domain,
+			});
+		}
+	}
 }

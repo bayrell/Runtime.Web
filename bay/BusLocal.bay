@@ -67,8 +67,8 @@ class BusLocal extends BaseProvider implements BusInterface
 	{
 		ApiResult result;
 		
-		string api_name = params["api_name"] |> default string "";
-		string method_name = params["method_name"] |> default string "";
+		string api_name = params.get("api_name");
+		string method_name = params.get("method_name");
 		
 		/* Get api name */
 		Dict res = Bus::parseName(api_name);
@@ -98,8 +98,8 @@ class BusLocal extends BaseProvider implements BusInterface
 	 */
 	async Dict findApi(Dict params)
 	{
-		string api_name = params["api_name"] |> default string "";
-		string method_name = params["method_name"] |> default string "";
+		string api_name = params.get("api_name");
+		string method_name = params.get("method_name");
 		
 		/* Get annotation by api name */
 		Api annotation = this.api_list.get(api_name);
@@ -152,13 +152,13 @@ class BusLocal extends BaseProvider implements BusInterface
 	async ApiResult callAnnotation(Dict annotation, Dict params)
 	{
 		Api api = annotation.get("api");
-		string method_name = params["method_name"] |> default string "";
+		string method_name = params.get("method_name");
 		
 		/* Create api instance */
 		BaseApi api_instance = rtl::newInstance(api.name, [api.params]);
 		api_instance.action = method_name;
-		api_instance.layout = params["layout"];
-		api_instance.post_data = params["data"] |> default Dict null;
+		api_instance.layout = params.get("layout");
+		api_instance.post_data = params.get("data");
 		api_instance.result = new ApiResult;
 		api_instance.init();
 		

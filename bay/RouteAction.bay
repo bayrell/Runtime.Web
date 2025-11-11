@@ -18,10 +18,11 @@
 
 namespace Runtime.Web;
 
-use Runtime.Callback;
+use Runtime.Method;
 use Runtime.SerializeInterface;
 use Runtime.Serializer;
 use Runtime.Entity.Factory;
+use Runtime.Web.BaseRoute;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RenderContainer;
 
@@ -51,25 +52,44 @@ class RouteAction extends RouteInfo
 		return route;
 	}
 	
+	
+	/**
+	 * Compile
+	 */
+	void compile()
+	{
+		parent();
+		
+		if (rtl::methodExists(this.route_class, this.action))
+		{
+			this.action = new Method(this.route_class, this.action);
+		}
+		else
+		{
+			this.action = new Factory(this.route_class, {"action": this.action});
+		}
+	}
+	
     
     /**
 	 * Render route
 	 */
 	async void render(RenderContainer container)
 	{
-        if (rtl::isCallable(this.action))
-		{
-			fn f = this.action;
-			await rtl::apply(f, [container]);
-		}
+		Method action = null;
+		
+		/* Get action */
+        if (this.action instanceof Method) action = this.action;
 		else if (this.action instanceof Factory)
 		{
-			container.base_route = this.action.factory();
-			Callback action = new Callback(container.base_route, container.base_route.action);
-			if (action.exists())
-			{
-				await rtl::apply(action, [container]);
-			}
+			BaseRoute base_route = this.action.createInstance();
+			action = new Method(base_route, base_route.action);
+		}
+		
+		/* Apply action */
+		if (action.exists())
+		{
+			await action.apply([container]);
 		}
     }
 }

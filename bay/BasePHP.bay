@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.BaseProvider;
 use Runtime.Callback;
+use Runtime.Hooks.RuntimeHook;
 use Runtime.Web.BaseLayoutModel;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.Layout;
@@ -31,49 +32,8 @@ use Runtime.Web.RouteList;
 use Runtime.Web.Hooks.AppHook;
 
 
-class BaseApp extends BaseObject
+class BasePHP extends BaseProvider
 {
-	/**
-	 * Init app
-	 */
-	async void init()
-	{
-	}
-	
-	
-	/**
-	 * Start app
-	 */
-	async void start()
-	{
-	}
-	
-	
-	/**
-	 * Run Web Application
-	 */
-	async int main()
-	{
-		#ifdef BACKEND then
-		
-		/* Create container */
-		RenderContainer container = this.createRenderContainer();
-		
-		/* Create request */
-		container.request = this.createRequest();
-		
-		/* Resolve container */
-		await container.resolve();
-		
-		/* Send reponse */
-		await this.sendResponse(container);
-		
-		#endif
-		
-		return 0;
-	}
-	
-	
 	/**
 	 * Create render container
 	 */
@@ -82,15 +42,13 @@ class BaseApp extends BaseObject
 		RenderContainer container = new RenderContainer();
 		
 		/* Create layout */
-		@.callHook(AppHook::CREATE_CONTAINER, {
+		@.hook(RuntimeHook::CREATE_CONTAINER, {
 			"container": container,
 		});
 		
 		return container;
 	}
 	
-	
-	#ifdef BACKEND then
 	
 	/**
 	 * Read post
@@ -271,12 +229,45 @@ class BaseApp extends BaseObject
 		$request->query = $query;
 		$request->payload = $payload;
 		$request->cookies = $cookies;
-		$request->headers = \Runtime\Map::from($_SERVER);
+		$request->headers = new \Runtime\Map($_SERVER);
 		$request->start_time = $start_time;
 		
 		#endif
 		
 		return request;
+	}
+	
+	
+	/**
+	 * Send status code
+	 */
+	void sendStatusCode(int http_code)
+	{
+		#ifcode PHP then
+		http_response_code($http_code);
+		#endif
+	}
+	
+	
+	/**
+	 * Send header
+	 */
+	void sendHeader(string key, string value)
+	{
+		#ifcode PHP then
+		header($key . ":" . $value);
+		#endif
+	}
+	
+	
+	/**
+	 * Send content
+	 */
+	void sendContent(string content)
+	{
+		#ifcode PHP then
+		echo $content;
+		#endif
 	}
 	
 	
@@ -291,7 +282,7 @@ class BaseApp extends BaseObject
 		
 		if ($response != null)
 		{
-			http_response_code($response->http_code);
+			$this->sendStatusCode($response->http_code);
 			
 			/* Setup cookies */
 			if ($container->cookies != null)
@@ -318,7 +309,7 @@ class BaseApp extends BaseObject
 				$response->headers->each(
 					function (string $value, string $key)
 					{
-						header($key . ":" . $value);
+						$this->sendHeader($key, $value);
 					}
 				);
 			}
@@ -326,38 +317,18 @@ class BaseApp extends BaseObject
 			/* Redirect */
 			if ($response instanceof \Runtime\Web\RedirectResponse)
 			{
-				header("Location:" . $response->redirect);
+				$this->sendHeader("Location", $response->redirect);
 			}
 			
-			echo $response->getContent();
+			$this->sendContent($response->getContent());
 		}
 		
 		else
 		{
-			http_response_code(404);
-			echo "404 Response not found";
+			$this->sendStatusCode(404);
+			$this->sendContent("404 Response not found");
 		}
 		
 		#endif
 	}
-	
-	
-	#endif
-	
-	
-	
-	#ifdef FRONTEND then
-	
-	
-	/**
-	 * Create request
-	 */
-	Request createRequest()
-	{
-		return null;
-	}
-	
-	
-	#endif
-	
 }

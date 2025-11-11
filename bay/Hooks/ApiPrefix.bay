@@ -59,7 +59,7 @@ class ApiPrefix extends AppHook
 		if (pos >= 0)
 		{
 			RouteInfo route = routes.routes_list.get(pos);
-			route <= uri <= this.prefix ~ "/api/{service}/{api_name}/{method_name}/";
+			route.uri = this.prefix ~ "/api/{service}/{api_name}/{method_name}/";
 			routes.routes_list.set(pos, route);
 		}
 	}

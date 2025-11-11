@@ -18,7 +18,7 @@
 
 namespace Runtime.Web;
 
-use Runtime.SerializeInterface;
+use Runtime.BaseModel;
 use Runtime.Serializer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RenderContainer;
@@ -44,7 +44,12 @@ class RoutePage extends RouteInfo
 	 */
 	async void render(RenderContainer container)
 	{
-		container.layout.setPageComponent(this.page);
+		container.layout.current_page_model = "page_model";
+		BaseModel page_model = container.layout.addWidget(classof BaseModel, {
+			"widget_name": "page_model",
+			"component": this.page,
+		});
+		
 		if (this.data)
 		{
 			string title = this.data.get("title");

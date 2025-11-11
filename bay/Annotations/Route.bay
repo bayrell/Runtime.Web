@@ -21,7 +21,7 @@ namespace Runtime.Web.Annotations;
 use Runtime.Entity.Entity;
 
 
-struct Route extends Entity
+class Route extends Entity
 {
 	Dict params = null;
 	

@@ -18,10 +18,10 @@
  
 namespace Runtime.Web;
 
-use Runtime.BaseStruct;
+use Runtime.BaseObject;
 
 
-struct Cookie extends BaseStruct
+class Cookie extends BaseObject
 {
 	public string name = "";
 	public string value = "";

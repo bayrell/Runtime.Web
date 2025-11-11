@@ -44,7 +44,7 @@ class Request extends BaseObject
 	public Dict<var> payload = null;
 	public Dict<string> cookies = null;
 	public Dict<string> headers = null;
-	public float start_time = 0;
+	public double start_time = 0;
 	
 	
 	/**
@@ -63,8 +63,8 @@ class Request extends BaseObject
 	{
 		Dict res = rs::parse_url(full_uri);
 		
-		string uri = res["uri"];
-		Dict<string> query = res["query_arr"];
+		string uri = res.get("uri");
+		Dict<string> query = res.get("query_arr");
 		
 		this.full_uri = full_uri;
 		this.uri = uri;

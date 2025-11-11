@@ -22,7 +22,7 @@ use Runtime.Entity.Hook;
 use Runtime.Web.Hooks.SetupLayout as SetupLayoutHook;
 
 
-struct SetupLayout extends Hook
+class SetupLayout extends Hook
 {
     /**
 	 * Constructor

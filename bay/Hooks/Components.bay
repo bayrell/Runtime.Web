@@ -19,10 +19,10 @@
 namespace Runtime.Web.Hooks;
 
 use Runtime.Entity.Hook;
-use Runtime.Web.Hooks.AppHook as BaseAppHook;
+use Runtime.Hooks.RuntimeHook;
 
 
-class Components extends BaseAppHook
+class Components extends RuntimeHook
 {
 	Collection items = {
 		"components": [],
@@ -34,7 +34,7 @@ class Components extends BaseAppHook
 	/**
 	 * Hook factory
 	 */
-	static Hook create(Collection items)
+	static Hook hook(Collection items)
 	{
 		return new Hook(static::getClassName(), {"components": items});
 	}
@@ -76,11 +76,9 @@ class Components extends BaseAppHook
 	 */
 	void register_hooks()
 	{
-		this.register(static::COMPONENTS);
-		#ifdef BACKEND then
-		this.register(static::RENDER_HEAD);
-		this.register(static::RENDER_FOOTER);
-		#endif
+		this.register(RuntimeHook::COMPONENTS, "components");
+		this.register(RuntimeHook::LAYOUT_HEADER, "render_head");
+		this.register(RuntimeHook::LAYOUT_FOOTER, "render_footer");
 	}
 	
 	

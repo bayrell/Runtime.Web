@@ -21,6 +21,6 @@ namespace Runtime.Web.Annotations;
 use Runtime.Entity.Entity;
 
 
-struct ApiMethod extends Entity
+class ApiMethod extends Entity
 {
 }

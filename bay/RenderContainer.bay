@@ -20,9 +20,12 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Callback;
+use Runtime.Component;
+use Runtime.RenderContainer as BaseRenderContainer;
 use Runtime.Serializer;
-use Runtime.SerializerNative;
+use Runtime.VirtualDom;
 use Runtime.Entity.Factory;
+use Runtime.Providers.RenderContent;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseLayoutModel;
 use Runtime.Web.BaseMiddleware;
@@ -35,108 +38,18 @@ use Runtime.Web.RenderResponse;
 use Runtime.Web.Request;
 use Runtime.Web.Response;
 use Runtime.Web.RouteInfo;
-use Runtime.Web.RouteList;
+use Runtime.Web.RouteProvider;
 use Runtime.Web.Hooks.AppHook;
 
 
-class RenderContainer extends BaseObject
+class RenderContainer extends BaseRenderContainer
 {
-	public BaseRoute base_route = null;
 	public Request request = null;
 	public Response response = null;
 	public RouteInfo route = null;
 	public Layout layout = null;
 	public Dict<Cookie> cookies = {};
-	
-	
-	/**
-	 * Create layout
-	 */
-	void createLayout(string layout_name)
-	{
-		/* Get layout params */
-		Dict params = @.callHook(AppHook::LAYOUT_MODEL_NAME, {
-			"class_name": classof BaseLayoutModel,
-			"layout_name": layout_name,
-			"component_name": "",
-		});
-		
-		/* Save widgets */
-		Dict old_widgets = {};
-		if (this.layout) old_widgets = this.layout.widgets;
-		
-		/* Create layout */
-		this.layout = rtl::newInstance(params.get("class_name"));
-		this.layout.setLayoutName(layout_name);
-		this.layout.route = this.route;
-		
-		/* Assign widgets */
-		Collection keys = old_widgets.keys();
-		for (int i=0; i<keys.count(); i++)
-		{
-			string name = keys.get(i);
-			BaseModel model = old_widgets.get(name);
-			model.parent_widget = this.layout;
-			this.layout.widgets.set(name, model);
-		}
-		if (old_widgets.has("storage"))
-		{
-			this.layout.storage = old_widgets.get("storage");
-		}
-		
-		/* Set component name */
-		if (params.get("component_name") != "")
-		{
-			this.layout.component = params.get("component_name");
-		}
-		
-		/* Call create layout */
-		@.callHook(AppHook::CREATE_LAYOUT, {
-			"container": this,
-		});
-	}
-	
-	
-	/**
-	 * Change layout
-	 */
-	void changeLayout(string layout_name)
-	{
-		if (this.layout)
-		{
-			if (this.layout.layout_name == layout_name) return;
-		}
-		this.createLayout(layout_name);
-	}
-	
-	
-	/**
-	 * Returns layout name
-	 */
-	string getLayoutName()
-	{
-		string layout_name = "default"
-		if (this.route == null) return layout_name;
-		
-		/* Set layout name from route */
-		if (this.route.layout)
-		{
-			layout_name = this.route.layout;
-		}
-		
-		/* Set layout name from route class */
-		else if (this.route.route_class)
-		{
-			Callback getLayoutName = new Callback(this.route.route_class, "getLayoutName");
-			if (getLayoutName.exists())
-			{
-				layout_name = getLayoutName.apply();
-			}
-		}
-		
-		/* Set layout name */
-		return layout_name;
-	}
+	public int http_code = 200;
 	
 	
 	/**
@@ -149,6 +62,9 @@ class RenderContainer extends BaseObject
 		
 		/* Resolve route */
 		await this.resolveRoute();
+		
+		/* Create response */
+		this.createResponse();
 	}
 	
 	
@@ -158,7 +74,7 @@ class RenderContainer extends BaseObject
 	async void findRoute()
 	{
 		/* Call hook find route */
-		await @.callHook(AppHook::FIND_ROUTE_BEFORE, {
+		await @.hook(AppHook::FIND_ROUTE_BEFORE, {
 			"container": this,
 		});
 		
@@ -167,11 +83,11 @@ class RenderContainer extends BaseObject
 		if (this.response != null) return;
 		
 		/* Find route */
-		RouteList routes = @.provider(classof RouteList);
-		this.route = routes.findRoute(this);
+		RouteProvider routes = @.provider(classof RouteProvider);
+		this.route = routes.findRoute(this.request);
 		
 		/* Call hook found route */
-		await @.callHook(AppHook::FIND_ROUTE_AFTER, {
+		await @.hook(AppHook::FIND_ROUTE_AFTER, {
 			"container": this,
 		});
 	}
@@ -182,22 +98,20 @@ class RenderContainer extends BaseObject
 	 */
 	async void resolveRoute()
 	{
+		if (not this.route) return;
 		if (this.response) return;
 		
 		/* Create layout */
-		string layout_name = this.getLayoutName();
+		string layout_name = this.route.getLayoutName();
 		this.createLayout(layout_name);
 		
 		/* Call route before */
-		await @.callHookAsync(AppHook::ROUTE_BEFORE, {
+		await @.hook(AppHook::ROUTE_BEFORE, {
 			"container": this,
 		});
 		
 		/* Call middleware */
 		await this.callRouteMiddleware(this);
-		
-		/* Call layout route before */
-		await this.layout.onActionBefore(this);
 		
 		/* Load layout data */
 		await this.layout.loadData(this);
@@ -208,19 +122,10 @@ class RenderContainer extends BaseObject
 			await this.route.render(this);
 		}
 		
-		/* Call layout route after */
-		await this.layout.onActionAfter(this);
-		
 		/* Call route after */
-		await @.callHookAsync(AppHook::ROUTE_AFTER, {
+		await @.hook(AppHook::ROUTE_AFTER, {
 			"container": this,
 		});
-		
-		/* Set response */
-		if (this.response == null)
-		{
-			this.setResponse(new RenderResponse(this));
-		}
 	}
 	
 	
@@ -235,29 +140,35 @@ class RenderContainer extends BaseObject
 		}
 		
 		/* Call hook middleware */
-		await @.callHook(AppHook::ROUTE_MIDDLEWARE, {
+		await @.hook(AppHook::ROUTE_MIDDLEWARE, {
 			"container": this,
 		});
 	}
 	
 	
 	/**
-	 * Render page model
+	 * Create response
 	 */
-	async void renderPageModel(string model_name, Dict params = null)
+	void createResponse()
 	{
+		if (this.response) return;
+		if (not this.layout) return;
+		
+		/* Create and render component */
+		Component component = rtl::newInstance(this.layout.component);
+		component.container = this;
+		component.layout = this.layout;
+		VirtualDom vdom = component.renderApp();
+		
+		/* Render Virtual DOM */
+		Vector content = [];
+		RenderContent provider = new RenderContent();
+		provider.render(vdom, content);
+		
 		/* Create response */
-		this.setResponse(new RenderResponse(this));
-		
-		/* Set page model */
-		this.layout.setPageModel(model_name, params);
-		
-		/* Action index */
-		BasePageModel page_model = this.layout.getPageModel();
-		if (page_model)
-		{
-			await page_model.actionIndex(this);
-		}
+		this.response = new Response();
+		this.response.http_code = this.http_code;
+		this.response.content = rs::join("", content);
 	}
 	
 	
@@ -271,110 +182,10 @@ class RenderContainer extends BaseObject
 	
 	
 	/**
-	 * Cancel route
-	 */
-	void cancelRoute()
-	{
-		if (this.base_route) this.base_route.cancelRoute();
-	}
-	
-	
-	/**
 	 * Add cookie
 	 */
 	Response addCookie(Cookie cookie)
 	{
 		this.cookies.set(cookie.name, cookie);
-	}
-	
-	
-	/**
-	 * Returns frontend environments
-	 */
-	Map getFrontendEnvironments()
-	{
-		Map environments = {};
-		
-		/* Setup environments */
-		Collection arr = ["CLOUD_ENV", "DEBUG", "LOCALE", "TZ", "TZ_OFFSET", "ROUTE_PREFIX"];
-		
-		/* Call hook */
-		Dict params = @.callHook(AppHook::ENVIRONMENTS, {
-			"arr": arr,
-			"environments": environments,
-		});
-		
-		/* Get result */
-		arr = params.get("arr");
-		environments = params.get("environments");
-		
-		/* Copy environments */
-		for (int i=0; i<arr.count(); i++)
-		{
-			string name = arr.get(i);
-			environments.set(name, @.env(name));
-		}
-		
-		return environments;
-	}
-	
-	
-	/**
-	 * Export data
-	 */
-	Map exportData()
-	{
-		Map data = {
-			"entry_point": @.entry_point,
-			"modules": @.start_modules,
-			"environments": this.getFrontendEnvironments(),
-		};
-		
-		/* Create serializer */
-		Serializer serializer = new Serializer();
-		serializer.setFlag(Serializer::ALLOW_OBJECTS);
-		serializer.setFlag(Serializer::ENCODE);
-		
-		/* Export data */
-		serializer.process(this, "layout", data);
-		
-		/* Call hook */
-		@.callHook(AppHook::EXPORT_CONTAINER_DATA, {
-			"container": this,
-			"data": data,
-		});
-		
-		return data;
-	}
-	
-	
-	/**
-	 * Import data
-	 */
-	void importData(Map data)
-	{
-		/* Call hook */
-		@.callHook(AppHook::IMPORT_CONTAINER_DATA_BEFORE, {
-			"container": this,
-			"data": data,
-		});
-		
-		/* Create serializer */
-		Serializer serializer = new SerializerNative();
-		serializer.setFlag(Serializer::ALLOW_OBJECTS);
-		
-		/* Create layout */
-		string layout_name = data.get("layout").get("layout_name");
-		this.createLayout(layout_name);
-		
-		/* Load data */
-		serializer.setFlag(Serializer::DECODE);
-		this.layout.serialize(serializer, data.get("layout"));
-		
-		/* Call hook */
-		@.callHook(AppHook::IMPORT_CONTAINER_DATA_AFTER, {
-			"container": this,
-			"data": data,
-		});
 	}
 }

@@ -206,9 +206,9 @@ class DetectLanguage extends BaseAppHook
 		BaseLayoutModel layout = api_params.get("layout");
 		
 		/* Get api params */
-		string service = api_params["service"] |> default string "app";
-		string api_name = api_params["api_name"] |> default string "";
-		string method_name = api_params["method_name"] |> default string "";
+		string service = api_params.get("service", "app");
+		string api_name = api_params.get("api_name");
+		string method_name = api_params.get("method_name");
 		
 		/* Build api url */
 		Vector api_url_arr = [

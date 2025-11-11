@@ -20,13 +20,13 @@ namespace Runtime.Web.Hooks;
 
 use Runtime.lib;
 use Runtime.Entity.Hook;
+use Runtime.Hooks.RuntimeHook;
 use Runtime.Web.RedirectResponse;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
-use Runtime.Web.Hooks.AppHook as BaseAppHook;
 
 
-class SetupLayout extends BaseAppHook
+class SetupLayout extends RuntimeHook
 {
 	Dict<Dict> names = null;
 	
@@ -34,7 +34,7 @@ class SetupLayout extends BaseAppHook
 	/**
 	 * Hook factory
 	 */
-	static Hook create(Dict params)
+	static Hook hook(Dict params)
 	{
 		return new Hook(static::getClassName(), {"names": params});
 	}
@@ -57,14 +57,14 @@ class SetupLayout extends BaseAppHook
 	 */
 	void register_hooks()
 	{
-		this.register(static::LAYOUT_MODEL_NAME);
+		this.register(static::LAYOUT_NAME, "getLayoutName");
 	}
 	
 	
 	/**
 	 * Layout model name
 	 */
-	void layout_model_name(Map params)
+	void getLayoutName(Map params)
 	{
 		/* Setup custom model */
 		string layout_name = params.get("layout_name");

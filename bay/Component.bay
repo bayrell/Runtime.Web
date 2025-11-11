@@ -761,22 +761,21 @@ pure string assets(string path)
  * Returns css hash
  */
 pure memorize string getCssHash(string class_name) =>
-	rtl::getParents(class_name)
-		|> .toVector()
-		|> .prepend(class_name)
-		|> .filter
+	rs::join(" ", rtl::getParents(class_name)
+		.toVector()
+		.prepend(class_name)
+		.filter
 		(
 			bool (string class_name) =>
 				class_name != "Runtime.BaseObject" and
 				class_name != "Runtime.Web.Component" and
 				class_name != ""
 		)
-		|> .map
+		.map
 		(
 			string (string class_name) => "h-" ~ static::hash(class_name)
 		)
-		|> lib::join(" ")
-	;
+	);
 
 
 /**

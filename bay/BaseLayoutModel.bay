@@ -19,25 +19,18 @@
 namespace Runtime.Web;
 
 use Runtime.lib;
+use Runtime.BaseLayout;
 use Runtime.Callback;
+use Runtime.DefaultLayout;
 use Runtime.Serializer;
-use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
-use Runtime.Web.BaseModel;
-use Runtime.Web.BasePageModel;
-use Runtime.Web.BaseStorage;
 use Runtime.Web.Bus;
 use Runtime.Web.BusInterface;
-use Runtime.Web.Component;
-use Runtime.Web.CoreUI;
-use Runtime.Web.DefaultLayout;
-use Runtime.Web.PageModel;
-use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.Hooks.AppHook;
 
 
-class BaseLayoutModel extends BaseModel
+class BaseLayoutModel extends BaseLayout
 {
 	string component = classof DefaultLayout;
 	string title = "";
@@ -59,11 +52,7 @@ class BaseLayoutModel extends BaseModel
 	Dict<string> request_query = null;
 	
 	/* Components list */
-	Vector<string> components = [];
 	Map<Dict> routes = {};
-	
-	/* Storage */
-	BaseStorage storage = null;
 	
 	/* Increment assets */
 	string f_inc = "1";
@@ -86,23 +75,6 @@ class BaseLayoutModel extends BaseModel
 	void initWidget(Dict params)
 	{
 		parent(params);
-		this.storage = this.addWidget(classof BaseStorage);
-	}
-	
-	
-	/**
-	 * Route before
-	 */
-	async void onActionBefore(RenderContainer container)
-	{
-	}
-	
-	
-	/**
-	 * Route after
-	 */
-	async void onActionAfter(RenderContainer container)
-	{
 	}
 	
 	
@@ -111,10 +83,6 @@ class BaseLayoutModel extends BaseModel
 	 */
 	void serialize(Serializer serializer, Map data)
 	{
-		serializer.process(this, "components", data);
-		serializer.process(this, "current_page_class", data);
-		serializer.process(this, "current_page_model", data);
-		serializer.process(this, "current_page_props", data);
 		serializer.process(this, "content_type", data);
 		serializer.process(this, "f_inc", data);
 		serializer.process(this, "is_full_title", data);
@@ -131,111 +99,6 @@ class BaseLayoutModel extends BaseModel
 		serializer.process(this, "title", data);
 		parent(serializer, data);
 	}
-	
-	
-	/**
-	 * Returns page model
-	 */
-	PageModel getPageModel()
-	{
-		return this.widgets.get(this.current_page_model);
-	}
-	
-	
-	/**
-	 * Returns storage
-	 */
-	BaseStorage getStorage()
-	{
-		return this.widgets.get("storage");
-	}
-	
-	
-	/**
-	 * Returns page class name
-	 */
-	string getPageClassName()
-	{
-		BasePageModel page_model = this.getPageModel();
-		if (page_model) return page_model.component;
-		return this.current_page_class;
-	}
-	
-	
-	/**
-	 * Set current page model
-	 */
-	PageModel setPageModel(string class_name, Dict params = null)
-	{
-		/* Set params */
-		if (params == null) params = {};
-		params.set("widget_name", class_name);
-		
-		/* Create page model */
-		PageModel page_model = this.getWidget(class_name);
-		if (page_model == null)
-		{
-			page_model = this.addWidget(class_name, params);
-		}
-		
-		/* Change current page model */
-		this.current_page_class = "";
-		this.current_page_model = class_name;
-		this.current_page_props = null;
-		
-		return page_model;
-	}
-	
-	
-	/**
-	 * Set page component
-	 */
-	void setPageComponent(string component_name, Dict props = null)
-	{
-		this.current_page_class = component_name;
-		this.current_page_props = props;
-	}
-	
-	
-	/**
-	 * Set layout name
-	 */
-	void setLayoutName(string layout_name)
-	{
-		this.layout_name = layout_name;
-	}
-	
-	
-	/**
-	 * Set page title
-	 */
-	void setPageTitle(string title, bool is_full_title = false)
-	{
-		this.title = title;
-		this.is_full_title = is_full_title;
-	}
-	
-	
-	/**
-	 * Returns full page title
-	 */
-	string getFullTitle(string ch = "|")
-	{
-		/* Check full title */
-		if (this.is_full_title) return this.title;
-		
-		/* Check site name */
-		string site_name = this.getSiteName();
-		if (site_name == "") return this.title;
-		
-		return this.title ~ " " ~ ch ~ " " ~ site_name;
-	}
-	
-	
-	/**
-	 * Returns locale
-	 */
-	string getLocale() => this.locale;
 	
 	
 	/**
@@ -258,143 +121,6 @@ class BaseLayoutModel extends BaseModel
 		
 		return api;
 	}
-	
-	
-	/**
-	 * Returns header components
-	 */
-	Collection<string> getHeaderComponents() => [];
-	
-	
-	/**
-	 * Returns body components
-	 */
-	Collection<string> getBodyComponents() => [];
-	
-	
-	/**
-	 * Returns footer components
-	 */
-	Collection<string> getFooterComponents() => [];
-
-	
-	/**
-	 * Add component
-	 */
-	void addComponent(string class_name)
-	{
-		if (this.components.indexOf(class_name) == -1)
-		{
-			this.components.push(class_name);
-		}
-	}
-	
-	
-	/**
-	 * Returns all components
-	 * @return Collection<string>
-	 */
-	Vector<string> getComponents(Vector components = null)
-	{
-		if (components == null) components = [];
-		
-		Vector<string> res = new Vector();
-		Map<string> cache = new Map();
-		
-		/* Call hook */
-		Map d = @.callHook(AppHook::COMPONENTS, {
-			"layout": this,
-			"components": components,
-		});
-		
-		/* Get new components */
-		components = d.get("components");
-		components = components.concat(this.components);
-		components.push(this.getPageClassName());
-		
-		/* Extends components */
-		static::_getRequiredComponents(res, cache, components);
-		
-		return res.removeDuplicates();
-	}
-	
-	
-	/**
-	 * Returns required modules
-	 * @param string class_name
-	 * @return Collection<string>
-	 */
-	static void _getRequiredComponents
-	(
-		Vector<string> res,
-		Map<string> cache,
-		Collection<string> components
-	)
-	{
-		if (components == null)
-			return;
-		
-		for (int i=0; i<components.count(); i++)
-		{
-			string class_name = components.item(i);
-			if (class_name == "")
-			{
-				continue;
-			}
-			if (not cache.has(class_name))
-			{
-				cache.set(class_name, true);
-				
-				Callback f = new Callback(class_name, "components");
-				if (f.exists())
-				{
-					Collection<string> sub_components = rtl::apply(f);
-					static::_getRequiredComponents(res, cache, sub_components);
-				}
-				
-				res.push(class_name);
-			}
-		}
-	}
-	
-	
-	/**
-	 * Returns css
-	 */
-	static string getCss(Collection<string> components, Dict css_vars = null)
-	{
-		if (css_vars == null)
-		{
-			css_vars = @.callHook(AppHook::CSS_VARS, css_vars);
-		}
-		
-		Collection<string> css = components.map
-		(
-			string (string component_name) use (css_vars)
-			{
-				if (component_name == "") return "";
-				
-				Callback f = new Callback(component_name, "css");
-				if (not f.exists()) return "";
-				
-				string css = rtl::apply(f, [css_vars]);
-				return css;
-			}
-		);
-		
-		css = css
-			.map( string (string s) => rs::trim(s) )
-			.filter( bool (string s) => s != "" )
-		;
-		
-		return rs::trim( rs::join("\n", css) );
-	}
-	
-	
-	/**
-	 * Returns assets
-	 */
-	string assets(string path) => Component::assets(path);
 	
 	
 	/**

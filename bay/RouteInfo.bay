@@ -20,7 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.re;
 use Runtime.BaseObject;
-use Runtime.Callback;
+use Runtime.Method;
 use Runtime.SerializeInterface;
 use Runtime.Serializer;
 use Runtime.Entity.Factory;
@@ -86,6 +86,21 @@ class RouteInfo extends BaseObject implements SerializeInterface
 	RouteInfo copy()
 	{
 		return Serializer::copy(this);
+	}
+	
+	
+	/**
+	 * Returns layout name
+	 */
+	string getLayoutName()
+	{
+		if (this.layout != "") return this.layout;
+		if (this.route_class != "")
+		{
+			fn f = new Method(this.route_class, "getLayoutName");
+			return f.apply();
+		}
+		return "";
 	}
 	
 	
@@ -173,7 +188,7 @@ class RouteInfo extends BaseObject implements SerializeInterface
 		if (this.route_class)
 		{
 			string class_name = this.route_class;
-			Callback getMiddleware = new Callback(class_name, "getMiddleware");
+			Method getMiddleware = new Method(class_name, "getMiddleware");
 			if (getMiddleware.exists())
 			{
 				Collection<BaseMiddleware> items = getMiddleware.apply();

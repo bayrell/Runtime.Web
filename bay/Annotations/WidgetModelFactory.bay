@@ -22,7 +22,7 @@ use Runtime.Entity.Hook;
 use Runtime.Web.Hooks.WidgetModelFactory as WidgetModelFactoryHook;
 
 
-struct WidgetModelFactory extends Hook
+class WidgetModelFactory extends Hook
 {
 	/**
 	 * Constructor
