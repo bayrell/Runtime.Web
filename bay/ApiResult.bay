@@ -159,15 +159,15 @@ class ApiResult extends BaseObject
 		if (not data) return;
 		
 		/* Set code */
-		if (data.has("code")) this.code = data["code"];
+		if (data.has("code")) this.code = data.get("code");
 		else this.code = rtl::ERROR_OK;
 		
 		/* Set message */
-		if (data.has("message")) this.message = data["message"];
+		if (data.has("message")) this.message = data.get("message");
 		else this.message = "Ok";
 		
 		/* Set data */
-		if (data.has("data")) this.setData(data["data"]);
+		if (data.has("data")) this.setData(data.get("data"));
 	}
 	
 	
@@ -208,15 +208,15 @@ class ApiResult extends BaseObject
 		else if (data instanceof Dict)
 		{
 			/* Set code */
-			if (data.has("code")) this.code = data["code"];
+			if (data.has("code")) this.code = data.get("code");
 			else this.code = rtl::ERROR_UNKNOWN;
 			
 			/* Set message */
-			if (data.has("message")) this.message = data["message"];
+			if (data.has("message")) this.message = data.get("message");
 			else this.message = "Error";
 			
 			/* Set data */
-			if (data.has("data")) this.setData(data["data"]);
+			if (data.has("data")) this.setData(data.get("data"));
 		}
 		else
 		{
