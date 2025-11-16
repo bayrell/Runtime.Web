@@ -59,7 +59,7 @@ class AppHook extends BaseHook
 		]);
 		
 		/* Hooks */
-		this.register(static::ROUTE_AFTER, "setupRoute");
+		this.register(static::ROUTE_BEFORE, "setupRoute");
 	}
 	
 	

@@ -28,6 +28,16 @@ class ApiRequest extends BaseObject
 	
 	
 	/**
+	 * Constructor
+	 */
+	void constructor(Map obj=null)
+	{
+		parent();
+		this._assign_values(obj);
+	}
+	
+	
+	/**
 	 * Returns value
 	 */
 	var get(string name) => this.data.get(name);
