@@ -46,9 +46,9 @@ class BusHttp extends BaseObject implements BusInterface
 		Dict data = params.get("data", null);
 		
 		/* Get api name */
-		Dict res = Bus::parseName(api_name);
-		service = res.get("service");
-		api_name = res.get("api_name");
+		Dict name = Bus::parseName(api_name);
+		service = name.get("service");
+		api_name = name.get("api_name");
 		
 		/* Get route prefix */
 		string route_prefix = @.env("ROUTE_PREFIX");

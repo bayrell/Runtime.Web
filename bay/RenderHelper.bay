@@ -88,11 +88,11 @@ class RenderHelper
 	 */
 	static string brightness(string color, int percent)
 	{
-		Collection color = static::rgbToInt(color);
+		Vector result = static::rgbToInt(color);
 		
-		int r = color[0];
-		int g = color[1];
-		int b = color[2];
+		int r = result[0];
+		int g = result[1];
+		int b = result[2];
 		
 		r = Math::round(r + (r * percent / 100));
 		g = Math::round(g + (g * percent / 100));
