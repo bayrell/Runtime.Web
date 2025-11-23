@@ -20,6 +20,7 @@ namespace Runtime.Web.Hooks;
 
 use Runtime.RenderContainer;
 use Runtime.Hooks.RuntimeHook;
+use Runtime.Web.Hooks.AppHook;
 
 
 class ThemeDetect extends RuntimeHook
@@ -29,7 +30,7 @@ class ThemeDetect extends RuntimeHook
 	 */
 	void register_hooks()
 	{
-		this.register(BaseAppHook::ROUTE_AFTER, "routeAfter");
+		this.register(AppHook::ROUTE_AFTER, "routeAfter");
 	}
 	
 	
