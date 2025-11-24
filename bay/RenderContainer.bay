@@ -154,21 +154,10 @@ class RenderContainer extends BaseRenderContainer
 		if (this.response) return;
 		if (not this.layout) return;
 		
-		/* Create and render component */
-		Component component = rtl::newInstance(this.layout.component);
-		component.container = this;
-		component.layout = this.layout;
-		VirtualDom vdom = component.renderApp();
-		
-		/* Render Virtual DOM */
-		Vector content = [];
-		RenderContent provider = new RenderContent();
-		provider.render(vdom, content);
-		
 		/* Create response */
 		this.response = new Response();
 		this.response.http_code = this.http_code;
-		this.response.content = rs::join("", content);
+		this.response.content = this.renderApp();
 	}
 	
 	
