@@ -33,22 +33,13 @@ use Runtime.Web.Hooks.AppHook;
 class BaseLayoutModel extends BaseLayout
 {
 	string component = classof DefaultLayout;
-	string title = "";
-	string content_type = "UTF-8";
-	string layout_name = "default";
-	string locale = @.env("LOCALE");
-	string current_page_class = "";
-	string current_page_model = "";
-	string site_name = "";
-	bool is_full_title = false;
-	Dict current_page_props = null;
 	
 	/* Current route */
 	RouteInfo route = null;
 	string request_full_uri = "";
 	string request_host = "";
-	string request_https = "";
 	string request_uri = "";
+	bool request_https = "";
 	Dict<string> request_query = null;
 	
 	/* Components list */
@@ -83,11 +74,7 @@ class BaseLayoutModel extends BaseLayout
 	 */
 	void serialize(Serializer serializer, Map data)
 	{
-		serializer.process(this, "content_type", data);
 		serializer.process(this, "f_inc", data);
-		serializer.process(this, "is_full_title", data);
-		serializer.process(this, "locale", data);
-		serializer.process(this, "layout_name", data);
 		serializer.process(this, "request_full_uri", data);
 		serializer.process(this, "request_host", data);
 		serializer.process(this, "request_https", data);
@@ -95,8 +82,6 @@ class BaseLayoutModel extends BaseLayout
 		serializer.process(this, "request_uri", data);
 		serializer.process(this, "route", data);
 		serializer.process(this, "routes", data);
-		serializer.process(this, "site_name", data);
-		serializer.process(this, "title", data);
 		parent(serializer, data);
 	}
 	
@@ -129,8 +114,18 @@ class BaseLayoutModel extends BaseLayout
 	string url(string route_name, Dict route_params = null, Dict url_params = null)
 	{
 		if (not this.routes.has(route_name)) return null;
+		if (route_params == null) route_params = {};
+		if (url_params == null) url_params = {};
 		
-		Dict route = this.routes.get(route_name);
+		Map route = this.routes.get(route_name);
+		Map res = @.hook(AppHook::MAKE_URL_PARAMS, {
+			"layout": this,
+			"route": route,
+			"route_name": route_name,
+			"route_params": route_params,
+			"url_params": url_params,
+		});
+		
 		string domain = route.get("domain");
 		string url = route.get("uri");
 		if (route_params != null and url != null)
@@ -142,10 +137,6 @@ class BaseLayoutModel extends BaseLayout
 					if (pos >= 0)
 					{
 						url = rs::replace("{" ~ key ~ "}", value, url);
-					}
-					else
-					{
-						url = rs::url_get_add(url, key, value);
 					}
 				}
 			);
@@ -162,7 +153,7 @@ class BaseLayoutModel extends BaseLayout
 		}
 		
 		/* Make url */
-		Dict res = @.callHook(AppHook::MAKE_URL, {
+		res = @.hook(AppHook::MAKE_URL, {
 			"domain": domain,
 			"layout": this,
 			"route": route,

@@ -29,9 +29,9 @@ use Runtime.Web.Hooks.AppHook;
 
 class PageNotFound extends RuntimeHook
 {
-    string model = "";
+	string model = "";
 	string layout_name = "default";
-    
+	
 	
 	/**
 	 * Hook factory
@@ -41,19 +41,18 @@ class PageNotFound extends RuntimeHook
 		return new Hook(static::getClassName(), {"model": model, "layout": layout});
 	}
 	
-    
-    /**
-     * Setup
-     */
-    void setup(Dict params)
-    {
+	
+	/**
+	 * Init params
+	 */
+	void initParams(Dict params)
+	{
 		parent(params);
 		
-        if (params == null) return;
-        if (params.has("model")) this.model = params.get("model");
-    }
-    
-    
+		if (params.has("model")) this.model = params.get("model");
+	}
+	
+	
 	/**
 	 * Register hooks
 	 */

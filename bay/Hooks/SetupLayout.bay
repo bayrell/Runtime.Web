@@ -41,9 +41,9 @@ class SetupLayout extends RuntimeHook
 	
 	
 	/**
-	 * Setup
+	 * Init params
 	 */
-	void setup(Dict params)
+	void initParams(Dict params)
 	{
 		parent(params);
 		

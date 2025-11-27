@@ -20,28 +20,36 @@ namespace Runtime.Web.Hooks;
 
 use Runtime.re;
 use Runtime.lib;
-use Runtime.Web.BaseLayoutModel;
+use Runtime.BaseLayout;
+use Runtime.Entity.Hook;
+use Runtime.Hooks.RuntimeHook;
 use Runtime.Web.RedirectResponse;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteInfo;
-use Runtime.Web.Hooks.AppHook as BaseAppHook;
+use Runtime.Web.Hooks.AppHook;
 
 
-class DetectLanguage extends BaseAppHook
+class DetectLanguage extends RuntimeHook
 {
 	string default_language = "";
+	string route_match_name = "lang";
 	Vector<string> allowed_languages = [];
-
-
+	
+	
 	/**
-	 * Setup
+	 * Create hook
 	 */
-	void setup(Dict params)
+	static DetectLanguage hook(Dict params) => new Hook(classof DetectLanguage, params);
+	
+	
+	/**
+	 * Init params
+	 */
+	void initParam(Dict params)
 	{
 		parent(params);
 		
-		if (params == null) return;
 		if (params.has("allowed_languages"))
 		{
 			this.allowed_languages = params.get("allowed_languages");
@@ -49,6 +57,10 @@ class DetectLanguage extends BaseAppHook
 		if (params.has("default_language"))
 		{
 			this.default_language = params.get("default_language");
+		}
+		if (params.has("route_match_name"))
+		{
+			this.route_match_name = params.get("route_match_name");
 		}
 	}
 
@@ -58,14 +70,8 @@ class DetectLanguage extends BaseAppHook
 	 */
 	void register_hooks()
 	{
-		this.register(static::CALL_API_BEFORE);
-		this.register(static::MAKE_URL);
-		
-		#ifdef BACKEND then
-		this.register(static::FIND_ROUTE_BEFORE);
-		this.register(static::MATCH_ROUTE);
-		this.register(static::FIND_ROUTE_AFTER);
-		#endif
+		this.register(AppHook::ROUTE_BEFORE, "routeBefore");
+		this.register(AppHook::MAKE_URL_PARAMS, "make_url_params");
 	}
 	
 	
@@ -73,183 +79,33 @@ class DetectLanguage extends BaseAppHook
 	
 	
 	/**
-	 * Returns language
+	 * Route before
 	 */
-	void getLanguage(Request request)
-	{
-		string lang = "";
-		string uri = request.uri;
-		
-		Vector arr = rs::split("/", request.uri)
-			.filter(lib::equalNot(""))
-		;
-		if (arr.count() > 0)
-		{
-			lang = arr.get(0);
-			uri = rs::substr(request.uri, rs::strlen(lang) + 1);
-		}
-		else
-		{
-			uri = "/";
-		}
-		
-		return {
-			"lang": lang,
-			"uri": uri,
-		};
-	}
-	
-	
-	/**
-	 * Redirect
-	 */
-	void find_route_before(Map params)
+	async void routeBefore(Map params)
 	{
 		RenderContainer container = params.get("container");
-		Request request = container.request;
+		if (container.layout == null) return;
+		if (container.route == null) return;
+		if (container.route.matches == null) return;
+		if (not container.route.matches.has(this.route_match_name)) return;
 		
-		/* Detect language */
-		Dict res = this.getLanguage(request);
-		string wrong_language = false;
-		string language = res.get("lang");
-		string uri = res.get("uri");
-		
-		/* Check if language is correct */
-		if (this.allowed_languages.indexOf(language) == -1) wrong_language = true;
-		
-		/* Set detected language */
-		container.backend_storage.set("detect_language", {
-			"lang": (not wrong_language) ? language : this.default_language,
-			"uri": uri,
-			"uri_lang": language,
-			"wrong": wrong_language,
-		});
-	}
-	
-	
-	/**
-	 * Match route
-	 */
-	void match_route(Map params)
-	{
-		RenderContainer container = params.get("container");
-		RouteInfo route = params.get("route");
-		
-		/* If enable locale */
-		if (not route.enable_locale) return;
-		
-		/* Get detected language */
-		Map detect_language = container.backend_storage.get("detect_language");
-		bool wrong_language = detect_language.get("wrong");
-		string language = detect_language.get("lang");
-		string uri = detect_language.get("uri");
-		
-		/* Clear matches */
-		params.set("matches", null);
-		
-		/* Check if language is correct */
-		if (wrong_language) return;
-		
-		/* Get matches */
-		Vector<string> matches = re::matchAll(route.uri_match, uri);
-		if (matches)
-		{
-			matches = matches.get(0, null);
-			matches.remove(0);
-			
-			/* Set result */
-			params.set("matches", matches);
-			
-			/* Set current language */
-			container.layout.lang = language;
-		}
-	}
-	
-	
-	/**
-	 * Find route after
-	 */
-	void find_route_after(Map params)
-	{
-		RenderContainer container = params.get("container");
-		
-		/* Get detected language */
-		Map detect_language = container.backend_storage.get("detect_language");
-		bool wrong_language = detect_language.get("wrong");
-		string language = detect_language.get("uri_lang");
-		string uri = detect_language.get("uri");
-		
-		/* Redirect if wrong language and route not found */
-		if (wrong_language and container.route == null)
-		{
-			string redirect_url = "/" ~ this.default_language ~ container.request.full_uri;
-			container.response = new RedirectResponse(redirect_url);
-		}
-		
-		/* Redirect if empty uri */
-		else if (not wrong_language and uri == "")
-		{
-			string redirect_url = "/" ~ container.layout.lang ~ "/";
-			container.response = new RedirectResponse(redirect_url);
-		}
+		/* Detect lang */
+		container.layout.lang = container.route.matches.get(this.route_match_name);
 	}
 	
 	#endif
 	
 	
 	/**
-	 * Call api before
+	 * Make url params
 	 */
-	void call_api_before(Map params)
+	void make_url_params(Map params)
 	{
-		Map api_params = params.get("params");
-		BaseLayoutModel layout = api_params.get("layout");
-		
-		/* Get api params */
-		string service = api_params.get("service", "app");
-		string api_name = api_params.get("api_name");
-		string method_name = api_params.get("method_name");
-		
-		/* Build api url */
-		Vector api_url_arr = [
-			layout.lang,
-			"api",
-			service,
-			api_name,
-			method_name,
-		];
-		api_url_arr = api_url_arr.filter( bool (string s) => s != "" );
-		string api_url = "/" ~ api_url_arr.join("/") ~ "/";
-		
-		/* Set api url */
-		params.set("api_url", api_url);
-	}
-	
-	
-	/**
-	 * Make url
-	 */
-	void make_url(Map params)
-	{
-		RouteInfo route = params.get("route");
-		BaseLayoutModel layout = params.get("layout");
-		string domain = params.get("domain");
-		string url = params.get("url");
-		Dict url_params = params.get("url_params");
-		string url_lang = url_params.has("lang") ? url_params.get("lang") : layout.lang;
-		
-		/* Add language */
-		if (route.enable_locale)
+		BaseLayout layout = params.get("layout");
+		Map route_params = params.get("route_params");
+		if (not route_params.has(this.route_match_name))
 		{
-			url = "/" ~ url_lang ~ url;
-			params.set("url", url);
-			params.set("url_with_domain", url);
-		}
-		
-		/* Add domain */
-		if (domain)
-		{
-			params.set("url_with_domain", "//" ~ domain ~ url);
+			route_params.set(this.route_match_name, layout.lang);
 		}
 	}
 }

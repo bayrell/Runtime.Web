@@ -33,6 +33,7 @@ class AppHook extends BaseHook
 	static const string FIND_ROUTE_BEFORE = "runtime.web.app::find_route_before";
 	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
 	static const string MAKE_URL = "runtime.web.app::make_url";
+	static const string MAKE_URL_PARAMS = "runtime.web.app::make_url_params";
 	static const string MATCH_ROUTE = "runtime.web.app::match_route";
 	static const string RESPONSE = "runtime.web.app::response";
 	static const string ROUTES_INIT = "runtime.web.app::routes_init";
@@ -71,7 +72,16 @@ class AppHook extends BaseHook
 		RenderContainer container = params.get("container");
 		BaseLayoutModel layout = container.layout;
 		if (not layout) return;
+		if (not (layout instanceof BaseLayoutModel)) return;
 		
+		/* Setup request */
+		layout.request_host = container.request.host;
+		layout.request_https = container.request.is_https;
+		layout.request_full_uri = container.request.full_uri;
+		layout.request_uri = container.request.uri;
+		layout.request_query = container.request.query;
+		
+		/* Setup route */
 		RouteProvider provider = @.provider(classof RouteProvider);
 		layout.route = container.route;
 		layout.routes = {};

@@ -30,9 +30,9 @@ class ApiPrefix extends AppHook
 	
 	
 	/**
-	 * Setup hook params
+	 * Init params
 	 */
-	void setup(Dict params)
+	void initParams(Dict params)
 	{
 		if (params == null) return;
 		if (params.has("prefix")) this.prefix = params.get("prefix");

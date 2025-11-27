@@ -59,9 +59,9 @@ class Components extends RuntimeHook
 	
 	
 	/**
-	 * Setup
+	 * Init params
 	 */
-	void setup(Dict params)
+	void initParams(Dict params)
 	{
 		parent(params);
 		if (params == null) return;

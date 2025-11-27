@@ -19,12 +19,33 @@
 namespace Runtime.Web.Hooks;
 
 use Runtime.RenderContainer;
+use Runtime.Entity.Hook;
 use Runtime.Hooks.RuntimeHook;
 use Runtime.Web.Hooks.AppHook;
 
 
-class ThemeDetect extends RuntimeHook
+class DetectTheme extends RuntimeHook
 {
+	string cookie_name = "theme";
+	
+	
+	/**
+	 * Create hook
+	 */
+	static void hook(Map params = null) => new Hook(classof DetectTheme, params);
+	
+	
+	/**
+	 * Init params
+	 */
+	void initParams(Map params)
+	{
+		parent(params);
+		
+		if (params.has("cookie_name")) this.cookie_name = params.get("cookie_name");
+	}
+	
+	
 	/**
 	 * Register hook
 	 */
@@ -40,6 +61,6 @@ class ThemeDetect extends RuntimeHook
 	void routeAfter(Map params)
 	{
 		RenderContainer container = params.get("container");
-		container.layout.theme = container.request.cookies.get("theme", "light");
+		container.layout.theme = container.request.cookies.get(this.cookie_name, "light");
 	}
 }

@@ -17,6 +17,7 @@
 		"Hooks/CanonicalUrl.bay",
 		"Hooks/Components.bay",
 		"Hooks/DetectLanguage.bay",
+		"Hooks/PageNotFound.bay",
 		"Hooks/SetupLayout.bay",
 		"Hooks/WidgetModelFactory.bay",
 		"ModuleDescription.bay"

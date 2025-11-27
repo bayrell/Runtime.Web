@@ -40,9 +40,9 @@ class WidgetModelFactory extends BaseAppHook
 	
 	
 	/**
-	 * Setup
+	 * Init params
 	 */
-	void setup(Dict params)
+	void initParams(Dict params)
 	{
 		parent(params);
 		
