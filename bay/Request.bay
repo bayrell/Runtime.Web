@@ -19,10 +19,12 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
+use Runtime.SerializeInterface;
+use Runtime.Serializer;
 use Runtime.Web.Cookie;
 
 
-class Request extends BaseObject
+class Request extends BaseObject implements SerializeInterface
 {
 	static const string METHOD_GET = "GET";
 	static const string METHOD_HEAD = "HEAD";
@@ -41,10 +43,28 @@ class Request extends BaseObject
 	public string protocol = "";
 	public bool is_https = false;
 	public Dict<string> query = null;
+	
+	#ifdef BACKEND then
 	public Dict<var> payload = null;
 	public Dict<string> cookies = null;
 	public Dict<string> headers = null;
 	public double start_time = 0;
+	#endif
+	
+	
+	/**
+	 * Serialize object
+	 */
+	void serialize(Serializer serializer, Map data)
+	{
+		serializer.process(this, "uri", data);
+		serializer.process(this, "full_uri", data);
+		serializer.process(this, "host", data);
+		serializer.process(this, "method", data);
+		serializer.process(this, "protocol", data);
+		serializer.process(this, "is_https", data);
+		serializer.process(this, "query", data);
+	}
 	
 	
 	/**

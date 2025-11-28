@@ -19,15 +19,19 @@
 namespace Runtime.Web;
 
 use Runtime.re;
+use Runtime.BaseLayout;
 use Runtime.BaseProvider;
 use Runtime.Method;
 use Runtime.Entity.Factory;
 use Runtime.Exceptions.ItemNotFound;
+use Runtime.Hooks.RuntimeHook;
+use Runtime.Providers.HookProvider;
 use Runtime.Web.BaseRoute;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteAction;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.RouteList;
 use Runtime.Web.RouteModel;
 use Runtime.Web.RoutePage;
 use Runtime.Web.Annotations.Route;
@@ -47,6 +51,9 @@ class RouteProvider extends BaseProvider
 	{
 		await parent::init();
 		await this.initRoutes();
+		
+		/* Register hooks */
+		this.register_hooks();
 	}
 	
 	
@@ -98,7 +105,10 @@ class RouteProvider extends BaseProvider
 	void addRoute(RouteInfo route)
 	{
 		if (route.uri_match === null) route.compile();
-		this.routes.set(route.name, route);
+		this.routes.set(route.name, {
+			"uri": route.uri,
+			"domain": route.domain,
+		});
 		this.routes_list.push(route);
 	}
 	
@@ -145,6 +155,31 @@ class RouteProvider extends BaseProvider
 	async void start()
 	{
 		await parent::start();
+	}
+	
+	
+	/**
+	 * Register hooks
+	 */
+	void register_hooks()
+	{
+		HookProvider hook = @.provider("hook");
+		hook.register(AppHook::ROUTE_BEFORE, new Method(this, "routeBefore"), 50);
+	}
+	
+	
+	/**
+	 * Route before
+	 */
+	void routeBefore(Map params)
+	{
+		RenderContainer container = params.get("container");
+		BaseLayout layout = container.layout;
+		
+		/* Create route */
+		RouteList router = layout.storage.createWidget(classof RouteList);
+		router.routes = this.routes.copy();
+		layout.storage.set("router", router);
 	}
 	
 	

@@ -58,12 +58,12 @@ class ModuleDescription
 	 */
 	pure Vector<Entity> entities() =>
 	[
-		/*new Hook("Runtime.Web.Hooks.AssetsHook"),
-		new Provider("Runtime.Web.RenderProvider"),*/
+		/*new Hook("Runtime.Web.Hooks.AssetsHook"),*/
+		
+		new Provider("Runtime.Web.RouteProvider"),
 		
 		#ifdef BACKEND then
 		new Hook("Runtime.Web.Hooks.AppHook"),
-		new Provider("Runtime.Web.RouteProvider"),
 		/*new Hook("Runtime.Web.Hooks.LayoutHook"),
 		new Hook("Runtime.Web.Hooks.ResponseHook"),
 		new Provider("Runtime.Web.BusLocal"),

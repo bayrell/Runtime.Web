@@ -18,93 +18,25 @@
 
 namespace Runtime.Web;
 
-use Runtime.lib;
-use Runtime.BaseLayout;
-use Runtime.Callback;
-use Runtime.DefaultLayout;
+use Runtime.BaseObject;
+use Runtime.SerializeInterface;
 use Runtime.Serializer;
-use Runtime.Web.ApiResult;
-use Runtime.Web.Bus;
-use Runtime.Web.BusInterface;
-use Runtime.Web.RouteInfo;
 use Runtime.Web.Hooks.AppHook;
 
 
-class BaseLayoutModel extends BaseLayout
+class RouteList extends BaseObject implements SerializeInterface
 {
-	string component = classof DefaultLayout;
-	
-	/* Current route */
-	RouteInfo route = null;
-	string request_full_uri = "";
-	string request_host = "";
-	string request_uri = "";
-	bool request_https = "";
-	Dict<string> request_query = null;
-	
-	/* Components list */
-	Map<Dict> routes = {};
-	
-	/* Increment assets */
-	string f_inc = "1";
+	Map routes = {};
+	Map route_params = {};
 	
 	
 	/**
-	 * Init widget params
-	 */
-	void initParams(Dict params)
-	{
-		this.layout = this;
-		if (params == null) return;
-		if (params.has("route")) this.route = params.get("route");
-	}
-	
-	
-	/**
-	 * Init widget settings
-	 */
-	void initWidget(Dict params)
-	{
-		parent(params);
-	}
-	
-	
-	/**
-	 * Process frontend data
+	 * Serialize
 	 */
 	void serialize(Serializer serializer, Map data)
 	{
-		serializer.process(this, "f_inc", data);
-		serializer.process(this, "request_full_uri", data);
-		serializer.process(this, "request_host", data);
-		serializer.process(this, "request_https", data);
-		serializer.process(this, "request_query", data);
-		serializer.process(this, "request_uri", data);
-		serializer.process(this, "route", data);
 		serializer.process(this, "routes", data);
-		parent(serializer, data);
-	}
-	
-	
-	/**
-	 * Returns site name
-	 */
-	string getSiteName() => this.site_name;
-	
-	
-	/**
-	 * Call Api
-	 */
-	async ApiResult callApi(Map params)
-	{
-		/* Set layout */
-		params.set("layout", this.layout);
-		
-		/* Returns bus */
-		BusInterface bus = Bus::getApi(params.get("api_name"));
-		ApiResult api = await bus.send(params);
-		
-		return api;
+		serializer.process(this, "route_params", data);
 	}
 	
 	
@@ -113,13 +45,15 @@ class BaseLayoutModel extends BaseLayout
 	 */
 	string url(string route_name, Dict route_params = null, Dict url_params = null)
 	{
-		if (not this.routes.has(route_name)) return null;
+		if (not this.routes.has(route_name)) return "";
 		if (route_params == null) route_params = {};
 		if (url_params == null) url_params = {};
 		
+		/* Merge route params */
+		route_params = this.route_params.concat(route_params);
+		
 		Map route = this.routes.get(route_name);
 		Map res = @.hook(AppHook::MAKE_URL_PARAMS, {
-			"layout": this,
 			"route": route,
 			"route_name": route_name,
 			"route_params": route_params,
@@ -155,7 +89,6 @@ class BaseLayoutModel extends BaseLayout
 		/* Make url */
 		res = @.hook(AppHook::MAKE_URL, {
 			"domain": domain,
-			"layout": this,
 			"route": route,
 			"route_name": route_name,
 			"route_params": route_params,

@@ -3,15 +3,17 @@
 	"assets":
 	[
 		"ApiResult.bay",
-		"BaseLayoutModel.bay",
 		"Bus.bay",
 		"BusHttp.bay",
 		"BusInterface.bay",
 		"RenderHelper.bay",
+		"Request.bay",
 		"RouteInfo.bay",
+		"RouteList.bay",
 		"RouteAction.bay",
 		"RoutePage.bay",
 		"RouteModel.bay",
+		"RouteProvider.bay",
 		"Hooks/AppHook.bay",
 		"Hooks/AssetsHook.bay",
 		"Hooks/CanonicalUrl.bay",

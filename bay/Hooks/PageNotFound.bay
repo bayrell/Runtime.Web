@@ -60,7 +60,7 @@ class PageNotFound extends RuntimeHook
 	{
 		parent();
 		this.register(AppHook::FIND_ROUTE_AFTER, "routeNotFound");
-		/*this.register(AppHook::ROUTE_AFTER, "renderPageNotFound");*/
+		this.register(AppHook::ROUTE_AFTER, "renderPageNotFound");
 	}
 	
 	

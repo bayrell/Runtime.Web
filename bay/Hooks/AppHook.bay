@@ -19,6 +19,7 @@
 namespace Runtime.Web.Hooks;
 
 use Runtime.Hooks.BaseHook;
+use Runtime.Hooks.RuntimeHook;
 use Runtime.Web.BaseLayoutModel;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
@@ -60,8 +61,13 @@ class AppHook extends BaseHook
 		]);
 		
 		/* Hooks */
+		#ifdef BACKEND then
 		this.register(static::ROUTE_BEFORE, "setupRoute");
+		#endif
 	}
+	
+	
+	#ifdef BACKEND then
 	
 	
 	/**
@@ -72,27 +78,10 @@ class AppHook extends BaseHook
 		RenderContainer container = params.get("container");
 		BaseLayoutModel layout = container.layout;
 		if (not layout) return;
-		if (not (layout instanceof BaseLayoutModel)) return;
 		
-		/* Setup request */
-		layout.request_host = container.request.host;
-		layout.request_https = container.request.is_https;
-		layout.request_full_uri = container.request.full_uri;
-		layout.request_uri = container.request.uri;
-		layout.request_query = container.request.query;
-		
-		/* Setup route */
-		RouteProvider provider = @.provider(classof RouteProvider);
-		layout.route = container.route;
-		layout.routes = {};
-		for (int i=0; i<provider.routes_list.count(); i++)
-		{
-			RouteInfo route = provider.routes_list.get(i);
-			if (route.is_backend) continue;
-			layout.routes.set(route.name, {
-				"uri": route.uri,
-				"domain": route.domain,
-			});
-		}
+		layout.storage.set("request", container.request);
+		layout.storage.set("route", container.route);
 	}
+	
+	#endif
 }

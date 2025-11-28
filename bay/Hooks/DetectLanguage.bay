@@ -27,6 +27,8 @@ use Runtime.Web.RedirectResponse;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.Request;
 use Runtime.Web.RouteInfo;
+use Runtime.Web.RouteList;
+use Runtime.Web.RouteProvider;
 use Runtime.Web.Hooks.AppHook;
 
 
@@ -70,8 +72,10 @@ class DetectLanguage extends RuntimeHook
 	 */
 	void register_hooks()
 	{
-		this.register(AppHook::ROUTE_BEFORE, "routeBefore");
-		this.register(AppHook::MAKE_URL_PARAMS, "make_url_params");
+		#ifdef BACKEND then
+		this.register(AppHook::ROUTE_BEFORE, "setupLanguage");
+		this.register(AppHook::ROUTE_BEFORE, "setupRouteParams");
+		#endif
 	}
 	
 	
@@ -79,9 +83,9 @@ class DetectLanguage extends RuntimeHook
 	
 	
 	/**
-	 * Route before
+	 * Setup language
 	 */
-	async void routeBefore(Map params)
+	async void setupLanguage(Map params)
 	{
 		RenderContainer container = params.get("container");
 		if (container.layout == null) return;
@@ -93,19 +97,19 @@ class DetectLanguage extends RuntimeHook
 		container.layout.lang = container.route.matches.get(this.route_match_name);
 	}
 	
-	#endif
-	
 	
 	/**
-	 * Make url params
+	 * Setup route params
 	 */
-	void make_url_params(Map params)
+	async void setupRouteParams(Map params)
 	{
-		BaseLayout layout = params.get("layout");
-		Map route_params = params.get("route_params");
-		if (not route_params.has(this.route_match_name))
-		{
-			route_params.set(this.route_match_name, layout.lang);
-		}
+		RenderContainer container = params.get("container");
+		RouteList router = container.layout.get("router");
+		if (not router) return;
+		
+		/* Add route params */
+		router.route_params.set(this.route_match_name, container.layout.lang);
 	}
+	
+	#endif
 }
