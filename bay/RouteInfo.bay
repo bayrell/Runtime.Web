@@ -26,6 +26,10 @@ use Runtime.Serializer;
 use Runtime.Entity.Factory;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Exceptions.RuntimeException;
+use Runtime.Serializer.IntegerType;
+use Runtime.Serializer.MapType;
+use Runtime.Serializer.StringType;
+use Runtime.Serializer.VectorType;
 use Runtime.Web.BaseMiddleware;
 use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
@@ -61,31 +65,22 @@ class RouteInfo extends BaseObject implements SerializeInterface
 	
 	
 	/**
-	 * Process frontend data
+	 * Serialize object
 	 */
-	void serialize(Serializer serializer, Map data)
+	void serialize(Serializer serializer)
 	{
-		serializer.process(this, "data", data);
-		serializer.process(this, "domain", data);
-		serializer.process(this, "label", data);
-		serializer.process(this, "layout", data);
-		serializer.process(this, "matches", data);
-		serializer.process(this, "middleware", data);
-		serializer.process(this, "name", data);
-		serializer.process(this, "params", data);
-		serializer.process(this, "pos", data);
-		serializer.process(this, "route_class", data);
-		serializer.process(this, "uri", data);
-		serializer.process(this, "uri_match", data);
-	}
-	
-	
-	/**
-	 * Copy route
-	 */
-	RouteInfo copy()
-	{
-		return Serializer::copy(this);
+		parent(serializer);
+		serializer.addType("data", new MapType());
+		serializer.addType("domain", new StringType());
+		serializer.addType("label", new StringType());
+		serializer.addType("layout", new StringType());
+		serializer.addType("name", new StringType());
+		serializer.addType("matches", new MapType(new StringType()));
+		serializer.addType("params", new VectorType(new StringType()));
+		serializer.addType("pos", new IntegerType());
+		serializer.addType("route_class", new StringType());
+		serializer.addType("uri", new StringType());
+		serializer.addType("uri_match", new StringType());
 	}
 	
 	

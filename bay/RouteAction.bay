@@ -35,10 +35,9 @@ class RouteAction extends RouteInfo
     /**
 	 * Process frontend data
 	 */
-	void serialize(Serializer serializer, Map data)
+	void serialize(Serializer serializer)
 	{
-		serializer.process(this, "action", data);
-		parent(serializer, data);
+		parent(serializer);
 	}
     
 	

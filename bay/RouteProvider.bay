@@ -197,7 +197,7 @@ class RouteProvider extends BaseProvider
 			Collection<string> matches = this.matchRoute(request, route);
 			if (matches == null) continue;
 			
-			route = route.copy();
+			route = rtl::copy(route);
 			route.addMatches(matches);
 			return route;
 		}

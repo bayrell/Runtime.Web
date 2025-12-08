@@ -19,24 +19,26 @@
 namespace Runtime.Web;
 
 use Runtime.Serializer;
+use Runtime.Serializer.MapType;
+use Runtime.Serializer.StringType;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RenderContainer;
 
 
 class RouteModel extends RouteInfo
 {
-	var model = null;
+	string model = "";
 	Dict model_params = null;
 	
 	
 	/**
 	 * Process frontend data
 	 */
-	void serialize(Serializer serializer, Map data)
+	void serialize(Serializer serializer)
 	{
-		serializer.process(this, "model", data);
-		serializer.process(this, "model_params", data);
-		parent(serializer, data);
+		parent(serializer);
+		serializer.addType("model", new StringType());
+		serializer.addType("model_params", new MapType());
 	}
 	
 	
