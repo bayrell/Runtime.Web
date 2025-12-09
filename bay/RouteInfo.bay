@@ -85,6 +85,15 @@ class RouteInfo extends BaseObject implements SerializeInterface
 	
 	
 	/**
+	 * Copy route
+	 */
+	RouteInfo copy()
+	{
+		return rtl::copy(this);
+	}
+	
+	
+	/**
 	 * Returns layout name
 	 */
 	string getLayoutName()

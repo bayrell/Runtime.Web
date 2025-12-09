@@ -86,7 +86,7 @@ class RouteAction extends RouteInfo
 		}
 		
 		/* Apply action */
-		if (action.exists())
+		if (action and action.exists())
 		{
 			await action.apply([container]);
 		}

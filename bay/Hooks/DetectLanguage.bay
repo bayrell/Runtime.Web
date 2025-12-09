@@ -34,7 +34,7 @@ use Runtime.Web.Hooks.AppHook;
 
 class DetectLanguage extends RuntimeHook
 {
-	string default_language = "";
+	string default_language = "en";
 	string route_match_name = "lang";
 	Vector<string> allowed_languages = [];
 	
@@ -48,7 +48,7 @@ class DetectLanguage extends RuntimeHook
 	/**
 	 * Init params
 	 */
-	void initParam(Dict params)
+	void initParams(Dict params)
 	{
 		parent(params);
 		
@@ -95,6 +95,14 @@ class DetectLanguage extends RuntimeHook
 		
 		/* Detect lang */
 		container.layout.lang = container.route.matches.get(this.route_match_name);
+		
+		/* Redirect */
+		if (this.allowed_languages.indexOf(container.layout.lang) == -1)
+		{
+			string full_uri = container.request.full_uri;
+			string redirect_uri = "/" ~ this.default_language ~ full_uri;
+			container.setResponse(new RedirectResponse(redirect_uri));
+		}
 	}
 	
 	
