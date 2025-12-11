@@ -20,10 +20,11 @@ namespace Runtime.Web;
 
 use Runtime.lib;
 use Runtime.BaseProvider;
-use Runtime.Callback;
+use Runtime.Method;
 use Runtime.Exceptions.ApiError;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Web.ApiResult;
+use Runtime.Web.ApiRequest;
 use Runtime.Web.BaseApi;
 use Runtime.Web.Bus;
 use Runtime.Web.BusInterface;
@@ -51,10 +52,10 @@ class BusLocal extends BaseProvider implements BusInterface
 		{
 			Api api = api_list.get(i);
 			string class_name = api.name;
-			Callback getApiName = new Callback(class_name, "getApiName");
+			Method getApiName = new Method(class_name, "getApiName");
 			
 			/* Save api */
-			string api_name = rtl::apply(getApiName);
+			string api_name = getApiName.apply();
 			this.api_list.set(api_name, api);
 		}
 	}
@@ -65,119 +66,33 @@ class BusLocal extends BaseProvider implements BusInterface
 	 */
 	async ApiResult send(Dict params)
 	{
-		ApiResult result;
-		
 		string api_name = params.get("api_name");
 		string method_name = params.get("method_name");
 		
-		/* Get api name */
-		Dict res = Bus::parseName(api_name);
-		api_name = res.get("api_name");
-		
-		/* Call local api */
-		try
+		/* Find api */
+		Api api = this.api_list.get(api_name);
+		if (not api)
 		{
-			ApiMethod annotation = this.findApi(params);
-			result = await this.callAnnotation(annotation, params);
-		}
-		catch (ApiError e)
-		{
-			result = new ApiResult();
-			result.fail(e.getPreviousException());
-		}
-		
-		/* Set api name */
-		result.api_name = api_name;
-		result.method_name = method_name;
-		return result;
-	}
-	
-	
-	/**
-	 * Find local api
-	 */
-	async Dict findApi(Dict params)
-	{
-		string api_name = params.get("api_name");
-		string method_name = params.get("method_name");
-		
-		/* Get annotation by api name */
-		Api annotation = this.api_list.get(api_name);
-		
-		/* Call find api hook */
-		Dict res = @.callHook(AppHook::FIND_API, {
-			"api_name": api_name,
-			"annotation": annotation,
-		});
-		annotation = res.get("annotation");
-		
-		/* Annotation not found */
-		if (annotation == null)
-		{
-			throw new ApiError( new ItemNotFound(api_name, "Api annotation") );
+			throw new ItemNotFound(api_name ~ "::" ~ method_name, "Api");
 		}
 		
 		/* Find method */
-		Callback getMethodInfoByName = new Callback(annotation.name, "getMethodInfoByName");
-		Dict method_info = getMethodInfoByName.apply([method_name]);
-		
-		/* Method not found */
-		if (method_info == null)
+		Method getMethodsList = new Method(api.name, "getMethodsList");
+		Vector methods = getMethodsList.apply();
+		if (methods.indexOf(method_name) == -1)
 		{
-			throw new ApiError( new ItemNotFound(method_name ~ " in " ~ api_name, "Api method") );
+			throw new ItemNotFound(api_name ~ "::" ~ method_name, "Api");
 		}
 		
-		/* Check if method is api */
-		ApiMethod api_method = method_info
-			.get("annotations")
-			.findItem( lib::isInstance(classof ApiMethod) )
-		;
-		if (api_method == null)
-		{
-			throw new ApiError( new ItemNotFound(method_name ~ " in " ~ api_name, "Api method") );
-		}
-		
-		/* Set props */
-		Dict result = {
-			"api": annotation,
-			"api_method": api_method,
+		/* Call method */
+		Method item = new Method(api.name, method_name);
+		ApiRequest request = new ApiRequest{
+			"data": params.get("data"),
+			"storage": params.get("storage"),
 		};
+		ApiResult result = await item.apply([request]);
+		
+		/* Return result */
 		return result;
-	}
-	
-	
-	/**
-	 * Call annotation
-	 */
-	async ApiResult callAnnotation(Dict annotation, Dict params)
-	{
-		Api api = annotation.get("api");
-		string method_name = params.get("method_name");
-		
-		/* Create api instance */
-		BaseApi api_instance = rtl::newInstance(api.name, [api.params]);
-		api_instance.action = method_name;
-		api_instance.layout = params.get("layout");
-		api_instance.post_data = params.get("data");
-		api_instance.result = new ApiResult;
-		api_instance.init();
-		
-		/* Create callback */
-		Callback callback = new Callback(api_instance, method_name);
-		
-		/* Call api */
-		try
-		{
-			await api_instance.onActionBefore();
-			await callback.apply();
-			await api_instance.onActionAfter();
-		}
-		catch (ApiError e)
-		{
-			api_instance.result.fail(e.getPreviousException());
-		}
-		
-		/* Return api result */
-		return api_instance.result;
 	}
 }

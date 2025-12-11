@@ -42,6 +42,7 @@ class DetectTheme extends RuntimeHook
 	{
 		parent(params);
 		
+		if (not params) return;
 		if (params.has("cookie_name")) this.cookie_name = params.get("cookie_name");
 	}
 	

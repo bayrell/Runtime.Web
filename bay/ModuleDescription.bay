@@ -65,9 +65,9 @@ class ModuleDescription
 		#ifdef BACKEND then
 		new Hook("Runtime.Web.Hooks.AppHook"),
 		/*new Hook("Runtime.Web.Hooks.LayoutHook"),
-		new Hook("Runtime.Web.Hooks.ResponseHook"),
-		new Provider("Runtime.Web.BusLocal"),
-		new Route("Runtime.Web.ApiRoute"),*/
+		new Hook("Runtime.Web.Hooks.ResponseHook"),*/
+		new Provider("api", "Runtime.Web.BusLocal"),
+		new Route("Runtime.Web.ApiRoute"),
 		#endif
 	];
 	

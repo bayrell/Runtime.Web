@@ -184,6 +184,14 @@ class RouteProvider extends BaseProvider
 	
 	
 	/**
+	 * Returns route by name
+	 */
+	RouteInfo getRoute(string route_name) => this.routes_list.find(
+		bool (RouteInfo route) use (route_name) => route.name == route_name
+	);
+	
+	
+	/**
 	 * Find route
 	 */
 	RouteInfo findRoute(Request request)

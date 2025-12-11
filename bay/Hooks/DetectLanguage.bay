@@ -52,6 +52,7 @@ class DetectLanguage extends RuntimeHook
 	{
 		parent(params);
 		
+		if (not params) return;
 		if (params.has("allowed_languages"))
 		{
 			this.allowed_languages = params.get("allowed_languages");

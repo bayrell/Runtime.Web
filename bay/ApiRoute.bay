@@ -18,7 +18,8 @@
 
 namespace Runtime.Web;
 
-use Runtime.Exceptions.AbstractException;
+use Runtime.Exceptions.ApiError;
+use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.ApiProvider;
 use Runtime.Web.ApiResult;
 use Runtime.Web.BaseRoute;
@@ -43,14 +44,14 @@ class ApiRoute extends BaseRoute
 		[
 			new RouteAction
 			{
-				"uri": "/api/{service}/{api_name}/{method_name}",
+				"uri": "/api/{api_name}/{method_name}",
 				"name": "runtime:web:api",
 				"action": "actionIndex",
 				"pos": 1000,
 			},
 			new RouteAction
 			{
-				"uri": "/api/{service}/{api_name}/{method_name}/",
+				"uri": "/api/{api_name}/{method_name}/",
 				"name": "runtime:web:api:index",
 				"action": "actionIndex",
 				"pos": 1000,
@@ -65,42 +66,53 @@ class ApiRoute extends BaseRoute
 	async static void actionIndex(RenderContainer container)
 	{
 		/* Call api */
-		string api_name = container.route.matches["api_name"];
-		string method_name = container.route.matches["method_name"];
+		string api_name = container.route.matches.get("api_name");
+		string method_name = container.route.matches.get("method_name");
 		
 		ApiResult api_result = null;
-		BusInterface bus = Bus::getApi(api_name);
+		BusInterface bus = @.provider("api");
 		try
 		{
+			Map payload = container.request.payload;
 			api_result = await bus.send({
 				"api_name": api_name,
 				"method_name": method_name,
-				"layout": container.layout,
-				"data": container.request.payload.get("data"),
-				"container": container,
+				"data": payload ? payload.get("data") : {},
+				"storage": container.layout.storage.backend,
 			});
 		}
-		catch (AbstractException e)
+		catch (RuntimeException e)
 		{
 			api_result = new ApiResult();
-			api_result.exception(e);
+			if (e instanceof ApiError) api_result.fail(e.prev);
+			else api_result.exception(e);
+		}
+		
+		/* Create api result if does not exists */
+		if (not api_result)
+		{
+			api_result = new ApiResult();
+			api_result.exception(new RuntimeException("ApiResult does not exists"));
 		}
 		
 		/* Create response */
 		container.setResponse( new JsonResponse(api_result.getContent()) );
 		
 		/* Set cookie */
-		api_result.cookies.each(
-			void (Cookie cookie) use (container)
-			{
-				container.addCookie(cookie);
-			}
-		);
+		if (api_result instanceof ApiResult)
+		{
+			api_result.cookies.each(
+				void (Cookie cookie) use (container)
+				{
+					container.addCookie(cookie);
+				}
+			);
+		}
 		
 		/* HTTP error if exception */
-		/*if (api.isException())
+		if (api_result.isException())
 		{
 			container.response.http_code = 500;
-		}*/
+		}
 	}
 }

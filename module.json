@@ -4,8 +4,6 @@
 	[
 		"ApiResult.bay",
 		"Bus.bay",
-		"BusHttp.bay",
-		"BusInterface.bay",
 		"RenderHelper.bay",
 		"Request.bay",
 		"RouteInfo.bay",
