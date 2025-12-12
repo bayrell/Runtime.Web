@@ -19,20 +19,22 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
-use Runtime.Exceptions.AbstractException;
+use Runtime.Exceptions.RuntimeException;
+use Runtime.Web.ApiRequest;
 use Runtime.Web.ApiResult;
-use Runtime.Web.BaseLayoutModel;
-use Runtime.Web.Cookie;
-use Runtime.Web.RenderContainer;
 
 
 class BaseApi extends BaseObject
 {
-	string action = "";
-	Dict post_data = null;
-	BaseLayoutModel layout = null;
-	ApiResult result = null;
-
+	ApiRequest request = null;
+	ApiResult result = new ApiResult;
+	
+	
+	/**
+	 * Returns api name
+	 */
+	static string getApiName() => "";
+	
 	
 	/**
 	 * Create hook
@@ -52,36 +54,7 @@ class BaseApi extends BaseObject
 	void setup(Dict params)
 	{
 		if (params == null) return;
-	}
-	
-	
-	/**
-	 * Init api
-	 */
-	void init()
-	{
-	}
-	
-	
-	/**
-	 * Returns api name
-	 */
-	pure string getApiName() => "";
-	
-	
-	/**
-	 * Before route
-	 */
-	async void onActionBefore()
-	{
-	}
-	
-	
-	/**
-	 * After route
-	 */
-	async void onActionAfter()
-	{
+		if (params.has("request")) this.request = params.get("request");
 	}
 	
 	
@@ -90,16 +63,16 @@ class BaseApi extends BaseObject
 	 */
 	void success(Dict data = null)
 	{
-		this.result.success(data);
+		return this.result.success(data);
 	}
 	
 	
 	/**
 	 * Setup exception
 	 */
-	ApiResult exception(AbstractException e)
+	ApiResult exception(RuntimeException e)
 	{
-		this.result.exception(e);
+		return this.result.exception(e);
 	}
 	
 	
@@ -108,6 +81,6 @@ class BaseApi extends BaseObject
 	 */
 	ApiResult fail(var data = null)
 	{
-		this.result.fail(data);
+		return this.result.fail(data);
 	}
 }

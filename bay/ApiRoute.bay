@@ -71,32 +71,17 @@ class ApiRoute extends BaseRoute
 		
 		ApiResult api_result = null;
 		BusInterface bus = @.provider("api");
-		try
-		{
-			Map payload = container.request.payload;
-			api_result = await bus.send({
-				"api_name": api_name,
-				"method_name": method_name,
-				"data": payload ? payload.get("data") : {},
-				"storage": container.layout.storage.backend,
-			});
-		}
-		catch (RuntimeException e)
-		{
-			api_result = new ApiResult();
-			if (e instanceof ApiError) api_result.fail(e.prev);
-			else api_result.exception(e);
-		}
 		
-		/* Create api result if does not exists */
-		if (not api_result)
-		{
-			api_result = new ApiResult();
-			api_result.exception(new RuntimeException("ApiResult does not exists"));
-		}
+		Map payload = container.request.payload;
+		api_result = await bus.send({
+			"api_name": api_name,
+			"method_name": method_name,
+			"data": payload,
+			"storage": container.layout.storage.backend,
+		});
 		
 		/* Create response */
-		container.setResponse( new JsonResponse(api_result.getContent()) );
+		container.setResponse(new JsonResponse(api_result.getContent()));
 		
 		/* Set cookie */
 		if (api_result instanceof ApiResult)

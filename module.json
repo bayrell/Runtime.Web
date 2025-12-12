@@ -2,8 +2,6 @@
 	"name": "Runtime.Web",
 	"assets":
 	[
-		"ApiResult.bay",
-		"Bus.bay",
 		"RenderHelper.bay",
 		"Request.bay",
 		"RouteInfo.bay",

@@ -40,5 +40,5 @@ class ApiRequest extends BaseObject
 	/**
 	 * Returns value
 	 */
-	var get(string name) => this.data.get(name);
+	var get(string name) => this.data ? this.data.get(name) : null;
 }

@@ -18,11 +18,12 @@
 
 namespace Runtime.Web;
 
-use Runtime.lib;
+use Runtime.BaseObject;
 use Runtime.BaseProvider;
 use Runtime.Method;
 use Runtime.Exceptions.ApiError;
 use Runtime.Exceptions.ItemNotFound;
+use Runtime.Exceptions.RuntimeException;
 use Runtime.Web.ApiResult;
 use Runtime.Web.ApiRequest;
 use Runtime.Web.BaseApi;
@@ -69,28 +70,76 @@ class BusLocal extends BaseProvider implements BusInterface
 		string api_name = params.get("api_name");
 		string method_name = params.get("method_name");
 		
-		/* Find api */
-		Api api = this.api_list.get(api_name);
-		if (not api)
+		ApiResult result = null;
+		
+		try
 		{
-			throw new ItemNotFound(api_name ~ "::" ~ method_name, "Api");
+			/* Check params */
+			if (api_name == "" or method_name == "")
+			{
+				throw new ItemNotFound("api name");
+			}
+			
+			/* Find api */
+			Api api = this.api_list.get(api_name);
+			if (not api)
+			{
+				throw new ItemNotFound(api_name ~ "::" ~ method_name, "Api");
+			}
+			
+			/* Find method */
+			string api_method_name = "";
+			ApiMethod api_method = null;
+			Method getMethodsList = new Method(api.name, "getMethodsList");
+			Method getMethodInfoByName = new Method(api.name, "getMethodInfoByName");
+			Vector methods = getMethodsList.apply();
+			for (int i=0; i<methods.count(); i++)
+			{
+				string name = methods.get(i);
+				Vector annotations = getMethodInfoByName.apply([name]);
+				ApiMethod api_method_item = annotations.find(
+					bool (BaseObject obj) => obj instanceof ApiMethod
+				);
+				if (api_method_item and (
+					api_method_item.name == method_name or
+					api_method_item.name == "" and method_name == name
+				))
+				{
+					api_method = api_method_item;
+					api_method_name = name;
+					break;
+				}
+			}
+			if (api_method == null or api_method_name == "")
+			{
+				throw new ItemNotFound(api_name ~ "::" ~ method_name, "Api");
+			}
+			
+			/* Call method */
+			Method item = new Method(api.name, api_method_name);
+			ApiRequest request = new ApiRequest{
+				"data": params.get("data"),
+				"storage": params.get("storage"),
+			};
+			result = await item.apply([request]);
+		}
+		catch (RuntimeException e)
+		{
+			result = new ApiResult();
+			if (e instanceof ApiError)
+			{
+				if (e.result instanceof ApiResult) result = e.result;
+				else result.fail(e.prev);
+			}
+			else result.exception(e);
 		}
 		
-		/* Find method */
-		Method getMethodsList = new Method(api.name, "getMethodsList");
-		Vector methods = getMethodsList.apply();
-		if (methods.indexOf(method_name) == -1)
+		/* If result does no exists */
+		if (not result)
 		{
-			throw new ItemNotFound(api_name ~ "::" ~ method_name, "Api");
+			result = new ApiResult();
+			result.exception(new ItemNotFound("ApiResult"));
 		}
-		
-		/* Call method */
-		Method item = new Method(api.name, method_name);
-		ApiRequest request = new ApiRequest{
-			"data": params.get("data"),
-			"storage": params.get("storage"),
-		};
-		ApiResult result = await item.apply([request]);
 		
 		/* Return result */
 		return result;
