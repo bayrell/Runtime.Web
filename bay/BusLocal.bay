@@ -77,14 +77,14 @@ class BusLocal extends BaseProvider implements BusInterface
 			/* Check params */
 			if (api_name == "" or method_name == "")
 			{
-				throw new ItemNotFound("api name");
+				throw new ApiError(new ItemNotFound("api name"));
 			}
 			
 			/* Find api */
 			Api api = this.api_list.get(api_name);
 			if (not api)
 			{
-				throw new ItemNotFound(api_name ~ "::" ~ method_name, "Api");
+				throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
 			}
 			
 			/* Find method */
@@ -112,7 +112,7 @@ class BusLocal extends BaseProvider implements BusInterface
 			}
 			if (api_method == null or api_method_name == "")
 			{
-				throw new ItemNotFound(api_name ~ "::" ~ method_name, "Api");
+				throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
 			}
 			
 			/* Call method */
