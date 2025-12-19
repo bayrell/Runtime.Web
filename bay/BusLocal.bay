@@ -141,6 +141,10 @@ class BusLocal extends BaseProvider implements BusInterface
 			result.exception(new ItemNotFound("ApiResult"));
 		}
 		
+		/* Set api name */
+		result.api_name = api_name;
+		result.method_name = method_name;
+		
 		/* Return result */
 		return result;
 	}
