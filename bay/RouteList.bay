@@ -20,8 +20,8 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.SerializeInterface;
-use Runtime.Serializer;
 use Runtime.Serializer.MapType;
+use Runtime.Serializer.ObjectType;
 use Runtime.Serializer.StringType;
 use Runtime.Web.Hooks.AppHook;
 
@@ -35,11 +35,19 @@ class RouteList extends BaseObject implements SerializeInterface
 	/**
 	 * Serialize
 	 */
-	void serialize(Serializer serializer)
+	static void serialize(ObjectType rules)
 	{
-		parent(serializer);
-		serializer.addType("routes", new MapType(new MapType(new StringType())));
-		serializer.addType("route_params", new MapType(new StringType()));
+		parent(rules);
+		rules.addType("routes", new MapType(new MapType(new StringType())));
+		rules.addType("route_params", new MapType(new StringType()));
+	}
+	
+	
+	/**
+	 * Assign rules
+	 */
+	void assignRules(ObjectType rule)
+	{
 	}
 	
 	

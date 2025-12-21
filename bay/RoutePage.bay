@@ -19,7 +19,7 @@
 namespace Runtime.Web;
 
 use Runtime.BaseModel;
-use Runtime.Serializer;
+use Runtime.Serializer.ObjectType;
 use Runtime.Serializer.StringType;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RenderContainer;
@@ -33,10 +33,10 @@ class RoutePage extends RouteInfo
 	/**
 	 * Process frontend data
 	 */
-	void serialize(Serializer serializer)
+	static void serialize(ObjectType rules)
 	{
-		parent(serializer);
-		serializer.addType("page", new StringType());
+		parent(rules)
+		rules.addType("page", new StringType());
 	}
 	
 	

@@ -150,7 +150,7 @@ class BasePHP extends BaseProvider
 				if (is_int($first)) $new_item = new \Runtime\Vector();
 				else $new_item = new \Runtime\Map();
 				
-				if ($payload instanceof \Runtime\Map && !$payload->has($key))
+				if ($payload instanceof \Runtime\Map)
 				{
 					$key = $path->last();
 					if (is_int($key)) $payload->set($key, $new_item);

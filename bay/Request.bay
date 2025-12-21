@@ -20,8 +20,8 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.SerializeInterface;
-use Runtime.Serializer;
 use Runtime.Serializer.MapType;
+use Runtime.Serializer.ObjectType;
 use Runtime.Serializer.StringType;
 use Runtime.Web.Cookie;
 
@@ -57,16 +57,24 @@ class Request extends BaseObject implements SerializeInterface
 	/**
 	 * Serialize object
 	 */
-	void serialize(Serializer serializer)
+	static void serialize(ObjectType rules)
 	{
-		parent(serializer);
-		serializer.addType("uri", new StringType());
-		serializer.addType("full_uri", new StringType());
-		serializer.addType("host", new StringType());
-		serializer.addType("method", new StringType());
-		serializer.addType("protocol", new StringType());
-		serializer.addType("is_https", new StringType());
-		serializer.addType("query", new MapType(new StringType()));
+		parent(rules);
+		rules.addType("uri", new StringType());
+		rules.addType("full_uri", new StringType());
+		rules.addType("host", new StringType());
+		rules.addType("method", new StringType());
+		rules.addType("protocol", new StringType());
+		rules.addType("is_https", new StringType());
+		rules.addType("query", new MapType(new StringType()));
+	}
+	
+	
+	/**
+	 * Assign rules
+	 */
+	void assignRules(ObjectType rules)
+	{
 	}
 	
 	

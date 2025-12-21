@@ -18,8 +18,8 @@
 
 namespace Runtime.Web;
 
-use Runtime.Serializer;
 use Runtime.Serializer.MapType;
+use Runtime.Serializer.ObjectType;
 use Runtime.Serializer.StringType;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RenderContainer;
@@ -34,11 +34,11 @@ class RouteModel extends RouteInfo
 	/**
 	 * Process frontend data
 	 */
-	void serialize(Serializer serializer)
+	static void serialize(ObjectType rules)
 	{
-		parent(serializer);
-		serializer.addType("model", new StringType());
-		serializer.addType("model_params", new MapType());
+		parent(rules);
+		rules.addType("model", new StringType());
+		rules.addType("model_params", new MapType());
 	}
 	
 	
