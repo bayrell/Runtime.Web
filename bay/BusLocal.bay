@@ -57,8 +57,60 @@ class BusLocal extends BaseProvider implements BusInterface
 			
 			/* Save api */
 			string api_name = getApiName.apply();
-			this.api_list.set(api_name, api);
+			if (not this.api_list.has(api_name)) this.api_list.set(api_name, []);
+			Vector items = this.api_list.get(api_name);
+			items.push(api);
 		}
+	}
+	
+	
+	/**
+	 * Find api
+	 */
+	ApiMethod findApi(string api_name, string method_name)
+	{
+		Map result = {};
+		
+		/* Check params */
+		if (api_name == "" or method_name == "")
+		{
+			throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
+		}
+		
+		/* Find api */
+		Vector<Api> items = this.api_list.get(api_name);
+		if (not items)
+		{
+			throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
+		}
+		
+		/* Find method */
+		ApiMethod api_method = null;
+		items.each(void (Api api) use (api_method, method_name){
+			
+			if (api_method) return;
+			
+			Method getMethodsList = new Method(api.name, "getMethodsList");
+			Method getMethodInfoByName = new Method(api.name, "getMethodInfoByName");
+			Vector methods = getMethodsList.apply();
+			
+			for (int i=0; i<methods.count(); i++)
+			{
+				string name = methods.get(i);
+				Vector annotations = getMethodInfoByName.apply([name]);
+				ApiMethod api_method_item = annotations.find(
+					bool (BaseObject obj) => obj instanceof ApiMethod
+				);
+				if (api_method_item and api_method_item.name == method_name)
+				{
+					api_method = api_method_item;
+					api_method.item = new Method(api.name, name);
+					return;
+				}
+			}
+		});
+		
+		return api_method;
 	}
 	
 	
@@ -74,54 +126,18 @@ class BusLocal extends BaseProvider implements BusInterface
 		
 		try
 		{
-			/* Check params */
-			if (api_name == "" or method_name == "")
-			{
-				throw new ApiError(new ItemNotFound("api name"));
-			}
-			
-			/* Find api */
-			Api api = this.api_list.get(api_name);
-			if (not api)
-			{
-				throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
-			}
-			
-			/* Find method */
-			string api_method_name = "";
-			ApiMethod api_method = null;
-			Method getMethodsList = new Method(api.name, "getMethodsList");
-			Method getMethodInfoByName = new Method(api.name, "getMethodInfoByName");
-			Vector methods = getMethodsList.apply();
-			for (int i=0; i<methods.count(); i++)
-			{
-				string name = methods.get(i);
-				Vector annotations = getMethodInfoByName.apply([name]);
-				ApiMethod api_method_item = annotations.find(
-					bool (BaseObject obj) => obj instanceof ApiMethod
-				);
-				if (api_method_item and (
-					api_method_item.name == method_name or
-					api_method_item.name == "" and method_name == name
-				))
-				{
-					api_method = api_method_item;
-					api_method_name = name;
-					break;
-				}
-			}
-			if (api_method == null or api_method_name == "")
+			ApiMethod api_method = this.findApi(api_name, method_name);
+			if (api_method == null or api_method.name == "")
 			{
 				throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
 			}
 			
 			/* Call method */
-			Method item = new Method(api.name, api_method_name);
 			ApiRequest request = new ApiRequest{
 				"data": params.get("data"),
 				"storage": params.get("storage"),
 			};
-			result = await item.apply([request]);
+			result = await api_method.apply(request);
 		}
 		catch (RuntimeException e)
 		{

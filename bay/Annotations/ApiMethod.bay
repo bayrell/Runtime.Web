@@ -18,9 +18,23 @@
 
 namespace Runtime.Web.Annotations;
 
+use Runtime.Method;
 use Runtime.Entity.Entity;
+use Runtime.Web.ApiResult;
+use Runtime.Web.ApiRequest;
 
 
 class ApiMethod extends Entity
 {
+	Method item = null;
+	
+	
+	/**
+	 * Apply item
+	 */
+	async ApiResult apply(ApiRequest request)
+	{
+		if (not this.item) return;
+		return await this.item.apply([request]);
+	}
 }
