@@ -71,7 +71,7 @@ class RouteInfo extends BaseObject implements SerializeInterface
 	static void serialize(ObjectType rules)
 	{
 		parent(rules);
-		rules.addType("data", new MapType());
+		rules.addType("data", new MapType(new StringType()));
 		rules.addType("domain", new StringType());
 		rules.addType("label", new StringType());
 		rules.addType("layout", new StringType());

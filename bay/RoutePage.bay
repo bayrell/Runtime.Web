@@ -46,10 +46,9 @@ class RoutePage extends RouteInfo
 	async void render(RenderContainer container)
 	{
 		container.layout.current_page_model = "page_model";
-		BaseModel page_model = container.layout.addWidget(classof BaseModel, {
-			"widget_name": "page_model",
+		container.layout.pages.set("page_model", container.layout.createWidget(classof BaseModel, {
 			"component": this.page,
-		});
+		}));
 		
 		if (this.data)
 		{

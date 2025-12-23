@@ -30,6 +30,7 @@ class AppHook extends BaseHook
 {
 	static const string ASSETS = "runtime.web.app::assets";
 	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
+	static const string CLIENT_IP = "runtime.web.app::client_ip";
 	static const string FIND_API = "runtime.web.app::find_api";
 	static const string FIND_ROUTE_BEFORE = "runtime.web.app::find_route_before";
 	static const string FIND_ROUTE_AFTER = "runtime.web.app::find_route_after";
@@ -62,12 +63,28 @@ class AppHook extends BaseHook
 		
 		/* Hooks */
 		#ifdef BACKEND then
+		this.register(static::ROUTE_BEFORE, "setupClientIP");
 		this.register(static::ROUTE_BEFORE, "setupRoute");
+		this.register(static::ROUTE_BEFORE, "setupSiteName");
 		#endif
 	}
 	
 	
 	#ifdef BACKEND then
+	
+	
+	/**
+	 * Setup client IP
+	 */
+	async void setupClientIP(Map params)
+	{
+		RenderContainer container = params.get("container");
+		BaseLayoutModel layout = container.layout;
+		if (not layout) return;
+		
+		string client_ip = container.request.getClientIP();
+		layout.storage.backend.set("client_ip", client_ip);
+	}
 	
 	
 	/**
@@ -81,6 +98,19 @@ class AppHook extends BaseHook
 		
 		layout.storage.set("request", container.request);
 		layout.storage.set("route", container.route);
+	}
+	
+	
+	/**
+	 * Setup site name
+	 */
+	async void setupSiteName(Map params)
+	{
+		RenderContainer container = params.get("container");
+		BaseLayoutModel layout = container.layout;
+		if (not layout) return;
+		
+		layout.storage.set("site_name", layout.getSiteName());
 	}
 	
 	#endif

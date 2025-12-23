@@ -103,8 +103,9 @@ class BusLocal extends BaseProvider implements BusInterface
 				);
 				if (api_method_item and api_method_item.name == method_name)
 				{
+					BaseApi api_item = rtl::newInstance(api.name);
 					api_method = api_method_item;
-					api_method.item = new Method(api.name, name);
+					api_method.item = new Method(api_item, name);
 					return;
 				}
 			}
@@ -127,7 +128,7 @@ class BusLocal extends BaseProvider implements BusInterface
 		try
 		{
 			ApiMethod api_method = this.findApi(api_name, method_name);
-			if (api_method == null or api_method.name == "")
+			if (api_method == null or api_method.item == null)
 			{
 				throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
 			}
@@ -137,6 +138,7 @@ class BusLocal extends BaseProvider implements BusInterface
 				"data": params.get("data"),
 				"storage": params.get("storage"),
 			};
+			api_method.item.obj.setRequest(request);
 			result = await api_method.apply(request);
 		}
 		catch (RuntimeException e)

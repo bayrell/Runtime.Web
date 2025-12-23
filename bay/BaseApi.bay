@@ -19,7 +19,9 @@
 namespace Runtime.Web;
 
 use Runtime.BaseObject;
+use Runtime.Exceptions.ApiError;
 use Runtime.Exceptions.RuntimeException;
+use Runtime.Serializer.BaseType;
 use Runtime.Web.ApiRequest;
 use Runtime.Web.ApiResult;
 
@@ -28,6 +30,8 @@ class BaseApi extends BaseObject
 {
 	ApiRequest request = null;
 	ApiResult result = new ApiResult;
+	Map data = null;
+	Map storage = null;
 	
 	
 	/**
@@ -37,24 +41,30 @@ class BaseApi extends BaseObject
 	
 	
 	/**
-	 * Create hook
+	 * Set request
 	 */
-	void constructor(Dict params = null)
+	void setRequest(ApiRequest request)
 	{
-		parent();
-		
-		/* Setup hook params */
-		this.setup(params);
+		this.request = request;
+		this.data = this.request.data;
+		this.storage = this.request.storage;
 	}
 	
 	
 	/**
-	 * Setup params
+	 * Filter rules
 	 */
-	void setup(Dict params)
+	Map filter(BaseType rules, Vector error = [])
 	{
-		if (params == null) return;
-		if (params.has("request")) this.request = params.get("request");
+		Map data = rules.filter(this.data, error);
+		if (error.count() > 0)
+		{
+			throw new ApiError(this.result.fail({
+				"message": "Field exception",
+				"error": TypeError::getMessages(error),
+			}));
+		}
+		return data;
 	}
 	
 	

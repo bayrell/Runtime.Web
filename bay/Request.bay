@@ -24,6 +24,7 @@ use Runtime.Serializer.MapType;
 use Runtime.Serializer.ObjectType;
 use Runtime.Serializer.StringType;
 use Runtime.Web.Cookie;
+use Runtime.Web.Hooks.AppHook;
 
 
 class Request extends BaseObject implements SerializeInterface
@@ -81,9 +82,13 @@ class Request extends BaseObject implements SerializeInterface
 	/**
 	 * Returns client ip
 	 */
-	string getClientIp()
+	string getClientIP()
 	{
-		return this.headers.get("REMOTE_ADDR");
+		Map params = @.hook(AppHook::CLIENT_IP, {
+			"headers": this.headers,
+			"client_ip": this.headers.get("REMOTE_ADDR"),
+		})
+		return params.get("client_ip");
 	}
 	
 	
