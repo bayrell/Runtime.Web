@@ -22,12 +22,14 @@ use Runtime.BaseObject;
 use Runtime.Exceptions.ApiError;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Serializer.BaseType;
+use Runtime.Serializer.MapType;
 use Runtime.Web.ApiRequest;
 use Runtime.Web.ApiResult;
 
 
 class BaseApi extends BaseObject
 {
+	string action = "";
 	ApiRequest request = null;
 	ApiResult result = new ApiResult;
 	Map data = null;
@@ -41,22 +43,38 @@ class BaseApi extends BaseObject
 	
 	
 	/**
+	 * Returns data rules
+	 */
+	void getDataRules(MapType rules)
+	{
+	}
+	
+	
+	/**
+	 * Set action
+	 */
+	void setAction(string action)
+	{
+		this.action = action;
+	}
+	
+	
+	/**
 	 * Set request
 	 */
 	void setRequest(ApiRequest request)
 	{
 		this.request = request;
-		this.data = this.request.data;
-		this.storage = this.request.storage;
+		this.storage = request.storage;
 	}
 	
 	
 	/**
 	 * Filter rules
 	 */
-	Map filter(BaseType rules, Vector error = [])
+	Map filter(Map data, BaseType rules, Vector error = [])
 	{
-		Map data = rules.filter(this.data, error);
+		Map data = rules.filter(data, error);
 		if (error.count() > 0)
 		{
 			throw new ApiError(this.result.fail({
@@ -65,6 +83,18 @@ class BaseApi extends BaseObject
 			}));
 		}
 		return data;
+	}
+	
+	
+	/**
+	 * Filter data
+	 */
+	void filterData()
+	{
+		Vector errors = [];
+		MapType rules = new MapType();
+		this.getDataRules(rules);
+		this.data = this.filter(this.request.data, rules, errors);
 	}
 	
 	

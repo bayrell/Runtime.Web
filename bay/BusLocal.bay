@@ -139,7 +139,8 @@ class BusLocal extends BaseProvider implements BusInterface
 				"storage": params.get("storage"),
 			};
 			api_method.item.obj.setRequest(request);
-			result = await api_method.apply(request);
+			await api_method.apply(request);
+			result = api_method.item.obj.result;
 		}
 		catch (RuntimeException e)
 		{
