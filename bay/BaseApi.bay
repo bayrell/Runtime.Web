@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.Exceptions.ApiError;
+use Runtime.Exceptions.FieldException;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Serializer.BaseType;
 use Runtime.Serializer.MapType;
@@ -77,8 +78,7 @@ class BaseApi extends BaseObject
 		Map data = rules.filter(data, error);
 		if (error.count() > 0)
 		{
-			throw new ApiError(this.result.fail({
-				"message": "Field exception",
+			throw new ApiError(new FieldException({
 				"error": TypeError::getMessages(error),
 			}));
 		}
