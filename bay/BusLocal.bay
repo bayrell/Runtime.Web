@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.BaseProvider;
+use Runtime.BusInterface;
 use Runtime.Method;
 use Runtime.Exceptions.ApiError;
 use Runtime.Exceptions.ItemNotFound;
@@ -28,7 +29,6 @@ use Runtime.Web.ApiResult;
 use Runtime.Web.ApiRequest;
 use Runtime.Web.BaseApi;
 use Runtime.Web.Bus;
-use Runtime.Web.BusInterface;
 use Runtime.Web.Annotations.Api;
 use Runtime.Web.Annotations.ApiMethod;
 use Runtime.Web.Hooks.AppHook;

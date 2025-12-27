@@ -35,6 +35,18 @@ use Runtime.Web.Hooks.AppHook;
 class BasePHP extends BaseProvider
 {
 	/**
+	 * Start app
+	 */
+	async int main()
+	{
+		RenderContainer container = this.createRenderContainer();
+		container.request = this.createRequest();
+		await container.resolve();
+		await this.sendResponse(container);
+	}
+	
+	
+	/**
 	 * Create render container
 	 */
 	RenderContainer createRenderContainer()
