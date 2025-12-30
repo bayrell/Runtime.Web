@@ -24,6 +24,7 @@ use Runtime.Exceptions.FieldException;
 use Runtime.Exceptions.RuntimeException;
 use Runtime.Serializer.BaseType;
 use Runtime.Serializer.MapType;
+use Runtime.Serializer.TypeError;
 use Runtime.Web.ApiRequest;
 use Runtime.Web.ApiResult;
 
@@ -79,7 +80,7 @@ class BaseApi extends BaseObject
 		if (error.count() > 0)
 		{
 			throw new ApiError(new FieldException({
-				"error": TypeError::getMessages(error),
+				"error": TypeError::getMap(error),
 			}));
 		}
 		return data;
