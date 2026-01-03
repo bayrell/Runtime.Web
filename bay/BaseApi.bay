@@ -27,6 +27,7 @@ use Runtime.Serializer.MapType;
 use Runtime.Serializer.TypeError;
 use Runtime.Web.ApiRequest;
 use Runtime.Web.ApiResult;
+use Runtime.Web.Middleware;
 
 
 class BaseApi extends BaseObject
@@ -50,6 +51,12 @@ class BaseApi extends BaseObject
 	void getDataRules(MapType rules)
 	{
 	}
+	
+	
+	/**
+	 * Returns middleware
+	 */
+	Vector<Middleware> getMiddleware() => [];
 	
 	
 	/**

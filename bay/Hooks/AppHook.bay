@@ -29,7 +29,7 @@ use Runtime.Web.RouteProvider;
 class AppHook extends BaseHook
 {
 	static const string ASSETS = "runtime.web.app::assets";
-	static const string CALL_API_BEFORE = "runtime.web.app::call_api_before";
+	static const string API_MIDDLEWARE = "runtime.web.app::api_middleware";
 	static const string CLIENT_IP = "runtime.web.app::client_ip";
 	static const string FIND_API = "runtime.web.app::find_api";
 	static const string FIND_ROUTE_BEFORE = "runtime.web.app::find_route_before";

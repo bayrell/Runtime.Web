@@ -29,6 +29,7 @@ use Runtime.Web.ApiResult;
 use Runtime.Web.ApiRequest;
 use Runtime.Web.BaseApi;
 use Runtime.Web.Bus;
+use Runtime.Web.Middleware;
 use Runtime.Web.Annotations.Api;
 use Runtime.Web.Annotations.ApiMethod;
 use Runtime.Web.Hooks.AppHook;
@@ -116,6 +117,26 @@ class BusLocal extends BaseProvider implements BusInterface
 	
 	
 	/**
+	 * Run middleware
+	 */
+	async void runMiddleware(ApiMethod api_method)
+	{
+		BaseApi api = api_method.item.obj;
+		Vector items = api.getMiddleware();
+		for (int i=0; i<items.count(); i++)
+		{
+			Middleware item = items.get(i);
+			await item.api(api);
+		}
+		
+		/* Run hook */
+		await @.hook(AppHook::API_MIDDLEWARE, {
+			"api": api
+		});
+	}
+	
+	
+	/**
 	 * Send api to frontend
 	 */
 	async ApiResult send(Dict params)
@@ -127,6 +148,7 @@ class BusLocal extends BaseProvider implements BusInterface
 		
 		try
 		{
+			/* Find api */
 			ApiMethod api_method = this.findApi(api_name, method_name);
 			if (api_method == null or api_method.item == null)
 			{
@@ -139,6 +161,11 @@ class BusLocal extends BaseProvider implements BusInterface
 				"storage": params.get("storage"),
 			};
 			api_method.item.obj.setRequest(request);
+			
+			/* Run middleware */
+			await this.runMiddleware(api_method);
+			
+			/* Apply */
 			await api_method.apply(request);
 			result = api_method.item.obj.result;
 		}
