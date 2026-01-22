@@ -41,6 +41,6 @@ class JsonResponse extends Response
 	 */
 	string getContent()
 	{
-		return rtl::jsonEncode(this.data);
+		return rtl::jsonEncode(rtl::toNative(this.data));
 	}
 }
