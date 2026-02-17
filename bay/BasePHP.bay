@@ -101,20 +101,32 @@ class BasePHP extends BaseProvider
 		
 		if (is_string($file["name"]))
 		{
-			$item = new \Runtime\File([
-				"name" => $file["name"],
-				"path" => $file["tmp_name"],
-				"type" => $file["type"],
-				"size" => $file["size"],
-			]);
-			\Runtime\rtl::setAttr($payload, $path, $item);
+			$item = new \Runtime\File();
+			$item->name = $file["name"];
+			$item->path = $file["tmp_name"];
+			$item->type = $file["type"];
+			$item->size = $file["size"];
+			$payload->set($path->last(), $item);
 		}
 		else if (is_array($file["name"]))
 		{
+			$createItem = function ($index)
+			{
+				if (is_int($first)) return new \Runtime\Vector();
+				return new \Runtime\Map();
+			};
 			foreach ($file["name"] as $index => $value)
 			{
+				if ($payload instanceof \Runtime\Map && !$payload->has($index))
+				{
+					$payload->set($index, $createItem($index));
+				}
+				else if ($payload instanceof \Runtime\Vector && $index >= $payload->count())
+				{
+					$payload->push($createItem($index));
+				}
 				$path->push($index);
-				$this->buildFiles($payload, $path, [
+				$this->buildFiles($payload->get($index), $path, [
 					"name" => $file["name"][$index],
 					"size" => $file["size"][$index],
 					"tmp_name" => $file["tmp_name"][$index],
@@ -222,9 +234,11 @@ class BasePHP extends BaseProvider
 			else
 			{
 				$this->buildPostData($payload, new \Runtime\Vector(), $post);
-				$this->buildPostFiles($payload);
 			}
 		}
+		
+		/* Build post files */
+		$this->buildPostFiles($payload);
 		
 		/* Read Cookie */
 		foreach ($_COOKIE as $key => $value)
