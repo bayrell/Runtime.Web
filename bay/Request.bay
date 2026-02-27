@@ -20,6 +20,7 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.SerializeInterface;
+use Runtime.Serializer.BooleanType;
 use Runtime.Serializer.MapType;
 use Runtime.Serializer.ObjectType;
 use Runtime.Serializer.StringType;
@@ -66,7 +67,7 @@ class Request extends BaseObject implements SerializeInterface
 		rules.addType("host", new StringType());
 		rules.addType("method", new StringType());
 		rules.addType("protocol", new StringType());
-		rules.addType("is_https", new StringType());
+		rules.addType("is_https", new BooleanType());
 		rules.addType("query", new MapType(new StringType()));
 	}
 	

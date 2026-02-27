@@ -34,6 +34,8 @@ class ApiRequest extends BaseObject
 	{
 		parent();
 		this._assign_values(obj);
+		if (not this.data) this.data = {};
+		if (not this.storage) this.storage = {};
 	}
 	
 	

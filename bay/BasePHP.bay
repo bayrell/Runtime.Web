@@ -197,7 +197,8 @@ class BasePHP extends BaseProvider
 		else if ($path->count() > 0)
 		{
 			$key = $path->last();
-			$payload->set($key, $post);
+			if ($payload instanceof \Runtime\Map) $payload->set($key, $post);
+			else if ($payload instanceof \Runtime\Vector) $payload->push($post);
 		}
 		#endif
 	}
