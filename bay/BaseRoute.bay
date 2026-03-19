@@ -21,6 +21,7 @@ namespace Runtime.Web;
 use Runtime.BaseObject;
 use Runtime.Web.LayoutModel;
 use Runtime.Web.BasePageModel;
+use Runtime.Web.Middleware;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RenderResponse;
 use Runtime.Web.RouteInfo;
@@ -46,6 +47,12 @@ class BaseRoute extends BaseObject
 	 * Returns layout name
 	 */
 	static string getLayoutName() => "default";
+	
+	
+	/**
+	 * Returns middleware
+	 */
+	static Vector<Middleware> getMiddleware() => [];
 	
 	
 	/**

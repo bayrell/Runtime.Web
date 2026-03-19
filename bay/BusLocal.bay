@@ -75,14 +75,14 @@ class BusLocal extends BaseProvider implements BusInterface
 		/* Check params */
 		if (api_name == "" or method_name == "")
 		{
-			throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
+			return null;
 		}
 		
 		/* Find api */
 		Vector<Api> items = this.api_list.get(api_name);
 		if (not items)
 		{
-			throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));
+			return null;
 		}
 		
 		/* Find method */
@@ -150,6 +150,16 @@ class BusLocal extends BaseProvider implements BusInterface
 		{
 			/* Find api */
 			ApiMethod api_method = this.findApi(api_name, method_name);
+			
+			/* Hook */
+			Map res = @.hook(AppHook::FIND_API, {
+				"api_name": api_name,
+				"method_name": method_name,
+				"api": api_method,
+			});
+			api_method = res.get("api");
+			
+			/* Check api */
 			if (api_method == null or api_method.item == null)
 			{
 				throw new ApiError(new ItemNotFound(api_name ~ "::" ~ method_name, "Api"));

@@ -112,6 +112,7 @@ class RenderContainer extends BaseRenderContainer
 		
 		/* Call middleware */
 		await this.callRouteMiddleware(this);
+		if (this.response) return;
 		
 		/* Load layout data */
 		await this.layout.loadData(this);

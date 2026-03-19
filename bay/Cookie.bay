@@ -33,7 +33,21 @@ class Cookie extends BaseObject
 	public bool httponly = false;
 	public bool changed = false;
 	
-	Dict getOptions()
+	
+	/**
+	 * Create object
+	 */
+	void constructor(Map data = null)
+	{
+		parent();
+		this._assign_values(data);
+	}
+	
+	
+	/**
+	 * Returns options
+	 */
+	Map getOptions()
 	{
 		Map res = new Map();
 		
@@ -44,6 +58,6 @@ class Cookie extends BaseObject
 		if (this.httponly) res.set("httponly", this.httponly);
 		if (this.samesite) res.set("samesite", this.samesite);
 		
-		return res.toDict();
+		return res;
 	}
 }

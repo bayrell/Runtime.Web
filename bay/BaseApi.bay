@@ -40,6 +40,25 @@ class BaseApi extends BaseObject
 	
 	
 	/**
+	 * Create object
+	 */
+	void constructor(Map params = null)
+	{
+		parent();
+		
+		this.initParams(params);
+	}
+	
+	
+	/**
+	 * Setup api
+	 */
+	void initParams(Map params)
+	{
+	}
+	
+	
+	/**
 	 * Returns api name
 	 */
 	static string getApiName() => "";

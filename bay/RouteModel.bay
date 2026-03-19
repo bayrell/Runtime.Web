@@ -43,6 +43,17 @@ class RouteModel extends RouteInfo
 	
 	
 	/**
+	 * Copy object
+	 */
+	RouteModel copy()
+	{
+		RouteModel route = rtl::copy(this);
+		if (this.model_params) route.model_params = this.model_params.copy();
+		return route;
+	}
+	
+	
+	/**
 	 * Render route
 	 */
 	async void render(RenderContainer container)

@@ -31,9 +31,9 @@ use Runtime.TypeError;
 use Runtime.Entity.Factory;
 use Runtime.Exceptions.ItemNotFound;
 use Runtime.Exceptions.RuntimeException;
-use Runtime.Web.BaseMiddleware;
 use Runtime.Web.BasePageModel;
 use Runtime.Web.BaseRoute;
+use Runtime.Web.Middleware;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteList;
 
@@ -167,7 +167,7 @@ class RouteInfo extends BaseObject implements SerializeInterface
 		{
 			for (int i = 0; i<this.middleware.count(); i++)
 			{
-				BaseMiddleware middleware = null;
+				Middleware middleware = null;
 				var item = this.middleware.get(i);
 				
 				/* Create middleware */
@@ -179,13 +179,9 @@ class RouteInfo extends BaseObject implements SerializeInterface
 				{
 					middleware = item.factory();
 				}
-				else if (item instanceof BaseMiddleware)
-				{
-					middleware = item;
-				}
 				
 				/* Apply middleware */
-				await middleware.apply(container);
+				await middleware.route(container);
 			}
 		}
 		
@@ -196,11 +192,11 @@ class RouteInfo extends BaseObject implements SerializeInterface
 			Method getMiddleware = new Method(class_name, "getMiddleware");
 			if (getMiddleware.exists())
 			{
-				Collection<BaseMiddleware> items = getMiddleware.apply();
+				Collection<Middleware> items = getMiddleware.apply();
 				for (int i=0; i<items.count(); i++)
 				{
-					BaseMiddleware middleware = items.get(i);
-					await middleware.apply(container);
+					Middleware middleware = items.get(i);
+					await middleware.route(container);
 				}
 			}
 		}
