@@ -47,6 +47,7 @@ class RouteInfo extends BaseObject implements SerializeInterface
 	string label = null;
 	string layout = null;
 	string route_class = null;
+	string method = "GET";
 	Dict data = null;
 	Collection<Callback> middleware = null;
 	Collection<string> params = [];
@@ -114,7 +115,7 @@ class RouteInfo extends BaseObject implements SerializeInterface
 	 */
 	void compile()
 	{
-		if (this.uri_match == "")
+		if (this.uri_match == "" or this.uri_match == null)
 		{
 			this.uri_match = "^" ~ re::replace("\\/", "\\/", this.uri) ~ "$";
 		}

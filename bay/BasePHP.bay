@@ -269,7 +269,7 @@ class BasePHP extends BaseProvider
 		$request->query = $query;
 		$request->payload = $payload;
 		$request->cookies = $cookies;
-		$request->headers = new \Runtime\Map($_SERVER);
+		$request->headers = new \Runtime\Web\Headers($_SERVER);
 		$request->start_time = $start_time;
 		
 		#endif

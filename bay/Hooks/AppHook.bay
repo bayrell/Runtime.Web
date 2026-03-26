@@ -18,12 +18,14 @@
 
 namespace Runtime.Web.Hooks;
 
+use Runtime.BaseLayout;
 use Runtime.Hooks.BaseHook;
 use Runtime.Hooks.RuntimeHook;
-use Runtime.Web.BaseLayoutModel;
+use Runtime.Web.Assets;
 use Runtime.Web.RenderContainer;
 use Runtime.Web.RouteInfo;
 use Runtime.Web.RouteProvider;
+use Runtime.Web.Translator;
 
 
 class AppHook extends BaseHook
@@ -61,12 +63,43 @@ class AppHook extends BaseHook
 			static::ROUTE_BEFORE,
 		]);
 		
+		this.register(RuntimeHook::CREATE_LAYOUT, "registerTranslator");
+		this.register(static::ROUTE_BEFORE, "registerAssets");
+		
 		/* Hooks */
 		#ifdef BACKEND then
 		this.register(static::ROUTE_BEFORE, "setupClientIP");
 		this.register(static::ROUTE_BEFORE, "setupRoute");
 		this.register(static::ROUTE_BEFORE, "setupSiteName");
 		#endif
+	}
+	
+	
+	/**
+	 * Register assets
+	 */
+	async void registerAssets(Map params)
+	{
+		RenderContainer container = params.get("container");
+		BaseLayout layout = container.layout;
+		if (not layout) return;
+		
+		/* Create assets */
+		Assets assets = new Assets();
+		layout.storage.set("assets", assets);
+		
+		/* Init assets */
+		@.hook(static::ASSETS, {"assets": assets});
+	}
+	
+	
+	/**
+	 * Register translator
+	 */
+	void registerTranslator(Map params)
+	{
+		RenderContainer container = params.get("container");
+		container.layout.storage.set("translator", new Translator(container.layout));
 	}
 	
 	
@@ -79,7 +112,7 @@ class AppHook extends BaseHook
 	async void setupClientIP(Map params)
 	{
 		RenderContainer container = params.get("container");
-		BaseLayoutModel layout = container.layout;
+		BaseLayout layout = container.layout;
 		if (not layout) return;
 		
 		string client_ip = container.request.getClientIP();
@@ -93,7 +126,7 @@ class AppHook extends BaseHook
 	async void setupRoute(Map params)
 	{
 		RenderContainer container = params.get("container");
-		BaseLayoutModel layout = container.layout;
+		BaseLayout layout = container.layout;
 		if (not layout) return;
 		
 		layout.storage.set("request", container.request);
@@ -107,7 +140,7 @@ class AppHook extends BaseHook
 	async void setupSiteName(Map params)
 	{
 		RenderContainer container = params.get("container");
-		BaseLayoutModel layout = container.layout;
+		BaseLayout layout = container.layout;
 		if (not layout) return;
 		
 		layout.storage.set("site_name", layout.getSiteName());

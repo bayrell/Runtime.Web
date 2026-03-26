@@ -102,7 +102,7 @@ class BaseApi extends BaseObject
 	 */
 	Map filter(Map data, BaseType rules, Vector error = [])
 	{
-		Map data = rules.filter(data, error);
+		data = rules.filter(data, error);
 		if (error.count() > 0)
 		{
 			throw new ApiError(new FieldException({

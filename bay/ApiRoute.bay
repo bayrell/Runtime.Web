@@ -47,6 +47,7 @@ class ApiRoute extends BaseRoute
 				"uri": "/api/{api_name}/{method_name}",
 				"name": "runtime:web:api",
 				"action": "actionIndex",
+				"method": "post",
 				"pos": 1000,
 			},
 			new RouteAction
@@ -54,6 +55,7 @@ class ApiRoute extends BaseRoute
 				"uri": "/api/{api_name}/{method_name}/",
 				"name": "runtime:web:api:index",
 				"action": "actionIndex",
+				"method": "post",
 				"pos": 1000,
 			},
 		];

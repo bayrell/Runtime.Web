@@ -90,6 +90,9 @@ class RouteList extends BaseObject implements SerializeInterface
 		/* Set url */
 		if (url == null) url = "";
 		
+		/* Add route prefix */
+		url = @.env("ROUTE_PREFIX") + url;
+		
 		/* Add domain */
 		string url_with_domain = url;
 		if (domain)

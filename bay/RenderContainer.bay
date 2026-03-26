@@ -158,7 +158,7 @@ class RenderContainer extends BaseRenderContainer
 		/* Create response */
 		this.response = new Response();
 		this.response.http_code = this.http_code;
-		this.response.content = this.renderApp();
+		this.response.content = "<!DOCTYPE html>" ~ this.renderApp();
 	}
 	
 	

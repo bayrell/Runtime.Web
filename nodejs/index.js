@@ -16,27 +16,54 @@
  *  limitations under the License.
  */
 
-var exports = {
-	VERSION: '0.11.0',
-	MODULE_NAME: 'Runtime.Web',
-}
+const use = require("bay-lang").use;
+const rtl = use("Runtime.rtl");
 
-function add(name)
-{
-	var module_name = exports.MODULE_NAME;
-	
-	name = name
-		.substr(module_name.length + 1)
-		.replace(".", "/")
-	;
-	
-	var path = __dirname + "/" + name + ".js";
-	var obj = require(path);
-}
+exports.VERSION = "1.0";
+exports.MODULE_NAME = "Runtime.Web";
+const add = rtl.add(__dirname, exports);
 
-add("Runtime.Web.Component");
-add("Runtime.Web.Control");
-add("Runtime.Web.RenderDriver");
+add("Runtime.Web.Annotations.Api");
+add("Runtime.Web.Annotations.ApiMethod");
+add("Runtime.Web.Annotations.Route");
+add("Runtime.Web.Hooks.ApiPrefix");
+add("Runtime.Web.Hooks.AppHook");
+add("Runtime.Web.Hooks.AssetsHook");
+add("Runtime.Web.Hooks.CanonicalUrl");
+add("Runtime.Web.Hooks.Components");
+add("Runtime.Web.Hooks.DetectLanguage");
+add("Runtime.Web.Hooks.DetectTheme");
+add("Runtime.Web.Hooks.Environments");
+add("Runtime.Web.Hooks.Middleware");
+add("Runtime.Web.Hooks.PageNotFound");
+add("Runtime.Web.Hooks.ResponseHook");
+add("Runtime.Web.Hooks.SetupLayout");
+add("Runtime.Web.Hooks.WidgetModelFactory");
+add("Runtime.Web.Assets");
+add("Runtime.Web.ApiRequest");
+add("Runtime.Web.ApiResult");
+add("Runtime.Web.ApiRoute");
+add("Runtime.Web.BaseApi");
+add("Runtime.Web.BaseRoute");
+add("Runtime.Web.BusLocal");
+add("Runtime.Web.Cookie");
+add("Runtime.Web.EmailLayout");
+add("Runtime.Web.Express");
+add("Runtime.Web.Fastify");
+add("Runtime.Web.Headers");
+add("Runtime.Web.Response");
+add("Runtime.Web.JsonResponse");
+add("Runtime.Web.Middleware");
+add("Runtime.Web.RedirectResponse");
+add("Runtime.Web.RenderContainer");
+add("Runtime.Web.Request");
+add("Runtime.Web.RouteInfo");
+add("Runtime.Web.RouteAction");
+add("Runtime.Web.RouteList");
+add("Runtime.Web.RouteModel");
+add("Runtime.Web.RoutePage");
+add("Runtime.Web.RouteProvider");
+add("Runtime.Web.Translator");
 add("Runtime.Web.ModuleDescription");
 
 module.exports = exports;
