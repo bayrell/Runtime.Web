@@ -104,7 +104,7 @@ class RouteInfo extends BaseObject implements SerializeInterface
 		if (this.route_class != "")
 		{
 			fn f = new Method(this.route_class, "getLayoutName");
-			return f.apply();
+			return f.exists() ? f.apply() : "";
 		}
 		return "";
 	}

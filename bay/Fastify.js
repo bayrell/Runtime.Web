@@ -18,6 +18,7 @@
 
 const fs = require("fs").promises;
 const use = require("bay-lang").use;
+const RuntimeMap = use("Runtime.Map");
 const BaseProvider = use("Runtime.BaseProvider");
 const rtl = use("Runtime.rtl");
 
@@ -119,10 +120,12 @@ class Fastify extends BaseProvider
 			const RenderContainer = use("Runtime.Web.RenderContainer");
 			let container = new RenderContainer();
 			container.request = this.createRequest(request);
-			container.route = routeInfo;
 			
 			/* Setup route */
-			container.route = routeInfo;
+			container.route = routeInfo.copy();
+			container.route.matches = new RuntimeMap(
+				Object.assign({}, request.params)
+			);
 			
 			/* Resolve route */
 			await container.resolveRoute();
@@ -158,6 +161,15 @@ class Fastify extends BaseProvider
 	
 	
 	/**
+	 * Convert route
+	 */
+	convertRoute(route)
+	{
+		return route.replace(/\{([^}]+)\}/g, ':$1');
+	}
+	
+	
+	/**
 	 * Register routes dynamically
 	 */
 	async registerRoutes()
@@ -176,7 +188,8 @@ class Fastify extends BaseProvider
 			
 			/* Register route in Fastify */
 			this.fastify[method](
-				routeInfo.uri, this.request(routeInfo)
+				this.convertRoute(routeInfo.uri),
+				this.request(routeInfo)
 			)
 		}
 	}
@@ -226,9 +239,17 @@ class Fastify extends BaseProvider
 		/* Create fastify instance */
 		this.createFastify();
 		
+		/* Register form body plugin */
+		const formBody = require("@fastify/formbody");
+		this.fastify.register(formBody);
+		
+		/* Register multipart */
+		const multipart = require("@fastify/multipart");
+		this.fastify.register(multipart)
+		
 		/* Error handler - using setErrorHandler instead of onError */
 		this.fastify.setErrorHandler((error, request, reply) => {
-			/*console.error(`Error at ${request.url}:`, error.stack);*/
+			console.error(`Error at ${request.url}:`, error.stack);
 			
 			/* Set status code */
 			reply.code(error.statusCode || 500);
@@ -301,7 +322,10 @@ class Fastify extends BaseProvider
 	async start()
 	{
 		/* Start Fastify server */
-		await this.fastify.listen({ port: this.port, host: this.host });
+		await this.fastify.listen({
+			port: this.port,
+			host: this.host
+		});
 		console.log(`Server listening on ${this.host}:${this.port}`);
 	}
 	
