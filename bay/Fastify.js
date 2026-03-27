@@ -98,7 +98,7 @@ class Fastify extends BaseProvider
 		request.host = req.hostname;
 		request.method = req.method;
 		request.protocol = req.protocol;
-		request.is_https == request.protocol == "https";
+		request.is_https = request.protocol == "https";
 		request.query = new RuntimeMap(req.query);
 		request.headers = new Headers(new RuntimeMap(req.headers));
 		request.headers.set("remote_addr", req.ip);
@@ -183,6 +183,39 @@ class Fastify extends BaseProvider
 	
 	
 	/**
+	 * Generate HTML error page
+	 */
+	generateErrorHtml(error, request)
+	{
+		return `
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<title>Error 500</title>
+				<style>
+					body { font-family: Arial, sans-serif; text-align: center; }
+					h1 { color: #e74c3c; }
+					.error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin: 20px auto; max-width: 800px; display: none; }
+					.stack { font-size: 12px; text-align: left; margin-top: 20px; }
+				</style>
+			</head>
+			<body>
+				<h1>Server Error (500)</h1>
+				<div class="error">
+					<p><strong>Error:</strong> ${error.message}</p>
+				</div>
+				<div class="stack">
+					<pre>${error.stack}</pre>
+				</div>
+			</body>
+			</html>
+		`;
+	}
+	
+	
+	/**
 	 * Init provider
 	 */
 	async init()
@@ -193,10 +226,18 @@ class Fastify extends BaseProvider
 		/* Create fastify instance */
 		this.createFastify();
 		
-		/* Error handler */
-		this.fastify.addHook('onError', (request, reply, error, done) => {
-			console.error(`Error at ${request.url}:`, error.stack);
-			done();
+		/* Error handler - using setErrorHandler instead of onError */
+		this.fastify.setErrorHandler((error, request, reply) => {
+			/*console.error(`Error at ${request.url}:`, error.stack);*/
+			
+			/* Set status code */
+			reply.code(error.statusCode || 500);
+
+			/* Set content type */
+			reply.type('text/html');
+			
+			/* Send HTML error page */
+			reply.send(this.generateErrorHtml(error, request));
 		});
 		
 		/* Static files */

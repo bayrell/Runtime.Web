@@ -57,6 +57,7 @@ class BusLocal extends BaseProvider implements BusInterface
 			Method getApiName = new Method(class_name, "getApiName");
 			
 			/* Save api */
+			if (not getApiName.exists()) continue;
 			string api_name = getApiName.apply();
 			if (not this.api_list.has(api_name)) this.api_list.set(api_name, []);
 			Vector items = this.api_list.get(api_name);
