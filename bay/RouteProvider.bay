@@ -51,9 +51,6 @@ class RouteProvider extends BaseProvider
 	{
 		await parent::init();
 		await this.initRoutes();
-		
-		/* Register hooks */
-		this.register_hooks();
 	}
 	
 	
@@ -164,7 +161,8 @@ class RouteProvider extends BaseProvider
 	void register_hooks()
 	{
 		HookProvider hook = @.provider("hook");
-		hook.register(AppHook::ROUTE_BEFORE, new Method(this, "routeBefore"), 50);
+		hook.register(AppHook::ROUTE_BEFORE,
+			new Method(this, "routeBefore"), 50);
 	}
 	
 	
@@ -186,9 +184,26 @@ class RouteProvider extends BaseProvider
 	/**
 	 * Returns route by name
 	 */
-	RouteInfo getRoute(string route_name) => this.routes_list.find(
-		bool (RouteInfo route) use (route_name) => route.name == route_name
-	);
+	RouteInfo getRoute(string route_name) =>
+		this.routes_list.find(
+			bool (RouteInfo route) => route.name == route_name
+		)
+	;
+	
+	
+	/**
+	 * Remove route by name
+	 */
+	void removeRoute(string route_name)
+	{
+		int index = this.routes_list.findIndex(
+			bool (RouteInfo route) => route.name == route_name
+		);
+		if (index == -1) return;
+		
+		this.routes_list.remove(index);
+		this.routes.remove(route_name);
+	}
 	
 	
 	/**
