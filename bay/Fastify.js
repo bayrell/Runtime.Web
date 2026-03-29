@@ -19,6 +19,7 @@
 const fs = require("fs").promises;
 const use = require("bay-lang").use;
 const RuntimeMap = use("Runtime.Map");
+const RuntimeVector = use("Runtime.Vector");
 const BaseProvider = use("Runtime.BaseProvider");
 const rtl = use("Runtime.rtl");
 
@@ -85,9 +86,93 @@ class Fastify extends BaseProvider
 	
 	
 	/**
+	 * Set body
+	 */
+	setBody(payload, fieldname, value)
+	{
+		if (fieldname.indexOf("[") >= 0)
+		{
+			let arr = fieldname.split("[").map(
+				s => s.replaceAll("]", "")
+			);
+			
+			let obj = payload;
+			for (let i=0; i<arr.length - 1; i++)
+			{
+				let key = arr[i];
+				if (!obj.has(key))
+				{
+					let nextkey = arr[i + 1];
+					let item = null;
+					if (Number(nextkey) == nextkey)
+					{
+						item = new RuntimeVector();
+					}
+					else
+					{
+						item = new RuntimeMap();
+					}
+					if (obj instanceof RuntimeVector)
+					{
+						obj.push(item);
+					}
+					else
+					{
+						obj.set(key, item);
+					}
+				}
+				obj = obj.get(key);
+			}
+			
+			let name = arr[arr.length - 1];
+			if (obj instanceof RuntimeVector) obj.push(value);
+			else obj.set(name, value);
+		}
+		else
+		{
+			payload.set(fieldname, value);
+		}
+	}
+	
+	
+	/**
+	 * Parse multipart form data
+	 */
+	async parseMultipart(request)
+	{
+		const File = use("Runtime.File");
+		const parts = request.parts();
+		const body = new RuntimeMap();
+		
+		for await (const part of parts)
+		{
+			/* If part is file */
+			if (part.file)
+			{
+				/* Create file */
+				let file = new File();
+				file.name = part.filename;
+				file.type = part.mimetype;
+				file.encoding = part.encoding;
+				file.content = part;
+				
+				this.setBody(body, part.fieldname, file);
+			}
+			/* If part is text field */
+			else
+			{
+				this.setBody(body, part.fieldname, part.value);
+			}
+		}
+		
+		return body;
+	}
+	
+	
+	/**
 	 * Create request from fastify
 	 */
-	createRequest(req)
+	async createRequest(req)
 	{
 		const RuntimeMap = use("Runtime.Map");
 		const Request = use("Runtime.Web.Request");
@@ -104,6 +189,25 @@ class Fastify extends BaseProvider
 		request.headers = new Headers(new RuntimeMap(req.headers));
 		request.headers.set("remote_addr", req.ip);
 		
+		/* Determine content type */
+		const contentType = req.headers["content-type"] || "";
+		
+		/* Parse multipart form data */
+		if (contentType.includes("multipart/form-data"))
+		{
+			request.payload = await this.parseMultipart(req);
+		}
+		/* Parse JSON */
+		else if (contentType.includes("application/json"))
+		{
+			request.payload = new RuntimeMap(req.body || {});
+		}
+		/* Parse URL encoded form */
+		else
+		{
+			request.payload = new RuntimeMap(req.body || {});
+		}
+		
 		return request;
 	}
 	
@@ -119,7 +223,7 @@ class Fastify extends BaseProvider
 			const RedirectResponse = use("Runtime.Web.RedirectResponse");
 			const RenderContainer = use("Runtime.Web.RenderContainer");
 			let container = new RenderContainer();
-			container.request = this.createRequest(request);
+			container.request = await this.createRequest(request);
 			
 			/* Setup route */
 			container.route = routeInfo.copy();
@@ -239,13 +343,17 @@ class Fastify extends BaseProvider
 		/* Create fastify instance */
 		this.createFastify();
 		
-		/* Register form body plugin */
+		/* Register form body plugin - REQUIRED for HTML forms */
 		const formBody = require("@fastify/formbody");
 		this.fastify.register(formBody);
 		
-		/* Register multipart */
+		/* Register multipart for file uploads */
 		const multipart = require("@fastify/multipart");
-		this.fastify.register(multipart)
+		this.fastify.register(multipart, {
+			limits: {
+				fileSize: 1 * 1024 * 1024,
+			},
+		});
 		
 		/* Error handler - using setErrorHandler instead of onError */
 		this.fastify.setErrorHandler((error, request, reply) => {
