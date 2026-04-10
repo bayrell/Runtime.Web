@@ -3,6 +3,7 @@
 	"assets":
 	[
 		"Assets.bay",
+		"BaseRoute.bay",
 		"RenderHelper.bay",
 		"Request.bay",
 		"RouteInfo.bay",
@@ -12,6 +13,7 @@
 		"RouteModel.bay",
 		"RouteProvider.bay",
 		"Translator.bay",
+		"Annotations/Route.bay",
 		"Hooks/AppHook.bay",
 		"Hooks/AssetsHook.bay",
 		"Hooks/CanonicalUrl.bay",

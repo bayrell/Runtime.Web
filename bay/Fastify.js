@@ -21,6 +21,7 @@ const use = require("bay-lang").use;
 const RuntimeMap = use("Runtime.Map");
 const RuntimeVector = use("Runtime.Vector");
 const BaseProvider = use("Runtime.BaseProvider");
+const WebHook = use("Runtime.Web.Hooks.AppHook");
 const rtl = use("Runtime.rtl");
 
 class Fastify extends BaseProvider
@@ -200,12 +201,12 @@ class Fastify extends BaseProvider
 		/* Parse JSON */
 		else if (contentType.includes("application/json"))
 		{
-			request.payload = new RuntimeMap(req.body || {});
+			request.payload = rtl.fromNative(req.body);
 		}
 		/* Parse URL encoded form */
 		else
 		{
-			request.payload = new RuntimeMap(req.body || {});
+			request.payload = rtl.fromNative(req.body);
 		}
 		
 		return request;
@@ -226,14 +227,33 @@ class Fastify extends BaseProvider
 			container.request = await this.createRequest(request);
 			
 			/* Setup route */
-			container.route = routeInfo.copy();
-			container.route.matches = new RuntimeMap(
-				Object.assign({}, request.params)
+			if (routeInfo)
+			{
+				container.route = routeInfo.copy();
+				container.route.matches = new RuntimeMap(
+					Object.assign({}, request.params)
+				);
+			}
+			
+			/* Find route after */
+			const context = rtl.getContext();
+			await context.hook(
+				WebHook.FIND_ROUTE_AFTER,
+				new RuntimeMap({ container })
 			);
 			
 			/* Resolve route */
 			await container.resolveRoute();
 			container.createResponse();
+			
+			/* Response is null */
+			if (!container.response)
+			{
+				/* Set status code 404 */
+				reply.code(404);
+				reply.send("404 not found");
+				return;
+			}
 			
 			/* Set http code */
 			reply.code(container.response.http_code);
@@ -296,6 +316,12 @@ class Fastify extends BaseProvider
 				this.request(routeInfo)
 			)
 		}
+		
+		/* 404 handler */
+		this.fastify.setNotFoundHandler(async (request, reply) => {			
+			const route = this.request(null);
+			await route(request, reply);
+		});
 	}
 	
 	
@@ -386,6 +412,7 @@ class Fastify extends BaseProvider
 						this.fastify.register(staticPlugin, {
 							root: obj.path,
 							prefix: obj.uri,
+							decorateReply: false,
 						});
 					}
 					else
