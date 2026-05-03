@@ -73,7 +73,10 @@ class Express extends BaseProvider
 		const express = require("express");
 		this.instance = express(this.getParams());
 		this.upload = multer({
-			storage: multer.memoryStorage()
+			storage: multer.memoryStorage(),
+			limits: {
+				fileSize: 1 * 1024 * 1024,
+			}
 		});
 	}
 	
@@ -152,15 +155,26 @@ class Express extends BaseProvider
 			container.request = this.createRequest(request);
 			
 			/* Setup route */
-			container.route = routeInfo.copy();
-			
-			/* Setup matches */
-			const matches = request.params || {};
-			container.route.matches = new RuntimeMap(matches);
+			if (routeInfo)
+			{
+				container.route = routeInfo.copy();
+				
+				/* Setup matches */
+				const matches = request.params || {};
+				container.route.matches = new RuntimeMap(matches);
+			}
 			
 			/* Resolve route */
 			await container.resolveRoute();
 			container.createResponse();
+			
+			/* Response not found */
+			if (container.response == null)
+			{
+				response.status(404);
+				response.send("Page not found");
+				return;
+			}
 			
 			/* Set http code */
 			response.status(container.response.http_code);
@@ -226,6 +240,11 @@ class Express extends BaseProvider
 				)
 			}
 		}
+		
+		const handler = this.request(null);
+		this.instance.use(async (request, response) => {
+			await handler(request, response);
+		});
 	}
 	
 	
