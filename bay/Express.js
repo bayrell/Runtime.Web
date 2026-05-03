@@ -18,6 +18,7 @@
 
 const fs = require("fs").promises;
 const use = require("bay-lang").use;
+const multer = require("multer");
 const BaseProvider = use("Runtime.BaseProvider");
 const rtl = use("Runtime.rtl");
 
@@ -43,6 +44,7 @@ class Express extends BaseProvider
 		this.host = "0.0.0.0";
 		this.debug = false;
 		this.static = null;
+		this.upload = null;
 	}
 	
 	
@@ -70,6 +72,9 @@ class Express extends BaseProvider
 		
 		const express = require("express");
 		this.instance = express(this.getParams());
+		this.upload = multer({
+			storage: multer.memoryStorage()
+		});
 	}
 	
 	
@@ -80,6 +85,15 @@ class Express extends BaseProvider
 	{
 		let params = {};
 		return params;
+	}
+	
+	
+	/**
+	 * Convert uri to express format
+	 */
+	convertUri(uri)
+	{
+		return uri.replace(/\{([^}]+)\}/g, ':$1');
 	}
 	
 	
@@ -103,6 +117,22 @@ class Express extends BaseProvider
 		request.headers = new Headers(new RuntimeMap(req.headers));
 		request.headers.set("remote_addr", req.ip);
 		
+		/* Set request payload based on content type */
+		const contentType = req.headers['content-type'] || '';
+		
+		if (contentType.includes('application/json') ||
+			contentType.includes('multipart/form-data')
+		)
+		{
+			if (req.body)
+			{
+				const body = JSON.parse(
+					JSON.stringify(req.body)
+				);
+				request.payload = rtl.fromNative(body);
+			}
+		}
+		
 		return request;
 	}
 	
@@ -115,14 +145,18 @@ class Express extends BaseProvider
 		return async (request, response) =>
 		{
 			/* Create RenderContainer */
+			const RuntimeMap = use("Runtime.Map");
 			const RedirectResponse = use("Runtime.Web.RedirectResponse");
 			const RenderContainer = use("Runtime.Web.RenderContainer");
 			let container = new RenderContainer();
 			container.request = this.createRequest(request);
-			container.route = routeInfo;
 			
 			/* Setup route */
-			container.route = routeInfo;
+			container.route = routeInfo.copy();
+			
+			/* Setup matches */
+			const matches = request.params || {};
+			container.route.matches = new RuntimeMap(matches);
 			
 			/* Resolve route */
 			await container.resolveRoute();
@@ -174,10 +208,23 @@ class Express extends BaseProvider
 			/* Determine HTTP method (default: get) */
 			let method = routeInfo.method.toLowerCase() || "get";
 			
+			/* Convert uri to express format */
+			let expressUri = this.convertUri(routeInfo.uri);
+			
 			/* Register route */
-			this.instance[method](
-				routeInfo.uri, this.request(routeInfo)
-			)
+			if (method == "post")
+			{
+				this.instance[method](
+					expressUri,
+					this.upload.none(), this.request(routeInfo)
+				)
+			}
+			else
+			{
+				this.instance[method](
+					expressUri, this.request(routeInfo)
+				)
+			}
 		}
 	}
 	
@@ -196,7 +243,6 @@ class Express extends BaseProvider
 		
 		/* Error handler */
 		this.instance.use((err, req, res, next) => {
-			/*console.error(`Error at ${req.url}:`, err.stack);*/
 			res.status(500).json({ error: err.message });
 		});
 		
