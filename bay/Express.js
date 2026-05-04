@@ -72,6 +72,12 @@ class Express extends BaseProvider
 		
 		const express = require("express");
 		this.instance = express(this.getParams());
+		
+		/* Enable JSON and URL-encoded parsers */
+		this.instance.enable("strict routing");
+		this.instance.use(express.json());
+		this.instance.use(express.urlencoded({ extended: true }));
+		
 		this.upload = multer({
 			storage: multer.memoryStorage(),
 			limits: {
@@ -124,7 +130,8 @@ class Express extends BaseProvider
 		const contentType = req.headers['content-type'] || '';
 		
 		if (contentType.includes('application/json') ||
-			contentType.includes('multipart/form-data')
+			contentType.includes('multipart/form-data') ||
+			contentType.includes('application/x-www-form-urlencoded')
 		)
 		{
 			if (req.body)
@@ -183,6 +190,7 @@ class Express extends BaseProvider
 			if (container.response instanceof RedirectResponse)
 			{
 				response.location(container.response.redirect);
+				response.send();
 				return;
 			}
 			
