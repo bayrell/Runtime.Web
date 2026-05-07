@@ -18,6 +18,8 @@
 
 const fs = require("fs").promises;
 const use = require("bay-lang").use;
+const http = require("http");
+const ws = require("ws");
 const multer = require("multer");
 const BaseProvider = use("Runtime.BaseProvider");
 const rtl = use("Runtime.rtl");
@@ -72,6 +74,10 @@ class Express extends BaseProvider
 		
 		const express = require("express");
 		this.instance = express(this.getParams());
+		this.server = http.createServer(this.instance);
+		this.websocket = new ws.WebSocketServer({
+			server: this.server
+		});
 		
 		/* Enable JSON and URL-encoded parsers */
 		this.instance.enable("strict routing");
@@ -314,6 +320,85 @@ class Express extends BaseProvider
 		
 		/* Register routes */
 		await this.registerRoutes();
+		
+		/* Init web socket */
+		await this.initWebSocket();
+	}
+	
+	
+	/**
+	 * Init websocket
+	 */
+	async initWebSocket()
+	{
+		const context = rtl.getContext();
+		const Map = use("Runtime.Map");
+		const ObjectType = use("Runtime.Serializer.ObjectType");
+		const Socket = use("Runtime.Web.Socket");
+		const SocketProvider = use("Runtime.Web.SocketProvider");
+		const providers = context.providers.filter(
+			(item) => item instanceof SocketProvider
+		);
+		const urls = [];
+		providers.each((provider) => {
+			const url = provider.constructor.url();
+			
+			let match = url;
+			const params = [];
+			const matches = [...url.matchAll(/{(.*?)}/g)];
+			if (matches)
+			{
+				for (let item of matches)
+				{
+					const name = item[1];
+					params.push(name);
+					match = match.replace(
+						"{" + name + "}", "([^//]*?)"
+					)
+				}
+			}
+			
+			urls.push({provider, match});
+		});
+		const matchUrl = (url) => {
+			for (let item of urls)
+			{
+				const r = new RegExp(item.match);
+				if (url.match(r)) return item;
+			}
+			return null;
+		};
+		const rules = new ObjectType(new Map({
+			"extends": "Runtime.BaseDTO",
+			"autocreate": true,
+		}));
+		this.websocket.on("connection", (ws, request) => {
+			
+			const url = request.url;
+			const item = matchUrl(url);
+			
+			/* Check url */
+			if (!item)
+			{
+				ws.terminate();
+				return;
+			}
+			
+			const socket = new Socket(ws);
+			const provider = item.provider;
+			
+			provider.connected(socket);
+			
+			ws.on("message", (message) => {
+				const data = rtl.jsonDecode(message);
+				const item = rules.filter(data, []);
+				provider.onMessage(socket, item);
+			});
+			
+			ws.on("close", () => {
+				provider.disconnected(socket);
+			})
+		});
 	}
 	
 	
@@ -323,7 +408,7 @@ class Express extends BaseProvider
 	async start()
 	{
 		/* Start server */
-		this.instance.listen(this.port);
+		this.server.listen(this.port);
 		console.log(`Server listening on ${this.port}`);
 	}
 	

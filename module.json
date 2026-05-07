@@ -12,6 +12,7 @@
 		"RoutePage.bay",
 		"RouteModel.bay",
 		"RouteProvider.bay",
+		"SocketClient.bay",
 		"Translator.bay",
 		"Annotations/Route.bay",
 		"Hooks/AppHook.bay",

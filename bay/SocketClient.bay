@@ -20,20 +20,62 @@ namespace Runtime.Web;
 
 use Runtime.BaseObject;
 use Runtime.BaseDTO;
+use Runtime.Serializer.ObjectType;
 
 
-class Socket extends BaseObject
+class SocketClient extends BaseObject
 {
-	var instance;
+	string url = "";
+	ObjectType rules = new ObjectType();
+	var instance = null;
+	var onDisconnect = null;
+	var onMessage = null;
 	
 	
 	/**
-	 * Create socket
+	 * Constructor
 	 */
-	void constructor(var socket)
+	void constructor(string url)
 	{
 		parent();
-		this.instance = socket;
+		this.url = url;
+		this.rules = new ObjectType{
+			"extends": classof BaseDTO,
+			"autocreate": true,
+		};
+	}
+	
+	
+	/**
+	 * Connect
+	 */
+	void connect()
+	{
+		#ifcode JAVASCRIPT then
+		this.instance = new WebSocket(this.url);
+		this.instance.onclose = this.socketDisconnect.bind(this);
+		this.instance.onmessage = this.socketMessage.bind(this);
+		#endif
+	}
+	
+	
+	/**
+	 * Disconnect
+	 */
+	void socketDisconnect()
+	{
+		if (this.onDisconnect) this.onDisconnect();
+	}
+	
+	
+	/**
+	 * Message
+	 */
+	void socketMessage(var event)
+	{
+		Map data = rtl::jsonDecode(event.data);
+		BaseDTO item = this.rules.filter(data, []);
+		if (this.onMessage) this.onMessage(item);
 	}
 	
 	

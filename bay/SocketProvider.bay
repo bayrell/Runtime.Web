@@ -18,6 +18,7 @@
 
 namespace Runtime.Web;
 
+use Runtime.BaseDTO;
 use Runtime.BaseProvider;
 use Runtime.Web.Socket;
 
@@ -49,7 +50,7 @@ class SocketProvider extends BaseProvider
 	/**
 	 * On message
 	 */
-	async void onMessage(Socket socket, Map message)
+	async void onMessage(Socket socket, BaseDTO message)
 	{
 	}
 }
