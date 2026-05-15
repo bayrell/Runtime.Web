@@ -20,7 +20,6 @@ const fs = require("fs").promises;
 const use = require("bay-lang").use;
 const http = require("http");
 const ws = require("ws");
-const multer = require("multer");
 const BaseProvider = use("Runtime.BaseProvider");
 const rtl = use("Runtime.rtl");
 
@@ -79,17 +78,14 @@ class Express extends BaseProvider
 			server: this.server
 		});
 		
+		/* Cookie parser */
+		const cookie = require("cookie-parser");
+		this.instance.use(cookie());
+		
 		/* Enable JSON and URL-encoded parsers */
-		this.instance.enable("strict routing");
+		this.instance.set("strict routing", true);
 		this.instance.use(express.json());
 		this.instance.use(express.urlencoded({ extended: true }));
-		
-		this.upload = multer({
-			storage: multer.memoryStorage(),
-			limits: {
-				fileSize: 1 * 1024 * 1024,
-			}
-		});
 	}
 	
 	
@@ -113,9 +109,87 @@ class Express extends BaseProvider
 	
 	
 	/**
-	 * Create request from fastify
+	 * Handle multipart form data with Busboy
 	 */
-	createRequest(req)
+	async handleMultipartFormData(req)
+	{
+		return new Promise((resolve, reject) => {
+			const Busboy = require("busboy");
+			const os = require("os");
+			const path = require("path");
+			const crypto = require("crypto");
+			const fsStream = require("fs");
+			
+			const busboy = Busboy({ headers: req.headers });
+			const payload = {};
+			
+			const setPayload = (fieldname, value) =>
+			{
+				if (fieldname.indexOf("[") >= 0)
+				{
+					let arr = fieldname.split("[").map(
+						s => s.replaceAll("]", "")
+					);
+					
+					// Handle nested array/object notation
+					let current = payload;
+					for (let i = 0; i < arr.length - 1; i++)
+					{
+						const key = arr[i];
+						if (!current[key])
+						{
+							current[key] = {};
+						}
+						current = current[key];
+					}
+					current[arr[arr.length - 1]] = value;
+				}
+				else
+				{
+					payload[fieldname] = value;
+				}
+			};
+			
+			busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+				const tmpdir = os.tmpdir();
+				const ext = path.extname(filename);
+				const randomName = crypto.randomBytes(16).toString('hex');
+				const filepath = path.join(tmpdir, `${randomName}${ext}`);
+				/*
+				const writeStream = fsStream.createWriteStream(filepath);
+				file.pipe(writeStream);
+				
+				setPayload(fieldname, {
+					filename,
+					encoding,
+					mimetype,
+					filepath
+				})*/
+			});
+			
+			busboy.on('field', (fieldname, value) => {
+				setPayload(fieldname, value);
+			});
+			
+			busboy.on('finish', () => {
+				resolve(payload);
+			});
+			
+			busboy.on('error', (err) => {
+				reject(err);
+			});
+			
+			req.pipe(busboy);
+		});
+	}
+	
+	
+	/**
+	 * Create request from express
+	 * @param {Object} req Express request object
+	 * @returns {Promise<Object>} Runtime.Web.Request object
+	 */
+	async createRequest(req)
 	{
 		const RuntimeMap = use("Runtime.Map");
 		const Request = use("Runtime.Web.Request");
@@ -127,16 +201,16 @@ class Express extends BaseProvider
 		request.host = req.hostname;
 		request.method = req.method;
 		request.protocol = req.protocol;
-		request.is_https == request.protocol == "https";
+		request.is_https = request.protocol == "https";
 		request.query = new RuntimeMap(req.query);
 		request.headers = new Headers(new RuntimeMap(req.headers));
 		request.headers.set("remote_addr", req.ip);
+		request.cookies = new RuntimeMap(req.cookies);
 		
 		/* Set request payload based on content type */
 		const contentType = req.headers['content-type'] || '';
 		
 		if (contentType.includes('application/json') ||
-			contentType.includes('multipart/form-data') ||
 			contentType.includes('application/x-www-form-urlencoded')
 		)
 		{
@@ -146,6 +220,18 @@ class Express extends BaseProvider
 					JSON.stringify(req.body)
 				);
 				request.payload = rtl.fromNative(body);
+			}
+		}
+		else if (contentType.includes('multipart/form-data'))
+		{
+			try
+			{
+				const payload = await this.handleMultipartFormData(req);
+				request.payload = rtl.fromNative(payload);
+			}
+			catch (err)
+			{
+				return null;
 			}
 		}
 		
@@ -161,21 +247,21 @@ class Express extends BaseProvider
 		return async (request, response) =>
 		{
 			/* Create RenderContainer */
-			const RuntimeMap = use("Runtime.Map");
 			const RedirectResponse = use("Runtime.Web.RedirectResponse");
 			const RenderContainer = use("Runtime.Web.RenderContainer");
 			let container = new RenderContainer();
-			container.request = this.createRequest(request);
+			container.request = await this.createRequest(request);
 			
-			/* Setup route */
-			if (routeInfo)
+			/* If request not found */
+			if (!container.request)
 			{
-				container.route = routeInfo.copy();
-				
-				/* Setup matches */
-				const matches = request.params || {};
-				container.route.matches = new RuntimeMap(matches);
+				response.status(404);
+				response.send("Page not found");
+				return;
 			}
+			
+			/* Find route */
+			await container.findRoute();
 			
 			/* Resolve route */
 			await container.resolveRoute();
@@ -213,6 +299,17 @@ class Express extends BaseProvider
 					"text/html; charset=utf8");
 			}
 			
+			let time = Date.now();
+			for (let cookie of container.cookies.values())
+			{
+				response.cookie(cookie.name, cookie.value, {
+					maxAge: cookie.expires * 1000 - time,
+					httpOnly: cookie.httponly,
+					secure: cookie.secure,
+					sameSite: cookie.samesite,
+				});
+			}
+			
 			/* Send data */
 			response.send(container.response.getContent());
 		}
@@ -224,41 +321,8 @@ class Express extends BaseProvider
 	 */
 	async registerRoutes()
 	{
-		const context = rtl.getContext();
-		const route_provider = context.provider("Runtime.Web.RouteProvider");
-		
-		/* Get routes collection */
-		const routes = route_provider.routes_list;
-		
-		/* Iterate over routes */
-		for (const routeInfo of routes)
-		{
-			/* Determine HTTP method (default: get) */
-			let method = routeInfo.method.toLowerCase() || "get";
-			
-			/* Convert uri to express format */
-			let expressUri = this.convertUri(routeInfo.uri);
-			
-			/* Register route */
-			if (method == "post")
-			{
-				this.instance[method](
-					expressUri,
-					this.upload.none(), this.request(routeInfo)
-				)
-			}
-			else
-			{
-				this.instance[method](
-					expressUri, this.request(routeInfo)
-				)
-			}
-		}
-		
 		const handler = this.request(null);
-		this.instance.use(async (request, response) => {
-			await handler(request, response);
-		});
+		this.instance.use(handler);
 	}
 	
 	

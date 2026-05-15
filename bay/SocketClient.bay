@@ -64,7 +64,7 @@ class SocketClient extends BaseObject
 	 */
 	void socketDisconnect()
 	{
-		if (this.onDisconnect) this.onDisconnect();
+		if (this.onDisconnect) this.onDisconnect.apply();
 	}
 	
 	
@@ -75,7 +75,7 @@ class SocketClient extends BaseObject
 	{
 		Map data = rtl::jsonDecode(event.data);
 		BaseDTO item = this.rules.filter(data, []);
-		if (this.onMessage) this.onMessage(item);
+		if (this.onMessage) this.onMessage.apply([item]);
 	}
 	
 	
