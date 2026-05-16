@@ -30,6 +30,8 @@ class SocketClient extends BaseObject
 	var instance = null;
 	var onDisconnect = null;
 	var onMessage = null;
+	var timer = null;
+	int timer_timeout = 25000;
 	
 	
 	/**
@@ -55,6 +57,9 @@ class SocketClient extends BaseObject
 		this.instance = new WebSocket(this.url);
 		this.instance.onclose = this.socketDisconnect.bind(this);
 		this.instance.onmessage = this.socketMessage.bind(this);
+		this.timer = setInterval(
+			this.ping.bind(this), this.timer_timeout
+		);
 		#endif
 	}
 	
@@ -65,6 +70,20 @@ class SocketClient extends BaseObject
 	void socketDisconnect()
 	{
 		if (this.onDisconnect) this.onDisconnect.apply();
+		if (this.timer)
+		{
+			window.clearInterval(this.timer);
+			this.timer = null;
+		}
+	}
+	
+	
+	/**
+	 * Send ping
+	 */
+	async void ping()
+	{
+		await this.send({"command": "ping"});
 	}
 	
 	
@@ -75,7 +94,7 @@ class SocketClient extends BaseObject
 	{
 		Map data = rtl::jsonDecode(event.data);
 		BaseDTO item = this.rules.filter(data, []);
-		if (this.onMessage) this.onMessage.apply([item]);
+		if (this.onMessage) this.onMessage.apply([item ? item : data]);
 	}
 	
 	
@@ -84,8 +103,18 @@ class SocketClient extends BaseObject
 	 */
 	async void send(BaseDTO item)
 	{
-		Map data = rtl::serialize(item);
-		data.set("__class_name__", item::getClassName());
+		Map data = null;
+		
+		if (item instanceof Map)
+		{
+			data = item;
+		}
+		else
+		{
+			data = rtl::serialize(item);
+			data.set("__class_name__", item::getClassName());
+		}
+		
 		this.instance.send(rtl::jsonEncode(data));
 	}
 }

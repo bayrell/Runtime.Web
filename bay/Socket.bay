@@ -42,8 +42,16 @@ class Socket extends BaseObject
 	 */
 	async void send(BaseDTO item)
 	{
-		Map data = rtl::serialize(item);
-		data.set("__class_name__", item::getClassName());
+		Map data = null;
+		if (item instanceof Map)
+		{
+			data = item;
+		}
+		else
+		{
+			data = rtl::serialize(item);
+			data.set("__class_name__", item::getClassName());
+		}
 		this.instance.send(rtl::jsonEncode(data));
 	}
 }

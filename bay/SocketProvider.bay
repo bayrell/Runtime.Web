@@ -52,5 +52,9 @@ class SocketProvider extends BaseProvider
 	 */
 	async void onMessage(Socket socket, BaseDTO message)
 	{
+		if (message instanceof Map and message.get("command") == "ping")
+		{
+			await socket.send({"command": "pong"});
+		}
 	}
 }

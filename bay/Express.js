@@ -455,8 +455,15 @@ class Express extends BaseProvider
 			
 			ws.on("message", (message) => {
 				const data = rtl.jsonDecode(message);
-				const item = rules.filter(data, []);
-				provider.onMessage(socket, item);
+				if (data && data.__class_name__ == undefined)
+				{
+					provider.onMessage(socket, data);
+				}
+				else
+				{
+					const item = rules.filter(data, []);
+					provider.onMessage(socket, item);
+				}
 			});
 			
 			ws.on("close", () => {
