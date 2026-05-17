@@ -138,11 +138,27 @@ class Express extends BaseProvider
 						const key = arr[i];
 						if (!current[key])
 						{
-							current[key] = {};
+							const nextKey = arr[i + 1];
+							if (!isNaN(Number(nextKey)))
+							{
+								current[key] = [];
+							}
+							else
+							{
+								current[key] = {};
+							}
 						}
 						current = current[key];
 					}
-					current[arr[arr.length - 1]] = value;
+					if (Array.isArray(current))
+					{
+						current.push(value);
+					}
+					else
+					{
+						const key = arr[arr.length - 1];
+						current[key] = value;
+					}
 				}
 				else
 				{
